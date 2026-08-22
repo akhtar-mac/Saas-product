@@ -1,8 +1,10 @@
 import { Phone, Mail, MapPin, Clock } from 'lucide-react';
+import SEO from '@/components/seo';
 
 export default function ContactPage() {
   return (
     <>
+      <SEO title="Contact Us" description="Contact ETaxwala - Call +91 70710 70707, email support@etaxwala.com. Offices in Chhatrapati Sambhaji Nagar (Aurangabad) and Ambad (Jalna)." url="/contact" />
       <section className="bg-primary-700 py-20 text-white">
         <div className="container-etaxwala">
           <h1 className="text-4xl font-bold lg:text-5xl">Contact Us</h1>

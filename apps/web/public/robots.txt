@@ -1,0 +1,11 @@
+# robots.txt for ETaxwala
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://etaxwala.com/sitemap.xml
+
+# Block admin/staff/client portal from indexing
+Disallow: /staff/
+Disallow: /client/
+Disallow: /api/

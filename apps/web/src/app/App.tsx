@@ -3,6 +3,7 @@ import MarketingLayout from '@/layouts/marketing-layout';
 import HomePage from '@/features/marketing/home/home-page';
 import AboutPage from '@/features/marketing/about/about-page';
 import ContactPage from '@/features/marketing/contact/contact-page';
+import CareersPage from '@/features/marketing/careers/careers-page';
 import ServicesHubPage from '@/features/marketing/services/services-hub-page';
 import ServiceDetailPage from '@/features/marketing/services/service-detail-page';
 import BlogListPage from '@/features/marketing/blog/blog-list-page';
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/careers" element={<CareersPage />} />
         <Route path="/services" element={<ServicesHubPage />} />
         <Route path="/services/:categorySlug" element={<ServicesHubPage />} />
         <Route path="/services/:categorySlug/:serviceSlug" element={<ServiceDetailPage />} />

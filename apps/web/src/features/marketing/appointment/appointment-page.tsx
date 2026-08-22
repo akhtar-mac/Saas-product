@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Phone, Mail, MapPin, CheckCircle2, Loader2 } from 'lucide-react';
+import SEO from '@/components/seo';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -52,6 +53,7 @@ export default function AppointmentPage() {
 
   return (
     <>
+      <SEO title="Book an Appointment" description="Book a free consultation with ETaxwala's expert Chartered Accountants and business consultants. We'll get back to you within 24 hours." url="/appointment" />
       <section className="bg-primary-700 py-20 text-white">
         <div className="container-etaxwala">
           <h1 className="text-4xl font-bold lg:text-5xl">Book an Appointment</h1>

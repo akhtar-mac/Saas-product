@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
+import SEO from '@/components/seo';
 
 const legalContent: Record<string, { title: string; body: string }> = {
   terms: {
@@ -21,6 +22,7 @@ export default function LegalPage() {
 
   return (
     <>
+      <SEO title={content.title} description={`${content.title} - ETaxwala Business Solutions`} url={`/legal/${type}`} />
       <section className="bg-primary-700 py-16 text-white">
         <div className="container-etaxwala">
           <h1 className="text-3xl font-bold lg:text-4xl">{content.title}</h1>

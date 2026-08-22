@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import SEO from '@/components/seo';
 import {
   Stethoscope, Building2, Calculator, ClipboardCheck, Lightbulb, TrendingUp,
   Users, FileText, ShieldCheck, Sparkles, ArrowRight, Star, CheckCircle2,
@@ -125,6 +126,32 @@ const offices = [
 export default function HomePage() {
   return (
     <>
+      <SEO
+        title="ETaxwala - Your Business Doctor"
+        description="Diagnose. Strategize. Succeed. 250+ business services: company registration, ITR, GST, audit, compliance, web development, marketing. 1L+ customers, 120+ franchises, 98.9% success rate."
+        keywords="business registration, company registration, ITR filing, GST, tax audit, LLP, private limited, MSME, FSSAI, trademark, web development, marketing, business consultancy"
+        url="/"
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'ETaxwala Business Solutions Pvt Ltd',
+          url: 'https://etaxwala.com',
+          logo: 'https://etaxwala.com/public/img/logo_black.png',
+          description: 'Your Business Doctor - Business registration, taxation, audit & compliance services in India',
+          telephone: '+91-70710-70707',
+          email: 'support@etaxwala.com',
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: '3rd Floor, Ashoka\'s Residency, Beed Bypass Rd, Deolai Parisar',
+            addressLocality: 'Chhatrapati Sambhaji Nagar',
+            addressRegion: 'Maharashtra',
+            postalCode: '431001',
+            addressCountry: 'IN',
+          },
+          foundingDate: '2014',
+          areaServed: 'IN',
+        }}
+      />
       {/* ═══ Hero ═══ */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary-700 via-primary-600 to-primary-800 text-white">
         {/* Decorative grid */}

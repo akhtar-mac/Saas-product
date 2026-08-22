@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { CheckCircle2, ArrowRight, Phone, MessageCircle, FileBadge, ChevronRight, Star, Clock, ShieldCheck } from 'lucide-react';
+import SEO from '@/components/seo';
 import { getServiceBySlug, getCategoryById, services, formatPrice } from '@/lib/constants/services';
 
 const processSteps = [
@@ -24,6 +25,7 @@ export default function ServiceDetailPage() {
   if (!service) {
     return (
       <div className="py-32 text-center">
+        <SEO title="Service Not Found" url="/services" />
         <p className="text-lg text-slate-500">Service not found.</p>
         <Link to="/services" className="btn-primary mt-4">Browse All Services</Link>
       </div>
@@ -35,6 +37,31 @@ export default function ServiceDetailPage() {
 
   return (
     <>
+      <SEO
+        title={`${service.name} - ${formatPrice(service.price)}`}
+        description={`${service.name} starting from ${formatPrice(service.price)}. ${service.inclusions.slice(0, 3).join(', ')}. Expert CA-led service with real-time tracking. 98.9% success rate.`}
+        keywords={`${service.name}, ${category?.name}, ETaxwala, business services`}
+        url={`/services/${service.category}/${service.slug}`}
+        type="product"
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'Service',
+          name: service.name,
+          description: service.inclusions.join(', '),
+          provider: {
+            '@type': 'Organization',
+            name: 'ETaxwala Business Solutions Pvt Ltd',
+            url: 'https://etaxwala.com',
+          },
+          offers: service.price > 0 ? {
+            '@type': 'Offer',
+            price: service.price,
+            priceCurrency: 'INR',
+            availability: 'https://schema.org/InStock',
+          } : undefined,
+          areaServed: 'IN',
+        }}
+      />
       {/* Hero / Breadcrumb */}
       <section className="bg-gradient-to-br from-primary-700 to-primary-800 py-12 text-white">
         <div className="container-etaxwala">

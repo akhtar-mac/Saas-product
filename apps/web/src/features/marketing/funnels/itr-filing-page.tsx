@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Calculator, ShieldCheck, FileText, TrendingUp, CheckCircle2, ArrowRight } from 'lucide-react';
+import SEO from '@/components/seo';
 
 export default function ITRFilingPage() {
   return (
     <>
+      <SEO title="ITR Filing - File Income Tax Return Online" description="File your ITR with ETaxwala. Every return double-checked by licensed CA. Salary ₹499, Business ₹1999, Capital Gains ₹2999. Maximum refund, zero stress." url="/itr-filing" keywords="ITR filing, income tax return, tax filing online, ITR-1, ITR-2, ITR-3, CA certified" />
       <section className="bg-gradient-to-br from-primary-700 to-primary-800 py-20 text-white">
         <div className="container-etaxwala">
           <div className="max-w-3xl">

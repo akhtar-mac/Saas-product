@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Building2, FileBadge, Receipt, ClipboardCheck, Lightbulb, Sparkles, FileText, ArrowRight, CheckCircle2, TrendingUp } from 'lucide-react';
+import SEO from '@/components/seo';
 import { services, categories, formatPrice, getFeaturedServices } from '@/lib/constants/services';
 
 const iconMap: Record<string, any> = {
@@ -23,6 +24,12 @@ export default function ServicesHubPage() {
 
   return (
     <>
+      <SEO
+        title="All Services - Business Registration, Tax, Audit, Marketing"
+        description="Browse 250+ business services with transparent pricing. Company registration, ITR filing, GST returns, audit, trademark, web development, marketing & more."
+        keywords="business services, company registration, ITR filing, GST returns, audit compliance, trademark, web development, marketing"
+        url="/services"
+      />
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary-700 to-primary-800 py-16 text-white">
         <div className="absolute -right-40 top-0 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />

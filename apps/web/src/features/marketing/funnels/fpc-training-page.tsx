@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Video, FileText, Award, Users } from 'lucide-react';
+import SEO from '@/components/seo';
 
 export default function FPCTrainingPage() {
   return (
     <>
+      <SEO title="FPC Training - Farmer to Founder Program" description="10-day live online FPC business training in Marathi. Learn how to run, grow, and profit from your Farmer Producer Company. ₹3,999 only." url="/fpc-training" keywords="FPC training, farmer producer company, agri business, farmer training, Marathi training" />
       <section className="bg-gradient-to-br from-primary-700 to-primary-800 py-20 text-white">
         <div className="container-etaxwala">
           <div className="max-w-3xl">

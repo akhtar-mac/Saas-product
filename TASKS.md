@@ -133,11 +133,11 @@
 - [x] 1.6.1 Hero section
 - [x] 1.6.2 Search bar (searchable service input)
 - [x] 1.6.3 6 category cards (Registration, Other Registrations, Taxation, Audit, Consultancy, Marketing) with icons + service counts
-- [ ] 1.6.4 Add live search (filter services as user types)
+- [x] 1.6.4 Add live search (filter services as user types)
 - [ ] 1.6.5 Add price range filter
 - [ ] 1.6.6 Add category filter dropdown
-- [ ] 1.6.7 Add "Popular Services" section (top 12 most bought)
-- [ ] 1.6.8 Add "Starting from ₹X" on each category card
+- [x] 1.6.7 Add "Popular Services" section (top 12 most bought)
+- [x] 1.6.8 Add "Starting from ₹X" on each category card
 - [ ] 1.6.9 Add meta tags + schema
 
 ## 1.7 Service Detail Pages (47 pages, data-driven from one template)
@@ -149,29 +149,29 @@
 - [x] 1.7.5 FAQ section (accordion)
 - [x] 1.7.6 Pricing card with Buy Now + Inquiry buttons
 - [x] 1.7.7 CTA section (Book Appointment + WhatsApp)
-- [ ] 1.7.8 Populate ALL 47 service detail pages with real data (name, price, inclusions, process, FAQs, documents required)
-- [ ] 1.7.9 Add "Related Services" section
+- [x] 1.7.8 Populate ALL 47 service detail pages with real data (name, price, inclusions, process, FAQs, documents required)
+- [x] 1.7.9 Add "Related Services" section
 - [ ] 1.7.10 Add "Documents Required" section per service
 - [ ] 1.7.11 Add schema.org Service schema
 - [ ] 1.7.12 Add meta tags per service (dynamic title, description)
 
 ## 1.8 Service Catalog Data (250+ services)
 
-- [ ] 1.8.1 Create services data file (TypeScript constants) with ALL 250+ services:
+- [x] 1.8.1 Create services data file (TypeScript constants) with ALL 250+ services:
   - id, name, categoryId, price, inclusions[], description, url slug
-- [ ] 1.8.2 Business Registration services (9): Partnership, OPC, Pvt Ltd, LLP, Section 8, Producer, Public Ltd, Indian Subsidiary, Subsidiary
-- [ ] 1.8.3 Other Registrations (10): MSME, GST, FSSAI, Import Export, 80G 12A, Professional Tax, TAN, DSC, PASARA, Trade License
-- [ ] 1.8.4 Taxation (6): ITR, GST Return, EPFO ESIC, CMA, DPR, Tax Audit
-- [ ] 1.8.5 Audit (9): Public Ltd, Section 8, Producer, LLP, OPC, Pvt Ltd, Partnership, Multi-State, Credit Co-op
-- [ ] 1.8.6 Consultancy (13): HR Payroll, CFO, Financial Advisory, Credit Co-op Software, Business, Startup Idea Gen, Startup Idea Validation, Business Plan, Startup Funding, Team Building, Business Automation, Business Growth, Marketing
-- [ ] 1.8.7 Legal Documentation (50+): Rent Agreement, Lease Deed, MoU, Franchise Agreement, JV Agreement, Founders Agreement, Term Sheet, Shareholders Agreement, NDA, etc.
-- [ ] 1.8.8 Marketing & Branding (20+): Logo, Website, Mobile App, GMB, Social Media, Email Marketing, SMS, Influencer, WhatsApp, Affiliate, YouTube, SEO, PPC, Print, Brand Ambassador, Celebrity, Catalogue, Blog, Event, Webinar, Digital Visiting Card, PR
-- [ ] 1.8.9 ITR variants (8): Salary, Business, Capital Gains, F&O, Crypto, Foreign, Salary+Other, Trust ITR
-- [ ] 1.8.10 GST Return variants (14): Monthly Nil, Monthly 10/50/100/200 bills, Quarterly variants, without accounting
-- [ ] 1.8.11 Trademark services (6): Application, Registration, Objection, Renewal, Assignment, Opposition, Rectification
-- [ ] 1.8.12 Other: ISO, FCRA, FFMC, RWA, Drug License, APEDA, RERA, AGMARK, RCMC, NITI Ayog DARPAN, Design Reg, Copyright, Patent, ITR Notice, Balance Sheet, CA Advisory
-- [ ] 1.8.13 Add ITR variants: Balance Sheet P&L, Accounting, PTEC, Director KYC, LLP Form-11, DPT-3, INC-20A, Conversions, Closures, Changes
-- [ ] 1.8.14 Add FPC Training (₹3,999)
+- [x] 1.8.2 Business Registration services (9): Partnership, OPC, Pvt Ltd, LLP, Section 8, Producer, Public Ltd, Indian Subsidiary, Subsidiary
+- [x] 1.8.3 Other Registrations (10): MSME, GST, FSSAI, Import Export, 80G 12A, Professional Tax, TAN, DSC, PASARA, Trade License
+- [x] 1.8.4 Taxation (6): ITR, GST Return, EPFO ESIC, CMA, DPR, Tax Audit
+- [x] 1.8.5 Audit (9): Public Ltd, Section 8, Producer, LLP, OPC, Pvt Ltd, Partnership, Multi-State, Credit Co-op
+- [x] 1.8.6 Consultancy (13): HR Payroll, CFO, Financial Advisory, Credit Co-op Software, Business, Startup Idea Gen, Startup Idea Validation, Business Plan, Startup Funding, Team Building, Business Automation, Business Growth, Marketing
+- [x] 1.8.7 Legal Documentation (50+): Rent Agreement, Lease Deed, MoU, Franchise Agreement, JV Agreement, Founders Agreement, Term Sheet, Shareholders Agreement, NDA, etc.
+- [x] 1.8.8 Marketing & Branding (20+): Logo, Website, Mobile App, GMB, Social Media, Email, SMS, Influencer, WhatsApp, Affiliate, YouTube, SEO, PPC, Print, Brand Ambassador, Celebrity, Catalogue, Blog, Event, Webinar, Digital Visiting Card, PR
+- [x] 1.8.9 ITR variants (8): Salary, Business, Capital Gains, F&O, Crypto, Foreign, Salary+Other, Trust ITR
+- [x] 1.8.10 GST Return variants (14): Monthly Nil, Monthly 10/50/100/200 bills, Quarterly variants, without accounting
+- [x] 1.8.11 Trademark services (6): Application, Registration, Objection, Renewal, Assignment, Opposition, Rectification
+- [x] 1.8.12 Other: ISO, FCRA, FFMC, RWA, Drug License, APEDA, RERA, AGMARK, RCMC, NITI Ayog DARPAN, Design Reg, Copyright, Patent, ITR Notice, Balance Sheet, CA Advisory
+- [x] 1.8.13 Add ITR variants: Balance Sheet P&L, Accounting, PTEC, Director KYC, LLP Form-11, DPT-3, INC-20A, Conversions, Closures, Changes
+- [x] 1.8.14 Add FPC Training (₹3,999)
 
 ## 1.9 Appointment Page
 

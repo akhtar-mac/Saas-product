@@ -1,9 +1,11 @@
 import { Target, Eye, Award, Users, Briefcase, Handshake, ShieldCheck, Rocket, Building2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import SEO from '@/components/seo';
 
 export default function AboutPage() {
   return (
     <>
+      <SEO title="About Us - Your Business Doctor" description="ETaxwala Business Solutions - 10+ years, 200+ team members, 120+ franchises, 1 Lakh+ happy customers. Your trusted business doctor for registration, tax, audit & growth." url="/about" />
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary-700 to-primary-800 py-20 text-white">
         <div className="absolute -right-40 top-0 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />
