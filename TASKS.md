@@ -36,9 +36,9 @@
 - [x] 0.2.5 Set up pnpm-workspace.yaml
 - [x] 0.2.6 Set up Turborepo (turbo.json)
 - [x] 0.2.7 Set up shared tsconfig.base.json
-- [ ] 0.2.8 🔧 MANUAL — Initialize git repo: `cd etaxwala-v2 && git init && git add . && git commit -m "Initial: ETaxwala 2.0 scaffold"`
+- [x] 0.2.8 🔧 MANUAL — Initialize git repo: `cd etaxwala-v2 && git init && git add . && git commit -m "Initial: ETaxwala 2.0 scaffold"`
 - [ ] 0.2.9 🔧 MANUAL — Create GitHub repo (private) and push: `git remote add origin <url> && git push -u origin main`
-- [ ] 0.2.10 Set up .gitignore (node_modules, dist, .env, .turbo, *.log)
+- [x] 0.2.10 Set up .gitignore (node_modules, dist, .env, .turbo, *.log)
 - [ ] 0.2.11 Set up ESLint + Prettier configs
 - [ ] 0.2.12 Set up Husky pre-commit hooks (lint-staged)
 
