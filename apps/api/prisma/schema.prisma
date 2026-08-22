@@ -1,0 +1,577 @@
+// ETaxwala 2.0 — Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ AUTH & USERS ============
+
+enum RoleType {
+  SUPER_ADMIN
+  ADMIN
+  SALES_MANAGER
+  OPERATIONS_MANAGER
+  FRANCHISE_MANAGER
+  SALES_EMPLOYEE
+  OPERATIONS_EMPLOYEE
+  FRANCHISE_EMPLOYEE
+  OPERATIONS_ASSISTANT
+  CONSULTATION
+  MARKETING_MANAGER
+  HR
+  WEBSITE_MANAGER
+  SALES_ASSISTANT
+  MARKETING_EMPLOYEE
+  STAFF
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  username    String
+  email       String    @unique
+  password    String
+  role        RoleType   @default(STAFF)
+  companyId   String    @default("etaxwala")
+  status      Int       @default(1)
+  isOnline    Boolean   @default(false)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  profile       Profile?
+  desktrackConfig DesktopUser?
+  assignedTasks OperationTask[] @relation("TaskAssignee")
+  createdTasks  OperationTask[] @relation("TaskAssigner")
+  calls         CallHistory[]
+  quotations    Quotation[]
+  appointments  Appointment[]
+  chatMessages  ChatMessage[]
+
+  @@index([role])
+  @@index([companyId])
+}
+
+model Profile {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  user        User     @relation(fields: [userId], references: [id])
+  profilePhoto String?
+  address     String?
+  dob         DateTime?
+  position    String?
+  about       String?  @db.VarChar(5000)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============ CLIENTS ============
+
+model Customer {
+  id           Int       @id @default(autoincrement())
+  leadId       Int?
+  name         String
+  business     String?
+  email        String    @unique
+  contact      String
+  password     String
+  service      String?
+  servicePrice Int       @default(0)
+  state        String?
+  city         String?
+  addedBy      Int?
+  companyId    String    @default("etaxwala")
+  isPayment    Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  isApprove    Boolean   @default(false)
+  customerToken String  @unique
+  date         DateTime  @default(now())
+
+  documents    CustomerDocument[]
+  chats        ChatMessage[]
+  tickets      SupportTicket[]
+  workTimelines WorkTimeline[]
+  dues         CustomerDue[]
+  emis         CustomerEmi[]
+  orders       Order[]
+
+  @@index([email])
+  @@index([companyId])
+}
+
+model CustomerDocument {
+  id           Int      @id @default(autoincrement())
+  customerId   Int
+  customer     Customer @relation(fields: [customerId], references: [id])
+  serviceId    Int?
+  documentName String
+  fileUrl      String
+  fileType     String?
+  fileSize     Int?
+  uploadedBy   String?
+  uploadedAt   DateTime @default(now())
+
+  @@index([customerId])
+}
+
+model WorkTimeline {
+  id         Int      @id @default(autoincrement())
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+  serviceId  Int?
+  status     String
+  note       String?
+  staffName  String?
+  date       DateTime @default(now())
+
+  @@index([customerId])
+}
+
+model CustomerDue {
+  id         Int      @id @default(autoincrement())
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+  amount     Decimal  @db.Decimal(12, 2)
+  dueDate    DateTime?
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+}
+
+model CustomerEmi {
+  id         Int      @id @default(autoincrement())
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+  amount     Decimal  @db.Decimal(12, 2)
+  emiDate    DateTime?
+  status     String   @default("pending")
+  paidDate   DateTime?
+  createdAt  DateTime @default(now())
+}
+
+model SupportTicket {
+  id          Int      @id @default(autoincrement())
+  customerId  Int
+  customer    Customer @relation(fields: [customerId], references: [id])
+  subject     String
+  description String   @db.Text
+  status      String   @default("open")
+  priority    String   @default("medium")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============ SERVICES ============
+
+model Category {
+  id         Int      @id @default(autoincrement())
+  name       String
+  nameMr     String?
+  description String?
+  icon       String?
+  companyId  String   @default("etaxwala")
+  services   Service[]
+  createdAt  DateTime @default(now())
+}
+
+model Service {
+  id                Int      @id @default(autoincrement())
+  categoryId        Int
+  category          Category @relation(fields: [categoryId], references: [id])
+  name              String
+  nameMr            String?
+  price             Int
+  partnerPercentage Int      @default(0)
+  description       String   @db.VarChar(2000)
+  inclusions        Json?
+  process           Json?
+  documentsRequired Json?
+  faqs              Json?
+  icon              String?
+  imageUrl          String?
+  url               String?
+  companyId         String   @default("etaxwala")
+  isFeatured        Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  orders  Order[]
+  docs    ServiceDoc[]
+  questions ServiceQuestion[]
+
+  @@index([categoryId])
+  @@index([companyId])
+}
+
+model ServiceDoc {
+  id          Int     @id @default(autoincrement())
+  serviceId   Int
+  service     Service @relation(fields: [serviceId], references: [id])
+  documentName String
+  isRequired  Boolean @default(true)
+  description String?
+}
+
+model ServiceQuestion {
+  id         Int     @id @default(autoincrement())
+  serviceId  Int
+  service    Service @relation(fields: [serviceId], references: [id])
+  question   String
+  type       String
+  options    Json?
+  isRequired Boolean @default(false)
+}
+
+model ComboPackage {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  description        String?
+  totalPrice         Int
+  serviceIds        Json
+  discountPercentage Int      @default(0)
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+}
+
+// ============ LEADS ============
+
+enum LeadSource {
+  ETAXWALA
+  UDYOMI
+  SAHAKAR
+  OTHER
+  WEBINAR
+  PARTNER
+}
+
+enum LeadStatus {
+  NEW
+  ASSIGNED
+  CONTACTED
+  FOLLOW_UP
+  CONVERTED
+  LOST
+  CANCELLED
+}
+
+model Lead {
+  id          Int        @id @default(autoincrement())
+  campaignId  Int?
+  source      LeadSource @default(ETAXWALA)
+  name        String
+  email       String
+  contact     String
+  service     String
+  state       String?
+  city        String?
+  leadNote    String?    @db.VarChar(500)
+  addedBy     Int?
+  leadType    Int        @default(0)
+  isCustomer  Boolean    @default(false)
+  isPayment   Boolean    @default(false)
+  companyId   String     @default("etaxwala")
+  leadScore   Int?
+  quotedPrice Decimal?   @db.Decimal(12, 2)
+  status      LeadStatus @default(NEW)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  followups   LeadFollowup[]
+  remarks     LeadRemark[]
+  calls       CallHistory[]
+
+  @@index([source])
+  @@index([status])
+}
+
+model LeadFollowup {
+  id           Int      @id @default(autoincrement())
+  leadId       Int
+  lead         Lead     @relation(fields: [leadId], references: [id])
+  staffId      Int?
+  followupDate DateTime
+  followupNote String?
+  callDuration Int?
+  createdAt    DateTime @default(now())
+}
+
+model LeadRemark {
+  id        Int      @id @default(autoincrement())
+  leadId    Int
+  lead      Lead     @relation(fields: [leadId], references: [id])
+  staffId   Int?
+  remark    String   @db.Text
+  createdAt DateTime @default(now())
+}
+
+// ============ APPOINTMENTS ============
+
+model Appointment {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String
+  mobile        String
+  city          String?
+  message       String?  @db.VarChar(500)
+  amount        Int?     @default(0)
+  isComplete    Boolean  @default(false)
+  paymentStatus Int      @default(0)
+  apDate        String?
+  apTime        String?
+  apMode        String?
+  isOnline      Boolean  @default(false)
+  conductBy     String?
+  addedBy       String?
+  staffId       Int?
+  staff         User?    @relation(fields: [staffId], references: [id])
+  date          DateTime @default(now())
+
+  @@index([date])
+}
+
+// ============ TASKS ============
+
+enum TaskStatus {
+  NOT_STARTED
+  WIP
+  PENDING_CLIENT
+  INVOICED
+  PAYMENT_PENDING
+  COMPLETED
+  RETURN_BACK
+  CANCELLED
+  FEES_PENDING
+  ON_HOLD
+}
+
+model OperationTask {
+  id          Int        @id @default(autoincrement())
+  assignedBy  Int
+  assigner    User       @relation("TaskAssigner", fields: [assignedBy], references: [id])
+  assignedTo  Int
+  assignee    User       @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  customerId  Int?
+  leadId      Int?
+  serviceId   Int?
+  taskName    String
+  companyName String?
+  clientName  String?
+  mobile      String?
+  status      TaskStatus @default(NOT_STARTED)
+  dueDate     DateTime?
+  priority    String    @default("normal")
+  notes       String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([assignedTo])
+  @@index([status])
+}
+
+// ============ CHAT ============
+
+model ChatMessage {
+  id           Int      @id @default(autoincrement())
+  customerId    Int?
+  customer      Customer? @relation(fields: [customerId], references: [id])
+  staffId       Int?
+  staff         User?    @relation(fields: [staffId], references: [id])
+  sender        String
+  message       String   @db.Text
+  attachmentUrl String?
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([customerId])
+}
+
+// ============ CALLS ============
+
+model CallHistory {
+  id           Int      @id @default(autoincrement())
+  leadId       Int?
+  lead         Lead?    @relation(fields: [leadId], references: [id])
+  contact      String
+  callType     String
+  duration     Int
+  callDate     DateTime
+  staffId      Int?
+  staff        User?    @relation(fields: [staffId], references: [id])
+  source       String?
+  recordingUrl String?
+
+  @@index([callDate])
+  @@index([staffId])
+}
+
+// ============ QUOTATIONS ============
+
+model Quotation {
+  id              Int      @id @default(autoincrement())
+  quotationNo     String   @unique
+  customerId      Int?
+  leadId          Int?
+  staffId         Int
+  staff           User     @relation(fields: [staffId], references: [id])
+  totalAmount     Decimal  @db.Decimal(12, 2)
+  overallDiscount Int      @default(0)
+  finalAmount     Decimal  @db.Decimal(12, 2)
+  status          String   @default("draft")
+  notes           String?
+  pdfUrl          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============ ORDERS ============
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  customerId    Int
+  customer      Customer @relation(fields: [customerId], references: [id])
+  serviceId     Int
+  service       Service  @relation(fields: [serviceId], references: [id])
+  amount        Decimal  @db.Decimal(12, 2)
+  paymentStatus String   @default("pending")
+  paymentId     String?
+  orderId       String?
+  emiPlan       Boolean  @default(false)
+  status        String   @default("active")
+  createdAt     DateTime @default(now())
+}
+
+model Coupon {
+  id            Int      @id @default(autoincrement())
+  code          String   @unique
+  discountType  String
+  discountValue Decimal
+  maxUses       Int?
+  usedCount     Int      @default(0)
+  isActive      Boolean  @default(true)
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+}
+
+// ============ CONTENT ============
+
+model Blog {
+  id              Int      @id @default(autoincrement())
+  title           String
+  slug            String   @unique
+  excerpt         String?  @db.Text
+  content         String   @db.Text
+  featuredImage   String?
+  category        String?
+  tags            Json?
+  authorName      String?
+  status          String   @default("published")
+  views           Int      @default(0)
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Ad {
+  id         Int      @id @default(autoincrement())
+  title      String
+  imageUrl   String
+  targetUrl  String?
+  position   String?
+  isActive   Boolean  @default(true)
+  startsAt   DateTime?
+  endsAt     DateTime?
+  createdAt  DateTime @default(now())
+}
+
+model Webinar {
+  id             Int      @id @default(autoincrement())
+  title          String
+  description    String?  @db.Text
+  date           DateTime
+  duration       Int?
+  meetingUrl     String?
+  isLive         Boolean  @default(false)
+  recordingUrl   String?
+  thumbnailUrl   String?
+  registrantCount Int     @default(0)
+  createdAt      DateTime @default(now())
+}
+
+// ============ FRANCHISE ============
+
+model FranchisePartner {
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  contact        String
+  city           String?
+  state          String?
+  companyName    String?
+  partnerCode    String   @unique
+  commissionRate Int      @default(0)
+  status         String   @default("active")
+  joinedAt       DateTime @default(now())
+}
+
+// ============ DESKTRACK ============
+
+model DesktopUser {
+  id            Int     @id @default(autoincrement())
+  userId        Int     @unique
+  user          User    @relation(fields: [userId], references: [id])
+  idleTime      Int     @default(5)
+  screenshotTime Int    @default(5)
+}
+
+model BlockedWebsite {
+  id        Int      @id @default(autoincrement())
+  url       String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// ============ LOCATIONS ============
+
+model Location {
+  id           Int      @id @default(autoincrement())
+  name         String
+  address      String
+  city         String
+  state        String
+  pincode      String?
+  phone        String?
+  email        String?
+  isHeadOffice Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+// ============ NOTIFICATIONS ============
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
+
+// ============ SYSTEM ============
+
+model OTP {
+  id        Int      @id @default(autoincrement())
+  email     String
+  otp       String
+  type      String
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

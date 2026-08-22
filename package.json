@@ -1,0 +1,24 @@
+{
+  "name": "etaxwala-v2",
+  "version": "2.0.0",
+  "private": true,
+  "description": "ETaxwala 2.0 - Complete rebuild with React + Node + PostgreSQL",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "dev:web": "pnpm --filter @etaxwala/web dev",
+    "dev:api": "pnpm --filter @etaxwala/api dev",
+    "build:web": "pnpm --filter @etaxwala/web build",
+    "build:api": "pnpm --filter @etaxwala/api build"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
