@@ -1,5 +1,3 @@
-// ETaxwala 2.0 — Prisma Schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,569 +7,857 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============ AUTH & USERS ============
+// ─── NEW MODELS for ETaxwala 2.0 CRM ─────────────────────────────────────────
 
-enum RoleType {
-  SUPER_ADMIN
-  ADMIN
-  SALES_MANAGER
-  OPERATIONS_MANAGER
-  FRANCHISE_MANAGER
-  SALES_EMPLOYEE
-  OPERATIONS_EMPLOYEE
-  FRANCHISE_EMPLOYEE
-  OPERATIONS_ASSISTANT
-  CONSULTATION
-  MARKETING_MANAGER
-  HR
-  WEBSITE_MANAGER
-  SALES_ASSISTANT
-  MARKETING_EMPLOYEE
-  STAFF
+/// Staff user accounts — authentication table for all 15 roles
+model staff_users {
+  id              Int       @id @default(autoincrement())
+  name            String    @db.VarChar(100)
+  email           String    @unique @db.VarChar(150)
+  password_hash   String    @db.VarChar(255)
+  phone           String?   @db.VarChar(20)
+  role_id         Int       // 1=super_admin … 15=website_manager
+  profile_photo   String?   @db.VarChar(500)
+  position        String?   @db.VarChar(100)
+  is_active       Boolean   @default(true)
+  last_login_at   DateTime?
+  created_by      Int?      // user_id of admin who created this account
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
 }
 
-model User {
-  id          Int       @id @default(autoincrement())
-  username    String
-  email       String    @unique
-  password    String
-  role        RoleType   @default(STAFF)
-  companyId   String    @default("etaxwala")
-  status      Int       @default(1)
-  isOnline    Boolean   @default(false)
-  lastLoginAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+/// Android call log entries synced from Flutter sales app
+model call_logs {
+  id               Int      @id @default(autoincrement())
+  user_id          Int      // staff_users.id
+  lead_id          Int?     // matched lead (nullable if number not in system)
+  phone_number     String   @db.VarChar(20)
+  direction        String   @db.VarChar(20)  // "outgoing" | "incoming"
+  status           String   @db.VarChar(20)  // "answered" | "missed" | "rejected"
+  duration_seconds Int      @default(0)
+  called_at        DateTime
+  synced_at        DateTime @default(now())
+  device_call_id   String?  @db.VarChar(100) // native Android call log ID for dedup
+  created_at       DateTime @default(now())
 
-  profile       Profile?
-  desktrackConfig DesktopUser?
-  assignedTasks OperationTask[] @relation("TaskAssignee")
-  createdTasks  OperationTask[] @relation("TaskAssigner")
-  calls         CallHistory[]
-  quotations    Quotation[]
-  appointments  Appointment[]
-  chatMessages  ChatMessage[]
-
-  @@index([role])
-  @@index([companyId])
+  @@unique([user_id, device_call_id]) // prevent duplicate syncs
+  @@index([user_id, called_at])
+  @@index([lead_id])
 }
 
-model Profile {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @unique
-  user        User     @relation(fields: [userId], references: [id])
-  profilePhoto String?
-  address     String?
-  dob         DateTime?
-  position    String?
-  about       String?  @db.VarChar(5000)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+/// Orders created from the Won Conversion Form (v2 CRM — not the legacy orders table)
+model crm_orders {
+  id                     Int      @id @default(autoincrement())
+  customer_id            Int
+  lead_id                Int
+  category_id            Int
+  service_id             Int
+  total_amount           Decimal  @db.Decimal(10, 2)
+  coupon_code            String?  @db.VarChar(50)
+  discount_amount        Decimal  @default(0) @db.Decimal(10, 2)
+  paid_amount            Decimal  @db.Decimal(10, 2)
+  unpaid_amount          Decimal  @db.Decimal(10, 2)
+  payment_mode           String   @db.VarChar(50)
+  next_due_date          DateTime? @db.Date
+  comment                String?
+  payment_screenshot_url String?  @db.VarChar(500)
+  sales_employee_id      Int
+  payment_status         String   @default("advance_paid") // advance_paid | fully_paid
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+
+  @@index([customer_id])
+  @@index([lead_id])
 }
 
-// ============ CLIENTS ============
 
-model Customer {
-  id           Int       @id @default(autoincrement())
-  leadId       Int?
-  name         String
-  business     String?
-  email        String    @unique
-  contact      String
-  password     String
-  service      String?
-  servicePrice Int       @default(0)
-  state        String?
-  city         String?
-  addedBy      Int?
-  companyId    String    @default("etaxwala")
-  isPayment    Boolean   @default(false)
-  isActive     Boolean   @default(true)
-  isApprove    Boolean   @default(false)
-  customerToken String  @unique
-  date         DateTime  @default(now())
-
-  documents    CustomerDocument[]
-  chats        ChatMessage[]
-  tickets      SupportTicket[]
-  workTimelines WorkTimeline[]
-  dues         CustomerDue[]
-  emis         CustomerEmi[]
-  orders       Order[]
-
-  @@index([email])
-  @@index([companyId])
+model ads {
+  id            Int      @id
+  ads_category  Int
+  ads_link      String?  @db.VarChar(250)
+  ads_thumbnail String   @db.VarChar(250)
+  is_active     Int      @default(0) @db.SmallInt
+  date          DateTime @default(now()) @db.Timestamp(6)
 }
 
-model CustomerDocument {
-  id           Int      @id @default(autoincrement())
-  customerId   Int
-  customer     Customer @relation(fields: [customerId], references: [id])
-  serviceId    Int?
-  documentName String
-  fileUrl      String
-  fileType     String?
-  fileSize     Int?
-  uploadedBy   String?
-  uploadedAt   DateTime @default(now())
-
-  @@index([customerId])
+model affiliates {
+  id            Decimal   @id @db.Decimal(20, 0)
+  name          String    @db.VarChar(255)
+  email         String    @db.VarChar(255)
+  mobile        String    @db.VarChar(255)
+  password      String    @db.VarChar(255)
+  referral_code String    @db.VarChar(255)
+  is_active     Int       @default(0)
+  created_at    DateTime? @db.Timestamp(6)
+  updated_at    DateTime? @db.Timestamp(6)
 }
 
-model WorkTimeline {
-  id         Int      @id @default(autoincrement())
-  customerId Int
-  customer   Customer @relation(fields: [customerId], references: [id])
-  serviceId  Int?
-  status     String
-  note       String?
-  staffName  String?
-  date       DateTime @default(now())
-
-  @@index([customerId])
+model appointments {
+  id             Int      @id
+  name           String   @db.VarChar(50)
+  email          String   @db.VarChar(50)
+  mobile         String   @db.VarChar(20)
+  city           String   @db.VarChar(50)
+  message        String   @db.VarChar(500)
+  order_id       String?  @db.VarChar(150)
+  payment_id     String?  @db.VarChar(150)
+  amount         Int?
+  is_complete    Int      @default(0)
+  payment_status Int      @default(0)
+  ap_date        String?  @db.VarChar(15)
+  ap_time        String?  @db.VarChar(15)
+  ap_mode        String?  @db.VarChar(25)
+  is_online      Int      @default(0)
+  conduct_by     String?  @db.VarChar(30)
+  added_by       String   @db.VarChar(50)
+  is_delete      Int      @default(0)
+  date           DateTime @default(now()) @db.Date
 }
 
-model CustomerDue {
-  id         Int      @id @default(autoincrement())
-  customerId Int
-  customer   Customer @relation(fields: [customerId], references: [id])
-  amount     Decimal  @db.Decimal(12, 2)
-  dueDate    DateTime?
-  status     String   @default("pending")
-  createdAt  DateTime @default(now())
+model blocked_websites {
+  id          Decimal   @id @db.Decimal(20, 0)
+  user_id     Int
+  website_url String    @db.VarChar(255)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
 }
 
-model CustomerEmi {
-  id         Int      @id @default(autoincrement())
-  customerId Int
-  customer   Customer @relation(fields: [customerId], references: [id])
-  amount     Decimal  @db.Decimal(12, 2)
-  emiDate    DateTime?
-  status     String   @default("pending")
-  paidDate   DateTime?
-  createdAt  DateTime @default(now())
+model blogs {
+  id               Int       @id
+  title            String    @db.VarChar(250)
+  meta_title       String?   @db.VarChar(500)
+  meta_description String?
+  meta_keywords    String?
+  focus_keyword    String?   @db.VarChar(500)
+  slug             String    @db.VarChar(250)
+  old_slug         String?   @db.VarChar(500)
+  category         String    @db.VarChar(100)
+  thumbnail        String    @db.VarChar(500)
+  thumbnail_alt    String?   @db.VarChar(255)
+  content          String?
+  faq_schema       String?
+  canonical_url    String?   @db.VarChar(500)
+  is_active        Int       @default(0)
+  date             DateTime  @default(now()) @db.Timestamp(6)
+  created_at       DateTime? @db.Timestamp(6)
+  updated_at       DateTime? @db.Timestamp(6)
 }
 
-model SupportTicket {
-  id          Int      @id @default(autoincrement())
-  customerId  Int
-  customer    Customer @relation(fields: [customerId], references: [id])
-  subject     String
-  description String   @db.Text
-  status      String   @default("open")
-  priority    String   @default("medium")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model ca_onboards {
+  id             Int      @id
+  name           String   @db.VarChar(255)
+  email          String   @db.VarChar(255)
+  contact        String   @db.VarChar(25)
+  city           String   @db.VarChar(255)
+  profession     String   @db.VarChar(255)
+  order_id       String?  @db.VarChar(255)
+  payment_id     String?  @db.VarChar(255)
+  signature      String?  @db.VarChar(255)
+  total_amount   Int
+  payment_status Int      @default(0)
+  payment_link   String?  @db.VarChar(255)
+  date           DateTime @default(now()) @db.Timestamp(6)
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
 }
 
-// ============ SERVICES ============
-
-model Category {
-  id         Int      @id @default(autoincrement())
-  name       String
-  nameMr     String?
-  description String?
-  icon       String?
-  companyId  String   @default("etaxwala")
-  services   Service[]
-  createdAt  DateTime @default(now())
-}
-
-model Service {
-  id                Int      @id @default(autoincrement())
-  categoryId        Int
-  category          Category @relation(fields: [categoryId], references: [id])
-  name              String
-  nameMr            String?
-  price             Int
-  partnerPercentage Int      @default(0)
-  description       String   @db.VarChar(2000)
-  inclusions        Json?
-  process           Json?
-  documentsRequired Json?
-  faqs              Json?
-  icon              String?
-  imageUrl          String?
-  url               String?
-  companyId         String   @default("etaxwala")
-  isFeatured        Boolean  @default(false)
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  orders  Order[]
-  docs    ServiceDoc[]
-  questions ServiceQuestion[]
-
-  @@index([categoryId])
-  @@index([companyId])
-}
-
-model ServiceDoc {
-  id          Int     @id @default(autoincrement())
-  serviceId   Int
-  service     Service @relation(fields: [serviceId], references: [id])
-  documentName String
-  isRequired  Boolean @default(true)
-  description String?
-}
-
-model ServiceQuestion {
-  id         Int     @id @default(autoincrement())
-  serviceId  Int
-  service    Service @relation(fields: [serviceId], references: [id])
-  question   String
-  type       String
-  options    Json?
-  isRequired Boolean @default(false)
-}
-
-model ComboPackage {
-  id                 Int      @id @default(autoincrement())
-  name               String
-  description        String?
-  totalPrice         Int
-  serviceIds        Json
-  discountPercentage Int      @default(0)
-  isActive           Boolean  @default(true)
-  createdAt          DateTime @default(now())
-}
-
-// ============ LEADS ============
-
-enum LeadSource {
-  ETAXWALA
-  UDYOMI
-  SAHAKAR
-  OTHER
-  WEBINAR
-  PARTNER
-}
-
-enum LeadStatus {
-  NEW
-  ASSIGNED
-  CONTACTED
-  FOLLOW_UP
-  CONVERTED
-  LOST
-  CANCELLED
-}
-
-model Lead {
-  id          Int        @id @default(autoincrement())
-  campaignId  Int?
-  source      LeadSource @default(ETAXWALA)
-  name        String
-  email       String
-  contact     String
-  service     String
-  state       String?
-  city        String?
-  leadNote    String?    @db.VarChar(500)
-  addedBy     Int?
-  leadType    Int        @default(0)
-  isCustomer  Boolean    @default(false)
-  isPayment   Boolean    @default(false)
-  companyId   String     @default("etaxwala")
-  leadScore   Int?
-  quotedPrice Decimal?   @db.Decimal(12, 2)
-  status      LeadStatus @default(NEW)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  followups   LeadFollowup[]
-  remarks     LeadRemark[]
-  calls       CallHistory[]
-
-  @@index([source])
-  @@index([status])
-}
-
-model LeadFollowup {
-  id           Int      @id @default(autoincrement())
-  leadId       Int
-  lead         Lead     @relation(fields: [leadId], references: [id])
-  staffId      Int?
-  followupDate DateTime
-  followupNote String?
-  callDuration Int?
-  createdAt    DateTime @default(now())
-}
-
-model LeadRemark {
-  id        Int      @id @default(autoincrement())
-  leadId    Int
-  lead      Lead     @relation(fields: [leadId], references: [id])
-  staffId   Int?
-  remark    String   @db.Text
-  createdAt DateTime @default(now())
-}
-
-// ============ APPOINTMENTS ============
-
-model Appointment {
-  id            Int      @id @default(autoincrement())
-  name          String
-  email         String
-  mobile        String
-  city          String?
-  message       String?  @db.VarChar(500)
-  amount        Int?     @default(0)
-  isComplete    Boolean  @default(false)
-  paymentStatus Int      @default(0)
-  apDate        String?
-  apTime        String?
-  apMode        String?
-  isOnline      Boolean  @default(false)
-  conductBy     String?
-  addedBy       String?
-  staffId       Int?
-  staff         User?    @relation(fields: [staffId], references: [id])
-  date          DateTime @default(now())
-
-  @@index([date])
-}
-
-// ============ TASKS ============
-
-enum TaskStatus {
-  NOT_STARTED
-  WIP
-  PENDING_CLIENT
-  INVOICED
-  PAYMENT_PENDING
-  COMPLETED
-  RETURN_BACK
-  CANCELLED
-  FEES_PENDING
-  ON_HOLD
-}
-
-model OperationTask {
-  id          Int        @id @default(autoincrement())
-  assignedBy  Int
-  assigner    User       @relation("TaskAssigner", fields: [assignedBy], references: [id])
-  assignedTo  Int
-  assignee    User       @relation("TaskAssignee", fields: [assignedTo], references: [id])
-  customerId  Int?
-  leadId      Int?
-  serviceId   Int?
-  taskName    String
-  companyName String?
-  clientName  String?
-  mobile      String?
-  status      TaskStatus @default(NOT_STARTED)
-  dueDate     DateTime?
-  priority    String    @default("normal")
-  notes       String?   @db.Text
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([assignedTo])
-  @@index([status])
-}
-
-// ============ CHAT ============
-
-model ChatMessage {
-  id           Int      @id @default(autoincrement())
-  customerId    Int?
-  customer      Customer? @relation(fields: [customerId], references: [id])
-  staffId       Int?
-  staff         User?    @relation(fields: [staffId], references: [id])
-  sender        String
-  message       String   @db.Text
-  attachmentUrl String?
-  isRead        Boolean  @default(false)
-  createdAt     DateTime @default(now())
-
-  @@index([customerId])
-}
-
-// ============ CALLS ============
-
-model CallHistory {
-  id           Int      @id @default(autoincrement())
-  leadId       Int?
-  lead         Lead?    @relation(fields: [leadId], references: [id])
-  contact      String
-  callType     String
-  duration     Int
-  callDate     DateTime
-  staffId      Int?
-  staff        User?    @relation(fields: [staffId], references: [id])
-  source       String?
-  recordingUrl String?
-
-  @@index([callDate])
-  @@index([staffId])
-}
-
-// ============ QUOTATIONS ============
-
-model Quotation {
-  id              Int      @id @default(autoincrement())
-  quotationNo     String   @unique
-  customerId      Int?
-  leadId          Int?
-  staffId         Int
-  staff           User     @relation(fields: [staffId], references: [id])
-  totalAmount     Decimal  @db.Decimal(12, 2)
-  overallDiscount Int      @default(0)
-  finalAmount     Decimal  @db.Decimal(12, 2)
-  status          String   @default("draft")
-  notes           String?
-  pdfUrl          String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-// ============ ORDERS ============
-
-model Order {
-  id            Int      @id @default(autoincrement())
-  customerId    Int
-  customer      Customer @relation(fields: [customerId], references: [id])
-  serviceId     Int
-  service       Service  @relation(fields: [serviceId], references: [id])
-  amount        Decimal  @db.Decimal(12, 2)
-  paymentStatus String   @default("pending")
-  paymentId     String?
-  orderId       String?
-  emiPlan       Boolean  @default(false)
-  status        String   @default("active")
-  createdAt     DateTime @default(now())
-}
-
-model Coupon {
-  id            Int      @id @default(autoincrement())
-  code          String   @unique
-  discountType  String
-  discountValue Decimal
-  maxUses       Int?
-  usedCount     Int      @default(0)
-  isActive      Boolean  @default(true)
-  expiresAt     DateTime?
-  createdAt     DateTime @default(now())
-}
-
-// ============ CONTENT ============
-
-model Blog {
-  id              Int      @id @default(autoincrement())
-  title           String
-  slug            String   @unique
-  excerpt         String?  @db.Text
-  content         String   @db.Text
-  featuredImage   String?
-  category        String?
-  tags            Json?
-  authorName      String?
-  status          String   @default("published")
-  views           Int      @default(0)
-  metaTitle       String?
-  metaDescription String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-model Ad {
-  id         Int      @id @default(autoincrement())
-  title      String
-  imageUrl   String
-  targetUrl  String?
-  position   String?
-  isActive   Boolean  @default(true)
-  startsAt   DateTime?
-  endsAt     DateTime?
-  createdAt  DateTime @default(now())
-}
-
-model Webinar {
-  id             Int      @id @default(autoincrement())
-  title          String
-  description    String?  @db.Text
-  date           DateTime
+model call_history {
+  id             BigInt    @id
+  lead_id        Int
+  user_id        Decimal   @db.Decimal(20, 0)
+  contact        String    @db.VarChar(20)
+  lead_source    String?   @db.VarChar(50)
+  name           String?   @db.VarChar(255)
+  call_type      String    @db.VarChar(20)
   duration       Int?
-  meetingUrl     String?
-  isLive         Boolean  @default(false)
-  recordingUrl   String?
-  thumbnailUrl   String?
-  registrantCount Int     @default(0)
-  createdAt      DateTime @default(now())
+  call_timestamp DateTime  @db.Timestamp(6)
+  call_date      DateTime  @db.Date
+  created_at     DateTime? @default(now()) @db.Timestamp(6)
+  updated_at     DateTime? @default(now()) @db.Timestamp(6)
 }
 
-// ============ FRANCHISE ============
-
-model FranchisePartner {
-  id             Int      @id @default(autoincrement())
-  name           String
-  email          String   @unique
-  contact        String
-  city           String?
-  state          String?
-  companyName    String?
-  partnerCode    String   @unique
-  commissionRate Int      @default(0)
-  status         String   @default("active")
-  joinedAt       DateTime @default(now())
+model call_remarks {
+  call_id              Int       @id
+  lead_id              Int
+  lead_status          Int
+  user_id              Int
+  call_status          Int
+  call_remark          String    @db.VarChar(250)
+  call_followup_date   DateTime? @db.Date
+  call_followup_remark String?   @db.VarChar(250)
+  call_date            DateTime  @default(now()) @db.Date
 }
 
-// ============ DESKTRACK ============
-
-model DesktopUser {
-  id            Int     @id @default(autoincrement())
-  userId        Int     @unique
-  user          User    @relation(fields: [userId], references: [id])
-  idleTime      Int     @default(5)
-  screenshotTime Int    @default(5)
+model campaign_leads {
+  id          Int       @id
+  campaign_id Int
+  lead_id     Int
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
 }
 
-model BlockedWebsite {
-  id        Int      @id @default(autoincrement())
-  url       String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+model campaigns {
+  id            Int       @id
+  campaign_name String    @db.VarChar(255)
+  platform      String
+  budget        Decimal?  @default(0.00) @db.Decimal(12, 2)
+  spent_amount  Decimal?  @default(0.00) @db.Decimal(12, 2)
+  start_date    DateTime? @db.Date
+  end_date      DateTime? @db.Date
+  status        String?   @default("draft")
+  landing_url   String?
+  utm_source    String?   @db.VarChar(100)
+  utm_medium    String?   @db.VarChar(100)
+  utm_campaign  String?   @db.VarChar(100)
+  total_leads   Int?      @default(0)
+  created_by    Int?
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
 }
 
-// ============ LOCATIONS ============
-
-model Location {
-  id           Int      @id @default(autoincrement())
-  name         String
-  address      String
-  city         String
-  state        String
-  pincode      String?
-  phone        String?
-  email        String?
-  isHeadOffice Boolean  @default(false)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
+model cart {
+  cart_id       Int      @id
+  cust_id       Int
+  cat_id        Int
+  service_id    Int
+  service_price String   @db.VarChar(11)
+  is_buy        Int      @default(0) @db.SmallInt
+  date          DateTime @default(now()) @db.Timestamp(6)
 }
 
-// ============ NOTIFICATIONS ============
-
-model Notification {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  type      String
-  title     String
-  message   String
-  isRead    Boolean  @default(false)
-  link      String?
-  createdAt DateTime @default(now())
+model categories {
+  category_id   Int    @id
+  company_id    String @db.VarChar(11)
+  category_name String @db.VarChar(100)
+  added_by      Int
+  date          String @db.VarChar(50)
 }
 
-// ============ SYSTEM ============
+model combo_packages {
+  cp_id       Int       @id
+  service_id  String    @db.VarChar(255)
+  cp_title    Int
+  cp_type     Int
+  cp_discount Int
+  company_id  String    @db.VarChar(20)
+  added_by    Int
+  cp_date     DateTime? @default(now()) @db.Timestamp(6)
+}
 
-model OTP {
-  id        Int      @id @default(autoincrement())
-  email     String
-  otp       String
-  type      String
-  expiresAt DateTime
-  isUsed    Boolean  @default(false)
-  createdAt DateTime @default(now())
+model comments {
+  id         Decimal   @id @db.Decimal(20, 0)
+  blog_id    Decimal   @db.Decimal(20, 0)
+  user_id    Decimal?  @db.Decimal(20, 0)
+  name       String?   @db.VarChar(255)
+  email      String?   @db.VarChar(255)
+  mobile     String    @db.VarChar(20)
+  parent_id  Decimal?  @db.Decimal(20, 0)
+  comment    String
+  approved   Int       @default(0) @db.SmallInt
+  created_at DateTime? @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+}
+
+model contact_us {
+  id         Int       @id
+  name       String    @db.VarChar(100)
+  number     String    @db.VarChar(15)
+  email      String    @db.VarChar(100)
+  city       String?   @db.VarChar(100)
+  state      String?   @db.VarChar(100)
+  subject    String?   @db.VarChar(200)
+  message    String?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model contacts {
+  id         Int       @id
+  name       String    @db.VarChar(100)
+  email      String    @db.VarChar(150)
+  phone      String    @db.VarChar(20)
+  city       String    @db.VarChar(100)
+  state      String    @db.VarChar(100)
+  subject    String    @db.VarChar(200)
+  message    String
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model core_services {
+  id      Int     @id
+  name    String  @db.VarChar(100)
+  image   String? @db.VarChar(500)
+  content String  @db.VarChar(500)
+}
+
+model coupons {
+  coupon_id        Int      @id
+  coupon_type      Int
+  coupon_name      String   @db.VarChar(30)
+  coupon_discount  Int
+  coupon_validity  String   @db.VarChar(15)
+  coupon_uses      Int
+  coupon_remaining Int
+  is_active        Int      @default(0)
+  date             DateTime @default(now()) @db.Timestamp(6)
+}
+
+model custom_packages {
+  id           Int      @id
+  service_ids  String   @db.VarChar(100)
+  cp_id        Int
+  customer_id  Int
+  price        Int
+  package_name String   @db.VarChar(100)
+  added_by     Int
+  date         DateTime @default(now()) @db.Timestamp(6)
+}
+
+model customer_affiliate_referrals {
+  id           Decimal   @id @db.Decimal(20, 0)
+  affiliate_id Decimal   @db.Decimal(20, 0)
+  customer_id  Int
+  created_at   DateTime? @db.Timestamp(6)
+  updated_at   DateTime? @db.Timestamp(6)
+}
+
+model customer_chatting {
+  chat_id    Int      @id
+  service_id Int
+  chat_from  Int
+  chat_to    Int
+  chat_msg   String?  @db.VarChar(1000)
+  date       DateTime @default(now()) @db.Timestamp(6)
+}
+
+model customer_documents {
+  cd_id      Int      @id
+  service_id Int?
+  cd_from    String   @db.VarChar(10)
+  cd_to      Int
+  cd_name    String   @db.VarChar(100)
+  cd_doc     String   @db.VarChar(100)
+  date       DateTime @default(now()) @db.Timestamp(6)
+}
+
+model customer_dues {
+  cd_id              Int      @id
+  emi_id             Int
+  customer_id        Int
+  paid_amount        Int
+  unpaid_amount      Int
+  payment_screenshot String   @db.VarChar(250)
+  added_by           Int
+  is_approve         Int      @default(0)
+  date               DateTime @default(now()) @db.Timestamp(6)
+}
+
+model customer_emi {
+  emi_id              Int       @id
+  customer_id         Int
+  order_id            Int
+  emi_type            Int
+  emi_total_amount    Int
+  emi_paid_amount     Int
+  emi_unpaid_amount   Int
+  emi_due_date        DateTime? @db.Date
+  second_emi          Int?
+  second_emi_due_date DateTime? @db.Date
+  emi_comment         String    @db.VarChar(2400)
+  payment_screenshot  String?   @db.VarChar(250)
+  date                DateTime  @default(now()) @db.Timestamp(6)
+}
+
+model customer_inquiries {
+  inq_id       Int      @id
+  cust_id      Int
+  service_id   Int
+  cust_query   String   @db.VarChar(250)
+  inquiry_from Int      @default(1)
+  inq_date     DateTime @default(now()) @db.Timestamp(6)
+}
+
+model customer_notifications {
+  id         Int       @id
+  cust_id    Int
+  title      String?   @db.VarChar(255)
+  message    String?
+  is_read    Int?      @default(0) @db.SmallInt
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model customer_payment_links {
+  link_id     Int     @id
+  emi_id      Int
+  customer_id Int
+  package_id  Int
+  link_url    String  @db.VarChar(250)
+  order_id    String? @db.VarChar(250)
+  payment_id  String? @db.VarChar(250)
+  amount      Int?
+  is_payment  Int     @default(0)
+}
+
+model customer_tickets {
+  ticket_id     Int      @id
+  customer_id   Int
+  service_id    Int
+  ticket_msg    String   @db.VarChar(250)
+  ticket_answer String?  @db.VarChar(250)
+  is_open       Int      @default(0)
+  date          DateTime @default(now()) @db.Timestamp(6)
+}
+
+model customer_work_timeline {
+  id            Int       @id
+  cust_id       Int
+  service_id    Int
+  task_id       Int
+  work          String    @db.VarChar(500)
+  work_hour     Int?
+  work_minute   Int?
+  work_seconds  Int       @default(0)
+  is_running    Int?      @default(0) @db.SmallInt
+  running_start DateTime? @db.Timestamp(6)
+  status        Int
+  added_by      Int
+  date          String    @db.VarChar(20)
+  time          String    @db.VarChar(20)
+  start_time    DateTime? @db.Time(6)
+  end_time      DateTime? @db.Time(6)
+}
+
+model customers {
+  id             Int      @id
+  lead_id        Int
+  name           String   @db.VarChar(100)
+  business       String   @db.VarChar(100)
+  email          String   @db.VarChar(100)
+  contact        String   @db.VarChar(20)
+  password       String   @db.VarChar(20)
+  service        String   @db.VarChar(120)
+  service_price  Int
+  state          String   @db.VarChar(100)
+  city           String   @db.VarChar(100)
+  added_by       Int
+  company_id     String   @db.VarChar(11)
+  is_payment     Int      @default(0) @db.SmallInt
+  is_active      Int      @default(1)
+  is_approve     Int      @default(0)
+  is_partner     Int      @default(1)
+  customer_token String   @db.VarChar(500)
+  date           DateTime @default(now()) @db.Timestamp(6)
+}
+
+model desktop_users {
+  id              Int    @id
+  username        String @db.VarChar(100)
+  user_id         Int
+  idle_time       Int
+  screenshot_time Int
+}
+
+model event_logs {
+  id          Int       @id
+  event_name  String?   @db.VarChar(255)
+  executed_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model internal_chat_groups {
+  id         Int      @id
+  group_name String   @db.VarChar(100)
+  members    String   @db.VarChar(1000)
+  created_by Int
+  date       DateTime @default(now()) @db.Timestamp(6)
+}
+
+model internal_communications {
+  id         Int      @id
+  from_id    Int
+  to_id      Int
+  message    String   @db.VarChar(500)
+  date       DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+}
+
+model jobs {
+  id               Int      @id
+  title            String   @db.VarChar(100)
+  location         String   @db.VarChar(100)
+  type             String   @db.VarChar(50)
+  description      String
+  responsibilities String
+  qualifications   String
+  posted_date      String   @db.VarChar(50)
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+}
+
+model lead_assign {
+  id          Int      @id
+  lead_id     Int
+  assign_to   Int
+  lead_status Int      @default(0)
+  lead_type   Int
+  assign_date DateTime @default(now()) @db.Timestamp(6)
+  lead_source String?  @db.VarChar(50)
+}
+
+model lead_followups {
+  id              Int      @id
+  user_id         Int
+  lead_id         Int
+  followup_date   DateTime @db.Date
+  followup_time   String?  @db.VarChar(20)
+  followup_remark String   @db.VarChar(500)
+  is_called       Int      @default(0) @db.SmallInt
+  date            DateTime @default(now()) @db.Timestamp(6)
+  lead_source     String?  @default("etaxwala") @db.VarChar(50)
+}
+
+model lead_notifications {
+  id         Int       @id
+  lead_id    Int
+  remark     String?
+  added_by   String?   @db.VarChar(255)
+  is_read    Int?      @default(0) @db.SmallInt
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model lead_question_ans {
+  id          Int       @id
+  lead_id     Int
+  question_id Int?
+  company_id  String?   @db.VarChar(50)
+  question    String
+  answer      String?
+  service_id  Int
+  added_by    Int
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model lead_remarks {
+  id          Int      @id
+  user_id     Int
+  lead_id     Int
+  lead_status Int
+  lead_remark String   @db.VarChar(5000)
+  date        DateTime @default(now()) @db.Timestamp(6)
+  lead_source String?  @default("etaxwala") @db.VarChar(50)
+}
+
+model leads {
+  id           Int      @id
+  campaign_id  Int?
+  source       String?  @db.VarChar(100)
+  name         String   @db.VarChar(100)
+  email        String   @db.VarChar(100)
+  contact      String   @db.VarChar(20)
+  service      String   @db.VarChar(250)
+  state        String   @db.VarChar(100)
+  city         String   @db.VarChar(250)
+  lead_note    String?  @db.VarChar(500)
+  added_by     Int
+  is_assign    Int      @default(0)
+  lead_type    Int
+  is_customer  Int      @default(0)
+  is_payment   Int      @default(0) @db.SmallInt
+  company_id   String   @db.VarChar(11)
+  date         DateTime @default(now()) @db.Date
+  updated_at   DateTime @default(now()) @db.Timestamp(6)
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  lead_score   Int?
+  quoted_price Decimal? @db.Decimal(12, 2)
+}
+
+model leads_sahakarsamridhi {
+  id           Int      @id
+  name         String   @db.VarChar(100)
+  email        String   @db.VarChar(50)
+  contact      String   @db.VarChar(20)
+  service      String   @db.VarChar(100)
+  state        String   @db.VarChar(100)
+  city         String   @db.VarChar(50)
+  lead_note    String?  @db.VarChar(500)
+  added_by     Int
+  is_assign    Int      @default(0)
+  lead_type    Int
+  is_customer  Int      @default(0)
+  is_payment   Int      @default(0) @db.SmallInt
+  company_id   String   @db.VarChar(11)
+  date         DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @default(now()) @db.Timestamp(6)
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  lead_score   Int?     @default(0)
+  quoted_price Decimal? @db.Decimal(12, 2)
+}
+
+model leads_udyamikisan {
+  id           Int      @id
+  name         String   @db.VarChar(100)
+  email        String   @db.VarChar(50)
+  contact      String   @db.VarChar(20)
+  service      String   @db.VarChar(100)
+  state        String   @db.VarChar(100)
+  city         String   @db.VarChar(50)
+  lead_note    String?  @db.VarChar(500)
+  added_by     Int
+  is_assign    Int      @default(0)
+  lead_type    Int
+  is_customer  Int      @default(0)
+  is_payment   Int      @default(0) @db.SmallInt
+  company_id   String   @db.VarChar(11)
+  date         DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @default(now()) @db.Timestamp(6)
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  lead_score   Int?
+  quoted_price Decimal? @db.Decimal(12, 2)
+}
+
+model meetings {
+  id            Int      @id
+  meeting_name  String   @db.VarChar(100)
+  customer_name String   @db.VarChar(250)
+  contact       String   @db.VarChar(30)
+  email         String   @db.VarChar(100)
+  city          String   @db.VarChar(50)
+  hostedBy      String   @db.VarChar(50)
+  date          DateTime @db.Date
+  time          DateTime @default(dbgenerated("CURRENT_TIMESTAMP(6)")) @db.Timestamp(6)
+  status        Int      @default(0)
+}
+
+model notifications {
+  id           Int       @id
+  user_id      Int
+  type         String?   @db.VarChar(50)
+  title        String?   @db.VarChar(255)
+  message      String?
+  related_id   Int?
+  redirect_url String?   @db.VarChar(100)
+  is_read      Int?      @default(0) @db.SmallInt
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  updated_at   DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model operation_tasks {
+  task_id              Int      @id
+  cust_id              Int
+  service_id           Int
+  task_name            String   @db.VarChar(250)
+  original_task_status Int      @default(1)
+  is_assign            Int      @default(0)
+  is_return            Int      @default(0)
+  added_by             Int
+  is_payment           Int      @default(0)
+  assign_date          DateTime @default(now()) @db.Timestamp(6)
+  updated_at           DateTime @default(now()) @db.Timestamp(6)
+  created_at           DateTime @default(now()) @db.Timestamp(6)
+  sub_customer_name    String?  @db.VarChar(255)
+  order_id             Int?
+}
+
+model orders {
+  id                Int      @id
+  customer_id       String   @db.VarChar(250)
+  package_id        String   @db.VarChar(1000)
+  order_id          String?  @db.VarChar(250)
+  payment_id        String?  @db.VarChar(250)
+  company_name      String   @default("NA") @db.VarChar(255)
+  total_amount      Int
+  payment_status    Int      @default(0)
+  order_date        DateTime @default(now()) @db.Timestamp(6)
+  sub_customer_name String?  @db.VarChar(255)
+}
+
+model other_leads {
+  id         Int      @id
+  lead_id    Int
+  date       DateTime @default(now()) @db.Timestamp(6)
+  service_id Int
+}
+
+model otps {
+  id         Int      @id
+  email      String   @db.VarChar(100)
+  otp        String   @db.VarChar(20)
+  expires_at DateTime @db.Timestamp(6)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+}
+
+model partner_refs {
+  id         BigInt    @id
+  user_id    BigInt
+  code       String    @db.VarChar(20)
+  url        String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+}
+
+model password_resets {
+  id         Int       @id
+  email      String    @db.VarChar(250)
+  token      String    @db.VarChar(300)
+  created_at DateTime? @db.Timestamp(6)
+  expires_at DateTime? @db.Timestamp(6)
+}
+
+model profile {
+  id            Int       @id
+  user_id       Int
+  profile_photo String?   @db.VarChar(250)
+  address       String?   @db.VarChar(250)
+  dob           DateTime? @db.Date
+  position      String?   @db.VarChar(50)
+  about         String?   @db.VarChar(5000)
+  created_at    DateTime  @default(now()) @db.Timestamp(6)
+  updated_at    DateTime  @default(now()) @db.Timestamp(6)
+}
+
+model quotations {
+  id         BigInt   @id
+  lead_id    BigInt
+  created_by String   @db.VarChar(50)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  note       String?
+}
+
+model sahakar_samriddhi_categories {
+  category_id   Int      @id
+  company_id    String   @db.VarChar(50)
+  category_name String   @db.VarChar(100)
+  added_by      Int
+  date          DateTime @default(now()) @db.Timestamp(6)
+}
+
+model sahakar_samridhhi_services {
+  service_id         Int      @id
+  company_id         String   @db.VarChar(50)
+  category_id        Int
+  service_name       String   @db.VarChar(100)
+  service_price      Int
+  partner_percentage Int      @default(0)
+  description        String   @db.VarChar(2000)
+  added_by           Int
+  date               DateTime @default(now()) @db.Timestamp(6)
+}
+
+model sales {
+  id                  BigInt   @id
+  quotation_id        BigInt
+  service_id          Int?
+  qty                 Int
+  price               Decimal  @db.Decimal(10, 0)
+  dis                 Decimal  @db.Decimal(10, 0)
+  overall_discount    Int      @default(0)
+  amount              Decimal  @db.Decimal(10, 0)
+  created_at          DateTime @default(now()) @db.Timestamp(6)
+  updated_at          DateTime @default(now()) @db.Timestamp(6)
+  service_name        String?  @db.VarChar(255)
+  service_description String?
+}
+
+model sales_user_locations {
+  id            Int       @id
+  user_id       Int
+  latitude      String    @db.VarChar(50)
+  longitude     String    @db.VarChar(50)
+  accuracy      String?   @db.VarChar(20)
+  speed         String?   @db.VarChar(20)
+  battery_level String?   @db.VarChar(10)
+  mode          String?   @default("foreground")
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model service_docs {
+  sd_id      BigInt   @id
+  s_id       Int
+  company_id String   @db.VarChar(10)
+  sd_name    String   @db.VarChar(10000)
+  added_by   Int
+  date       DateTime @default(now()) @db.Timestamp(6)
+}
+
+model service_questions {
+  id         Int       @id
+  service_id Int
+  question   String
+  added_by   Int
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model services {
+  service_id         Int      @id
+  company_id         String   @db.VarChar(11)
+  category_id        Int
+  service_name       String   @db.VarChar(100)
+  service_price      Int
+  partner_percentage Int      @default(0)
+  description        String   @db.VarChar(2000)
+  added_by           Int
+  date               DateTime @default(now()) @db.Timestamp(6)
+  url                String?  @db.VarChar(255)
+}
+
+model sessions {
+  id            String   @id @db.VarChar(255)
+  user_id       Decimal? @db.Decimal(20, 0)
+  ip_address    String?  @db.VarChar(45)
+  user_agent    String?
+  payload       String
+  last_activity Int
+}
+
+model social_accounts {
+  id           Int       @id
+  user_id      Int?
+  platform     String?   @db.VarChar(50)
+  account_id   String?   @db.VarChar(255)
+  access_token String?
+  expires_at   DateTime? @db.Timestamp(6)
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  updated_at   DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model social_platforms {
+  id               Int       @id
+  post_id          Int
+  platform         String?   @db.VarChar(50)
+  status           String?   @default("pending") @db.VarChar(20)
+  platform_post_id String?   @db.VarChar(255)
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model social_posts {
+  id            Int       @id
+  campaign_id   Int?
+  platform      String
+  post_type     String?   @default("image")
+  caption       String?
+  media_url     String?
+  scheduled_at  DateTime? @db.Timestamp(6)
+  published_at  DateTime? @db.Timestamp(6)
+  status        String?   @default("draft")
+  response_data String?
+  created_by    Int?
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model states {
+  state_id   Int    @id
+  state_name String @db.VarChar(30)
+}
+
+model system_logs {
+  id              Decimal   @id @db.Decimal(20, 0)
+  user_id         Int
+  event_type      String
+  screenshot_path Bytes?
+  event_time      DateTime? @db.Timestamp(6)
+  created_at      DateTime? @db.Timestamp(6)
+  updated_at      DateTime? @db.Timestamp(6)
 }

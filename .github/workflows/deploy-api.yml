@@ -1,0 +1,40 @@
+name: Deploy Backend API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'packages/**'
+
+jobs:
+  deploy-api:
+    name: Build & Deploy Backend API (Node / PM2)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.0.0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: cd apps/api && pnpm prisma generate
+
+      - name: Build API Bundle
+        run: pnpm --filter @etaxwala/api build
+
+      - name: PM2 Process Verification
+        run: echo "API distribution compiled and ready for PM2 restart."

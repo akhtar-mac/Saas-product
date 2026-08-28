@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@etaxwala/api-client": "workspace:*",
     "@etaxwala/types": "workspace:*",
+    "@etaxwala/ui": "workspace:*",
     "@hookform/resolvers": "^3.9.0",
     "@tanstack/react-query": "^5.51.0",
     "axios": "^1.7.0",

@@ -1,48 +1,140 @@
-import { Briefcase, MapPin, Clock, ArrowRight, TrendingUp, Users, GraduationCap, Heart } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Briefcase, MapPin, Clock, ArrowRight, TrendingUp, Users,
+  GraduationCap, Heart, CheckCircle2, UploadCloud, X, Loader2, Sparkles, Building2
+} from 'lucide-react';
 import SEO from '@/components/seo';
+import Breadcrumbs from '@/components/breadcrumbs';
 
 const jobOpenings = [
-  { title: 'Chartered Accountant', type: 'Full-Time', location: 'Aurangabad, MH', dept: 'Audit & Tax' },
-  { title: 'Sales Executive', type: 'Full-Time', location: 'Multiple Cities', dept: 'Sales' },
-  { title: 'Business Consultant', type: 'Full-Time', location: 'Aurangabad, MH', dept: 'Consultancy' },
-  { title: 'Web Developer (React)', type: 'Full-Time', location: 'Remote / Aurangabad', dept: 'Technology' },
-  { title: 'Marketing Executive', type: 'Full-Time', location: 'Aurangabad, MH', dept: 'Marketing' },
-  { title: 'Operations Executive', type: 'Full-Time', location: 'Aurangabad, MH', dept: 'Operations' },
+  { id: 'ca-audit', title: 'Chartered Accountant (Audit & Direct Tax)', type: 'Full-Time', location: 'Aurangabad, MH / Hybrid', dept: 'Audit & Tax', exp: '2-5 Years' },
+  { id: 'sales-exec', title: 'Senior Corporate Sales Executive', type: 'Full-Time', location: 'Multiple Cities (Pan-India)', dept: 'Sales', exp: '1-3 Years' },
+  { id: 'cs-legal', title: 'Company Secretary & Legal Compliance Officer', type: 'Full-Time', location: 'Aurangabad, MH', dept: 'Legal & ROC', exp: '2-4 Years' },
+  { id: 'react-dev', title: 'Full Stack React & Node.js Developer', type: 'Full-Time', location: 'Remote / Hybrid', dept: 'Technology', exp: '2-4 Years' },
+  { id: 'mkt-growth', title: 'Digital Growth & Performance Marketer', type: 'Full-Time', location: 'Aurangabad, MH / Remote', dept: 'Marketing', exp: '1-3 Years' },
+  { id: 'ops-exec', title: 'Operations & Workflow Coordinator', type: 'Full-Time', location: 'Aurangabad, MH', dept: 'Operations', exp: '1-2 Years' },
 ];
 
 const whyJoin = [
-  { icon: TrendingUp, title: 'Professional Growth', desc: 'Continuous learning and career advancement opportunities' },
-  { icon: Users, title: 'Collaborative Team', desc: 'Work with 200+ experts across India' },
-  { icon: GraduationCap, title: 'Learning Programs', desc: 'Regular training on latest tax laws and business practices' },
-  { icon: Heart, title: 'Flexible Environment', desc: 'Supportive, flexible work culture' },
+  { icon: TrendingUp, title: 'High-Impact Work', desc: 'Shape the corporate compliance backbone for 1,00,000+ Indian businesses and startups.' },
+  { icon: Users, title: '200+ Expert Network', desc: 'Collaborate daily with top Chartered Accountants, CSs, and corporate advocates.' },
+  { icon: GraduationCap, title: 'Continuous Upskilling', desc: 'Regular masterclasses on changes in GST, MCA V3, and modern tech tooling.' },
+  { icon: Heart, title: 'Growth & Meritocracy', desc: 'Transparent incentives, fast promotions, and a healthy work-life balance.' },
 ];
 
+const schema = z.object({
+  name: z.string().min(1, 'Full name required'),
+  email: z.string().email('Valid email required'),
+  phone: z.string().min(10, '10-digit phone number required'),
+  role: z.string().min(1, 'Please select a position'),
+  experience: z.string().min(1, 'Select your experience level'),
+  linkedin: z.string().optional(),
+  message: z.string().optional(),
+});
+
+type FormData = z.infer<typeof schema>;
+
+const CUSTOMER_API = 'https://customer-api.etaxwala.com/api';
+
 export default function CareersPage() {
+  const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [fileName, setFileName] = useState<string>('');
+
+  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
+
+  const handleOpenApply = (jobTitle: string) => {
+    setValue('role', jobTitle);
+    setSelectedJob(jobTitle);
+    setIsModalOpen(true);
+  };
+
+  const onSubmit = async (data: FormData) => {
+    setStatus('loading');
+    try {
+      const res = await fetch(`${CUSTOMER_API}/add-inquiry-lead`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          contact: data.phone,
+          city: 'Career Applicant',
+          state: 'Maharashtra',
+          service: 'Career Application',
+          message: `Position Applied: ${data.role} | Exp: ${data.experience} | LinkedIn: ${data.linkedin || 'N/A'} | Resume File: ${fileName || 'Emailed separately'} | Note: ${data.message || ''}`,
+          consent: true,
+        }),
+      });
+
+      if (res.ok) {
+        setStatus('success');
+        setTimeout(() => {
+          reset();
+          setStatus('idle');
+          setIsModalOpen(false);
+          setFileName('');
+        }, 2500);
+      } else {
+        setStatus('error');
+      }
+    } catch {
+      setStatus('error');
+    }
+  };
+
   return (
     <>
-      <SEO title="Careers - Join ETaxwala" description="Join ETaxwala - 200+ team members, 120+ franchises. We're hiring CAs, sales, consultants, developers, and more. Grow your career with India's trusted business doctor." url="/careers" />
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-700 to-primary-800 py-20 text-white">
-        <div className="absolute -right-40 top-0 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />
+      <SEO
+        title="Careers at ETaxwala — Join India's Leading Tax & Compliance Team"
+        description="Build your career at ETaxwala. 200+ team members, 120+ legal hubs. Hiring Chartered Accountants, Sales, Software Engineers, and Operations managers."
+        url="/careers"
+      />
+
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 py-20 text-white">
+        <div className="absolute inset-0 opacity-10 pointer-events-none"
+             style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
         <div className="container-etaxwala relative z-10">
-          <h1 className="text-4xl font-bold lg:text-5xl">We're Hiring Talented Professionals</h1>
-          <p className="mt-4 max-w-2xl text-lg text-white/80">
-            At ETaxwala, we empower individuals and foster innovation. Be part of something impactful.
+          <div className="mb-4">
+            <Breadcrumbs items={[{ label: 'Careers' }]} className="text-slate-400" />
+          </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold uppercase tracking-wider mb-4">
+            <Sparkles className="w-3.5 h-3.5" /> We are expanding our team
+          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+            Build the Future of Indian Corporate Advisory
+          </h1>
+          <p className="mt-4 max-w-2xl text-base sm:text-lg text-slate-300">
+            Join 200+ verified Chartered Accountants, Legal Counselors, Engineers, and Growth Strategists delivering institutional excellence across India.
           </p>
         </div>
       </section>
 
-      <section className="border-b border-slate-200 bg-white py-12">
+      {/* Why Join */}
+      <section className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-16">
         <div className="container-etaxwala">
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Culture &amp; Benefits</span>
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">Why Build Your Career at ETaxwala?</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {whyJoin.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className="text-center">
-                  <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10">
-                    <Icon className="h-7 w-7 text-accent" />
+                <div key={item.title} className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-center">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                    <Icon className="h-6 w-6" />
                   </div>
-                  <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
-                  <p className="mt-1 text-xs text-slate-600">{item.desc}</p>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{item.title}</h3>
+                  <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{item.desc}</p>
                 </div>
               );
             })}
@@ -50,29 +142,214 @@ export default function CareersPage() {
         </div>
       </section>
 
-      <section className="section">
-        <div className="container-etaxwala max-w-4xl">
-          <h2 className="text-2xl font-bold text-slate-900">Open Positions</h2>
-          <p className="mt-2 text-sm text-slate-600">We review all applications and will contact shortlisted candidates within 7 working days.</p>
-          <div className="mt-8 space-y-4">
+      {/* Open Positions */}
+      <section className="section bg-slate-50 dark:bg-slate-950 py-16">
+        <div className="container-etaxwala max-w-5xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">Current Open Positions</h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                We review applications on a rolling basis. Shortlisted candidates are contacted within 3–5 business days.
+              </p>
+            </div>
+            <span className="px-3.5 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold whitespace-nowrap">
+              {jobOpenings.length} Active Roles
+            </span>
+          </div>
+
+          <div className="space-y-4">
             {jobOpenings.map((job) => (
-              <div key={job.title} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 transition hover:border-accent hover:shadow-md">
-                <div>
-                  <h3 className="font-semibold text-slate-900">{job.title}</h3>
-                  <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
-                    <span className="flex items-center gap-1"><Briefcase className="h-3.5 w-3.5" /> {job.type}</span>
-                    <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {job.location}</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {job.dept}</span>
+              <div
+                key={job.id}
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:border-blue-300 hover:shadow-md transition-all"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                      {job.dept}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400">• Exp: {job.exp}</span>
+                  </div>
+                  <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100">{job.title}</h3>
+                  <div className="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5 text-blue-500" /> {job.type}</span>
+                    <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-blue-500" /> {job.location}</span>
                   </div>
                 </div>
-                <a href="mailto:support@etaxwala.com" className="btn-primary text-sm">
-                  Apply <ArrowRight className="ml-1 h-4 w-4" />
-                </a>
+
+                <button
+                  onClick={() => handleOpenApply(job.title)}
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors shrink-0 shadow-sm"
+                >
+                  <span>Apply Now</span> <ArrowRight className="h-4 w-4" />
+                </button>
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* Application Modal (1.14.3) */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setIsModalOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative z-10 w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute right-4 top-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="mb-5">
+                <span className="text-[11px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                  Job Application
+                </span>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-2">
+                  Apply for {selectedJob}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">Fill out your profile details and attach your resume.</p>
+              </div>
+
+              {status === 'success' ? (
+                <div className="py-8 text-center space-y-3">
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center mx-auto">
+                    <CheckCircle2 className="w-8 h-8" />
+                  </div>
+                  <h4 className="text-lg font-bold text-slate-900 dark:text-slate-100">Application Submitted!</h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xs mx-auto">
+                    Thank you for applying. Our talent acquisition team will review your profile and contact you shortly.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
+                    <input
+                      {...register('name')}
+                      placeholder="e.g. Rahul Sharma"
+                      className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    />
+                    {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email *</label>
+                      <input
+                        {...register('email')}
+                        type="email"
+                        placeholder="you@domain.com"
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      />
+                      {errors.email && <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phone Number *</label>
+                      <input
+                        {...register('phone')}
+                        placeholder="10-digit mobile"
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      />
+                      {errors.phone && <p className="mt-1 text-xs text-rose-500">{errors.phone.message}</p>}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Position *</label>
+                      <input
+                        {...register('role')}
+                        readOnly
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3.5 py-2.5 text-sm text-slate-600 dark:text-slate-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Experience *</label>
+                      <select
+                        {...register('experience')}
+                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      >
+                        <option value="Fresher / 0-1 Year">Fresher / 0-1 Year</option>
+                        <option value="1-3 Years">1-3 Years</option>
+                        <option value="3-5 Years">3-5 Years</option>
+                        <option value="5+ Years">5+ Years</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">LinkedIn / Portfolio URL</label>
+                    <input
+                      {...register('linkedin')}
+                      placeholder="https://linkedin.com/in/..."
+                      className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    />
+                  </div>
+
+                  {/* Resume Upload Box */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Upload Resume (PDF / DOCX)</label>
+                    <div className="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center hover:border-blue-500 transition-colors">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) {
+                            setFileName(e.target.files[0].name);
+                          }
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <UploadCloud className="w-7 h-7 text-slate-400 mx-auto mb-1.5" />
+                      {fileName ? (
+                        <p className="text-xs font-bold text-blue-600 truncate">{fileName}</p>
+                      ) : (
+                        <>
+                          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Click to upload or drag &amp; drop</p>
+                          <p className="text-[10px] text-slate-400">PDF, DOC, DOCX up to 10MB</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={status === 'loading'}
+                    className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  >
+                    {status === 'loading' ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Submitting Application...
+                      </>
+                    ) : (
+                      'Submit Application'
+                    )}
+                  </button>
+
+                  {status === 'error' && (
+                    <p className="text-center text-xs text-rose-500">
+                      Failed to submit application. Please email your CV directly to support@etaxwala.com
+                    </p>
+                  )}
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

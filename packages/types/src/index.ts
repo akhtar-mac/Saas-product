@@ -148,14 +148,32 @@ export enum LeadSource {
 }
 
 export enum LeadStatus {
-  NEW = 'NEW',
-  ASSIGNED = 'ASSIGNED',
-  CONTACTED = 'CONTACTED',
-  FOLLOW_UP = 'FOLLOW_UP',
-  CONVERTED = 'CONVERTED',
-  LOST = 'LOST',
-  CANCELLED = 'CANCELLED',
+  NEW = 0,
+  ASSIGNED = 1,
+  CONTACTED = 2,
+  FOLLOW_UP = 3,
+  QUOTATION_SENT = 4,
+  CONVERTED = 5,
+  PAYMENT_PENDING = 6,
+  CLOSED_WON = 7,
+  CLOSED_LOST = 8,
+  NOT_INTERESTED = 9,
+  INVALID_NUMBER = 10,
 }
+
+export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
+  [LeadStatus.NEW]: 'New Lead',
+  [LeadStatus.ASSIGNED]: 'Assigned',
+  [LeadStatus.CONTACTED]: 'Contacted',
+  [LeadStatus.FOLLOW_UP]: 'Follow Up',
+  [LeadStatus.QUOTATION_SENT]: 'Quotation Sent',
+  [LeadStatus.CONVERTED]: 'Converted',
+  [LeadStatus.PAYMENT_PENDING]: 'Payment Pending',
+  [LeadStatus.CLOSED_WON]: 'Closed Won',
+  [LeadStatus.CLOSED_LOST]: 'Closed Lost',
+  [LeadStatus.NOT_INTERESTED]: 'Not Interested',
+  [LeadStatus.INVALID_NUMBER]: 'Invalid Number',
+};
 
 export interface Lead {
   id: number;
@@ -201,45 +219,58 @@ export interface Appointment {
   date: string;
 }
 
-// ============ TASKS ============
+// ============ 10-STAGE TASK LIFECYCLE ============
 
 export enum TaskStatus {
-  NOT_STARTED = 'NOT_STARTED',
-  WIP = 'WIP',
-  PENDING_CLIENT = 'PENDING_CLIENT',
-  INVOICED = 'INVOICED',
-  PAYMENT_PENDING = 'PAYMENT_PENDING',
-  COMPLETED = 'COMPLETED',
-  RETURN_BACK = 'RETURN_BACK',
-  CANCELLED = 'CANCELLED',
-  FEES_PENDING = 'FEES_PENDING',
-  ON_HOLD = 'ON_HOLD',
+  DOCUMENTS_PENDING = 1,
+  DOCUMENTS_COLLECTED = 2,
+  VERIFICATION_IN_PROGRESS = 3,
+  VERIFICATION_COMPLETED = 4,
+  GOVT_FILING_IN_PROGRESS = 5,
+  GOVT_QUERY_RECEIVED = 6,
+  QC_REVIEW = 7,
+  GOVT_APPROVAL_RECEIVED = 8,
+  COMPLETED = 9,
+  CANCELLED = 10,
 }
 
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  [TaskStatus.DOCUMENTS_PENDING]: 'Documents Pending',
+  [TaskStatus.DOCUMENTS_COLLECTED]: 'Documents Collected',
+  [TaskStatus.VERIFICATION_IN_PROGRESS]: 'Verification In Progress',
+  [TaskStatus.VERIFICATION_COMPLETED]: 'Verification Completed',
+  [TaskStatus.GOVT_FILING_IN_PROGRESS]: 'Govt Filing In Progress',
+  [TaskStatus.GOVT_QUERY_RECEIVED]: 'Govt Query / Resubmit',
+  [TaskStatus.QC_REVIEW]: 'QC Review',
+  [TaskStatus.GOVT_APPROVAL_RECEIVED]: 'Govt Approval Received',
+  [TaskStatus.COMPLETED]: 'Service Completed',
+  [TaskStatus.CANCELLED]: 'Cancelled',
+};
+
 export const TASK_STATUS_LIST: TaskStatus[] = [
-  TaskStatus.NOT_STARTED,
-  TaskStatus.WIP,
-  TaskStatus.PENDING_CLIENT,
-  TaskStatus.INVOICED,
-  TaskStatus.PAYMENT_PENDING,
+  TaskStatus.DOCUMENTS_PENDING,
+  TaskStatus.DOCUMENTS_COLLECTED,
+  TaskStatus.VERIFICATION_IN_PROGRESS,
+  TaskStatus.VERIFICATION_COMPLETED,
+  TaskStatus.GOVT_FILING_IN_PROGRESS,
+  TaskStatus.GOVT_QUERY_RECEIVED,
+  TaskStatus.QC_REVIEW,
+  TaskStatus.GOVT_APPROVAL_RECEIVED,
   TaskStatus.COMPLETED,
-  TaskStatus.RETURN_BACK,
   TaskStatus.CANCELLED,
-  TaskStatus.FEES_PENDING,
-  TaskStatus.ON_HOLD,
 ];
 
 export const TASK_STATUS_COLORS: Record<TaskStatus, string> = {
-  [TaskStatus.NOT_STARTED]: '#94A3B8',
-  [TaskStatus.WIP]: '#3B82F6',
-  [TaskStatus.PENDING_CLIENT]: '#F59E0B',
-  [TaskStatus.INVOICED]: '#8B5CF6',
-  [TaskStatus.PAYMENT_PENDING]: '#F97316',
+  [TaskStatus.DOCUMENTS_PENDING]: '#F59E0B',
+  [TaskStatus.DOCUMENTS_COLLECTED]: '#06B6D4',
+  [TaskStatus.VERIFICATION_IN_PROGRESS]: '#3B82F6',
+  [TaskStatus.VERIFICATION_COMPLETED]: '#10B981',
+  [TaskStatus.GOVT_FILING_IN_PROGRESS]: '#8B5CF6',
+  [TaskStatus.GOVT_QUERY_RECEIVED]: '#EF4444',
+  [TaskStatus.QC_REVIEW]: '#6366F1',
+  [TaskStatus.GOVT_APPROVAL_RECEIVED]: '#059669',
   [TaskStatus.COMPLETED]: '#10B981',
-  [TaskStatus.RETURN_BACK]: '#EF4444',
   [TaskStatus.CANCELLED]: '#991B1B',
-  [TaskStatus.FEES_PENDING]: '#F97316',
-  [TaskStatus.ON_HOLD]: '#64748B',
 };
 
 export interface OperationTask {
@@ -351,92 +382,30 @@ export interface Comment {
   name: string;
   email: string;
   comment: string;
-  isApproved: boolean;
+  status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
-}
-
-// ============ INQUIRY FORMS ============
-
-export interface InquiryFormData {
-  name: string;
-  email: string;
-  contact: string;
-  service: string;
-  state: string;
-  city: string;
-}
-
-export interface AppointmentFormData {
-  name: string;
-  email: string;
-  mobile: string;
-  city: string;
-  message: string;
-  apDate?: string;
-  apTime?: string;
-  apMode?: string;
 }
 
 // ============ API RESPONSES ============
 
-export interface ApiResponse<T> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
-  data: T;
-  message: string;
+  data?: T;
+  message?: string;
+  error?: {
+    code?: string;
+    message: string;
+    details?: unknown;
+  };
 }
 
-export interface ApiListResponse<T> {
+export interface ApiListResponse<T = unknown> {
   success: boolean;
   data: T[];
-  message: string;
   pagination: {
     page: number;
-    perPage: number;
+    limit: number;
     total: number;
     totalPages: number;
   };
-}
-
-export interface ApiError {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-    fields?: Record<string, string>;
-  };
-}
-
-// ============ DASHBOARD ============
-
-export interface DashboardStats {
-  notStarted: number;
-  wip: number;
-  pendingClient: number;
-  invoiced: number;
-  paymentPending: number;
-  completed: number;
-}
-
-export interface CallSummary {
-  total: number;
-  incoming: number;
-  outgoing: number;
-  missed: number;
-  duration: string;
-}
-
-// ============ FRANCHISE ============
-
-export interface FranchisePartner {
-  id: number;
-  name: string;
-  email: string;
-  contact: string;
-  city: string | null;
-  state: string | null;
-  companyName: string | null;
-  partnerCode: string;
-  commissionRate: number;
-  status: string;
-  joinedAt: string;
 }

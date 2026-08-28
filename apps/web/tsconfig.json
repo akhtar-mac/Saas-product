@@ -2,7 +2,6 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": ".",
     "types": ["vite/client", "node"],
     "noEmit": true,
     "baseUrl": ".",
@@ -11,5 +10,5 @@
       "@etaxwala/types": ["../../packages/types/src"]
     }
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "../../packages/types/src"]
 }

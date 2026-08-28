@@ -34,5 +34,10 @@ coverage/
 # Playwright
 .playwright-mcp/
 
+# Migration & SQL Dumps
+migration-output/
+*.sql
+*.sql.gz
+
 # OS
 Thumbs.db
