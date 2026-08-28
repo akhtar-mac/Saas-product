@@ -66,20 +66,22 @@ export default function ServicesHubPage() {
       />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 py-16 text-white relative">
-        <div className="absolute inset-0 opacity-10 pointer-events-none"
-             style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+      <section className="relative bg-[#FFFDF9] py-16 border-b border-[#EAE6DD]">
+        {/* Multicolour accent strip */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-multicolor" />
+        <div className="absolute inset-0 opacity-[0.025] pointer-events-none"
+             style={{ backgroundImage: 'radial-gradient(#7C3AED 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
         <div className="container-etaxwala relative z-10">
           <div className="mb-4">
-            <Breadcrumbs items={[{ label: 'Services' }]} className="text-slate-400" />
+            <Breadcrumbs items={[{ label: 'Services' }]} className="text-slate-500" />
           </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold uppercase tracking-wider mb-4">
-            <Sparkles className="w-3.5 h-3.5" /> 250+ Professional Practice Solutions
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 text-xs font-semibold uppercase tracking-wider mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> 250+ Professional Practice Solutions
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900">
             Comprehensive Corporate &amp; Tax Solutions
           </h1>
-          <p className="mt-3 max-w-2xl text-base sm:text-lg text-slate-300">
+          <p className="mt-3 max-w-2xl text-base sm:text-lg text-slate-600">
             From single-day name approvals to multi-crore audit representation. Transparent pricing with end-to-end digital tracking.
           </p>
 
@@ -91,7 +93,7 @@ export default function ServicesHubPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by service name (e.g. Pvt Ltd, GST, Trademark, ITR)..."
-              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-lg"
+              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border border-[#EAE6DD] text-slate-800 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 shadow-xs"
             />
           </div>
         </div>
@@ -118,7 +120,7 @@ export default function ServicesHubPage() {
                   <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors mt-1 line-clamp-1">
                     {s.name}
                   </h3>
-                  <p className="mt-3 text-sm font-extrabold text-slate-900 dark:text-slate-100">{formatPrice(s.price)}</p>
+                  <p className="mt-3 text-sm font-bold price-masked">₹ ★ ★ ★</p>
                 </Link>
               ))}
             </div>
@@ -185,29 +187,7 @@ export default function ServicesHubPage() {
                   </div>
                 </div>
 
-                {/* 2. Price Range Filter (1.6.5) */}
-                <div className="border-t border-slate-100 dark:border-slate-800 pt-5">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
-                    Price Range
-                  </label>
-                  <div className="space-y-1.5">
-                    {PRICE_RANGES.map((pr) => (
-                      <label
-                        key={pr.id}
-                        className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
-                      >
-                        <input
-                          type="radio"
-                          name="price-filter"
-                          checked={priceRange === pr.id}
-                          onChange={() => setPriceRange(pr.id)}
-                          className="text-blue-600 focus:ring-blue-500 rounded-full"
-                        />
-                        <span>{pr.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                {/* 2. Price Range Filter — removed (prices are hidden) */}
 
                 {/* 3. Sort Filter */}
                 <div className="border-t border-slate-100 dark:border-slate-800 pt-5">
@@ -220,8 +200,6 @@ export default function ServicesHubPage() {
                     className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs px-3 py-2 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                   >
                     <option value="recommended">Recommended</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
                   </select>
                 </div>
 
@@ -280,10 +258,10 @@ export default function ServicesHubPage() {
                         </ul>
                       </div>
 
-                      <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                      <div className="mt-5 pt-4 border-t border-[#EAE6DD] flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-slate-400 block">All-Inclusive</span>
-                          <span className="text-base font-extrabold text-slate-900 dark:text-slate-100">{formatPrice(s.price)}</span>
+                          <span className="text-[10px] text-slate-400 block">Enquire for Price</span>
+                          <span className="price-masked text-sm">₹ ★ ★ ★</span>
                         </div>
 
                         <Link

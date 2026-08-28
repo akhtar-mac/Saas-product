@@ -3,64 +3,61 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Menu, X, Phone, ChevronDown, Building2,
   Receipt, ClipboardCheck, FileBadge, ArrowRight,
-  Zap, Shield, Award, Clock,
+  Shield, Award, Clock, Search, User, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const servicesMenu = [
+const servicesMega = [
   {
-    category: 'Business Incorporation', icon: Building2,
+    category: 'Incorporation & Startup',
+    icon: Building2,
     items: [
-      { label: 'Private Limited Company',    to: '/services/registration/private-limited' },
-      { label: 'LLP Registration',           to: '/services/registration/llp' },
-      { label: 'One Person Company (OPC)',   to: '/services/registration/opc' },
-      { label: 'Section 8 NGO',              to: '/services/registration/section-8-ngo' },
-      { label: 'Farmer Producer Co (FPC)',  to: '/fpc-training' },
+      { label: 'Private Limited Company', to: '/services/registration/private-limited', badge: 'Popular' },
+      { label: 'Limited Liability Partnership (LLP)', to: '/services/registration/llp' },
+      { label: 'One Person Company (OPC)', to: '/services/registration/opc' },
+      { label: 'Section 8 Non-Profit (NGO)', to: '/services/registration/section-8-ngo' },
+      { label: 'Farmer Producer Co. (FPC)', to: '/fpc-training' },
     ],
   },
   {
-    category: 'Tax & Regulatory', icon: Receipt,
+    category: 'Taxation & Regulatory',
+    icon: Receipt,
     items: [
-      { label: 'Income Tax Return (ITR)',    to: '/itr-filing' },
-      { label: 'GST Registration',           to: '/services/other/gst' },
-      { label: 'GST Monthly Returns',        to: '/services/taxation/gst-return' },
-      { label: 'Tax Audit (Sec 44AB)',       to: '/services/taxation/tax-audit' },
-      { label: 'TDS Return Filing',          to: '/services/taxation/tds' },
+      { label: 'Income Tax Return (ITR)', to: '/itr-filing', badge: 'Fast Track' },
+      { label: 'GST Registration (New)', to: '/services/other/gst' },
+      { label: 'Monthly GSTR-1 & 3B Returns', to: '/services/taxation/gst-return' },
+      { label: 'Tax Audit (Section 44AB)', to: '/services/taxation/tax-audit' },
+      { label: 'TDS & TCS Reconciliation', to: '/services/taxation/tds' },
     ],
   },
   {
-    category: 'Corporate Governance', icon: ClipboardCheck,
+    category: 'Corporate Governance',
+    icon: ClipboardCheck,
     items: [
-      { label: 'Annual ROC Compliance',      to: '/services/compliance/pvt-ltd' },
-      { label: 'Director KYC (DIR-3)',       to: '/services/compliance/pvt-ltd' },
-      { label: 'FSSAI Food License',         to: '/services/other/fssai' },
-      { label: 'MSME / Udyam Registration',  to: '/services/other/msme' },
-      { label: 'Import Export Code (IEC)',   to: '/services/other/import-export' },
+      { label: 'Annual ROC Compliance Retainer', to: '/services/compliance/pvt-ltd' },
+      { label: 'Director KYC (DIR-3 KYC)', to: '/services/compliance/pvt-ltd' },
+      { label: 'FSSAI Food Hygiene License', to: '/services/other/fssai' },
+      { label: 'Udyam / MSME Certificate', to: '/services/other/msme' },
+      { label: 'Import Export Code (IEC)', to: '/services/other/import-export' },
     ],
   },
   {
-    category: 'Intellectual Property', icon: FileBadge,
+    category: 'Intellectual Property',
+    icon: FileBadge,
     items: [
-      { label: 'Trademark Registration (TM)', to: '/services/ip/trademark' },
-      { label: 'Copyright Registration',      to: '/services/ip/copyright' },
-      { label: 'Patent Drafting & Filing',   to: '/services/ip/patent' },
-      { label: 'ISO 9001 Certification',     to: '/services/ip/iso' },
+      { label: 'Trademark Registration (TM)', to: '/services/ip/trademark', badge: '24 Hours' },
+      { label: 'Copyright Filing', to: '/services/ip/copyright' },
+      { label: 'Patent Specification Drafting', to: '/services/ip/patent' },
+      { label: 'ISO 9001:2015 Audit', to: '/services/ip/iso' },
     ],
   },
-];
-
-const topNav = [
-  { label: 'About Us',  to: '/about' },
-  { label: 'Services',  to: '/services' },
-  { label: 'Articles',  to: '/blog' },
-  { label: 'Contact',   to: '/contact' },
 ];
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
+  const [activeMegaCategory, setActiveMegaCategory] = useState(0);
   const [scrolled, setScrolled] = useState(false);
-  const [activeCat, setActiveCat] = useState(0);
   const megaRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
@@ -70,266 +67,277 @@ export default function Header() {
   }, [location]);
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', fn, { passive: true });
-    fn();
-    return () => window.removeEventListener('scroll', fn);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
-    const fn = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent) => {
       if (megaRef.current && !megaRef.current.contains(e.target as Node)) {
         setMegaOpen(false);
       }
     };
-    document.addEventListener('mousedown', fn);
-    return () => document.removeEventListener('mousedown', fn);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const ActiveCat = servicesMenu[activeCat];
 
   return (
     <header className="sticky top-0 left-0 right-0 z-50 transition-all duration-200">
       
-      {/* ── Top Micro-Bar with 10am-7pm Timings ── */}
-      <div className="bg-[#FAFBFD]/95 backdrop-blur-md border-b border-slate-200/50 py-1.5 px-4 hidden lg:block text-[11px]">
+      {/* ── Top Micro Utility Bar (Light Cream) ── */}
+      <div className="bg-[#FAF9F5] text-slate-600 text-xs py-1.5 px-4 hidden lg:block border-b border-[#EAE6DD]">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-5 text-slate-500 font-medium">
-            <span className="flex items-center gap-1.5 text-slate-700 font-semibold">
-              <Award className="w-3.5 h-3.5 text-amber-500" /> ISO 9001:2015 Certified
+          <div className="flex items-center gap-5 text-[11px]">
+            <span className="flex items-center gap-1.5 text-slate-800 font-bold">
+              <Shield className="w-3.5 h-3.5 text-[#0084D1]" /> MCA &amp; GST Certified Practice
             </span>
-            <span className="text-slate-300">·</span>
-            <span className="flex items-center gap-1.5 text-slate-700">
-              <Clock className="w-3.5 h-3.5 text-[#0084D1]" /> Desk Timings: <strong>10:00 AM – 7:00 PM (Mon–Sat)</strong>
-            </span>
-            <span className="text-slate-300">·</span>
-            <span className="text-emerald-700 font-semibold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Guaranteed 5-Min Callback
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-600">120+ Offline Legal Hubs across 28 States</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-600 flex items-center gap-1">
+              <Clock className="w-3 h-3 text-[#E11D48]" /> Mon–Sat, 9:30 AM – 6:30 PM
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-semibold">
-            <a
-              href="tel:18008890128"
-              className="text-slate-700 hover:text-[#0084D1] transition-colors flex items-center gap-1"
-            >
-              <Phone className="w-3 h-3 text-[#E11D48]" /> 1800-889-0128
+          <div className="flex items-center gap-4 text-[11px]">
+            <a href="tel:08069029999" className="text-slate-900 hover:text-[#0084D1] font-bold flex items-center gap-1.5 transition-colors">
+              <Phone className="w-3 h-3 text-[#F97316]" /> 080-6902-9999
             </a>
-            <span className="text-slate-200">|</span>
-            <Link to="/portal/login" className="text-slate-500 hover:text-slate-800 transition-colors">
+            <span className="text-slate-300">|</span>
+            <Link to="/portal/login" className="text-slate-700 hover:text-slate-900 font-medium transition-colors">
               Client Portal
             </Link>
-            <span className="text-slate-200">|</span>
-            <Link to="/crm/login" className="text-[#7C3AED] hover:text-[#0084D1] font-bold transition-colors">
-              Staff CRM →
+            <span className="text-slate-300">|</span>
+            <Link to="/crm/login" className="text-slate-500 hover:text-slate-800 font-medium transition-colors">
+              Staff CRM
             </Link>
           </div>
         </div>
       </div>
 
-      {/* ── Main Clean Glass Navbar ── */}
+      {/* ── Main Navigation Bar (Clean White / Light Cream) ── */}
       <div className={cn(
-        'transition-all duration-200 border-b',
-        scrolled
-          ? 'bg-white/90 backdrop-blur-xl border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
-          : 'bg-[#FAFBFD]/80 backdrop-blur-lg border-slate-200/40'
+        "bg-white/95 backdrop-blur-md transition-all duration-200 border-b",
+        scrolled ? "border-[#EAE6DD] shadow-xs" : "border-slate-100"
       )}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            
+            {/* Left: Official ETaxwala Logo */}
+            <div className="flex items-center gap-8">
+              <Link to="/" className="flex items-center gap-3">
+                <img
+                  src="/logo_black.png"
+                  alt="ETaxwala"
+                  className="h-10 sm:h-12 w-auto object-contain"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/brand-logo.png';
+                  }}
+                />
+              </Link>
 
-            {/* Brand Logo */}
-            <Link to="/" className="flex items-center gap-2 shrink-0 group">
-              <img
-                src="/logo_black.png"
-                alt="ETaxwala"
-                className="h-9 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
-              />
-            </Link>
+              {/* Desktop Nav Links */}
+              <nav className="hidden lg:flex items-center gap-1" ref={megaRef}>
+                
+                {/* Services Mega Menu Trigger */}
+                <div className="relative">
+                  <button
+                    onClick={() => setMegaOpen(!megaOpen)}
+                    className={cn(
+                      "px-3.5 py-2 text-sm font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer",
+                      megaOpen ? "bg-[#FAF9F5] text-slate-900" : "text-slate-700 hover:text-slate-900 hover:bg-[#FAF9F5]"
+                    )}
+                  >
+                    <span>Services</span>
+                    <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform duration-200", megaOpen && "rotate-180 text-slate-800")} />
+                  </button>
 
-            {/* Minimal Desktop Nav Links */}
-            <nav className="hidden items-center gap-1 lg:flex" ref={megaRef}>
-              <div className="relative">
-                <button
-                  type="button"
-                  onMouseEnter={() => setMegaOpen(true)}
-                  onClick={() => setMegaOpen(!megaOpen)}
-                  className={cn(
-                    'px-4 py-2 rounded-xl text-xs font-semibold tracking-wide flex items-center gap-1.5 transition-all text-slate-700 hover:text-slate-900 hover:bg-white/80',
-                    megaOpen && 'bg-white text-[#0084D1] shadow-sm'
+                  {/* Mega Menu Dropdown */}
+                  {megaOpen && (
+                    <div className="absolute left-0 top-full mt-2 w-[720px] bg-white rounded-2xl border border-[#EAE6DD] shadow-xl p-5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="grid grid-cols-12 gap-5">
+                        
+                        {/* Categories Sidebar */}
+                        <div className="col-span-4 border-r border-[#EAE6DD] pr-3 space-y-1">
+                          {servicesMega.map((cat, idx) => {
+                            const Icon = cat.icon;
+                            const isSelected = activeMegaCategory === idx;
+                            return (
+                              <button
+                                key={cat.category}
+                                onMouseEnter={() => setActiveMegaCategory(idx)}
+                                className={cn(
+                                  "w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-colors cursor-pointer",
+                                  isSelected ? "bg-[#FAF9F5] text-slate-900 font-bold border border-[#EAE6DD]" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                )}
+                              >
+                                <Icon className={cn("w-4 h-4", isSelected ? "text-[#7C3AED]" : "text-slate-400")} />
+                                <span>{cat.category}</span>
+                              </button>
+                            );
+                          })}
+                          
+                          <div className="pt-3 border-t border-[#EAE6DD] mt-2">
+                            <Link
+                              to="/services"
+                              className="text-xs font-bold text-slate-900 hover:text-[#0084D1] flex items-center gap-1 px-3 py-1"
+                            >
+                              <span>View All 250+ Services</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </Link>
+                          </div>
+                        </div>
+
+                        {/* Selected Category Items */}
+                        <div className="col-span-8 space-y-1 pl-2">
+                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                            {servicesMega[activeMegaCategory].category}
+                          </p>
+                          <div className="grid grid-cols-1 gap-1">
+                            {servicesMega[activeMegaCategory].items.map((item) => (
+                              <Link
+                                key={item.label}
+                                to={item.to}
+                                className="p-2.5 rounded-xl hover:bg-[#FAF9F5] flex items-center justify-between group transition-colors"
+                              >
+                                <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900">
+                                  {item.label}
+                                </span>
+                                {item.badge && (
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#FAF9F5] text-slate-700 border border-[#EAE6DD]">
+                                    {item.badge}
+                                  </span>
+                                )}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <NavLink
+                  to="/itr-filing"
+                  className={({ isActive }) => cn(
+                    "px-3.5 py-2 text-sm font-bold rounded-lg transition-colors",
+                    isActive ? "text-slate-900 bg-[#FAF9F5]" : "text-slate-700 hover:text-slate-900 hover:bg-[#FAF9F5]"
                   )}
                 >
-                  <span>Services</span>
-                  <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200', megaOpen && 'rotate-180 text-[#0084D1]')} />
-                </button>
-              </div>
-
-              {topNav.map((item) => (
-                <NavLink
-                  key={item.label}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    cn(
-                      'px-4 py-2 rounded-xl text-xs font-semibold tracking-wide text-slate-700 hover:text-slate-900 hover:bg-white/80 transition-all',
-                      isActive && 'text-[#0084D1] font-bold bg-white/90 shadow-sm'
-                    )
-                  }
-                >
-                  {item.label}
+                  ITR Filing
                 </NavLink>
-              ))}
-            </nav>
 
-            {/* Right Action Button with Multi-Color Hover */}
-            <div className="hidden items-center gap-3 lg:flex">
+                <NavLink
+                  to="/fpc-training"
+                  className={({ isActive }) => cn(
+                    "px-3.5 py-2 text-sm font-bold rounded-lg transition-colors",
+                    isActive ? "text-slate-900 bg-[#FAF9F5]" : "text-slate-700 hover:text-slate-900 hover:bg-[#FAF9F5]"
+                  )}
+                >
+                  FPC Academy
+                </NavLink>
+
+                <NavLink
+                  to="/appointment"
+                  className={({ isActive }) => cn(
+                    "px-3.5 py-2 text-sm font-bold rounded-lg transition-colors",
+                    isActive ? "text-slate-900 bg-[#FAF9F5]" : "text-slate-700 hover:text-slate-900 hover:bg-[#FAF9F5]"
+                  )}
+                >
+                  CA Consultation
+                </NavLink>
+
+                <NavLink
+                  to="/about"
+                  className={({ isActive }) => cn(
+                    "px-3.5 py-2 text-sm font-bold rounded-lg transition-colors",
+                    isActive ? "text-slate-900 bg-[#FAF9F5]" : "text-slate-700 hover:text-slate-900 hover:bg-[#FAF9F5]"
+                  )}
+                >
+                  About
+                </NavLink>
+              </nav>
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-3">
+              
+              <Link
+                to="/portal/login"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-[#FAF9F5] rounded-xl border border-transparent hover:border-[#EAE6DD] transition-all"
+              >
+                <User className="w-3.5 h-3.5 text-slate-400" />
+                <span>Client Login</span>
+              </Link>
+
+              {/* Signature Multicolour CTA Button */}
               <Link
                 to="/appointment"
-                className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-800 bg-white/90 hover:bg-white border border-slate-200/90 hover:border-purple-300 shadow-sm hover:shadow-md transition-all flex items-center gap-2 group cursor-pointer"
+                className="px-4 py-2 sm:py-2.5 text-xs font-bold text-white rounded-xl shadow-xs transition-all flex items-center gap-1.5 btn-multicolor"
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="group-hover:bg-gradient-to-r group-hover:from-[#0084D1] group-hover:via-[#7C3AED] group-hover:to-[#F97316] group-hover:bg-clip-text group-hover:text-transparent transition-all">
-                  Request 5-Min Callback
-                </span>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#7C3AED] group-hover:translate-x-0.5 transition-all" />
+                <span>Talk to a CA</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+
+              {/* Mobile menu toggle */}
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-[#FAF9F5] rounded-lg"
+                aria-label="Toggle menu"
+              >
+                {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileOpen && (
+          <div className="lg:hidden border-t border-[#EAE6DD] bg-white px-4 py-6 space-y-4 shadow-lg">
+            <div className="space-y-1">
+              <Link to="/services" className="block px-3 py-2 text-sm font-bold text-slate-900 rounded-lg hover:bg-[#FAF9F5]">
+                All 250+ Services
+              </Link>
+              <Link to="/itr-filing" className="block px-3 py-2 text-sm font-bold text-slate-900 rounded-lg hover:bg-[#FAF9F5]">
+                ITR Return Filing
+              </Link>
+              <Link to="/fpc-training" className="block px-3 py-2 text-sm font-bold text-slate-900 rounded-lg hover:bg-[#FAF9F5]">
+                FPC Agri Training
+              </Link>
+              <Link to="/appointment" className="block px-3 py-2 text-sm font-bold text-slate-900 rounded-lg hover:bg-[#FAF9F5]">
+                Book CA Appointment
+              </Link>
+              <Link to="/about" className="block px-3 py-2 text-sm font-bold text-slate-900 rounded-lg hover:bg-[#FAF9F5]">
+                About ETaxwala
+              </Link>
+              <Link to="/contact" className="block px-3 py-2 text-sm font-bold text-slate-900 rounded-lg hover:bg-[#FAF9F5]">
+                Contact &amp; Legal Hubs
               </Link>
             </div>
 
-            {/* Mobile Hamburger */}
-            <button
-              type="button"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 lg:hidden"
-              aria-label="Toggle menu"
-            >
-              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-
-          </div>
-        </div>
-      </div>
-
-      {/* ── Mega Menu (Minimal Glassy Dropdown) ── */}
-      {megaOpen && (
-        <div
-          ref={megaRef}
-          onMouseLeave={() => setMegaOpen(false)}
-          className="hidden lg:block absolute top-full left-0 right-0 bg-white/95 backdrop-blur-2xl border-b border-slate-200/80 shadow-2xl animate-fade-in"
-        >
-          <div className="max-w-7xl mx-auto px-8 py-8">
-            <div className="grid grid-cols-12 gap-8">
-              
-              <div className="col-span-4 border-r border-slate-100 pr-6 space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">
-                  Practice Verticals
-                </p>
-                {servicesMenu.map((cat, idx) => {
-                  const Icon = cat.icon;
-                  const isSelected = activeCat === idx;
-                  return (
-                    <button
-                      key={cat.category}
-                      onMouseEnter={() => setActiveCat(idx)}
-                      onClick={() => setActiveCat(idx)}
-                      className={cn(
-                        'w-full text-left px-3.5 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between group cursor-pointer',
-                        isSelected
-                          ? 'bg-slate-100/90 text-[#0084D1] shadow-sm'
-                          : 'text-slate-700 hover:bg-slate-50'
-                      )}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className={cn(
-                          'w-7 h-7 rounded-lg flex items-center justify-center transition-colors',
-                          isSelected ? 'bg-[#0084D1] text-white' : 'bg-slate-100 text-slate-500'
-                        )}>
-                          <Icon className="w-3.5 h-3.5" />
-                        </div>
-                        <span className="group-hover:bg-gradient-to-r group-hover:from-[#0084D1] group-hover:via-[#7C3AED] group-hover:to-[#F97316] group-hover:bg-clip-text group-hover:text-transparent">
-                          {cat.category}
-                        </span>
-                      </div>
-                      <ArrowRight className={cn('w-3.5 h-3.5 transition-transform', isSelected ? 'text-[#0084D1] translate-x-0.5' : 'opacity-0')} />
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="col-span-8 pl-4 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <div>
-                    <h3 className="font-bold text-sm text-slate-900">{ActiveCat.category}</h3>
-                    <p className="text-[11px] text-slate-400">Handled by certified Chartered Accountants & Senior Attorneys</p>
-                  </div>
-                  <Link
-                    to="/services"
-                    className="text-xs font-bold text-[#0084D1] hover:underline flex items-center gap-1"
-                  >
-                    View All Services <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  {ActiveCat.items.map((svc) => (
-                    <Link
-                      key={svc.label}
-                      to={svc.to}
-                      onClick={() => setMegaOpen(false)}
-                      className="p-3 rounded-xl bg-slate-50/70 hover:bg-white border border-slate-100 hover:border-purple-200 hover:shadow-md transition-all group"
-                    >
-                      <p className="text-xs font-bold text-slate-800 group-hover:bg-gradient-to-r group-hover:from-[#0084D1] group-hover:via-[#7C3AED] group-hover:to-[#F97316] group-hover:bg-clip-text group-hover:text-transparent transition-all">
-                        {svc.label}
-                      </p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">MCA & ROC Verified · Fast Turnaround</p>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Mobile Navigation Drawer ── */}
-      {mobileOpen && (
-        <div className="lg:hidden bg-white/98 backdrop-blur-2xl border-b border-slate-200 px-6 py-6 space-y-6 animate-fade-in max-h-[85vh] overflow-y-auto">
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1">
-            <p className="font-bold text-slate-900 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-[#0084D1]" /> 10:00 AM – 7:00 PM (Mon–Sat)
-            </p>
-            <p className="text-[11px] text-slate-500">Guaranteed 5-minute expert callback during desk hours</p>
-          </div>
-
-          <div className="space-y-1">
-            {topNav.map((item) => (
+            <div className="pt-4 border-t border-[#EAE6DD] space-y-2">
               <Link
-                key={item.label}
-                to={item.to}
-                onClick={() => setMobileOpen(false)}
-                className="block py-2.5 text-sm font-semibold text-slate-800 hover:text-[#0084D1] border-b border-slate-100"
+                to="/portal/login"
+                className="w-full py-2.5 text-center block text-xs font-bold text-slate-800 bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl"
               >
-                {item.label}
+                Client Portal Login
               </Link>
-            ))}
+              <Link
+                to="/crm/login"
+                className="w-full py-2.5 text-center block text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl"
+              >
+                Staff CRM Login
+              </Link>
+            </div>
           </div>
+        )}
 
-          <div className="pt-2 flex flex-col gap-2.5">
-            <Link
-              to="/appointment"
-              onClick={() => setMobileOpen(false)}
-              className="w-full py-3 rounded-xl text-center text-xs font-bold text-white bg-slate-900 shadow-md"
-            >
-              Request 5-Min Callback
-            </Link>
-            <a
-              href="tel:18008890128"
-              className="w-full py-3 rounded-xl text-center text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 flex items-center justify-center gap-1.5"
-            >
-              <Phone className="w-3.5 h-3.5 text-[#E11D48]" /> 1800-889-0128 (Toll-Free)
-            </a>
-          </div>
-        </div>
-      )}
-
+      </div>
     </header>
   );
 }

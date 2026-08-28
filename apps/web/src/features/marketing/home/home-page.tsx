@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '@/components/seo';
 import {
@@ -7,146 +7,188 @@ import {
   Star, CheckCircle2, Phone, MapPin, Globe, Clock,
   Zap, Lock, AlertCircle, Scale, ShieldCheck, Search,
   MessageSquare, Sparkles, User, Mail, Calculator, Award,
-  ChevronRight, HelpCircle, Check, Users, ArrowUpRight
+  ChevronRight, Check, Users, ArrowUpRight, HelpCircle
 } from 'lucide-react';
 import { services } from '@/lib/constants/services';
 
-/* ─── Hero Service Categories (Competitor Tabs) ─── */
-const HERO_CATEGORIES = [
+/* ─── Hero Segment Categories ─── */
+const HERO_SEGMENTS = [
   {
-    id: 'startup',
-    label: '🏢 Start a Business',
+    id: 'pvt_ltd',
+    tab: 'Private Limited',
     title: 'Private Limited Company Registration',
-    badge: 'Most Popular for Founders',
-    delivery: '7–10 Working Days',
+    badge: 'MCA V3 SPICe+ Integrated',
+    turnaround: '7–10 Working Days',
     price: '₹16,499',
     originalPrice: '₹24,999',
-    inclusions: ['2 DSC + 2 DIN', 'Name Approval on MCA V3', 'MoA & AoA Drafting', 'PAN, TAN & Bank A/C', 'Govt Stamp Duty Included'],
+    desc: 'The complete corporate startup package: 2 Digital Signatures (DSC), 2 DIN, Name Reservation, MoA & AoA drafting, PAN, TAN, and Zero-Fee Corporate Bank Account.',
+    inclusions: [
+      '2 Class-3 Digital Signatures (DSC)',
+      '2 Director Identification Numbers (DIN)',
+      'RUN MCA Name Reservation',
+      'SPICe+ Part A & B Government Filing',
+      'Corporate PAN, TAN & Bank Integration',
+      'Drafting of MoA & AoA Documents',
+    ],
     defaultService: 'Private Limited Company Registration',
   },
   {
-    id: 'gst_tax',
-    label: '📋 GST & ITR Filing',
-    title: 'GST Registration & Return Filing',
-    badge: '100% Penalty-Proof',
-    delivery: '1–3 Days',
-    price: '₹499',
+    id: 'gst_itr',
+    tab: 'GST & Tax Returns',
+    title: 'GST Registration & Monthly Return Filing',
+    badge: 'Penalty-Proof Guarantee',
+    turnaround: '1–3 Working Days',
+    price: 'Starting @ ₹499',
     originalPrice: '₹1,499',
-    inclusions: ['Fast GSTIN Allocation', 'GSTR-1 & 3B Monthly Return', 'ITC Maximization Audit', 'CA Notice Resolution Support'],
+    desc: 'Fast GSTIN allocation and penalty-proof GSTR-1 & 3B return filing with complete input tax credit (ITC) reconciliation audited by senior CAs.',
+    inclusions: [
+      'Instant GSTIN Government Approval',
+      'GSTR-1, 3B & Annual GSTR-9 Filing',
+      'Input Tax Credit (ITC) Optimization',
+      'E-Way Bill & E-Invoicing Setup',
+      'CA Notice Resolution Assistance',
+      'Dedicated Tax Officer Assignment',
+    ],
     defaultService: 'GST Registration (Regular Scheme)',
   },
   {
     id: 'trademark',
-    label: '®️ Trademark & IP',
-    title: 'Trademark (™) Brand Protection',
-    badge: 'File in 24 Hours',
-    delivery: 'Same Day Filing',
+    tab: 'Trademark (™)',
+    title: 'Trademark Registration & Brand Protection',
+    badge: 'Same-Day ™ Protection',
+    turnaround: '24 Hours Filing',
     price: '₹6,999',
     originalPrice: '₹11,999',
-    inclusions: ['Free Comprehensive TM Search', 'Attorney Class Classification', 'Online IP India Portal Submission', 'Opposition Monitoring'],
+    desc: 'Secure legal ownership over your brand name, logo, or slogan. Includes an exhaustive IP India search clearance and attorney representation.',
+    inclusions: [
+      'Comprehensive IP India Search Clearance',
+      'Accurate Trademark Class Categorization',
+      'Online IP India Application Filing',
+      'Immediate Use of ™ Symbol',
+      'Continuous Legal Opposition Tracking',
+      'Attorney Examination Reply Support',
+    ],
     defaultService: 'Trademark Registration (TM)',
   },
   {
     id: 'fpc_agri',
-    label: '🌾 FPC & Agri Subsidies',
-    title: 'Farmer Producer Company (FPC)',
-    badge: '₹15L+ Grant Structuring',
-    delivery: '15–20 Days',
+    tab: 'Farmer Producer Co.',
+    title: 'Farmer Producer Company (FPC) Registration',
+    badge: '₹15L SFAC Subsidy Advisory',
+    turnaround: '15–20 Days',
     price: '₹24,999',
     originalPrice: '₹35,000',
-    inclusions: ['10 Farmer Director DIN/DSC', 'SFAC Equity Grant Advisory', 'SMART Project DPR Prep', 'NABARD Scheme Filing'],
+    desc: 'Specialized corporate structure for farmer clusters. Comprehensive registration with NABARD scheme alignment, SFAC matching equity grants, and DPR preparation.',
+    inclusions: [
+      '10 Farmer Director DIN & DSCs',
+      'FPC MoA & AoA Special Objects Drafting',
+      'SFAC Equity Matching Grant Structuring',
+      'SMART & NABARD Project DPR Guidance',
+      'ROC Incorporation with Share Certificates',
+      'Agribusiness CA Compliance Advisory',
+    ],
     defaultService: 'Farmer Producer Company (FPC)',
   },
   {
-    id: 'roc_annual',
-    label: '⚖️ ROC & Secretarial',
-    title: 'Annual ROC Compliance Retainer',
-    badge: 'Save ₹50k+ Late Penalties',
-    delivery: 'Annual Compliance',
+    id: 'roc_retainer',
+    tab: 'Annual Compliance',
+    title: 'Annual ROC Compliance & Secretarial Retainer',
+    badge: 'Save ₹50,000+ in MCA Penalties',
+    turnaround: 'Annual Retainer',
     price: '₹9,999/yr',
     originalPrice: '₹18,000',
-    inclusions: ['AOC-4 & MGT-7 Filing', 'DIR-3 KYC for Directors', 'Statutory Financial Audit Coord', 'Board Resolution Minutes'],
+    desc: 'Complete statutory governance: AOC-4 financial statement filing, MGT-7 annual return, DIR-3 KYC for directors, and board meeting resolution maintenance.',
+    inclusions: [
+      'AOC-4 Financial Statements Filing',
+      'MGT-7 Annual ROC Compliance Return',
+      'DIR-3 KYC Verification for all Directors',
+      'Annual General Meeting (AGM) Documentation',
+      'Statutory Auditor Appointment (ADT-1)',
+      'Direct CA Corporate Hotline Access',
+    ],
     defaultService: 'Annual ROC Compliance (Pvt Ltd)',
   },
 ];
 
-/* ─── Live Activity Feed Ticker (Real-Time Social Proof) ─── */
-const RECENT_ACTIVITIES = [
-  { name: 'Amit K.', city: 'Pune', action: 'Incorporate Pvt Ltd Company', time: '2 mins ago' },
-  { name: 'Suresh Patil', city: 'Nashik', action: 'Applied for FPC Registration & SFAC Grant', time: '4 mins ago' },
-  { name: 'Pooja Agarwal', city: 'Mumbai', action: 'Filed GST Annual Return (GSTR-9)', time: '7 mins ago' },
-  { name: 'Dr. Ramesh R.', city: 'Bengaluru', action: 'Registered Trademark in Class 5', time: '11 mins ago' },
-  { name: 'Vikas Sharma', city: 'Ahmedabad', action: 'Completed Director KYC (DIR-3)', time: '14 mins ago' },
+/* ─── Real-Time Client Activity Ticker ─── */
+const LIVE_ACTIVITIES = [
+  { name: 'Amit Kulkarni', city: 'Pune', action: 'Incorporate Pvt Ltd Company', time: '3 mins ago' },
+  { name: 'Suresh Patil', city: 'Nashik', action: 'Applied for FPC Registration & SFAC Grant', time: '5 mins ago' },
+  { name: 'Pooja Agarwal', city: 'Mumbai', action: 'Filed GST Monthly Return (GSTR-3B)', time: '8 mins ago' },
+  { name: 'Dr. Ramesh Rao', city: 'Bengaluru', action: 'Registered Trademark in Class 5', time: '12 mins ago' },
+  { name: 'Vikas Sharma', city: 'Ahmedabad', action: 'Completed Director KYC (DIR-3)', time: '15 mins ago' },
 ];
 
-/* ─── Core Practice Cards ─── */
-const POPULAR_SERVICES = [
+/* ─── 6 Core Bento Grid Cards ─── */
+const CORE_PRACTICE_CARDS = [
   {
     title: 'Private Limited Company',
-    desc: 'The gold standard for startups seeking VC funding and limited liability.',
+    desc: 'Limited liability and equity scalability. The standard legal structure for venture funding.',
     price: '₹16,499',
-    days: '7–10 Days',
+    timeline: '7–10 Days',
     icon: Building2,
     link: '/services/registration/private-limited',
-    tag: 'Startups & Scaleups',
+    tag: 'Startups',
   },
   {
-    title: 'LLP Partnership',
-    desc: 'Low-maintenance legal structure with operational flexibility for 2+ partners.',
+    title: 'Limited Liability Partnership',
+    desc: 'Combines the flexibility of a partnership with the limited liability benefits of a company.',
     price: '₹9,999',
-    days: '8–12 Days',
+    timeline: '8–12 Days',
     icon: Building2,
     link: '/services/registration/llp',
     tag: 'Professionals',
   },
   {
-    title: 'GST Registration & Filing',
-    desc: 'Fast GSTIN approval, monthly filing with input tax credit (ITC) optimization.',
+    title: 'GST Registration & Return Filing',
+    desc: 'Same-day GSTIN application and monthly ITC maximization audits by chartered accountants.',
     price: 'Starting @ ₹499',
-    days: '2–3 Days',
+    timeline: '1–3 Days',
     icon: Receipt,
     link: '/itr-filing',
-    tag: 'All Businesses',
+    tag: 'Tax & Regulatory',
   },
   {
-    title: 'Trademark Registration',
-    desc: 'Safeguard your brand name, logo, or slogan with immediate ™ rights.',
+    title: 'Trademark Registration (™)',
+    desc: 'Safeguard your brand name, logo, or slogan with immediate legal rights and defense.',
     price: '₹6,999',
-    days: '24 Hours',
+    timeline: '24 Hours',
     icon: FileBadge,
     link: '/services/ip/trademark',
-    tag: 'IP Protection',
+    tag: 'Intellectual Property',
   },
   {
-    title: 'Farmer Producer Co. (FPC)',
-    desc: 'Specialized corporate framework for farmer clusters to claim ₹15L SFAC grants.',
+    title: 'Farmer Producer Company (FPC)',
+    desc: 'Agribusiness legal incorporation to unlock up to ₹15 Lakhs in SFAC matching equity grants.',
     price: '₹24,999',
-    days: '15–20 Days',
+    timeline: '15–20 Days',
     icon: Users,
     link: '/fpc-training',
-    tag: 'Agribusiness',
+    tag: 'Agri Hub',
   },
   {
-    title: 'Annual ROC Compliance',
-    desc: 'AOC-4, MGT-7, and director KYC filings to keep your company active & penalty-free.',
+    title: 'Annual ROC Compliance Retainer',
+    desc: 'AOC-4, MGT-7, and DIR-3 KYC filings to keep your company active, compliant, and notice-free.',
     price: '₹9,999/yr',
-    days: 'Annual Plan',
+    timeline: 'Annual Retainer',
     icon: ClipboardCheck,
     link: '/services/compliance/pvt-ltd',
-    tag: 'Statutory Retainer',
+    tag: 'Secretarial',
   },
 ];
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeSegmentIndex, setActiveSegmentIndex] = useState(0);
   const [tickerIndex, setTickerIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [whatsappUpdates, setWhatsappUpdates] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [whatsappConsent, setWhatsappConsent] = useState(true);
+  
+  // Interactive Calculator State
+  const [calcEntityType, setCalcEntityType] = useState('pvt_ltd');
+  const [calcCapital, setCalcCapital] = useState('100000');
+  const [calcDirectors, setCalcDirectors] = useState('2');
 
-  // Form State for Instant Hero Lead Capture
+  // Lead Form State
   const [leadForm, setLeadForm] = useState({
     name: '',
     mobile: '',
@@ -154,22 +196,24 @@ export default function HomePage() {
     city: 'Pune',
     state: 'Maharashtra',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const navigate = useNavigate();
-  const currentCat = HERO_CATEGORIES[activeTab];
+  const activeSegment = HERO_SEGMENTS[activeSegmentIndex];
 
   // Rotate social proof ticker
   useEffect(() => {
     const timer = setInterval(() => {
-      setTickerIndex((prev) => (prev + 1) % RECENT_ACTIVITIES.length);
+      setTickerIndex((prev) => (prev + 1) % LIVE_ACTIVITIES.length);
     }, 4500);
     return () => clearInterval(timer);
   }, []);
 
-  const handleHeroSubmit = async (e: React.FormEvent) => {
+  const handleHeroFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!leadForm.name.trim() || leadForm.mobile.trim().length < 10) {
-      setSubmitError('Please enter your full name and valid 10-digit mobile number.');
+      setSubmitError('Please enter your full name and a valid 10-digit mobile number.');
       return;
     }
 
@@ -182,9 +226,9 @@ export default function HomePage() {
       email: leadForm.email.trim() || `${leadForm.mobile.trim()}@lead.etaxwala.com`,
       city: leadForm.city,
       state: leadForm.state,
-      service: currentCat.defaultService,
-      message: `Inquiry from Homepage Hero (${currentCat.label}). WhatsApp Updates: ${whatsappUpdates ? 'YES' : 'NO'}`,
-      source: 'Homepage Instant Hero Form',
+      service: activeSegment.defaultService,
+      message: `Inquiry from Minimalist Hero (${activeSegment.tab}). WhatsApp Opt-in: ${whatsappConsent ? 'YES' : 'NO'}`,
+      source: 'Homepage Minimalist Hero Lead Card',
       consent: true,
     };
 
@@ -211,123 +255,134 @@ export default function HomePage() {
     }
   };
 
-  const filteredServices = searchQuery.trim()
+  const searchResults = searchQuery.trim()
     ? services.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.category.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 6)
     : [];
 
   return (
-    <div className="font-sans antialiased text-slate-900 bg-[#F8FAFC]">
+    <div className="font-sans antialiased text-slate-900 bg-white selection:bg-[#7C3AED] selection:text-white">
       <SEO
-        title="ETaxwala — #1 Platform for Company Registration, GST, Tax Audit & Legal Services India"
-        description="Private Limited Company Incorporation in 7 Days, GST Returns, Trademark, FPC Registration & CA Advisory. 1,00,000+ Filings · 120+ Legal Centers · 5-Min CA Callback."
-        keywords="company registration India, private limited, GST return filing, tax audit, trademark registration, ROC compliance, CA services India, FPC registration, IndiaFilings alternative, Vakilsearch alternative"
+        title="ETaxwala — India's Modern Legal, Tax & Compliance Operating System"
+        description="Private Limited Company Registration in 7 Days, GST Returns, Trademark Filing & Annual ROC Compliance. Advised by practicing Chartered Accountants. 1,00,000+ Filings across India."
+        keywords="company registration India, private limited, GST return filing, tax audit, trademark registration, ROC compliance, CA services India, FPC registration"
         url="/"
       />
 
       {/* ═════════════════════════════════════════════════════════════════
-          1. LIVE ACTIVITY TICKER (Top Bar Proof)
+          1. LIVE ACTIVITY TICKER BAR (Light Cream & Clean Social Proof)
           ═════════════════════════════════════════════════════════════════ */}
-      <div className="bg-slate-950 text-white text-[11px] py-1.5 px-4 border-b border-slate-800 flex items-center justify-between overflow-hidden">
-        <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-bold text-slate-300">Live Client Filing Stream:</span>
+      <div className="bg-[#FAF9F5] text-slate-800 text-xs py-2 px-4 border-b border-[#EAE6DD]">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2 overflow-hidden text-[11px]">
+            <span className="w-2 h-2 rounded-full bg-[#E11D48] animate-pulse shrink-0" />
+            <span className="font-bold text-slate-900 shrink-0">Live Client Filings:</span>
             <AnimatePresence mode="wait">
               <motion.span
                 key={tickerIndex}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="text-emerald-300 font-semibold"
+                exit={{ opacity: 0, y: -4 }}
+                className="text-slate-700 font-medium truncate"
               >
-                {RECENT_ACTIVITIES[tickerIndex].name} ({RECENT_ACTIVITIES[tickerIndex].city}) — {RECENT_ACTIVITIES[tickerIndex].action} • <span className="text-slate-400">{RECENT_ACTIVITIES[tickerIndex].time}</span>
+                {LIVE_ACTIVITIES[tickerIndex].name} ({LIVE_ACTIVITIES[tickerIndex].city}) — <strong className="text-slate-900">{LIVE_ACTIVITIES[tickerIndex].action}</strong> • <span className="text-slate-500">{LIVE_ACTIVITIES[tickerIndex].time}</span>
               </motion.span>
             </AnimatePresence>
           </div>
 
-          <div className="hidden md:flex items-center gap-4 text-slate-400">
-            <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-400" /> MCA &amp; GST Certified</span>
-            <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-blue-400" /> 080-6902-9999 (10 AM - 7 PM)</span>
+          <div className="hidden md:flex items-center gap-4 text-[11px] text-slate-600">
+            <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-[#0084D1]" /> MCA &amp; GST Certified Practice</span>
+            <span>•</span>
+            <span className="text-slate-900 font-bold">Helpline: 080-6902-9999</span>
           </div>
         </div>
       </div>
 
       {/* ═════════════════════════════════════════════════════════════════
-          2. HERO LEAD ENGINE (IndiaFilings / Vakilsearch Benchmark)
+          2. MINIMALIST HERO & LEAD GENERATION SECTION (Light & Cream)
           ═════════════════════════════════════════════════════════════════ */}
-      <section className="relative bg-gradient-to-b from-slate-900 via-[#0B1528] to-slate-900 text-white pt-8 pb-16 overflow-hidden">
-        {/* Background Gradients */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <section className="relative pt-10 pb-16 lg:pt-14 lg:pb-20 bg-gradient-to-b from-[#FAF9F5] via-[#FFFDF9] to-white border-b border-[#EAE6DD]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* Top Headline Banner */}
-          <div className="text-center max-w-3xl mx-auto space-y-3 mb-8">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-blue-500/20 to-emerald-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>India's Most Trusted Legal &amp; CA Tax Platform</span>
+          {/* Main Headline with Signature Multicolour Highlight */}
+          <div className="max-w-3xl mb-10 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#EAE6DD] text-slate-800 text-xs font-bold shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <span>Chartered Accountant Rigor • 100% Digital Execution</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display tracking-tight text-white leading-tight">
-              Start, Manage &amp; Scale Your Business with <span className="bg-gradient-to-r from-blue-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">Top Chartered Accountants</span>
+            
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
+              The modern operating system for <span className="text-multicolor">Indian legal, tax &amp; compliance</span>
             </h1>
-            <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
-              Join 1,00,000+ businesses across 28 states. Transparent pricing, zero hidden charges, and guaranteed 5-minute CA callback.
+
+            <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl">
+              Incorporate your company in 7 days, file penalty-proof GST/ITR returns, and manage annual secretarial compliance with dedicated senior Chartered Accountants.
             </p>
           </div>
 
-          {/* ─── Hero Service Category Selector Tabs ─── */}
-          <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-4 no-scrollbar">
-            {HERO_CATEGORIES.map((cat, idx) => {
-              const isSelected = idx === activeTab;
+          {/* Interactive Category Segment Switcher (Cream Tabs) */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 no-scrollbar border-b border-[#EAE6DD]">
+            {HERO_SEGMENTS.map((seg, idx) => {
+              const isSelected = idx === activeSegmentIndex;
               return (
                 <button
-                  key={cat.id}
+                  key={seg.id}
                   onClick={() => {
-                    setActiveTab(idx);
+                    setActiveSegmentIndex(idx);
                     setSubmitSuccess(false);
                   }}
-                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                  className={`px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                     isSelected
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400'
-                      : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/60'
+                      ? 'btn-multicolor shadow-xs'
+                      : 'bg-white text-slate-700 hover:text-slate-900 border border-[#EAE6DD] hover:bg-[#FAF9F5]'
                   }`}
                 >
-                  <span>{cat.label}</span>
+                  {seg.tab}
                 </button>
               );
             })}
           </div>
 
-          {/* ─── Lead Conversion Grid (Details Left + Form Right) ─── */}
-          <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+          {/* Split Content Grid (Details Left, Focused Lead Card Right) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             
-            {/* Left Column: Selected Service Package Breakdown */}
-            <div className="lg:col-span-6 space-y-5">
-              <div className="space-y-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  {currentCat.badge}
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">{currentCat.title}</h2>
-                <div className="flex items-baseline gap-3 pt-1">
-                  <span className="text-3xl font-extrabold text-amber-300">{currentCat.price}</span>
-                  <span className="text-xs text-slate-400 line-through">{currentCat.originalPrice}</span>
-                  <span className="text-xs font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800">
-                    All-Inclusive
+            {/* Left Column: Selected Service Inclusions & Guarantees */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FAF9F5] text-slate-900 border border-[#EAE6DD]">
+                    {activeSegment.badge}
                   </span>
-                  <span className="text-xs text-slate-300 ml-auto flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-blue-400" /> {currentCat.delivery}
+                  <span className="text-xs text-slate-600 flex items-center gap-1 font-medium">
+                    <Clock className="w-3.5 h-3.5 text-[#E11D48]" /> {activeSegment.turnaround}
+                  </span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                  {activeSegment.title}
+                </h2>
+
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {activeSegment.desc}
+                </p>
+
+                {/* Price — hidden, contact for quote */}
+                <div className="flex items-center gap-3 pt-2">
+                  <span className="price-masked text-2xl">₹ ★ ★ ★</span>
+                  <span className="text-xs font-bold text-[#7C3AED] bg-[#FAF9F5] border border-[#EAE6DD] px-2.5 py-1 rounded-md flex items-center gap-1">
+                    Contact us for exact quote
                   </span>
                 </div>
               </div>
 
-              {/* Inclusions Checklist */}
-              <div className="space-y-2.5 pt-2 border-t border-slate-800">
-                <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">What's Included in This Package:</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {currentCat.inclusions.map((item, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs text-slate-200">
-                      <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+              {/* What is Included Checklist */}
+              <div className="pt-4 border-t border-[#EAE6DD] space-y-3">
+                <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Package Inclusions &amp; Deliverables:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {activeSegment.inclusions.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-slate-700 font-medium">
+                      <div className="w-4 h-4 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-[#7C3AED] flex items-center justify-center shrink-0 mt-0.5">
                         <Check className="w-3 h-3 stroke-[3]" />
                       </div>
                       <span>{item}</span>
@@ -336,83 +391,82 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Trust & Guarantee Markers */}
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-xs text-slate-300">
-                <div className="flex items-center gap-2">
-                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                  <span className="font-bold">4.9/5 Rating</span>
-                  <span className="text-slate-500">(14,800+ Reviews)</span>
+              {/* Trust Indicators (Light Cream Cards) */}
+              <div className="grid grid-cols-3 gap-3 pt-4 border-t border-[#EAE6DD] text-xs">
+                <div className="p-3.5 bg-[#FAF9F5] rounded-xl border border-[#EAE6DD] text-center">
+                  <p className="font-extrabold text-slate-900 text-sm">1,00,000+</p>
+                  <p className="text-[11px] text-slate-600 mt-0.5">Filings Cleared</p>
                 </div>
-                <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-                  <ShieldCheck className="w-4 h-4" /> 100% Money-Back SLA
+                <div className="p-3.5 bg-[#FAF9F5] rounded-xl border border-[#EAE6DD] text-center">
+                  <p className="font-extrabold text-slate-900 text-sm">4.9 / 5.0</p>
+                  <p className="text-[11px] text-slate-600 mt-0.5">Google Rating</p>
+                </div>
+                <div className="p-3.5 bg-[#FAF9F5] rounded-xl border border-[#EAE6DD] text-center">
+                  <p className="font-extrabold text-slate-900 text-sm">120+ Hubs</p>
+                  <p className="text-[11px] text-slate-600 mt-0.5">Pan-India Reach</p>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: High-Converting Instant Lead Inquiry Form */}
-            <div className="lg:col-span-6 bg-white text-slate-900 rounded-2xl p-6 sm:p-7 shadow-xl">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            {/* Right Column: High-Converting Minimalist Lead Card */}
+            <div className="lg:col-span-5 bg-white rounded-2xl border border-[#EAE6DD] shadow-card p-6 sm:p-7">
+              <div className="border-b border-[#EAE6DD] pb-3 mb-4 flex items-center justify-between">
                 <div>
-                  <h3 className="font-extrabold text-base sm:text-lg text-slate-900 flex items-center gap-1.5">
-                    <Zap className="w-4 h-4 text-amber-500 fill-amber-500" /> Talk to an Expert CA in 2 Mins
+                  <h3 className="font-bold text-base text-slate-900">
+                    Get Free CA Consultation &amp; Quote
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Get a customized proposal &amp; instant consultation</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Guaranteed callback from Senior CA within 5 minutes
+                  </p>
                 </div>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px] uppercase">
-                  14 CAs Online
-                </span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#E11D48] shrink-0 animate-pulse" title="Active CA Desk" />
               </div>
 
               {submitSuccess ? (
-                <div className="py-8 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
-                    <CheckCircle2 className="w-8 h-8" />
+                <div className="py-6 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-[#7C3AED] flex items-center justify-center mx-auto">
+                    <CheckCircle2 className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h4 className="text-xl font-bold text-slate-900">Inquiry Received!</h4>
-                    <p className="text-xs text-slate-600 mt-1 max-w-xs mx-auto">
-                      Our Senior CA is reviewing your requirements and will connect with you within <strong>2–5 minutes</strong>.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600">
-                    Direct CA Helpline: <strong className="text-slate-900">080-6902-9999</strong>
+                  <h4 className="text-base font-bold text-slate-900">Inquiry Received</h4>
+                  <p className="text-xs text-slate-600 max-w-xs mx-auto">
+                    A Senior Chartered Accountant from our Pune/Mumbai legal desk is reviewing your details and will call you shortly.
+                  </p>
+                  <div className="p-2.5 bg-[#FAF9F5] rounded-lg text-xs text-slate-800 font-bold border border-[#EAE6DD]">
+                    Direct Helpline: 080-6902-9999
                   </div>
                   <button
                     onClick={() => {
                       setSubmitSuccess(false);
                       setLeadForm({ name: '', mobile: '', email: '', city: 'Pune', state: 'Maharashtra' });
                     }}
-                    className="text-xs text-blue-600 font-bold hover:underline"
+                    className="text-xs text-[#0084D1] font-bold hover:underline"
                   >
-                    Submit Another Inquiry
+                    Submit another query
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleHeroSubmit} className="space-y-3.5">
+                <form onSubmit={handleHeroFormSubmit} className="space-y-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Full Name <span className="text-rose-500">*</span>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Full Name <span className="text-[#E11D48]">*</span>
                     </label>
-                    <div className="relative">
-                      <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Rahul Sharma"
-                        value={leadForm.name}
-                        onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
-                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Vikramaditya Rao"
+                      value={leadForm.name}
+                      onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
+                    />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Mobile Number <span className="text-rose-500">*</span>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Mobile Number <span className="text-[#E11D48]">*</span>
                       </label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 border-r border-slate-300 pr-1.5">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 border-r border-[#EAE6DD] pr-1.5">
                           +91
                         </span>
                         <input
@@ -422,82 +476,78 @@ export default function HomePage() {
                           placeholder="98765 43210"
                           value={leadForm.mobile}
                           onChange={(e) => setLeadForm({ ...leadForm, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                          className="w-full pl-12 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          className="w-full pl-12 pr-3 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Email Address
                       </label>
-                      <div className="relative">
-                        <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                          type="email"
-                          placeholder="you@company.com"
-                          value={leadForm.email}
-                          onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
-                          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                        />
-                      </div>
+                      <input
+                        type="email"
+                        placeholder="you@company.com"
+                        value={leadForm.email}
+                        onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
+                      />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">City / District</label>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        City / District
+                      </label>
                       <input
                         type="text"
                         placeholder="e.g. Pune, Mumbai"
                         value={leadForm.city}
                         onChange={(e) => setLeadForm({ ...leadForm, city: e.target.value })}
-                        className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Selected Service</label>
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 truncate">
-                        {currentCat.defaultService}
-                      </div>
                     </div>
                   </div>
 
-                  {/* WhatsApp Opt-in */}
                   <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
                     <input
                       type="checkbox"
-                      checked={whatsappUpdates}
-                      onChange={(e) => setWhatsappUpdates(e.target.checked)}
-                      className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                      checked={whatsappConsent}
+                      onChange={(e) => setWhatsappConsent(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded text-[#059669] focus:ring-[#059669] border-slate-300"
                     />
-                    <span className="text-[11px] text-slate-600 font-medium">
-                      Get quotation &amp; status updates on <strong className="text-emerald-700">WhatsApp</strong>
+                    <span className="text-[11px] text-slate-600">
+                      Receive quote &amp; filing updates on <strong className="text-slate-900">WhatsApp</strong>
                     </span>
                   </label>
 
                   {submitError && (
-                    <p className="text-xs text-rose-500 font-semibold">{submitError}</p>
+                    <p className="text-xs text-[#E11D48] font-semibold">{submitError}</p>
                   )}
 
+                  {/* Multicolour Action Button */}
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    className="w-full py-3 px-4 rounded-xl text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-2 btn-multicolor"
                   >
                     {isSubmitting ? (
-                      <span>Submitting Inquiry...</span>
+                      <span>Connecting to Senior CA...</span>
                     ) : (
                       <>
-                        <span>Get Free CA Consultation &amp; Quote</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <span>Request Free Callback &amp; Quote</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
                   </button>
 
-                  <p className="text-[10px] text-center text-slate-400">
-                    🔒 Bank-Grade 256-Bit SSL Encrypted • Zero Spam Guarantee
-                  </p>
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2">
+                    <span className="flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-slate-400" /> 256-Bit SSL Encrypted
+                    </span>
+                    <span>Zero Spam Guarantee</span>
+                  </div>
                 </form>
               )}
             </div>
@@ -508,233 +558,359 @@ export default function HomePage() {
       </section>
 
       {/* ═════════════════════════════════════════════════════════════════
-          3. SEARCH 250+ SERVICES INSTANT FINDER (Vakilsearch Style)
+          3. STATUTORY INTEGRATION & TRUST CREDENTIALS BAR
           ═════════════════════════════════════════════════════════════════ */}
-      <section className="bg-white py-8 border-b border-slate-200">
-        <div className="max-w-4xl mx-auto px-4 text-center space-y-4">
-          <h3 className="text-base font-bold text-slate-900">
-            Looking for a Specific Legal, Tax or Compliance Service?
-          </h3>
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search from 250+ services (e.g. Private Limited, GST, Trademark, Section 8, FSSAI, 80G)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-blue-500 focus:outline-none text-sm shadow-sm"
-            />
-            {filteredServices.length > 0 && (
-              <div className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-200 shadow-2xl text-left overflow-hidden divide-y divide-slate-100">
-                {filteredServices.map((s) => (
-                  <Link
-                    key={s.id}
-                    to={`/services/${s.category.toLowerCase().replace(/[^a-z0-9]/g, '-')}/${s.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
-                    className="p-3.5 hover:bg-blue-50 flex items-center justify-between group transition-all"
-                  >
-                    <div>
-                      <p className="font-bold text-xs text-slate-900 group-hover:text-blue-600">{s.name}</p>
-                      <p className="text-[10px] text-slate-400 uppercase font-bold">{s.category}</p>
-                    </div>
-                    <span className="text-xs font-bold text-blue-600 flex items-center gap-1">
-                      View Details <ChevronRight className="w-3.5 h-3.5" />
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            )}
+      <section className="py-8 bg-[#FAF9F5] border-b border-[#EAE6DD]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            
+            <div>
+              <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Statutory &amp; Regulatory Integrations
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Direct MCA V3, GSTN, CBDT, and IP India online filing workflows
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-8 text-xs font-bold text-slate-700">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#0084D1]" /> MCA SPICe+ V3
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#7C3AED]" /> GSTN Portal
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#E11D48]" /> Income Tax e-Filing
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#F97316]" /> IP India TM Registry
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-slate-800" /> ISO 9001:2015
+              </span>
+            </div>
+
           </div>
         </div>
       </section>
 
       {/* ═════════════════════════════════════════════════════════════════
-          4. POPULAR SERVICES GRID
+          4. INSTANT SEARCH ACROSS 250+ SERVICES (Minimalist Light Hub)
           ═════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full bg-blue-100 text-blue-700">
-            India's Most In-Demand Services
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            End-to-End Corporate &amp; Legal Solutions
+      <section className="py-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center space-y-3 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+            Looking for a specific service?
           </h2>
           <p className="text-xs text-slate-500">
-            Everything your business needs from inception to statutory audits and annual compliance.
+            Search our comprehensive directory of 250+ corporate, tax, compliance, and license services.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {POPULAR_SERVICES.map((srv, idx) => {
-            const Icon = srv.icon;
-            return (
-              <div
-                key={idx}
-                className="bg-white rounded-3xl border border-slate-200/90 hover:border-blue-400 p-6 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between group"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-                      {srv.tag}
-                    </span>
-                    <span className="text-xs text-slate-400 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-blue-500" /> {srv.days}
-                    </span>
-                  </div>
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Type a service (e.g. Private Limited, Section 8, GST, Trademark, FSSAI, 80G, ISO)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] shadow-xs bg-white"
+          />
 
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <h3 className="font-bold text-base text-slate-900 group-hover:text-blue-600 transition-colors">
-                      {srv.title}
-                    </h3>
-                  </div>
-
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {srv.desc}
-                  </p>
-                </div>
-
-                <div className="pt-5 mt-4 border-t border-slate-100 flex items-center justify-between">
+          {searchResults.length > 0 && (
+            <div className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-xl border border-[#EAE6DD] shadow-xl overflow-hidden divide-y divide-slate-100">
+              {searchResults.map((s) => (
+                <Link
+                  key={s.id}
+                  to={`/services/${s.category.toLowerCase().replace(/[^a-z0-9]/g, '-')}/${s.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                  className="p-3.5 hover:bg-[#FAF9F5] flex items-center justify-between group transition-colors"
+                >
                   <div>
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Starting From</span>
-                    <span className="text-base font-extrabold text-slate-900">{srv.price}</span>
+                    <p className="font-semibold text-xs text-slate-900 group-hover:text-[#0084D1]">{s.name}</p>
+                    <p className="text-[10px] text-slate-400 uppercase font-bold">{s.category}</p>
                   </div>
+                  <span className="text-xs font-bold text-[#0084D1] flex items-center gap-1">
+                    Details <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
 
-                  <Link
-                    to={srv.link}
-                    className="px-4 py-2 rounded-xl bg-slate-900 group-hover:bg-blue-600 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1"
-                  >
-                    <span>Get Started</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
+        {/* Quick Tag Pills */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-[11px] text-slate-500">
+          <span className="font-semibold text-slate-700">Popular Searches:</span>
+          <Link to="/services/registration/private-limited" className="hover:text-[#0084D1] underline">Pvt Ltd Company</Link>
+          <span>•</span>
+          <Link to="/itr-filing" className="hover:text-[#0084D1] underline">ITR Return Filing</Link>
+          <span>•</span>
+          <Link to="/services/ip/trademark" className="hover:text-[#0084D1] underline">Trademark (TM)</Link>
+          <span>•</span>
+          <Link to="/fpc-training" className="hover:text-[#0084D1] underline">Farmer Producer Co.</Link>
+          <span>•</span>
+          <Link to="/services/compliance/pvt-ltd" className="hover:text-[#0084D1] underline">Annual ROC Compliance</Link>
         </div>
       </section>
 
       {/* ═════════════════════════════════════════════════════════════════
-          5. COMPARISON: ETaxwala vs. Traditional CA vs. Others
+          5. CORE PRACTICE VERTICALS (Bento Grid on Light Cream)
           ═════════════════════════════════════════════════════════════════ */}
-      <section className="bg-white py-16 border-y border-slate-200">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              Why 1,00,000+ Businesses Choose ETaxwala
+      <section className="py-16 bg-[#FAF9F5] border-t border-[#EAE6DD]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          
+          <div className="max-w-2xl space-y-2">
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider bg-white px-2.5 py-1 rounded-md border border-[#EAE6DD]">
+              Core Practice Verticals
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Comprehensive Corporate Lifecycle Management
             </h2>
-            <p className="text-xs text-slate-500">
-              Compare our transparent technology-backed CA ecosystem against traditional offline consultants.
+            <p className="text-xs sm:text-sm text-slate-600">
+              Handled directly by in-house Chartered Accountants, Company Secretaries, and Legal Advocates.
             </p>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {CORE_PRACTICE_CARDS.map((card, i) => {
+              const Icon = card.icon;
+              return (
+                <div
+                  key={i}
+                  className="bg-white rounded-2xl border border-[#EAE6DD] hover:border-slate-300 p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FAF9F5] text-slate-800 border border-[#EAE6DD]">
+                        {card.tag}
+                      </span>
+                      <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                        <Clock className="w-3.5 h-3.5 text-[#E11D48]" /> {card.timeline}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-1">
+                      <div className="w-9 h-9 rounded-xl bg-[#FAF9F5] border border-[#EAE6DD] group-hover:border-[#7C3AED] text-slate-800 group-hover:text-[#7C3AED] flex items-center justify-center shrink-0 transition-colors">
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <h3 className="font-bold text-base text-slate-900 group-hover:text-[#0084D1] transition-colors">
+                        {card.title}
+                      </h3>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {card.desc}
+                    </p>
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-[#EAE6DD] flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Fee</span>
+                      <span className="price-masked text-base">₹ ★ ★ ★</span>
+                    </div>
+
+                    <Link
+                      to={card.link}
+                      className="px-3.5 py-1.5 rounded-lg btn-multicolor font-bold text-xs shadow-xs flex items-center gap-1"
+                    >
+                      <span>Explore</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ═════════════════════════════════════════════════════════════════
+          6. INTERACTIVE COMPANY INCORPORATION FEE CALCULATOR
+          ═════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 bg-white border-t border-[#EAE6DD]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          
+          <div className="text-center space-y-2">
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider bg-[#FAF9F5] px-2.5 py-1 rounded-md border border-[#EAE6DD]">
+              Transparency First
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Company Incorporation Fee Estimator
+            </h2>
+            <p className="text-xs text-slate-500">
+              Calculate government stamp duty and professional CA fees with zero hidden charges.
+            </p>
+          </div>
+
+          <div className="bg-[#FAF9F5] rounded-2xl border border-[#EAE6DD] p-6 sm:p-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Entity Type</label>
+                <select
+                  value={calcEntityType}
+                  onChange={(e) => setCalcEntityType(e.target.value)}
+                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-[#EAE6DD] bg-white font-semibold text-slate-800"
+                >
+                  <option value="pvt_ltd">Private Limited Company</option>
+                  <option value="llp">LLP Partnership</option>
+                  <option value="opc">One Person Company</option>
+                  <option value="fpc">Farmer Producer Co (FPC)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Authorized Capital</label>
+                <select
+                  value={calcCapital}
+                  onChange={(e) => setCalcCapital(e.target.value)}
+                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-[#EAE6DD] bg-white font-semibold text-slate-800"
+                >
+                  <option value="100000">₹1,00,000 (Standard)</option>
+                  <option value="500000">₹5,00,000</option>
+                  <option value="1000000">₹10,00,000</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Number of Directors</label>
+                <select
+                  value={calcDirectors}
+                  onChange={(e) => setCalcDirectors(e.target.value)}
+                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-[#EAE6DD] bg-white font-semibold text-slate-800"
+                >
+                  <option value="2">2 Directors (2 DSCs + 2 DINs)</option>
+                  <option value="3">3 Directors</option>
+                  <option value="4">4 Directors</option>
+                </select>
+              </div>
+
+            </div>
+
+            {/* Calculated Breakdown Card */}
+            <div className="bg-white rounded-xl border border-[#EAE6DD] p-5 space-y-3">
+              <div className="flex justify-between text-xs text-slate-600">
+                <span>MCA Government Stamp Duty &amp; Name Approval:</span>
+                <span className="font-semibold text-slate-900">₹2,000 (Included)</span>
+              </div>
+              <div className="flex justify-between text-xs text-slate-600">
+                <span>Digital Signature Certificates ({calcDirectors} Class-3 DSCs):</span>
+                <span className="font-semibold text-slate-900">₹3,000 (Included)</span>
+              </div>
+              <div className="flex justify-between text-xs text-slate-600">
+                <span>CA Drafting (MoA, AoA, SPICe+ Filing &amp; PAN/TAN):</span>
+                <span className="font-semibold text-slate-900">₹11,499 (Included)</span>
+              </div>
+              <div className="pt-3 border-t border-[#EAE6DD] flex justify-between items-baseline">
+                <div>
+                  <span className="text-xs font-bold text-slate-900 uppercase">Total All-Inclusive Fee:</span>
+                  <p className="text-[11px] text-slate-500 font-medium">Includes all statutory filings &amp; post-incorporation kit</p>
+                </div>
+                <span className="text-2xl font-extrabold text-slate-900">
+                  {calcEntityType === 'pvt_ltd' ? '₹16,499' : calcEntityType === 'llp' ? '₹9,999' : calcEntityType === 'opc' ? '₹11,999' : '₹24,999'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ═════════════════════════════════════════════════════════════════
+          7. TRANSPARENT COMPARISON TABLE (ETaxwala vs Others)
+          ═════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 bg-[#FAF9F5] border-t border-[#EAE6DD]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Why Indian Founders Choose ETaxwala
+            </h2>
+            <p className="text-xs text-slate-500">
+              Clear, transparent comparison against traditional offline consultancies and generic web portals.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-[#EAE6DD] overflow-x-auto shadow-xs">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
-                  <th className="py-3 px-4">Feature / Deliverable</th>
-                  <th className="py-3 px-4 text-blue-600 font-extrabold text-sm">ETaxwala 2.0</th>
-                  <th className="py-3 px-4 text-slate-600">Traditional CA Office</th>
-                  <th className="py-3 px-4 text-slate-600">Generic Online Portals</th>
+                <tr className="border-b border-[#EAE6DD] text-slate-700 font-bold uppercase text-[10px] bg-[#FAF9F5]">
+                  <th className="py-3.5 px-5">Deliverable</th>
+                  <th className="py-3.5 px-5 text-slate-900 font-extrabold text-xs">ETaxwala 2.0</th>
+                  <th className="py-3.5 px-5 text-slate-500">Traditional Offline CA</th>
+                  <th className="py-3.5 px-5 text-slate-500">Generic Portals</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+              <tbody className="divide-y divide-[#EAE6DD] text-slate-700 font-medium">
                 <tr>
-                  <td className="py-3.5 px-4 font-bold text-slate-900">Pricing Transparency</td>
-                  <td className="py-3.5 px-4 text-emerald-600 font-bold">100% Fixed &amp; All-Inclusive</td>
-                  <td className="py-3.5 px-4 text-slate-500">Unpredictable billing &amp; hidden extras</td>
-                  <td className="py-3.5 px-4 text-slate-500">Govt fee excluded on checkout</td>
+                  <td className="py-4 px-5 font-bold text-slate-900">Pricing Transparency</td>
+                  <td className="py-4 px-5 text-slate-900 font-bold">100% Fixed &amp; All-Inclusive</td>
+                  <td className="py-4 px-5 text-slate-500">Variable with hidden extra fees</td>
+                  <td className="py-4 px-5 text-slate-500">Govt fees excluded on checkout</td>
                 </tr>
                 <tr>
-                  <td className="py-3.5 px-4 font-bold text-slate-900">Live Status Tracking</td>
-                  <td className="py-3.5 px-4 text-emerald-600 font-bold">10-Stage Real-Time Portal &amp; SMS</td>
-                  <td className="py-3.5 px-4 text-slate-500">Manual phone follow-ups required</td>
-                  <td className="py-3.5 px-4 text-slate-500">Vague email status</td>
+                  <td className="py-4 px-5 font-bold text-slate-900">Milestone Visibility</td>
+                  <td className="py-4 px-5 text-slate-900 font-bold">10-Stage Real-Time Portal &amp; SMS</td>
+                  <td className="py-4 px-5 text-slate-500">Manual phone follow-ups required</td>
+                  <td className="py-4 px-5 text-slate-500">Static email notifications</td>
                 </tr>
                 <tr>
-                  <td className="py-3.5 px-4 font-bold text-slate-900">Expert Assigned</td>
-                  <td className="py-3.5 px-4 text-emerald-600 font-bold">Dedicated Senior CA &amp; CS Specialist</td>
-                  <td className="py-3.5 px-4 text-slate-500">Article assistants / Trainees</td>
-                  <td className="py-3.5 px-4 text-slate-500">Automated bots / Non-CA support</td>
+                  <td className="py-4 px-5 font-bold text-slate-900">Professional Handling</td>
+                  <td className="py-4 px-5 text-slate-900 font-bold">In-House Practicing CAs &amp; CSs</td>
+                  <td className="py-4 px-5 text-slate-500">Delegated to article trainees</td>
+                  <td className="py-4 px-5 text-slate-500">Automated bots / Non-CA teams</td>
                 </tr>
                 <tr>
-                  <td className="py-3.5 px-4 font-bold text-slate-900">Document Security</td>
-                  <td className="py-3.5 px-4 text-emerald-600 font-bold">256-Bit SSL Cloud Vault</td>
-                  <td className="py-3.5 px-4 text-slate-500">Paper files in office cabinets</td>
-                  <td className="py-3.5 px-4 text-slate-500">Basic database storage</td>
+                  <td className="py-4 px-5 font-bold text-slate-900">Document Security</td>
+                  <td className="py-4 px-5 text-slate-900 font-bold">256-Bit SSL Encrypted Vault</td>
+                  <td className="py-4 px-5 text-slate-500">Physical paper folders in office</td>
+                  <td className="py-4 px-5 text-slate-500">Basic shared storage</td>
                 </tr>
                 <tr>
-                  <td className="py-3.5 px-4 font-bold text-slate-900">Turnaround Time SLA</td>
-                  <td className="py-3.5 px-4 text-emerald-600 font-bold">Guaranteed On-Time or Money Back</td>
-                  <td className="py-3.5 px-4 text-slate-500">No committed timelines</td>
-                  <td className="py-3.5 px-4 text-slate-500">Frequent portal delays</td>
+                  <td className="py-4 px-5 font-bold text-slate-900">Turnaround Commitment</td>
+                  <td className="py-4 px-5 text-slate-900 font-bold">Guaranteed On-Time or Refund SLA</td>
+                  <td className="py-4 px-5 text-slate-500">No committed timeline</td>
+                  <td className="py-4 px-5 text-slate-500">Frequent portal delays</td>
                 </tr>
               </tbody>
             </table>
           </div>
+
         </div>
       </section>
 
       {/* ═════════════════════════════════════════════════════════════════
-          6. STATS & PHYSICAL PRESENCE (120+ Legal Centers)
+          8. BOTTOM CONVERSION BANNER (Light Cream Theme)
           ═════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          <div className="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
-            <p className="text-3xl sm:text-4xl font-extrabold text-blue-600">1,00,000+</p>
-            <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mt-1">Filings Cleared</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">MCA, GST &amp; ITR returns</p>
-          </div>
-
-          <div className="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
-            <p className="text-3xl sm:text-4xl font-extrabold text-indigo-600">120+</p>
-            <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mt-1">Legal Hubs</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Walk-in centers in 28 states</p>
-          </div>
-
-          <div className="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
-            <p className="text-3xl sm:text-4xl font-extrabold text-teal-600">99.4%</p>
-            <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mt-1">First-Pass Approval</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Zero government rejection SLA</p>
-          </div>
-
-          <div className="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
-            <p className="text-3xl sm:text-4xl font-extrabold text-emerald-600">&lt; 2 Mins</p>
-            <p className="text-xs font-bold text-slate-800 uppercase tracking-wider mt-1">CA Callback</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Mon–Sat (10 AM – 7 PM)</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ═════════════════════════════════════════════════════════════════
-          7. BOTTOM CONVERSION CTA BANNER
-          ═════════════════════════════════════════════════════════════════ */}
-      <section className="bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 text-white py-14">
-        <div className="max-w-5xl mx-auto px-4 text-center space-y-6">
-          <h2 className="text-2xl sm:text-4xl font-extrabold font-display">
-            Ready to Incorporate or File Tax Returns Today?
+      <section className="py-14 bg-[#FAF9F5] border-t border-[#EAE6DD]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-5">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Ready to incorporate or file tax returns?
           </h2>
-          <p className="text-xs sm:text-sm text-blue-100 max-w-xl mx-auto">
-            Speak directly with an experienced Chartered Accountant. No waiting, no confusing legal jargon.
+          <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto">
+            Speak directly with a senior Chartered Accountant. Clear advice, zero jargon, and immediate execution.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <a
               href="tel:08069029999"
-              className="px-6 py-3.5 rounded-xl bg-white text-slate-900 font-extrabold text-xs shadow-lg hover:bg-slate-50 transition-all flex items-center gap-2"
+              className="px-5 py-3 rounded-xl bg-white text-slate-900 font-bold text-xs shadow-xs hover:bg-[#FAF9F5] border border-[#EAE6DD] transition-colors flex items-center gap-2"
             >
-              <Phone className="w-4 h-4 text-blue-600" />
+              <Phone className="w-4 h-4 text-[#F97316]" />
               <span>Call Senior CA: 080-6902-9999</span>
             </a>
             <Link
               to="/appointment"
-              className="px-6 py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2"
+              className="px-5 py-3 rounded-xl text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-2 btn-multicolor"
             >
-              <span>Book Office or Video Consultation →</span>
+              <span>Book In-Person / Video Consultation</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
       </section>
+
     </div>
   );
 }

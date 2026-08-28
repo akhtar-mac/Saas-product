@@ -110,7 +110,9 @@ export default function ServiceDetailPage() {
       />
 
       {/* Hero / Breadcrumb */}
-      <section className="bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 py-14 text-white relative">
+      <section className="relative bg-[#FFFDF9] py-14 border-b border-[#EAE6DD]">
+        {/* Multicolour accent strip */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-multicolor" />
         <div className="container-etaxwala">
           <div className="mb-4">
             <Breadcrumbs
@@ -119,23 +121,23 @@ export default function ServiceDetailPage() {
                 { label: category?.name || service.category, href: `/services` },
                 { label: service.name },
               ]}
-              className="text-slate-400"
+              className="text-slate-500"
             />
           </div>
 
           <div className="grid gap-8 lg:grid-cols-12 items-center">
             <div className="lg:col-span-8 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5" /> CA &amp; Legal Specialist Practice
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 text-xs font-bold uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> CA &amp; Legal Specialist Practice
               </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-slate-900">
                 {service.name}
               </h1>
-              <p className="text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed">
+              <p className="text-base sm:text-lg text-slate-600 max-w-2xl leading-relaxed">
                 Complete statutory execution, documentation drafting, and compliance verification led by experienced Chartered Accountants.
               </p>
               
-              <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-300 pt-2">
+              <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-500 pt-2">
                 <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-amber-400" /> 7–10 Business Days</span>
                 <span>•</span>
                 <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-emerald-400" /> 100% Approval Guarantee</span>
@@ -146,27 +148,27 @@ export default function ServiceDetailPage() {
 
             {/* Quick Price Booking Card */}
             <div className="lg:col-span-4">
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-2xl text-slate-900 dark:text-slate-100 space-y-5">
+              <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EAE6DD] shadow-xl space-y-5">
                 <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">All-Inclusive Fee</span>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-3xl font-extrabold text-blue-600 dark:text-blue-400">{formatPrice(service.price)}</span>
-                    <span className="text-xs text-slate-500">+ Govt Fees</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Custom Quote</span>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="price-masked text-3xl">₹ ★ ★ ★</span>
                   </div>
+                  <p className="text-[11px] text-slate-500 mt-1">Contact us to get your personalised quote</p>
                 </div>
 
                 <Link
                   to="/appointment"
-                  className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-xl btn-multicolor font-bold text-sm shadow-xs flex items-center justify-center gap-2"
                 >
-                  <span>Book Consultation &amp; File</span> <ArrowRight className="w-4 h-4" />
+                  <span>Get a Free Quote</span> <ArrowRight className="w-4 h-4" />
                 </Link>
 
                 <a
                   href="tel:+917071070707"
-                  className="w-full py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
+                  className="w-full py-3 rounded-xl border border-[#EAE6DD] hover:bg-[#FAF9F5] text-slate-700 font-semibold text-xs flex items-center justify-center gap-2 transition-colors"
                 >
-                  <Phone className="w-3.5 h-3.5 text-emerald-600" /> Call Direct: +91 70710 70707
+                  <Phone className="w-3.5 h-3.5 text-[#0084D1]" /> Call Direct: +91 70710 70707
                 </a>
               </div>
             </div>
@@ -268,22 +270,24 @@ export default function ServiceDetailPage() {
             <div className="lg:col-span-4 space-y-6">
               
               {/* Trust Box */}
-              <div className="bg-gradient-to-br from-blue-900 to-slate-900 text-white rounded-3xl p-6 shadow-lg space-y-4">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-500/30 text-blue-300">
+              <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-3xl p-6 shadow-xs space-y-4">
+                {/* Multicolour top accent */}
+                <div className="h-0.5 w-12 bg-multicolor rounded-full" />
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white border border-[#EAE6DD] text-[#7C3AED]">
                   ETaxwala Guarantee
                 </span>
-                <h3 className="font-bold text-base text-white">Why 1 Lakh+ Businesses Choose Us</h3>
-                <ul className="space-y-3 text-xs text-slate-300">
+                <h3 className="font-bold text-base text-slate-900">Why 1 Lakh+ Businesses Choose Us</h3>
+                <ul className="space-y-3 text-xs text-slate-600">
                   <li className="flex items-start gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <ShieldCheck className="w-4 h-4 text-[#0084D1] shrink-0 mt-0.5" />
                     <span>Every filing personally signed &amp; audited by practicing CAs.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#7C3AED] shrink-0 mt-0.5" />
                     <span>100% transparent fee structure with zero hidden charges.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Clock className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <Clock className="w-4 h-4 text-[#F97316] shrink-0 mt-0.5" />
                     <span>On-time milestone delivery backed by institutional SLA.</span>
                   </li>
                 </ul>
@@ -303,7 +307,7 @@ export default function ServiceDetailPage() {
                         <h5 className="font-bold text-xs text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors line-clamp-1">
                           {rel.name}
                         </h5>
-                        <p className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-1">{formatPrice(rel.price)}</p>
+                        <p className="text-xs font-bold price-masked mt-1">₹ ★ ★ ★</p>
                       </Link>
                     ))}
                   </div>

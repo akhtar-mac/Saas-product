@@ -3,12 +3,13 @@ import SEO from '@/components/seo';
 import {
   Award, Users, Target, Globe, HeartHandshake,
   Building2, Briefcase, Calendar, ArrowRight,
-  CheckCircle2, Star, ShieldCheck, Lightbulb,
+  CheckCircle2, Star, ShieldCheck, Lightbulb, Sparkles,
+  TrendingUp, MapPin, Clock,
 } from 'lucide-react';
 
 const milestones = [
   { year: '2014', title: 'Founded in Aurangabad', desc: 'Started as a small CA consultancy with 2 experts and a big vision.' },
-  { year: '2016', title: 'Crossed 1,000 clients',  desc: 'Expanded into GST, company registration, and trademark services.' },
+  { year: '2016', title: 'Crossed 1,000 Clients',  desc: 'Expanded into GST, company registration, and trademark services.' },
   { year: '2018', title: '50+ Expert Team',         desc: 'Added digital marketing, web development, and HR services.' },
   { year: '2020', title: 'Franchise Model Launched',desc: 'Opened our franchise model — now 120+ centers across India.' },
   { year: '2022', title: 'FPC Training Division',   desc: 'Launched FPC & PACS consultancy — transforming India\'s agriculture.' },
@@ -16,21 +17,28 @@ const milestones = [
 ];
 
 const team = [
-  { name: 'CA Ravan',       role: 'Founder & CEO',             initials: 'CR', expertise: 'Taxation & Business Strategy' },
-  { name: 'Adv. Priya',     role: 'Head of Legal Services',    initials: 'AP', expertise: 'Corporate & IP Law' },
-  { name: 'CS Rahul',       role: 'Company Secretary',          initials: 'CR', expertise: 'MCA, ROC & Compliance' },
-  { name: 'CA Meena',       role: 'Senior Tax Consultant',      initials: 'CM', expertise: 'Direct & Indirect Taxation' },
-  { name: 'Vijay',          role: 'Head of Digital Services',   initials: 'VK', expertise: 'Web, App & Digital Marketing' },
-  { name: 'Sunita',         role: 'Head of FPC Division',       initials: 'SK', expertise: 'Agriculture & PACS' },
+  { name: 'CA Ravan',    role: 'Founder & CEO',          expertise: 'Taxation & Business Strategy',    color: '#003A66' },
+  { name: 'Adv. Priya',  role: 'Head of Legal Services',  expertise: 'Corporate & IP Law',              color: '#7C3AED' },
+  { name: 'CS Rahul',    role: 'Company Secretary',        expertise: 'MCA, ROC & Compliance',           color: '#0084D1' },
+  { name: 'CA Meena',    role: 'Senior Tax Consultant',    expertise: 'Direct & Indirect Taxation',      color: '#E11D48' },
+  { name: 'Vijay',       role: 'Head of Digital Services', expertise: 'Web, App & Digital Marketing',   color: '#F97316' },
+  { name: 'Sunita',      role: 'Head of FPC Division',     expertise: 'Agriculture & PACS',              color: '#059669' },
 ];
 
 const values = [
-  { icon: ShieldCheck,    title: 'Integrity',        desc: 'Transparent pricing, honest advice, no hidden charges — always.' },
-  { icon: Target,         title: 'Precision',        desc: 'Every filing, document, and deadline handled with meticulous accuracy.' },
-  { icon: HeartHandshake, title: 'Partnership',      desc: 'We succeed when you succeed — long-term relationships over transactions.' },
-  { icon: Lightbulb,      title: 'Innovation',       desc: 'Tech-first approach to compliance — real-time tracking, digital documents.' },
-  { icon: Globe,          title: 'Accessibility',    desc: 'Premium CA services at accessible prices for every business size.' },
-  { icon: Users,          title: 'People First',     desc: '200+ expert team members who care deeply about client outcomes.' },
+  { icon: ShieldCheck,    title: 'Integrity',        desc: 'Transparent pricing, honest advice, no hidden charges — always.', color: '#0084D1' },
+  { icon: Target,         title: 'Precision',        desc: 'Every filing, document, and deadline handled with meticulous accuracy.', color: '#7C3AED' },
+  { icon: HeartHandshake, title: 'Partnership',      desc: 'We succeed when you succeed — long-term relationships over transactions.', color: '#E11D48' },
+  { icon: Lightbulb,      title: 'Innovation',       desc: 'Tech-first approach to compliance — real-time tracking, digital documents.', color: '#F97316' },
+  { icon: Globe,          title: 'Accessibility',    desc: 'Premium CA services at accessible prices for every business size.', color: '#059669' },
+  { icon: Users,          title: 'People First',     desc: '200+ expert team members who care deeply about client outcomes.', color: '#003A66' },
+];
+
+const stats = [
+  { v: '10+',  l: 'Years of Excellence',  icon: Calendar },
+  { v: '1L+',  l: 'Happy Clients',        icon: Users },
+  { v: '200+', l: 'Expert Professionals', icon: Award },
+  { v: '120+', l: 'Franchise Centers',    icon: MapPin },
 ];
 
 export default function AboutPage() {
@@ -43,82 +51,148 @@ export default function AboutPage() {
       />
 
       {/* ─── Hero ─── */}
-      <section className="relative pt-32 pb-20 overflow-hidden" style={{ background: 'var(--navy)' }}>
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
-        <div className="container-etaxwala relative text-center text-white">
-          <p className="section-tag mx-auto" style={{ color: 'var(--gold-light)' }}>About ETaxwala</p>
-          <h1 className="section-title text-white mb-4">India's Business Doctor Since 2014</h1>
-          <p className="section-subtitle mx-auto text-center" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            From a 2-person CA firm in Aurangabad to India's fastest-growing multi-service business platform —
-            serving 1 Lakh+ businesses across 28 states.
-          </p>
+      <section className="relative pt-28 pb-16 bg-gradient-to-b from-[#FAF9F5] to-white border-b border-[#EAE6DD] overflow-hidden">
+        {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.035]"
+          style={{ backgroundImage: 'linear-gradient(#000 1px,transparent 1px),linear-gradient(90deg,#000 1px,transparent 1px)', backgroundSize: '50px 50px' }}
+        />
+        {/* Multicolour accent line */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-multicolor" />
+
+        <div className="container-etaxwala relative">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#EAE6DD] text-xs font-bold text-[#7C3AED] mb-5 shadow-xs">
+              <Sparkles className="w-3.5 h-3.5" />
+              India's Business Doctor Since 2014
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight mb-5">
+              We are <span className="text-multicolor">ETaxwala</span>
+            </h1>
+            <p className="text-lg text-slate-600 leading-relaxed max-w-2xl">
+              From a 2-person CA firm in Aurangabad to India's fastest-growing multi-service business platform —
+              serving 1 Lakh+ businesses across 28 states.
+            </p>
+            <div className="flex flex-wrap gap-3 mt-7">
+              <Link to="/appointment" className="px-5 py-3 rounded-xl btn-multicolor font-bold text-sm flex items-center gap-2 shadow-xs">
+                Book Free Consultation <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/services" className="px-5 py-3 rounded-xl border border-[#EAE6DD] bg-white font-bold text-sm text-slate-700 hover:bg-[#FAF9F5] transition-colors">
+                Explore Services
+              </Link>
+            </div>
+          </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
+      </section>
+
+      {/* ─── Team Photo Banner ─── */}
+      <section className="bg-[#FAF9F5] py-12 border-b border-[#EAE6DD]">
+        <div className="container-etaxwala">
+          <div className="rounded-3xl overflow-hidden shadow-xl">
+            <img
+              src="/about_team.jpg"
+              alt="ETaxwala Expert Team"
+              className="w-full h-auto object-cover"
+              style={{ maxHeight: 420 }}
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        </div>
       </section>
 
       {/* ─── Stats ─── */}
-      <section className="section-white">
+      <section className="py-14 bg-white border-b border-[#EAE6DD]">
         <div className="container-etaxwala">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { v: '10+',   l: 'Years of Excellence' },
-              { v: '1L+',   l: 'Happy Clients'        },
-              { v: '200+',  l: 'Expert Professionals' },
-              { v: '120+',  l: 'Franchise Centers'    },
-            ].map(s => (
-              <div key={s.l} className="card-offwhite text-center p-8">
-                <p className="stat-value text-4xl mb-2">{s.v}</p>
-                <p className="stat-label">{s.l}</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+            {stats.map(({ v, l, icon: Icon }) => (
+              <div key={l} className="p-7 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DD] text-center hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 rounded-xl bg-multicolor flex items-center justify-center mx-auto mb-3">
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <p className="text-3xl font-extrabold text-slate-900 mb-1">{v}</p>
+                <p className="text-xs text-slate-500 font-medium">{l}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Split: Story ─── */}
-      <section className="split-section section-border">
-        <div className="split-image" style={{ minHeight: 420 }}>
-          <img
-            src="/ofc2.jpg"
-            alt="ETaxwala Office"
-            className="absolute inset-0 w-full h-full object-cover"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).parentElement!.style.background = 'linear-gradient(135deg,#003A66,#004d87)'; (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-          />
-        </div>
-        <div className="split-content">
-          <p className="section-tag">Our Story</p>
-          <h2 className="section-title mb-4">We Started as a Business, Just Like Yours</h2>
-          <p className="text-slate-500 text-sm leading-relaxed mb-4">
-            ETaxwala was born in 2014 from a simple frustration — why should quality CA and legal services only be available to large corporations? Why can't small businesses get the same expert guidance?
-          </p>
-          <p className="text-slate-500 text-sm leading-relaxed mb-6">
-            Our founder, CA Ravan, built ETaxwala to be India's <strong className="text-slate-700">Business Doctor</strong> — diagnosing problems at the root, not just treating symptoms. Today we serve 1 Lakh+ businesses across India with 250+ services under one roof.
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            {['Pan-India Online Services', 'CA-Led Every Service', 'Real-time Client Portal', '98.9% Success Rate'].map(i => (
-              <div key={i} className="flex items-center gap-2 text-sm text-slate-600">
-                <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: 'var(--gold)' }} />
-                {i}
+      {/* ─── Story Split ─── */}
+      <section className="py-16 border-b border-[#EAE6DD]">
+        <div className="container-etaxwala">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Text */}
+            <div className="space-y-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-xs font-bold text-[#7C3AED]">
+                Our Story
               </div>
-            ))}
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
+                We Started as a Business,<br />Just Like Yours
+              </h2>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                ETaxwala was born in 2014 from a simple frustration — why should quality CA and legal services only be available to large corporations? Why can't small businesses get the same expert guidance?
+              </p>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                Our founder, <strong className="text-slate-700">CA Ravan</strong>, built ETaxwala to be India's Business Doctor — diagnosing problems at the root, not just treating symptoms. Today we serve 1 Lakh+ businesses across India with 250+ services under one roof.
+              </p>
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                {['Pan-India Online Services', 'CA-Led Every Service', 'Real-time Client Portal', '98.9% Success Rate'].map((item) => (
+                  <div key={item} className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                    <div className="w-5 h-5 rounded-full bg-multicolor flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-3 h-3 text-white" />
+                    </div>
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Image / Office */}
+            <div className="rounded-3xl overflow-hidden shadow-xl bg-[#FAF9F5] min-h-[320px] relative border border-[#EAE6DD]">
+              <img
+                src="/ofc2.jpg"
+                alt="ETaxwala Office"
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+              {/* Overlay stats */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6">
+                <div className="flex items-center gap-4 text-white">
+                  <div className="text-center">
+                    <p className="text-2xl font-extrabold">2014</p>
+                    <p className="text-xs opacity-80">Founded</p>
+                  </div>
+                  <div className="w-px h-10 bg-white/30" />
+                  <div className="text-center">
+                    <p className="text-2xl font-extrabold">Aurangabad</p>
+                    <p className="text-xs opacity-80">Headquarters</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ─── Our Values ─── */}
-      <section className="section-off section-border">
+      <section className="py-16 bg-[#FAF9F5] border-b border-[#EAE6DD]">
         <div className="container-etaxwala">
           <div className="text-center mb-12">
-            <p className="section-tag mx-auto">Our Values</p>
-            <h2 className="section-title">What Drives Us Every Day</h2>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#EAE6DD] text-xs font-bold text-[#7C3AED] mb-4">
+              <TrendingUp className="w-3.5 h-3.5" /> Our Values
+            </div>
+            <h2 className="text-3xl font-extrabold text-slate-900">What Drives Us Every Day</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {values.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="card p-6">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: 'rgba(212,157,14,0.1)' }}>
-                  <Icon className="h-6 w-6" style={{ color: 'var(--gold)' }} />
+            {values.map(({ icon: Icon, title, desc, color }) => (
+              <div key={title} className="bg-white rounded-2xl p-6 border border-[#EAE6DD] hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: `${color}15` }}>
+                  <Icon className="h-6 w-6" style={{ color }} />
                 </div>
-                <h3 className="font-poppins font-semibold text-slate-800 mb-2">{title}</h3>
+                <h3 className="font-bold text-slate-800 mb-2">{title}</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
               </div>
             ))}
@@ -127,26 +201,31 @@ export default function AboutPage() {
       </section>
 
       {/* ─── Timeline ─── */}
-      <section className="section-white section-border">
+      <section className="py-16 bg-white border-b border-[#EAE6DD]">
         <div className="container-etaxwala">
           <div className="text-center mb-12">
-            <p className="section-tag mx-auto">Our Journey</p>
-            <h2 className="section-title">A Decade of Growth</h2>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-xs font-bold text-[#7C3AED] mb-4">
+              <Clock className="w-3.5 h-3.5" /> Our Journey
+            </div>
+            <h2 className="text-3xl font-extrabold text-slate-900">A Decade of Growth</h2>
           </div>
           <div className="relative max-w-3xl mx-auto">
             {/* Vertical line */}
-            <div className="absolute left-16 top-0 bottom-0 w-0.5" style={{ background: 'var(--border)' }} />
+            <div className="absolute left-16 top-0 bottom-0 w-0.5 bg-[#EAE6DD]" />
             <div className="space-y-8">
               {milestones.map((m, idx) => (
                 <div key={m.year} className="flex items-start gap-8">
                   <div className="w-14 shrink-0 text-right">
-                    <span className="font-poppins font-bold text-sm" style={{ color: 'var(--gold-dark)' }}>{m.year}</span>
+                    <span className="font-extrabold text-sm text-[#7C3AED]">{m.year}</span>
                   </div>
                   <div className="relative">
-                    <div className="absolute -left-[25px] top-1 w-4 h-4 rounded-full border-2 border-white" style={{ background: idx === milestones.length - 1 ? 'var(--gold)' : 'var(--navy)' }} />
+                    <div
+                      className="absolute -left-[25px] top-1 w-4 h-4 rounded-full border-2 border-white shadow"
+                      style={{ background: idx === milestones.length - 1 ? '#7C3AED' : '#003A66' }}
+                    />
                   </div>
-                  <div className="card-flat p-5 flex-1">
-                    <h3 className="font-poppins font-semibold text-slate-800 mb-1">{m.title}</h3>
+                  <div className="p-5 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DD] flex-1 hover:shadow-sm transition-shadow">
+                    <h3 className="font-bold text-slate-800 mb-1">{m.title}</h3>
                     <p className="text-sm text-slate-500">{m.desc}</p>
                   </div>
                 </div>
@@ -157,24 +236,31 @@ export default function AboutPage() {
       </section>
 
       {/* ─── Team ─── */}
-      <section className="section-off section-border">
+      <section className="py-16 bg-[#FAF9F5] border-b border-[#EAE6DD]">
         <div className="container-etaxwala">
           <div className="text-center mb-12">
-            <p className="section-tag mx-auto">Our Team</p>
-            <h2 className="section-title">200+ Experts in Your Corner</h2>
-            <p className="section-subtitle mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#EAE6DD] text-xs font-bold text-[#7C3AED] mb-4">
+              <Users className="w-3.5 h-3.5" /> Our Team
+            </div>
+            <h2 className="text-3xl font-extrabold text-slate-900">200+ Experts in Your Corner</h2>
+            <p className="text-slate-500 text-sm max-w-xl mx-auto mt-2 leading-relaxed">
               Chartered Accountants, Lawyers, Company Secretaries and Business Advisors working together for your success.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {team.map(t => (
-              <div key={t.name} className="card p-6 text-center">
-                <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center text-white font-poppins font-bold text-lg" style={{ background: 'var(--navy)' }}>
-                  {t.initials}
+            {team.map((t) => (
+              <div key={t.name} className="bg-white rounded-2xl p-6 border border-[#EAE6DD] hover:shadow-md transition-all flex items-center gap-4 group">
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-base shrink-0"
+                  style={{ background: t.color }}
+                >
+                  {t.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                 </div>
-                <h3 className="font-poppins font-semibold text-slate-800">{t.name}</h3>
-                <p className="text-sm font-medium mb-1" style={{ color: 'var(--gold-dark)' }}>{t.role}</p>
-                <p className="text-xs text-slate-400">{t.expertise}</p>
+                <div>
+                  <h3 className="font-bold text-slate-800 group-hover:text-[#003A66] transition-colors">{t.name}</h3>
+                  <p className="text-xs font-bold mt-0.5" style={{ color: t.color }}>{t.role}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">{t.expertise}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -182,15 +268,31 @@ export default function AboutPage() {
       </section>
 
       {/* ─── CTA ─── */}
-      <section className="section-navy">
-        <div className="container-etaxwala text-center">
-          <h2 className="section-title text-white mb-4">Ready to Work with India's Best?</h2>
-          <p className="section-subtitle mx-auto text-center mb-8" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            Book a free consultation and discover how ETaxwala can transform your business compliance experience.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/appointment" className="btn btn-gold btn-lg">Book Free Consultation <ArrowRight className="h-5 w-5" /></Link>
-            <Link to="/services" className="btn btn-outline-white btn-lg">Explore Services</Link>
+      <section className="py-16 bg-white">
+        <div className="container-etaxwala">
+          <div className="rounded-3xl bg-multicolor p-10 sm:p-14 text-center text-white relative overflow-hidden">
+            <div className="relative z-10">
+              <h2 className="text-3xl sm:text-4xl font-extrabold mb-4 tracking-tight">
+                Ready to Work with India's Best?
+              </h2>
+              <p className="text-sm sm:text-base opacity-90 max-w-xl mx-auto mb-8 leading-relaxed">
+                Book a free consultation and discover how ETaxwala can transform your business compliance experience.
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center">
+                <Link
+                  to="/appointment"
+                  className="px-6 py-3.5 rounded-xl bg-white text-slate-900 font-bold text-sm hover:bg-[#FAF9F5] transition-colors flex items-center gap-2 shadow-md"
+                >
+                  Book Free Consultation <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/services"
+                  className="px-6 py-3.5 rounded-xl border border-white/40 text-white font-bold text-sm hover:bg-white/10 transition-colors"
+                >
+                  Explore Services
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

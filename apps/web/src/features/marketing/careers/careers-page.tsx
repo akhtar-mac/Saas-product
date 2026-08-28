@@ -99,42 +99,44 @@ export default function CareersPage() {
       />
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 py-20 text-white">
-        <div className="absolute inset-0 opacity-10 pointer-events-none"
-             style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+      <section className="relative overflow-hidden bg-[#FFFDF9] py-20 border-b border-[#EAE6DD]">
+        {/* Multicolour accent strip */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-multicolor" />
+        <div className="absolute inset-0 opacity-[0.025] pointer-events-none"
+             style={{ backgroundImage: 'radial-gradient(#7C3AED 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
         <div className="container-etaxwala relative z-10">
           <div className="mb-4">
-            <Breadcrumbs items={[{ label: 'Careers' }]} className="text-slate-400" />
+            <Breadcrumbs items={[{ label: 'Careers' }]} className="text-slate-500" />
           </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold uppercase tracking-wider mb-4">
-            <Sparkles className="w-3.5 h-3.5" /> We are expanding our team
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 text-xs font-semibold uppercase tracking-wider mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> We are expanding our team
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900">
             Build the Future of Indian Corporate Advisory
           </h1>
-          <p className="mt-4 max-w-2xl text-base sm:text-lg text-slate-300">
+          <p className="mt-4 max-w-2xl text-base sm:text-lg text-slate-600">
             Join 200+ verified Chartered Accountants, Legal Counselors, Engineers, and Growth Strategists delivering institutional excellence across India.
           </p>
         </div>
       </section>
 
       {/* Why Join */}
-      <section className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-16">
+      <section className="border-b border-[#EAE6DD] bg-white py-16">
         <div className="container-etaxwala">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Culture &amp; Benefits</span>
-            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">Why Build Your Career at ETaxwala?</h2>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#7C3AED]">Culture &amp; Benefits</span>
+            <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Why Build Your Career at ETaxwala?</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {whyJoin.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-center">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                <div key={item.title} className="p-6 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DD] text-center">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-[#EAE6DD] text-[#7C3AED]">
                     <Icon className="h-6 w-6" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{item.title}</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{item.desc}</p>
+                  <h3 className="text-base font-bold text-slate-900">{item.title}</h3>
+                  <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">{item.desc}</p>
                 </div>
               );
             })}
@@ -143,7 +145,7 @@ export default function CareersPage() {
       </section>
 
       {/* Open Positions */}
-      <section className="section bg-slate-50 dark:bg-slate-950 py-16">
+      <section className="section bg-[#FAF9F5] py-16">
         <div className="container-etaxwala max-w-5xl">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
@@ -161,25 +163,25 @@ export default function CareersPage() {
             {jobOpenings.map((job) => (
               <div
                 key={job.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:border-blue-300 hover:shadow-md transition-all"
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-[#EAE6DD] bg-white p-6 shadow-xs hover:border-[#7C3AED]/30 hover:shadow-md transition-all"
               >
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-slate-600">
                       {job.dept}
                     </span>
                     <span className="text-[10px] font-bold text-slate-400">• Exp: {job.exp}</span>
                   </div>
-                  <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100">{job.title}</h3>
-                  <div className="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5 text-blue-500" /> {job.type}</span>
-                    <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-blue-500" /> {job.location}</span>
+                  <h3 className="font-bold text-base sm:text-lg text-slate-900">{job.title}</h3>
+                  <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+                    <span className="flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5 text-[#0084D1]" /> {job.type}</span>
+                    <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-[#0084D1]" /> {job.location}</span>
                   </div>
                 </div>
 
                 <button
                   onClick={() => handleOpenApply(job.title)}
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors shrink-0 shadow-sm"
+                  className="px-5 py-2.5 rounded-xl btn-multicolor text-xs sm:text-sm flex items-center gap-1.5 shrink-0"
                 >
                   <span>Apply Now</span> <ArrowRight className="h-4 w-4" />
                 </button>
@@ -190,6 +192,7 @@ export default function CareersPage() {
       </section>
 
       {/* Application Modal (1.14.3) */}
+      {/* Application Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -197,14 +200,14 @@ export default function CareersPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
               onClick={() => setIsModalOpen(false)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative z-10 w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto"
+              className="relative z-10 w-full max-w-lg rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-[#EAE6DD] max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setIsModalOpen(false)}

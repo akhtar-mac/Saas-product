@@ -111,7 +111,7 @@ export default function FPCTrainingPage() {
     <>
       <SEO
         title="FPC Business Training Program — Farmer to Founder Masterclass"
-        description="10-day live online Farmer Producer Company (FPC) training in Marathi. Learn ROC compliance, NABARD subsidies, business planning & marketing. ₹3,999 only."
+        description="10-day live online Farmer Producer Company (FPC) training in Marathi. Learn ROC compliance, NABARD subsidies, business planning & marketing. Contact us for course fee."
         url="/fpc-training"
         keywords="FPC training, farmer producer company, Marathi agri training, SFAC subsidy, NABARD FPC loan, smart project maharashtra, CA training"
         schema={{
@@ -132,46 +132,48 @@ export default function FPCTrainingPage() {
       />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-slate-950 via-emerald-950 to-slate-900 py-16 lg:py-24 text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 pointer-events-none"
+      <section className="relative bg-[#FFFDF9] py-16 lg:py-24 border-b border-[#EAE6DD] overflow-hidden">
+        {/* Multicolour accent strip */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-multicolor" />
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none"
              style={{ backgroundImage: 'radial-gradient(#10b981 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
         <div className="container-etaxwala relative z-10">
           <div className="mb-4">
-            <Breadcrumbs items={[{ label: 'FPC Training' }]} className="text-emerald-300" />
+            <Breadcrumbs items={[{ label: 'FPC Training' }]} className="text-slate-500" />
           </div>
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-4">
-              <Sparkles className="w-3.5 h-3.5" /> १० दिवसांचा प्रॅक्टिकल ऑनलाईन कोर्स
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 text-xs font-semibold uppercase tracking-wider mb-4">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> १० दिवसांचा प्रॅक्टिकल ऑनलाईन कोर्स
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.18]">
-              शेतकरी ते उद्योजक: <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 bg-clip-text text-transparent">FPC बिझनेस ट्रेनिंग प्रोग्राम</span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.18] text-slate-900">
+              शेतकरी ते उद्योजक: <span className="text-multicolor">FPC बिझनेस ट्रेनिंग प्रोग्राम</span>
             </h1>
-            <p className="mt-4 text-base sm:text-lg text-emerald-100/90 leading-relaxed">
+            <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
               तुमची शेतकरी उत्पादक कंपनी (Farmer Producer Company) यशस्वीपणे चालवा, सरकारी अनुदान (Subsidies) मिळवा आणि थेट नफा कमवा. संपूर्ण मार्गदर्शन सोप्या मराठीत.
             </p>
 
             {/* Countdown Badge */}
-            <div className="mt-6 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 inline-block">
-              <p className="text-xs uppercase font-bold text-amber-300 tracking-wider mb-2">नवीन बॅच सुरू होण्यास शिल्लक वेळ:</p>
+            <div className="mt-6 p-4 rounded-2xl bg-white border border-[#EAE6DD] shadow-xs inline-block">
+              <p className="text-xs uppercase font-bold text-[#7C3AED] tracking-wider mb-2">नवीन बॅच सुरू होण्यास शिल्लक वेळ:</p>
               <div className="flex items-center gap-3 text-center">
-                <div className="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-white/10">
-                  <span className="text-xl font-bold text-white">{timeLeft.days}</span>
-                  <span className="block text-[10px] text-slate-400">दिवस</span>
+                <div className="bg-[#FAF9F5] border border-[#EAE6DD] px-3 py-1.5 rounded-lg">
+                  <span className="text-xl font-bold text-slate-900">{timeLeft.days}</span>
+                  <span className="block text-[10px] text-slate-500">दिवस</span>
                 </div>
-                <span className="text-lg font-bold text-white/50">:</span>
-                <div className="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-white/10">
-                  <span className="text-xl font-bold text-white">{timeLeft.hours}</span>
-                  <span className="block text-[10px] text-slate-400">तास</span>
+                <span className="text-lg font-bold text-slate-300">:</span>
+                <div className="bg-[#FAF9F5] border border-[#EAE6DD] px-3 py-1.5 rounded-lg">
+                  <span className="text-xl font-bold text-slate-900">{timeLeft.hours}</span>
+                  <span className="block text-[10px] text-slate-500">तास</span>
                 </div>
-                <span className="text-lg font-bold text-white/50">:</span>
-                <div className="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-white/10">
-                  <span className="text-xl font-bold text-white">{timeLeft.minutes}</span>
-                  <span className="block text-[10px] text-slate-400">मिनिटे</span>
+                <span className="text-lg font-bold text-slate-300">:</span>
+                <div className="bg-[#FAF9F5] border border-[#EAE6DD] px-3 py-1.5 rounded-lg">
+                  <span className="text-xl font-bold text-slate-900">{timeLeft.minutes}</span>
+                  <span className="block text-[10px] text-slate-500">मिनिटे</span>
                 </div>
-                <span className="text-lg font-bold text-white/50">:</span>
-                <div className="bg-slate-900/80 px-3 py-1.5 rounded-lg border border-white/10">
-                  <span className="text-xl font-bold text-white">{timeLeft.seconds}</span>
-                  <span className="block text-[10px] text-slate-400">सेकंद</span>
+                <span className="text-lg font-bold text-slate-300">:</span>
+                <div className="bg-[#FAF9F5] border border-[#EAE6DD] px-3 py-1.5 rounded-lg">
+                  <span className="text-xl font-bold text-slate-900">{timeLeft.seconds}</span>
+                  <span className="block text-[10px] text-slate-500">सेकंद</span>
                 </div>
               </div>
             </div>
@@ -180,32 +182,32 @@ export default function FPCTrainingPage() {
         </div>
       </section>
 
-      {/* Batch Details Bar (1.11.4) */}
-      <section className="bg-slate-900 text-white py-5 border-y border-slate-800">
+      {/* Batch Details Bar */}
+      <section className="bg-[#FAF9F5] text-slate-700 py-5 border-b border-[#EAE6DD]">
         <div className="container-etaxwala">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center md:text-left divide-y md:divide-y-0 md:divide-x divide-slate-800">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center md:text-left divide-y md:divide-y-0 md:divide-x divide-[#EAE6DD]">
             <div className="pt-2 md:pt-0">
-              <p className="text-[11px] text-slate-400 uppercase font-bold">माध्यम / Platform</p>
-              <p className="text-sm font-bold text-white flex items-center justify-center md:justify-start gap-1.5 mt-0.5">
-                <Video className="w-4 h-4 text-emerald-400" /> Live Zoom + Recordings
+              <p className="text-[11px] text-slate-500 uppercase font-bold">माध्यम / Platform</p>
+              <p className="text-sm font-bold text-slate-900 flex items-center justify-center md:justify-start gap-1.5 mt-0.5">
+                <Video className="w-4 h-4 text-emerald-600" /> Live Zoom + Recordings
               </p>
             </div>
             <div className="pt-2 md:pt-0 md:pl-6">
-              <p className="text-[11px] text-slate-400 uppercase font-bold">भाषा / Language</p>
-              <p className="text-sm font-bold text-white flex items-center justify-center md:justify-start gap-1.5 mt-0.5">
-                <BookOpen className="w-4 h-4 text-amber-400" /> सोपी मराठी (Marathi)
+              <p className="text-[11px] text-slate-500 uppercase font-bold">भाषा / Language</p>
+              <p className="text-sm font-bold text-slate-900 flex items-center justify-center md:justify-start gap-1.5 mt-0.5">
+                <BookOpen className="w-4 h-4 text-[#F97316]" /> सोपी मराठी (Marathi)
               </p>
             </div>
             <div className="pt-2 md:pt-0 md:pl-6">
-              <p className="text-[11px] text-slate-400 uppercase font-bold">वेळ / Timing</p>
-              <p className="text-sm font-bold text-white flex items-center justify-center md:justify-start gap-1.5 mt-0.5">
-                <Clock className="w-4 h-4 text-blue-400" /> 07:30 PM – 09:00 PM
+              <p className="text-[11px] text-slate-500 uppercase font-bold">वेळ / Timing</p>
+              <p className="text-sm font-bold text-slate-900 flex items-center justify-center md:justify-start gap-1.5 mt-0.5">
+                <Clock className="w-4 h-4 text-[#0084D1]" /> 07:30 PM – 09:00 PM
               </p>
             </div>
             <div className="pt-2 md:pt-0 md:pl-6">
-              <p className="text-[11px] text-slate-400 uppercase font-bold">कालावधी / Duration</p>
-              <p className="text-sm font-bold text-white flex items-center justify-center md:justify-start gap-1.5 mt-0.5">
-                <Calendar className="w-4 h-4 text-purple-400" /> 10 दिवस (Daily 1.5 Hrs)
+              <p className="text-[11px] text-slate-500 uppercase font-bold">कालावधी / Duration</p>
+              <p className="text-sm font-bold text-slate-900 flex items-center justify-center md:justify-start gap-1.5 mt-0.5">
+                <Calendar className="w-4 h-4 text-[#7C3AED]" /> 10 दिवस (Daily 1.5 Hrs)
               </p>
             </div>
           </div>
@@ -261,16 +263,14 @@ export default function FPCTrainingPage() {
             {/* Right: Registration Form (1.11.6) */}
             <div className="lg:col-span-5">
               <div className="sticky top-24 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border-2 border-emerald-500 shadow-xl space-y-6">
-                <div className="text-center border-b border-slate-100 dark:border-slate-800 pb-5">
-                  <span className="text-[11px] font-extrabold uppercase px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                <div className="text-center border-b border-[#EAE6DD] pb-5">
+                  <span className="text-[11px] font-extrabold uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">
                     प्रवेश सुरू आहे (Limited Seats)
                   </span>
-                  <div className="mt-3 flex items-baseline justify-center gap-2">
-                    <span className="text-4xl font-extrabold text-slate-900 dark:text-slate-100">₹३,९९९</span>
-                    <span className="text-base text-slate-400 line-through">₹४,९९९</span>
-                    <span className="text-xs font-bold text-emerald-600">(₹१,००० सूट)</span>
+                  <div className="mt-3 flex items-center justify-center gap-2">
+                    <span className="price-masked text-3xl">&#x20b9; &#x2605; &#x2605; &#x2605;</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">सर्व १० दिवस + रेकॉर्डिंग्ज + सर्टिफिकेट समाविष्ट</p>
+                  <p className="text-xs text-slate-500 mt-1">Contact us for pricing · किमतीसाठी संपर्क करा</p>
                 </div>
 
                 {status === 'success' ? (

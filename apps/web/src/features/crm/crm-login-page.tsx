@@ -257,140 +257,182 @@ export default function CrmLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] py-10 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Top Header */}
-        <div className="text-center space-y-3">
-          <Link to="/" className="inline-flex items-center gap-3">
-            <img src="/logo_black.png" alt="ETaxwala" className="h-10 w-auto" />
+    <div className="min-h-screen flex bg-[#FFFDF9]">
+
+      {/* ── Left Panel: Brand Illustration ── */}
+      <div className="hidden lg:flex lg:w-[42%] xl:w-[38%] relative overflow-hidden bg-[#FAF9F5] flex-col items-center justify-center p-10">
+        {/* Multicolour top strip */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-multicolor" />
+
+        {/* Logo */}
+        <div className="absolute top-8 left-10">
+          <Link to="/">
+            <img src="/logo_black.png" alt="ETaxwala" className="h-9 w-auto" />
           </Link>
-          <div>
-            <span className="badge badge-gold mb-2 font-bold">Staff & Executive Portal</span>
-            <h1 className="text-3xl font-display font-bold text-[#0D1B2A]">
-              Unified Enterprise CRM Dashboards
-            </h1>
-            <p className="text-xs text-slate-500 max-w-2xl mx-auto mt-1">
-              Select any of the 16 specialized roles below for instant 1-click access connected to the live PostgreSQL database.
-            </p>
-          </div>
         </div>
 
-        {/* Quick 1-Click Role Login Grid */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-brand-gold" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                1-Click Direct Role Access (All 16 Dashboards Live)
-              </h2>
-            </div>
-            <span className="badge badge-green text-xs font-semibold">Live PostgreSQL: 66 Tables</span>
+        {/* Dashboard illustration */}
+        <div className="w-full max-w-xs mx-auto">
+          <img
+            src="/staff_login_illus.jpg"
+            alt="ETaxwala CRM Dashboard"
+            className="w-full rounded-3xl shadow-2xl object-cover"
+            style={{ aspectRatio: '3/4' }}
+          />
+        </div>
+
+        {/* Caption */}
+        <div className="mt-8 text-center max-w-xs">
+          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+            Unified Enterprise CRM
+          </h2>
+          <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+            16 specialized role dashboards connected to a live PostgreSQL database with 66 tables.
+          </p>
+          <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-700">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            Live DB: 66 Tables Active
+          </div>
+        </div>
+      </div>
+
+      {/* ── Right Panel: Login + Role Grid ── */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="min-h-screen flex flex-col items-center justify-start py-10 px-6 sm:px-10 space-y-8">
+
+          {/* Mobile logo */}
+          <div className="lg:hidden">
+            <Link to="/">
+              <img src="/logo_black.png" alt="ETaxwala" className="h-9 w-auto" />
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {roleCards.map((card) => (
-              <div
-                key={card.role}
-                onClick={() => handleQuickLogin(card)}
-                className="bg-white rounded-xl p-5 border border-slate-200 hover:border-brand-navy hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between group"
-              >
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span
-                      className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full"
-                      style={{ background: `${card.color}12`, color: card.color }}
-                    >
-                      {card.badge}
-                    </span>
-                    <span className="text-[11px] font-semibold text-slate-400">{card.category}</span>
-                  </div>
+          {/* Header */}
+          <div className="w-full max-w-lg space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-xs font-bold text-[#7C3AED]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Staff &amp; Executive Portal
+            </div>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              Staff Sign In
+            </h1>
+            <p className="text-sm text-slate-500">
+              Enter your credentials or click a role card for instant demo access.
+            </p>
+          </div>
 
-                  <div>
-                    <h3 className="font-display font-bold text-base text-slate-800 group-hover:text-brand-navy transition-colors">
+          {/* Manual Login Form */}
+          <div className="w-full max-w-lg bg-white rounded-3xl border border-[#EAE6DD] shadow-xl p-7 sm:p-8 space-y-5">
+            <form onSubmit={handleFormLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Official Email</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="email"
+                    placeholder="admin@etaxwala.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#EAE6DD] text-sm text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all bg-white"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#EAE6DD] text-sm text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all bg-white"
+                    required
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-700 font-medium">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3.5 rounded-xl btn-multicolor font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {isLoading ? (
+                  <span>Signing In...</span>
+                ) : (
+                  <>
+                    <span>Sign In to Dashboard</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="border-t border-[#EAE6DD] pt-4 flex items-center justify-between text-xs text-slate-500">
+              <Link to="/portal/login" className="text-[#003A66] font-bold hover:underline">
+                ← Client Portal Login
+              </Link>
+              <span className="flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> SSL Encrypted
+              </span>
+            </div>
+          </div>
+
+          {/* 1-Click Role Cards */}
+          <div className="w-full max-w-4xl space-y-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#F97316]" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                1-Click Demo Role Access — All 16 Dashboards
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {roleCards.map((card) => (
+                <div
+                  key={card.role}
+                  onClick={() => handleQuickLogin(card)}
+                  className="bg-white rounded-2xl p-4 border border-[#EAE6DD] hover:border-[#7C3AED]/40 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span
+                        className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
+                        style={{ background: `${card.color}15`, color: card.color }}
+                      >
+                        {card.badge}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">{card.category}</span>
+                    </div>
+                    <h3 className="font-bold text-sm text-slate-800 group-hover:text-[#003A66] transition-colors leading-tight">
                       {card.title}
                     </h3>
-                    <p className="text-xs text-slate-500 line-clamp-2 mt-1 leading-relaxed">
+                    <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
                       {card.desc}
                     </p>
                   </div>
+                  <div className="mt-3 pt-2.5 border-t border-[#EAE6DD] flex items-center justify-between">
+                    <span className="text-slate-400 font-mono text-[10px] truncate">{card.email}</span>
+                    <span className="flex items-center gap-1 text-xs font-semibold group-hover:translate-x-0.5 transition-transform" style={{ color: card.color }}>
+                      Open <ArrowRight className="w-3 h-3" />
+                    </span>
+                  </div>
                 </div>
-
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-brand-navy">
-                  <span className="text-slate-400 font-mono text-[11px]">{card.email}</span>
-                  <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform" style={{ color: card.color }}>
-                    Open <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Standard Manual Login Card */}
-        <div className="max-w-md mx-auto bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
-          <div className="text-center space-y-1">
-            <h3 className="font-display font-bold text-lg text-slate-800">
-              Staff Account Sign In
-            </h3>
-            <p className="text-xs text-slate-500">
-              Enter credentials to sign in to your assigned department
-            </p>
-          </div>
-
-          <form onSubmit={handleFormLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Official Email</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="email"
-                  placeholder="admin@etaxwala.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input pl-9 text-xs"
-                  required
-                />
-              </div>
+              ))}
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input pl-9 text-xs"
-                  required
-                />
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700 font-medium">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn btn-primary w-full text-xs font-bold py-3 mt-2"
-            >
-              {isLoading ? 'Signing In...' : 'Sign In to Dashboard'}
-            </button>
-          </form>
-
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-            <Link to="/portal/login" className="text-brand-navy font-bold hover:underline">
-              Client Portal Login →
-            </Link>
-            <span className="text-slate-400">PostgreSQL DB: 66 Tables Live</span>
           </div>
+
         </div>
       </div>
     </div>
   );
 }
+

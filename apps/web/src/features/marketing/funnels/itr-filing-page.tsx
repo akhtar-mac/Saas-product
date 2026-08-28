@@ -64,7 +64,7 @@ export default function ITRFilingPage() {
     <>
       <SEO
         title="ITR Filing Online — Expert CA Assisted Income Tax Returns"
-        description="File your ITR with practicing Chartered Accountants. Maximum refund guarantee, AIS/TIS reconciliation, penalty protection. Plans starting @ ₹499."
+        description="File your ITR with practicing Chartered Accountants. Maximum refund guarantee, AIS/TIS reconciliation, and penalty protection. Contact us for custom plans."
         url="/itr-filing"
         keywords="ITR filing, income tax return online, CA assisted ITR, salary ITR 1, capital gains ITR 2, business ITR 3, Section 44AD"
         schema={{
@@ -82,29 +82,31 @@ export default function ITRFilingPage() {
       />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 py-16 lg:py-24 text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 pointer-events-none"
-             style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+      <section className="relative bg-[#FFFDF9] py-16 lg:py-24 border-b border-[#EAE6DD] overflow-hidden">
+        {/* Multicolour accent strip */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-multicolor" />
+        <div className="absolute inset-0 opacity-[0.025] pointer-events-none"
+             style={{ backgroundImage: 'radial-gradient(#7C3AED 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
         <div className="container-etaxwala relative z-10">
           <div className="mb-4">
-            <Breadcrumbs items={[{ label: 'ITR Filing' }]} className="text-slate-400" />
+            <Breadcrumbs items={[{ label: 'ITR Filing' }]} className="text-slate-500" />
           </div>
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-4">
-              <Sparkles className="w-3.5 h-3.5" /> Assessment Year 2024-25 / 2025-26
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 text-xs font-semibold uppercase tracking-wider mb-4">
+              <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> Assessment Year 2024-25 / 2025-26
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15]">
-              File Your Income Tax Return with <span className="bg-gradient-to-r from-blue-400 via-sky-300 to-emerald-400 bg-clip-text text-transparent">Senior CA Advisory</span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15] text-slate-900">
+              File Your Income Tax Return with <span className="text-multicolor">Senior CA Advisory</span>
             </h1>
-            <p className="mt-4 text-base sm:text-lg text-slate-300 leading-relaxed">
+            <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
               Never leave your hard-earned tax refund on the table. Every return is audited against 80+ deduction checkpoints and AIS/TIS data by certified Chartered Accountants.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link to="/appointment" className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold text-sm shadow-lg shadow-blue-900/40 transition-all flex items-center gap-2">
+              <Link to="/appointment" className="px-6 py-3.5 rounded-xl btn-multicolor font-bold text-sm shadow-xs flex items-center gap-2">
                 <span>Start CA Assisted Filing</span> <ArrowRight className="w-4 h-4" />
               </Link>
-              <a href="tel:+917071070707" className="px-5 py-3.5 rounded-xl border border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-white text-sm font-semibold transition-colors flex items-center gap-2">
-                <PhoneCall className="w-4 h-4 text-emerald-400" /> Talk to Tax Expert
+              <a href="tel:+917071070707" className="px-5 py-3.5 rounded-xl border border-[#EAE6DD] bg-white hover:bg-[#FAF9F5] text-slate-800 text-sm font-semibold transition-colors flex items-center gap-2">
+                <PhoneCall className="w-4 h-4 text-[#0084D1]" /> Talk to Tax Expert
               </a>
             </div>
           </div>
@@ -176,31 +178,28 @@ export default function ITRFilingPage() {
       </section>
 
       {/* Pricing Plans */}
-      <section className="section bg-white dark:bg-slate-900 py-16">
+      <section className="section bg-white py-16">
         <div className="container-etaxwala">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Transparent Pricing</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">Simple, All-Inclusive Plans</h2>
-            <p className="text-xs sm:text-sm text-slate-500 mt-2">Zero hidden charges. Includes CA consultation &amp; acknowledgement generation.</p>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#7C3AED]">Our Plans</span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Choose Your Filing Plan</h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-2">Contact us for a personalised quote — zero hidden charges, CA consultation included.</p>
           </div>
           <div className="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
             {[
               {
                 type: 'Salary & Single Form 16',
-                price: 499,
                 badge: 'Most Popular for Employees',
                 features: ['Income from Salary & House Property', 'Chapter VI-A Deductions (80C, 80D)', 'AIS/TIS & 26AS Verification', 'Old vs New Tax Regime Analysis', 'ITR-V Filing & Confirmation'],
               },
               {
                 type: 'Business & Professionals',
-                price: 1999,
                 badge: 'Freelancers & SMEs',
                 popular: true,
                 features: ['Presumptive Taxation (44AD / 44ADA)', 'Balance Sheet & P&L Drafting', 'Multi-source Income Reconciliation', 'GST & Bank Turnover Matching', 'Advance Tax Advisory'],
               },
               {
                 type: 'Capital Gains & Crypto',
-                price: 2999,
                 badge: 'Traders & Investors',
                 features: ['Equity, Mutual Funds, Crypto VDA', 'F&O Trading Profit/Loss Computation', 'Loss Carry-forward Setoff', 'Multiple Demat Broker Statements', 'Foreign Assets & Stock ESOPs'],
               },
@@ -209,8 +208,8 @@ export default function ITRFilingPage() {
                 key={plan.type}
                 className={`rounded-3xl p-7 flex flex-col justify-between transition-all ${
                   plan.popular
-                    ? 'bg-gradient-to-b from-blue-900 to-slate-900 text-white shadow-xl ring-2 ring-blue-500 relative'
-                    : 'bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-sm'
+                    ? 'bg-multicolor text-white shadow-xl ring-2 ring-[#7C3AED]/30 relative'
+                    : 'bg-white border border-[#EAE6DD] shadow-xs'
                 }`}
               >
                 {plan.popular && (
@@ -219,23 +218,23 @@ export default function ITRFilingPage() {
                   </span>
                 )}
                 <div>
-                  <span className={`text-xs font-semibold ${plan.popular ? 'text-blue-300' : 'text-slate-500'}`}>
+                  <span className={`text-xs font-semibold ${plan.popular ? 'text-blue-200' : 'text-slate-500'}`}>
                     {plan.badge}
                   </span>
-                  <h3 className={`text-lg font-bold mt-1 ${plan.popular ? 'text-white' : 'text-slate-900 dark:text-slate-100'}`}>
+                  <h3 className={`text-lg font-bold mt-1 ${plan.popular ? 'text-white' : 'text-slate-900'}`}>
                     {plan.type}
                   </h3>
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className={`text-3xl font-extrabold ${plan.popular ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`}>
-                      ₹{plan.price}
+                  <div className="mt-4 flex items-center gap-2">
+                    <span className={`price-masked text-2xl ${plan.popular ? 'text-white' : ''}`}>
+                      ₹ ★ ★ ★
                     </span>
-                    <span className={`text-xs ${plan.popular ? 'text-slate-300' : 'text-slate-500'}`}>+ GST (All-inclusive)</span>
                   </div>
+                  <p className={`text-[11px] mt-1 ${plan.popular ? 'text-slate-200' : 'text-slate-400'}`}>Contact us for quote</p>
                   <div className="mt-6 space-y-2.5 text-left">
                     {plan.features.map((f) => (
                       <div key={f} className="flex items-start gap-2 text-xs sm:text-sm">
-                        <CheckCircle2 className={`h-4 w-4 shrink-0 mt-0.5 ${plan.popular ? 'text-emerald-400' : 'text-emerald-600'}`} />
-                        <span className={plan.popular ? 'text-slate-200' : 'text-slate-600 dark:text-slate-300'}>{f}</span>
+                        <CheckCircle2 className={`h-4 w-4 shrink-0 mt-0.5 ${plan.popular ? 'text-emerald-300' : 'text-emerald-600'}`} />
+                        <span className={plan.popular ? 'text-slate-100' : 'text-slate-600'}>{f}</span>
                       </div>
                     ))}
                   </div>
@@ -245,16 +244,17 @@ export default function ITRFilingPage() {
                   className={`mt-8 py-3 px-4 rounded-xl text-center font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 ${
                     plan.popular
                       ? 'bg-white text-slate-900 hover:bg-slate-100 shadow-md'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'btn-multicolor'
                   }`}
                 >
-                  <span>Select Plan &amp; File</span> <ArrowRight className="w-4 h-4" />
+                  <span>Get a Free Quote</span> <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             ))}
           </div>
         </div>
       </section>
+
 
       {/* 1.10.5: Urgency Section */}
       <section className="bg-amber-500/10 border-y border-amber-500/20 py-10">
