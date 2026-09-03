@@ -159,9 +159,9 @@ etaxwala-v2/
 │   └── api-client/                   # @etaxwala/api-client (Shared Axios client with JWT interceptors)
 │
 ├── .github/workflows/                # CI/CD Pipelines (run-tests.yml, deploy-web.yml, deploy-api.yml)
-├── scripts/                          # Streaming MySQL -> PostgreSQL Migration Engine
+├── scripts/                          # Database Migration & Utility Scripts
 ├── turbo.json                        # Turborepo Build Pipeline Config
-└── TASKS.md                          # Comprehensive Execution & Roadmap Tracker
+└── README.md                         # Project Documentation
 ```
 
 ---
@@ -232,6 +232,47 @@ Every commit to `main` triggers GitHub Actions workflows:
 - **Network Protection**: Helmet headers, CORS whitelisting, and rate-limiting.
 - **Data Protection**: 256-Bit SSL encryption for client vault documents on Cloudflare R2.
 - **Audit Logging**: Winston multi-transport logger with automatic JSON request audit trails.
+
+---
+
+## 🎯 9. Platform Features (2026)
+
+### ✅ Completed & Production-Ready
+- **10 Admin CRUD Pages**: Categories, Services, Packages, Blogs, Blog Comments, Ads, User Activities, Appointments, Webinars, User Profile
+- **5 Core Integrations**: WebSocket (Socket.io), R2/S3 Storage, Razorpay Payments, Brevo Email/SMS, WhatsApp Business API
+- **17 Role-Based Dashboards**: Super Admin, Admin, Operations, Sales, HR, Marketing, Franchise, CA, QC, Support
+- **Real-Time Features**: Live notifications, chat messaging, user presence tracking
+- **Payment Processing**: Razorpay order creation, payment verification, webhook handling
+- **File Management**: Secure uploads, presigned URLs, 10MB file size validation
+- **Email & SMS**: Transactional emails, password resets, invoices, welcome messages
+- **CI/CD Automation**: GitHub Actions workflows for automated testing and deployment
+
+### 📊 System Capabilities
+- **Lead Management**: Complete CRM with lead assignment, tracking, and conversion funnels
+- **Quotation System**: PDF generation, digital signatures, approval workflows
+- **Task Management**: Operations task tracking, milestone completion, QC review
+- **Call Analytics**: 79,900+ call history records, recording storage, performance metrics
+- **Client Portal**: 10-stage milestone tracker, document vault, video academy
+- **Mobile App**: Flutter dialer with background call recording, lead management
+
+---
+
+## 🚀 10. Getting Started for New Team Members
+
+1. **Clone & Install**: `git clone && pnpm install`
+2. **Database Setup**: Run `pnpm --filter @etaxwala/api db:migrate`
+3. **Environment Config**: Copy `.env.example` to `.env` in `apps/api/`
+4. **Start Development**: `pnpm dev` (runs both web and API)
+5. **Access Applications**:
+   - Frontend: http://localhost:5173
+   - API: http://localhost:5001
+   - API Docs: http://localhost:5001/api/docs
+
+### 📚 Key Documentation
+- **QUICKSTART.md**: Database setup and migration guide
+- **API Routes**: `apps/api/src/routes/` for all endpoints
+- **Components**: `packages/ui/` for shared UI components
+- **Type Definitions**: `packages/types/` for TypeScript interfaces
 
 ---
 
