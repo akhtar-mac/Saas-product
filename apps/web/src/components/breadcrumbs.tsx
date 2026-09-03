@@ -47,29 +47,37 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
     ...(items || (autoGenerate ? autoItems : [])),
   ];
 
-  const sep = separator || <ChevronRight size={14} className="text-slate-400 flex-shrink-0" />;
+  const sep = separator || <ChevronRight size={12} className="text-slate-300 shrink-0 mx-0.5" />;
 
   return (
-    <nav aria-label="Breadcrumb" className={cn('flex items-center gap-1.5 flex-wrap text-sm', className)}>
+    <nav
+      aria-label="Breadcrumb"
+      className={cn(
+        'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-xs border border-[#EAE6DD] text-xs text-slate-600 shadow-xs hover:shadow-sm hover:border-[#7C3AED]/30 transition-all flex-wrap',
+        className
+      )}
+    >
       {crumbs.map((crumb, i) => {
         const isLast = i === crumbs.length - 1;
         return (
           <React.Fragment key={i}>
-            {i > 0 && <span aria-hidden="true">{sep}</span>}
+            {i > 0 && <span aria-hidden="true" className="flex items-center">{sep}</span>}
             {isLast ? (
               <span
                 aria-current="page"
-                className="text-slate-700 dark:text-slate-300 font-medium truncate max-w-[200px]"
+                className="font-medium text-slate-800 bg-[#FAF9F5] px-2 py-0.5 rounded-md border border-[#EAE6DD]/60 truncate max-w-[220px]"
               >
                 {crumb.label}
               </span>
             ) : (
               <Link
                 to={crumb.href || '/'}
-                className="flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                className="group flex items-center gap-1 text-slate-500 hover:text-slate-900 transition-colors py-0.5 px-1 rounded-md hover:bg-[#FAF9F5]"
               >
-                {i === 0 && <Home size={13} />}
-                <span>{crumb.label}</span>
+                {i === 0 && (
+                  <Home size={12} className="shrink-0 text-slate-400 group-hover:text-[#0084D1] transition-colors" />
+                )}
+                <span className="font-normal group-hover:text-multicolor transition-all">{crumb.label}</span>
               </Link>
             )}
           </React.Fragment>
@@ -80,3 +88,4 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
 };
 
 export default Breadcrumbs;
+

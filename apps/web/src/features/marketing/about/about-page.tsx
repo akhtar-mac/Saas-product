@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import SEO from '@/components/seo';
+import CtaBanner from '@/components/cta-banner';
 import {
   Award, Users, Target, Globe, HeartHandshake,
   Building2, Briefcase, Calendar, ArrowRight,
@@ -74,11 +75,17 @@ export default function AboutPage() {
               serving 1 Lakh+ businesses across 28 states.
             </p>
             <div className="flex flex-wrap gap-3 mt-7">
-              <Link to="/appointment" className="px-5 py-3 rounded-xl btn-multicolor font-bold text-sm flex items-center gap-2 shadow-xs">
-                Book Free Consultation <ArrowRight className="w-4 h-4" />
+              <Link to="/appointment" className="px-5 py-3 rounded-xl btn-multicolor">
+                <span className="btn-galaxy__stars" aria-hidden="true" />
+                <span className="relative z-[2] inline-flex items-center gap-2 font-bold text-sm">
+                  Book Free Consultation <ArrowRight className="btn-galaxy__icon w-4 h-4" />
+                </span>
               </Link>
-              <Link to="/services" className="px-5 py-3 rounded-xl border border-[#EAE6DD] bg-white font-bold text-sm text-slate-700 hover:bg-[#FAF9F5] transition-colors">
-                Explore Services
+              <Link to="/services" className="px-5 py-3 rounded-xl btn-outline-multicolor">
+                <span className="btn-galaxy__stars" aria-hidden="true" />
+                <span className="relative z-[2] inline-flex items-center gap-2 font-bold text-sm">
+                  Explore Services
+                </span>
               </Link>
             </div>
           </div>
@@ -267,35 +274,15 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ─── CTA ─── */}
-      <section className="py-16 bg-white">
-        <div className="container-etaxwala">
-          <div className="rounded-3xl bg-multicolor p-10 sm:p-14 text-center text-white relative overflow-hidden">
-            <div className="relative z-10">
-              <h2 className="text-3xl sm:text-4xl font-extrabold mb-4 tracking-tight">
-                Ready to Work with India's Best?
-              </h2>
-              <p className="text-sm sm:text-base opacity-90 max-w-xl mx-auto mb-8 leading-relaxed">
-                Book a free consultation and discover how ETaxwala can transform your business compliance experience.
-              </p>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <Link
-                  to="/appointment"
-                  className="px-6 py-3.5 rounded-xl bg-white text-slate-900 font-bold text-sm hover:bg-[#FAF9F5] transition-colors flex items-center gap-2 shadow-md"
-                >
-                  Book Free Consultation <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  to="/services"
-                  className="px-6 py-3.5 rounded-xl border border-white/40 text-white font-bold text-sm hover:bg-white/10 transition-colors"
-                >
-                  Explore Services
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ─── CTA Banner ─── */}
+      <CtaBanner
+        title="Ready to Work with India's Best?"
+        subtitle="Book a free consultation and discover how ETaxwala can transform your business compliance experience."
+        primaryButtonText="Book Free Consultation"
+        primaryButtonLink="/appointment"
+        secondaryButtonText="Explore Services"
+        secondaryButtonLink="/services"
+      />
     </>
   );
 }

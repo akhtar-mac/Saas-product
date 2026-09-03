@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
+import QuickEnquiryModal from '@/components/quick-enquiry-modal';
 import { getServiceBySlug, getCategoryById, services, formatPrice } from '@/lib/constants/services';
 
 const processSteps = [
@@ -58,16 +59,52 @@ export default function ServiceDetailPage() {
   const service = getServiceBySlug(serviceSlug || '');
   const category = service ? getCategoryById(service.category) : null;
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [showEnquiryModal, setShowEnquiryModal] = useState(false);
 
   if (!service) {
+    const formattedTitle = serviceSlug
+      ? serviceSlug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+      : 'Custom CA Consultation';
+
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center py-20 px-4 text-center">
-        <SEO title="Service Not Found" url="/services" />
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Service Not Found</h2>
-        <p className="text-sm text-slate-500 mt-2">The service you requested may have been renamed or moved.</p>
-        <Link to="/services" className="mt-6 px-6 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm">
-          Browse All 250+ Services
-        </Link>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center py-20 px-4 text-center bg-etax-puma-soft">
+        <SEO title="Consult CA — ETaxwala" url="/services" />
+        <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-[#EAE6DD] shadow-card space-y-5">
+          <div className="w-12 h-12 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-[#7C3AED] flex items-center justify-center mx-auto">
+            <Sparkles className="w-6 h-6" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-extrabold text-slate-900">
+              Need Help with {formattedTitle}?
+            </h2>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Our practicing Chartered Accountants handle all custom legal incorporations, registrations, and tax appeals.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowEnquiryModal(true)}
+            className="btn-panda w-full py-3 text-xs"
+          >
+            <span>Request Instant CA Callback</span>
+            <ArrowRight className="w-3.5 h-3.5 btn-panda-icon" />
+          </button>
+
+          <Link
+            to="/services"
+            className="block text-xs font-bold text-[#0084D1] hover:underline pt-2"
+          >
+            ← Browse All 250+ Services Catalog
+          </Link>
+        </div>
+
+        <QuickEnquiryModal
+          isOpen={showEnquiryModal}
+          onClose={() => setShowEnquiryModal(false)}
+          serviceTitle={formattedTitle}
+        />
       </div>
     );
   }
@@ -107,6 +144,7 @@ export default function ServiceDetailPage() {
           },
           areaServed: 'IN',
         }}
+        faqs={serviceFaqs.map((f) => ({ question: f.q, answer: f.a }))}
       />
 
       {/* Hero / Breadcrumb */}

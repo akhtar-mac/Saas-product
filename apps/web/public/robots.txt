@@ -1,11 +1,19 @@
-# robots.txt for ETaxwala
+# robots.txt for ETaxwala - Chartered Accountants & Legal Services
 User-agent: *
 Allow: /
+Allow: /services/
+Allow: /itr-filing
+Allow: /fpc-training
+Allow: /appointment
+Allow: /about
+Allow: /contact
+Allow: /blog
 
-# Sitemap
-Sitemap: https://etaxwala.com/sitemap.xml
-
-# Block admin/staff/client portal from indexing
-Disallow: /staff/
-Disallow: /client/
+# Block private portal, staff CRM, and backend APIs from search engine indexing
+Disallow: /portal/
+Disallow: /crm/
 Disallow: /api/
+Disallow: /admin/
+
+# Sitemaps
+Sitemap: https://etaxwala.com/sitemap.xml

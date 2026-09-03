@@ -267,19 +267,25 @@ export default function Header() {
               
               <Link
                 to="/portal/login"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-[#FAF9F5] rounded-xl border border-transparent hover:border-[#EAE6DD] transition-all"
+                className="hidden sm:inline-flex items-center px-3.5 py-2 text-xs btn-outline-multicolor"
               >
-                <User className="w-3.5 h-3.5 text-slate-400" />
-                <span>Client Login</span>
+                <span className="btn-galaxy__stars" aria-hidden="true" />
+                <span className="relative z-[2] inline-flex items-center gap-1.5 font-bold">
+                  <User className="w-3.5 h-3.5" />
+                  <span>Client Login</span>
+                </span>
               </Link>
 
               {/* Signature Multicolour CTA Button */}
               <Link
                 to="/appointment"
-                className="px-4 py-2 sm:py-2.5 text-xs font-bold text-white rounded-xl shadow-xs transition-all flex items-center gap-1.5 btn-multicolor"
+                className="px-4 py-2 sm:py-2.5 text-xs rounded-xl btn-multicolor"
               >
-                <span>Talk to a CA</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span className="btn-galaxy__stars" aria-hidden="true" />
+                <span className="relative z-[2] inline-flex items-center gap-1.5 font-bold">
+                  <span>Talk to a CA</span>
+                  <ArrowRight className="btn-galaxy__icon w-3.5 h-3.5" />
+                </span>
               </Link>
 
               {/* Mobile menu toggle */}

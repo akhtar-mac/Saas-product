@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Light & Cream Minimalist Design Tokens with ETaxwala Signature Multicolour ── */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Light & Cream Minimalist Design Tokens with ETaxwala Signature Multicolour ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 :root {
   --background: #FFFFFF;
   --bg-cream: #FAF9F5;
@@ -33,7 +33,7 @@
   --shadow-elevated: 0 12px 28px -6px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
 }
 
-/* ── Base ── */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Base ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -59,6 +59,8 @@
     letter-spacing: -0.025em;
   }
 
+
+
   ::selection {
     background: #7C3AED;
     color: #FFFFFF;
@@ -80,7 +82,7 @@
   }
 }
 
-/* ── Multicolour Utilities ── */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Multicolour Utilities ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .text-multicolor {
   background: var(--mc-gradient-h);
   -webkit-background-clip: text;
@@ -96,15 +98,217 @@
   border-image: var(--mc-gradient-h) 1;
 }
 
-.btn-multicolor {
-  background: var(--mc-gradient-h);
-  color: white;
-  transition: all 0.2s ease;
+/* ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
+   GALAXY BUTTON ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ETaxwala Light Theme Edition
+   White background + rotating nebula border on hover
+   ALL buttons share this light-theme galaxy style
+   ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â */
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Shared base for ALL galaxy buttons ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+.btn-galaxy,
+.btn-multicolor,
+.btn-outline-multicolor,
+.btn-hover-multicolor,
+.btn-secondary-outline {
+  --gbtn-primary:  #7C3AED;
+  --gbtn-secondary: #0084D1;
+  --gbtn-accent:   #E11D48;
+  --gbtn-accent2:  #F97316;
+  --gbtn-bg-inner: #FFFFFF;
+
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  z-index: 1;
+  border: none;
+  border-radius: 0.75rem;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  background: var(--gbtn-bg-inner);
+  color: #0F172A;
+  transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
+
+.btn-galaxy:focus-visible,
+.btn-multicolor:focus-visible,
+.btn-outline-multicolor:focus-visible {
+  outline: 2px solid #7C3AED;
+  outline-offset: 4px;
+}
+
+.btn-galaxy:active,
+.btn-multicolor:active,
+.btn-outline-multicolor:active {
+  transform: scale(0.97);
+}
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Rotating nebula border (shared ::before) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+.btn-galaxy::before,
+.btn-multicolor::before,
+.btn-outline-multicolor::before,
+.btn-hover-multicolor::before,
+.btn-secondary-outline::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  z-index: 0;
+  background: conic-gradient(
+    from 0deg,
+    #EAE6DD         0deg,
+    var(--gbtn-primary)   60deg,
+    var(--gbtn-secondary) 120deg,
+    #EAE6DD        180deg,
+    var(--gbtn-accent)    240deg,
+    var(--gbtn-accent2)   290deg,
+    var(--gbtn-primary)   330deg,
+    #EAE6DD         360deg
+  );
+  border-radius: 0.9rem;
+  filter: blur(6px);
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* PRIMARY CTA: nebula always slightly visible (feels prominent) */
+.btn-multicolor::before {
+  animation: etax-rotate-nebula 4s linear infinite;
+  opacity: 0.55;
+}
+.btn-multicolor:hover::before {
+  opacity: 1;
+  animation-duration: 2s;
+  filter: blur(4px);
+}
+
+/* SECONDARY / OUTLINE: nebula hidden at rest, fires on hover */
+.btn-outline-multicolor::before,
+.btn-hover-multicolor::before,
+.btn-secondary-outline::before {
+  animation: etax-rotate-nebula 5s linear infinite;
+  opacity: 0;
+}
+.btn-outline-multicolor:hover::before,
+.btn-hover-multicolor:hover::before,
+.btn-secondary-outline:hover::before {
+  opacity: 0.9;
+  animation-duration: 2s;
+  filter: blur(4px);
+}
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ White inner mask (shared ::after) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+.btn-galaxy::after,
+.btn-multicolor::after,
+.btn-outline-multicolor::after,
+.btn-hover-multicolor::after,
+.btn-secondary-outline::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: var(--gbtn-bg-inner);
+  border-radius: 0.6rem;
+  z-index: 1;
+}
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Content sits above mask ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+.btn-galaxy > *,
+.btn-multicolor > *,
+.btn-outline-multicolor > *,
+.btn-hover-multicolor > *,
+.btn-secondary-outline > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Normal state: always readable dark text ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+.btn-multicolor,
+.btn-outline-multicolor,
+.btn-hover-multicolor,
+.btn-secondary-outline {
+  color: #0F172A;
+}
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Primary hover: stronger glow + gradient text ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .btn-multicolor:hover {
-  opacity: 0.94;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 0.8em 2em -0.5em rgba(124, 58, 237, 0.45),
+              0 0.4em 1em -0.3em rgba(0, 132, 209, 0.3);
+}
+.btn-multicolor:hover > span {
+  background: var(--mc-gradient-h);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Secondary hover: glow + gradient text ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+.btn-outline-multicolor:hover,
+.btn-hover-multicolor:hover,
+.btn-secondary-outline:hover {
+  transform: translateY(-2px);
+  color: #0F172A;
+  box-shadow: 0 0.6em 1.8em -0.5em rgba(124, 58, 237, 0.4),
+              0 0.3em 0.8em -0.3em rgba(0, 132, 209, 0.25);
+}
+.btn-outline-multicolor:hover > span,
+.btn-hover-multicolor:hover > span,
+.btn-secondary-outline:hover > span {
+  background: var(--mc-gradient-h);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Primary resting shadow (subtle, makes it feel like the main CTA) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+.btn-multicolor {
+  box-shadow: 0 0.3em 1em -0.3em rgba(124, 58, 237, 0.3),
+              0 0.15em 0.5em -0.2em rgba(0, 132, 209, 0.2);
+}
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Star Particles ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+.btn-galaxy__stars {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 18% 28%, rgba(124,58,237,0.6) 1px, transparent 1.5px),
+    radial-gradient(circle at 78% 68%, rgba(0,132,209,0.6) 1px, transparent 1.5px),
+    radial-gradient(circle at 38% 82%, rgba(225,29,72,0.5) 0.5px, transparent 1px),
+    radial-gradient(circle at 60% 20%, rgba(249,115,22,0.5) 1px, transparent 1.5px),
+    radial-gradient(circle at 88% 40%, rgba(124,58,237,0.4) 0.5px, transparent 1px);
+  background-size: 110% 110%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btn-multicolor:hover .btn-galaxy__stars,
+.btn-outline-multicolor:hover .btn-galaxy__stars,
+.btn-hover-multicolor:hover .btn-galaxy__stars {
+  opacity: 1;
+  animation: etax-star-drift 4s linear infinite alternate;
+}
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Icon animation ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+.btn-galaxy__icon {
+  transition: transform 0.3s ease;
+}
+.btn-multicolor:hover .btn-galaxy__icon,
+.btn-outline-multicolor:hover .btn-galaxy__icon,
+.btn-hover-multicolor:hover .btn-galaxy__icon {
+  transform: translateX(3px) rotate(-8deg);
+}
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Keyframes ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+@keyframes etax-rotate-nebula {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes etax-star-drift {
+  0%   { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.1) translate(-2%, -2%); }
 }
 
 .card-cream {
@@ -117,7 +321,42 @@
   border: 1px solid #EAE6DD;
 }
 
-/* ── Layout Utilities ── */
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Multicolour Card & Hover Utilities ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+.card-hover-multicolor {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.card-hover-multicolor:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px -8px rgba(124, 58, 237, 0.16), 0 6px 16px -4px rgba(0, 132, 209, 0.1);
+}
+
+.card-glow-multicolor {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-glow-multicolor::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(0, 132, 209, 0.4), rgba(124, 58, 237, 0.4), rgba(225, 29, 72, 0.4), rgba(249, 115, 22, 0.4));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.card-glow-multicolor:hover::before {
+  opacity: 1;
+}
+
+/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Layout Utilities ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
 .container-etaxwala {
   width: 100%;
   max-width: 1280px;
@@ -141,14 +380,722 @@
   }
 }
 
+
 .section {
   width: 100%;
 }
 
-/* ── Price Mask ── */
+/* ÃƒÂ¢Ã¢â‚¬Â Ã¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬Â Ã¢â€šÂ¬ Price Mask ÃƒÂ¢Ã¢â‚¬Â Ã¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬Â Ã¢â€šÂ¬ */
 .price-masked {
   font-family: 'Plus Jakarta Sans', sans-serif;
   letter-spacing: 0.1em;
   color: var(--mc-purple, #7C3AED);
   font-weight: 800;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ETAXWALA SIGNATURE PATTERN (kencode7/perfect-puma-86)
+   Adapted with ETaxwala Spectrum (#0084D1, #7C3AED, #E11D48, #F97316)
+   and Cream Minimalist Palette (#FFFDF9)
+   ═══════════════════════════════════════════════════════════════ */
+
+.bg-etax-puma {
+  position: relative;
+  overflow: hidden;
+  background: 
+    linear-gradient(
+      to bottom,
+      #FFFDF9 0%,
+      #FFFDF9 35%,
+      rgba(255, 253, 249, 0.7) 70%,
+      rgba(255, 253, 249, 0.1) 100%
+    ),
+    linear-gradient(90deg, #0084D1 0%, #7C3AED 33%, #E11D48 66%, #F97316 100%);
+}
+
+.bg-etax-puma::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, rgba(15, 23, 42, 0.07) 1px, transparent 1px);
+  background-size: 48px 100%;
+  pointer-events: none;
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0) 75%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0) 75%
+  );
+}
+
+.bg-etax-puma-soft {
+  position: relative;
+  overflow: hidden;
+  background: 
+    linear-gradient(
+      to bottom,
+      #FFFDF9 0%,
+      #FFFDF9 45%,
+      rgba(255, 253, 249, 0.88) 75%,
+      rgba(255, 253, 249, 0.35) 100%
+    ),
+    linear-gradient(90deg, rgba(0, 132, 209, 0.4) 0%, rgba(124, 58, 237, 0.4) 33%, rgba(225, 29, 72, 0.35) 66%, rgba(249, 115, 22, 0.35) 100%);
+}
+
+.bg-etax-puma-soft::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+  background-size: 48px 100%;
+  pointer-events: none;
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0) 70%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0) 70%
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ETAXWALA FOLDER TABS (german_7619/brown-sloth-50)
+   Browser-style folder tabs with inverted concave rounded corners
+   ═══════════════════════════════════════════════════════════════ */
+
+.etax-folder-tabs-strip {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  background-color: #EFECE6;
+  border-radius: 1rem 1rem 0 0;
+  border: 1px solid #EAE6DD;
+  border-bottom: none;
+  padding: 0.4rem 0.6rem 0 0.6rem;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.etax-folder-tabs-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.etax-folder-tab {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.etax-folder-tab-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+  padding: 0.65rem 1.15rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.etax-folder-tab:hover .etax-folder-tab-name {
+  color: #0F172A;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Inverted concave curves on left and right */
+.etax-folder-tab .pre-curve,
+.etax-folder-tab .pos-curve {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #EFECE6;
+  bottom: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.etax-folder-tab .pre-curve {
+  right: -10px;
+  border-bottom-left-radius: 10px;
+  box-shadow: -3px 3px 0px 3px #FFFFFF;
+}
+
+.etax-folder-tab .pos-curve {
+  left: -10px;
+  border-bottom-right-radius: 10px;
+  box-shadow: 3px 3px 0px 3px #FFFFFF;
+}
+
+/* Active Tab */
+.etax-folder-tab.active .etax-folder-tab-name {
+  background-color: #FFFFFF;
+  font-weight: 700;
+  color: #0F172A;
+  cursor: default;
+}
+
+/* Multicolour indicator on top of active tab */
+.etax-folder-tab.active .etax-folder-tab-name::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: 2.5px;
+  border-radius: 9999px;
+  background: var(--mc-gradient-h);
+}
+
+.etax-folder-tab.active .pre-curve,
+.etax-folder-tab.active .pos-curve {
+  opacity: 1;
+  z-index: 10;
+}
+
+/* Connected content wrapper */
+.etax-folder-panel {
+  background-color: #FFFFFF;
+  border-radius: 0 0 1rem 1rem;
+  border: 1px solid #EAE6DD;
+  border-top: none;
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.04);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TERRIBLE PANDA GLOW BUTTON (nima-mollazadeh/terrible-panda-97)
+   Adapted with ETaxwala Multicolour Gradient & Light Theme
+   ═══════════════════════════════════════════════════════════════ */
+
+.btn-panda {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 1rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(
+    90deg,
+    #0084D1 0%,
+    #7C3AED 25%,
+    #E11D48 50%,
+    #F97316 75%,
+    #0084D1 100%
+  );
+  background-size: 250% 100%;
+  animation: panda-border-flow 3.5s linear infinite;
+  color: #0F172A;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.btn-panda > * {
+  position: relative;
+  z-index: 2;
+  color: #0F172A;
+}
+
+/* Inner white mask (keeps button clean and text legible) */
+.btn-panda::before {
+  content: "";
+  position: absolute;
+  inset: 1.5px;
+  background: #FFFFFF;
+  border-radius: calc(0.75rem - 1.5px);
+  z-index: 1;
+  transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+.btn-panda:hover::before {
+  background: #FFFDF9;
+  opacity: 0.96;
+}
+
+/* Multicolour radiant ambient glow behind the button (continuously moving!) */
+.btn-panda::after {
+  content: "";
+  position: absolute;
+  inset: 0px;
+  background: linear-gradient(
+    90deg,
+    #0084D1 0%,
+    #7C3AED 25%,
+    #E11D48 50%,
+    #F97316 75%,
+    #0084D1 100%
+  );
+  background-size: 250% 100%;
+  animation: panda-border-flow 3.5s linear infinite;
+  border-radius: 0.75rem;
+  transition: opacity 0.4s ease, filter 0.4s ease;
+  opacity: 0.25;
+  filter: blur(8px);
+  z-index: -1;
+}
+
+.btn-panda:hover::after {
+  opacity: 0.75;
+  filter: blur(14px);
+}
+
+/* Floating Chat Panda Orb */
+.chat-panda-orb {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    #0084D1 0%,
+    #7C3AED 25%,
+    #E11D48 50%,
+    #F97316 75%,
+    #0084D1 100%
+  );
+  background-size: 250% 100%;
+  animation: panda-border-flow 3.5s linear infinite;
+  padding: 2.5px;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.35);
+}
+
+.chat-panda-orb::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(
+    90deg,
+    #0084D1 0%,
+    #7C3AED 25%,
+    #E11D48 50%,
+    #F97316 75%,
+    #0084D1 100%
+  );
+  background-size: 250% 100%;
+  animation: panda-border-flow 3.5s linear infinite;
+  border-radius: 9999px;
+  opacity: 0.35;
+  filter: blur(10px);
+  z-index: -1;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.chat-panda-orb:hover::after {
+  opacity: 0.85;
+  filter: blur(16px);
+}
+
+.chat-panda-orb:hover {
+  transform: scale(1.06) translateY(-2px);
+}
+
+.chat-panda-orb-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.btn-panda:hover {
+  transform: translateY(-1px);
+}
+
+.btn-panda .btn-panda-icon {
+  transition: transform 0.25s ease;
+}
+
+.btn-panda:hover .btn-panda-icon {
+  transform: translateX(3px);
+}
+
+@keyframes panda-border-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 250% 50%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ITCHY SQUID INPUTS & MODAL (EddyBel/itchy-squid-77)
+   Light Glassmorphism & ETaxwala Spectrum (#0084D1, #7C3AED, #E11D48, #F97316)
+   ═══════════════════════════════════════════════════════════════ */
+
+.itchy-modal-dialog {
+  position: relative;
+  background: #FFFFFF;
+  border-radius: 24px;
+  border: 1px solid #EAE6DD;
+  box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.14);
+}
+
+.input__container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 253, 249, 0.8);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 12px 14px 10px 14px;
+  border-radius: 20px;
+  position: relative;
+  border: 1.5px solid rgba(234, 230, 221, 0.9);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  isolation: isolate;
+}
+
+.input__container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  filter: blur(18px);
+  border-radius: 20px;
+  background-color: #FAF9F5;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(0, 132, 209, 0.16) 0px, transparent 55%),
+    radial-gradient(at 100% 100%, rgba(124, 58, 237, 0.16) 0px, transparent 55%);
+  opacity: 0.9;
+  transition: opacity 0.3s ease, background-image 0.3s ease;
+}
+
+.input__container:focus-within::before {
+  opacity: 1;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(0, 132, 209, 0.25) 0px, transparent 55%),
+    radial-gradient(at 100% 100%, rgba(225, 29, 72, 0.22) 0px, transparent 55%);
+}
+
+.input__container:focus-within {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(124, 58, 237, 0.6);
+  box-shadow: 
+    0 8px 24px -4px rgba(124, 58, 237, 0.15),
+    0 0 0 3px rgba(124, 58, 237, 0.1);
+  transform: translateY(-1px);
+}
+
+.input__label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.3em;
+  color: #0F172A;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.input__description {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-align: left;
+  margin-left: 0.4em;
+  color: #64748B;
+  transition: color 0.2s ease;
+}
+
+.input__container:focus-within .input__description {
+  color: #7C3AED;
+  font-weight: 700;
+}
+
+.itchy-input {
+  border: 1.5px solid rgba(234, 230, 221, 0.95);
+  outline: none;
+  width: 100%;
+  padding: 0.7em 1.1em;
+  border-radius: 14px;
+  background: #FFFFFF;
+  color: #0F172A;
+  font-size: 0.82rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: 
+    border-color 250ms ease,
+    box-shadow 250ms ease,
+    background-color 250ms ease;
+}
+
+.itchy-input:hover {
+  border-color: rgba(0, 132, 209, 0.45);
+  box-shadow: 0 4px 12px -2px rgba(0, 132, 209, 0.1);
+}
+
+.itchy-input:focus {
+  background: #FFFFFF;
+  color: #0F172A;
+  border-color: #7C3AED;
+  box-shadow: 
+    0 0 0 3.5px rgba(124, 58, 237, 0.14),
+    0 6px 18px -3px rgba(124, 58, 237, 0.15);
+}
+
+.itchy-input::placeholder {
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+/* =====================================================
+   UIVERSE MECHANICAL FLIP CLOCK (uiv-*)
+   Direct architecture from https://uiverse.io/whoisyourdeadie/friendly-dingo-90
+   Single 3-D continuous 0 to -180deg flip with GPU acceleration
+   ===================================================== */
+
+.uiv-container {
+  display: inline-block;
+  padding: 1.25rem 1.6rem;
+  border-radius: 1.5rem;
+  background: #FFFFFF;
+  border: 1px solid #EAE6DD;
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05);
+}
+
+.uiv-title {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7C3AED;
+  margin-bottom: 0.85rem;
+}
+
+.uiv-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+/* Colons between units */
+.uiv-sep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #CBD5E1;
+  line-height: 1;
+  user-select: none;
+  padding: 0 1px;
+}
+
+.uiv-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.uiv-digits {
+  display: flex;
+  gap: 4px;
+}
+
+.uiv-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94A3B8;
+}
+
+/* Individual digit tile (matching .nums from Uiverse) */
+.uiv-nums {
+  position: relative;
+  width: 42px;
+  height: 60px;
+  perspective: 500px;
+  border-radius: 8px;
+  box-shadow:
+    3px 4px 10px rgba(42, 42, 42, 0.14),
+    -3px -3px 8px rgba(255, 255, 255, 0.85);
+  background: #EAE5DC;
+}
+
+/* Center horizontal slit line (matching .nums:before from Uiverse) */
+.uiv-nums::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  border-bottom: 1px solid #D1CAC0;
+  transform: translate3d(0, -1px, 0);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Static bottom half (matching .nums:after from Uiverse) */
+.uiv-curr-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: calc(50% - 1px);
+  background: #DFDAD0;
+  border-radius: 0 0 8px 8px;
+  color: #1E293B;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 43px;
+  font-weight: 800;
+  line-height: 0;
+  overflow: hidden;
+  text-align: center;
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.08);
+  backface-visibility: hidden;
+  z-index: 0;
+}
+
+.uiv-curr-bottom::before {
+  content: attr(data-num);
+}
+
+/* Static top half (revealed as flipper drops) */
+.uiv-next-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: #EDE8DF;
+  border-radius: 8px 8px 0 0;
+  color: #1E293B;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 43px;
+  font-weight: 800;
+  line-height: 1.38;
+  overflow: hidden;
+  text-align: center;
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.08);
+  backface-visibility: hidden;
+  z-index: 0;
+}
+
+.uiv-next-top::before {
+  content: attr(data-num);
+}
+
+/* The animated 3D card (matching .num from Uiverse) */
+.uiv-num {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 43px;
+  font-weight: 800;
+  transform-style: preserve-3d;
+  transform: rotateX(0deg);
+  z-index: 10;
+}
+
+/* Flipper front (top half curr) and back (bottom half next) */
+.uiv-num::before,
+.uiv-num::after {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+  text-align: center;
+  color: #1E293B;
+  backface-visibility: hidden;
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Front: current top half */
+.uiv-num::before {
+  content: attr(data-num);
+  top: 0;
+  background: #EDE8DF;
+  border-radius: 8px 8px 0 0;
+  line-height: 1.38;
+  z-index: 1;
+}
+
+/* Back: next bottom half (pre-rotated 180deg) */
+.uiv-num::after {
+  content: attr(data-num-next);
+  top: 0;
+  height: calc(50% - 1px);
+  background: #DFDAD0;
+  border-bottom: 1px solid #D1CAC0;
+  border-radius: 0 0 8px 8px;
+  line-height: 0;
+  transform: rotateX(180deg);
+}
+
+/* Single continuous smooth flip animation */
+.uiv-flip {
+  animation: uiv-card-flip 0.55s cubic-bezier(0.35, 0, 0.25, 1) forwards;
+}
+
+@keyframes uiv-card-flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  100% {
+    transform: rotateX(-180deg);
+  }
+}
+
+/* Mobile responsive sizing */
+@media (max-width: 480px) {
+  .uiv-container {
+    padding: 1rem 1.1rem;
+  }
+  .uiv-nums {
+    width: 32px;
+    height: 46px;
+  }
+  .uiv-num,
+  .uiv-next-top,
+  .uiv-curr-bottom {
+    font-size: 33px;
+  }
+  .uiv-sep {
+    height: 46px;
+    font-size: 1.1rem;
+  }
 }
