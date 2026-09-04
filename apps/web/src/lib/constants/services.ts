@@ -1,6 +1,51 @@
 // ETaxwala 2.0 — Service Catalog Data (250+ services with pricing)
 // Extracted from current client portal (customer-all-services page)
 
+export interface ServicePackage {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  period?: string; // e.g. "/ year", "/ month", "all inclusive"
+  popular?: boolean;
+  tagline: string;
+  features: string[];
+  govtFeeNote?: string;
+  turnaround?: string;
+}
+
+export interface ServiceProcessStep {
+  step: number;
+  title: string;
+  desc: string;
+  duration?: string;
+}
+
+export interface DocumentGroup {
+  entityType: string; // e.g. "Sole Proprietorship", "Private Limited / LLP"
+  items: string[];
+}
+
+export interface ServiceComparisonFeature {
+  feature: string;
+  etaxwala: string | boolean;
+  traditionalCA: string | boolean;
+  cheapSites: string | boolean;
+}
+
+export interface ServiceSoftwareFeature {
+  title: string;
+  desc: string;
+  badge?: string;
+}
+
+export interface ComplianceAlert {
+  dueDate?: string;
+  penaltyText?: string;
+  legalSection?: string;
+  riskNotice?: string;
+}
+
 export interface ServiceItem {
   id: number;
   name: string;
@@ -10,6 +55,20 @@ export interface ServiceItem {
   inclusions: string[];
   description?: string;
   isFeatured?: boolean;
+  
+  // Rich conversion properties (IndiaFilings benchmark)
+  subtitle?: string;
+  rating?: number;
+  reviewCount?: number;
+  turnaround?: string;
+  stats?: { label: string; value: string }[];
+  packages?: ServicePackage[];
+  processSteps?: ServiceProcessStep[];
+  documentsRequired?: DocumentGroup[];
+  complianceAlert?: ComplianceAlert;
+  softwareFeatures?: ServiceSoftwareFeature[];
+  comparisonTable?: ServiceComparisonFeature[];
+  faqs?: { q: string; a: string }[];
 }
 
 export interface CategoryItem {
@@ -20,6 +79,7 @@ export interface CategoryItem {
   description: string;
   color: string;
 }
+
 
 // ═══════════════════════════════════════════
 // CATEGORIES (8)
@@ -47,7 +107,150 @@ export const services: ServiceItem[] = [
   // ── Business Registration (9) ──
   { id: next(), name: 'Partnership Firm Registration', slug: 'partnership-firm', category: 'registration', price: 14999, isFeatured: true, inclusions: ['Partnership Deed Drafting', 'Free Expert Advice', 'PAN Card Apply', 'Continuous legal support'] },
   { id: next(), name: 'One Person Company Registration', slug: 'opc', category: 'registration', price: 16499, inclusions: ['Free Name Search', '2 DSC', '1 DIN', 'Incorporation certificate', 'MOA & AOA', 'PAN & TAN', 'Shares Certificate', 'Bank A/C docs'] },
-  { id: next(), name: 'Private Limited Company Registration', slug: 'private-limited', category: 'registration', price: 16499, isFeatured: true, inclusions: ['Name Search & Approval', 'Up to 1L authorized capital', '2 DSC', 'DIN for 2 Directors', 'Incorporation Certificate', 'MOA & AOA', 'PAN & TAN', 'Shares Certificate', 'Bank A/C docs', 'Continuous Legal Support'] },
+  {
+    id: next(),
+    name: 'Private Limited Company Registration',
+    slug: 'private-limited',
+    category: 'registration',
+    price: 16499,
+    isFeatured: true,
+    subtitle: 'Fastest 7-day MCA SPICe+ incorporation with 2 DSC, DIN, MOA/AOA, PAN/TAN, Corporate Bank Account & 1-Year Compliance handholding.',
+    rating: 4.9,
+    reviewCount: 3840,
+    turnaround: '7 - 10 Working Days',
+    stats: [
+      { label: 'Companies Incorporated', value: '14,500+' },
+      { label: 'Approval Rate', value: '99.4%' },
+      { label: 'Practicing CA & CS', value: '100% Verified' },
+      { label: 'Turnaround Time', value: '7-10 Days' },
+    ],
+    inclusions: [
+      'Name Search & RUN Approval',
+      'Up to ₹1,00,000 Authorized Capital',
+      '2 Class-3 Digital Signature Certificates (DSC)',
+      'Director Identification Numbers (DIN) for 2 Directors',
+      'Incorporation Certificate issued by MCA',
+      'e-MOA & e-AOA Drafting & Stamping',
+      'Corporate PAN & TAN Allotment',
+      'Share Certificates Generation',
+      'Zero-Balance Corporate Bank Account Opening Support',
+      'Post-Incorporation Compliance Guidance & Checklist',
+    ],
+    packages: [
+      {
+        id: 'starter',
+        name: 'Incorporation Starter',
+        price: 16499,
+        originalPrice: 24999,
+        period: 'all inclusive',
+        tagline: 'Ideal for tech founders & startups needing clean incorporation fast.',
+        turnaround: '7-10 Days',
+        govtFeeNote: 'Includes MCA stamp duty up to ₹1L authorized capital',
+        features: [
+          'Name approval in RUN portal',
+          '2 Class-3 DSC tokens with 2-year validity',
+          'DIN for 2 Directors',
+          'SPICe+ Part A & B filing with MCA',
+          'Certificate of Incorporation (COI)',
+          'e-MOA & e-AOA statutory drafting',
+          'Company PAN and TAN allotment',
+          'PF & ESIC registration numbers',
+        ],
+      },
+      {
+        id: 'standard',
+        name: 'Smart Founder Pack',
+        price: 24999,
+        originalPrice: 38999,
+        period: 'most popular',
+        popular: true,
+        tagline: 'Everything in Starter plus GST, MSME, Bank A/C and Trademark Filing.',
+        turnaround: '10-14 Days',
+        govtFeeNote: 'All statutory government incorporation & registration fees included',
+        features: [
+          'Everything in Incorporation Starter',
+          'GST Registration Certificate & Login',
+          'Udyam / MSME Registration Certificate',
+          'Trademark (TM) Application in 1 Class',
+          'Priority Corporate Bank Account Opening (HDFC/ICICI/Axis)',
+          'Drafting of Founder Agreements & Shareholding Terms',
+          'INC-20A Commencement of Business Filing',
+          'Dedicated Chartered Accountant Relationship Manager',
+        ],
+      },
+      {
+        id: 'compliance-retainer',
+        name: 'Scale-Up 360° (With 1st Year Compliance)',
+        price: 44999,
+        originalPrice: 65999,
+        period: 'complete assurance',
+        tagline: 'Zero-worry package covering incorporation PLUS full 1-year secretarial & ROC compliance.',
+        turnaround: 'Full Year Retainer',
+        govtFeeNote: 'All incorporation fees + statutory ROC annual return filing fees',
+        features: [
+          'Everything in Smart Founder Pack',
+          '1st Year Annual ROC Filing (AOC-4 & MGT-7)',
+          'Mandatory Statutory Auditor Appointment (ADT-1)',
+          'Director KYC (DIR-3 KYC) for all directors',
+          'Preparation of Board Meeting Minutes & AGM Notices',
+          'Statutory Registers Maintenance',
+          'Quarterly Financial Health Reviews with Senior CA',
+          'Free Legal Contract Templates (NDA, Employment, Service)',
+        ],
+      },
+    ],
+    processSteps: [
+      { step: 1, title: 'Name Search & DSC Generation', desc: 'We verify name availability on MCA portal and issue 2 Class-3 DSCs within 24 hours.', duration: 'Day 1' },
+      { step: 2, title: 'SPICe+ & MOA/AOA Drafting', desc: 'Our corporate legal team drafts constitutional documents tailored to your business objectives.', duration: 'Day 2 - 3' },
+      { step: 3, title: 'MCA Government Portal Filing', desc: 'SPICe+ Part B, AGILE-PRO-S, and INC-9 submitted to the Registrar of Companies (ROC).', duration: 'Day 4 - 6' },
+      { step: 4, title: 'COI, PAN, TAN & Bank Account', desc: 'MCA issues the Certificate of Incorporation. We deliver PAN, TAN, and bank onboarding kit.', duration: 'Day 7 - 10' },
+    ],
+    documentsRequired: [
+      {
+        entityType: 'Directors / Shareholders',
+        items: [
+          'PAN Card of all Directors and Shareholders (Mandatory)',
+          'Aadhaar Card / Passport / Voter ID for Identity Verification',
+          'Latest Bank Statement / Electricity Bill (< 2 months old) as proof of residence',
+          'Passport-size photographs of all directors',
+          'Valid Mobile Number & Email ID linked with Aadhaar for OTP signing',
+        ],
+      },
+      {
+        entityType: 'Registered Office Address',
+        items: [
+          'Electricity Bill / Water Bill / Gas Bill of the registered premises (< 2 months old)',
+          'No Objection Certificate (NOC) from the property owner / landlord',
+          'Rent Agreement (if rented) or Property Ownership Document / Tax receipt',
+        ],
+      },
+    ],
+    complianceAlert: {
+      dueDate: 'INC-20A must be filed within 180 days of incorporation',
+      penaltyText: 'Penalty of ₹50,000 on the company and ₹1,000 per day on defaulting directors. Bank accounts may be frozen if neglected.',
+      legalSection: 'Section 10A of the Companies Act, 2013',
+      riskNotice: 'Appointing a statutory auditor (ADT-1) within 30 days is mandatory for all newly incorporated companies.',
+    },
+    softwareFeatures: [
+      { title: 'MCA Filing Status Tracker', desc: 'Track your SPICe+ approval stage in real-time from your E-Taxwala portal dashboard.', badge: 'Live Updates' },
+      { title: 'Digital Document Vault', desc: 'Your COI, MOA, AOA, PAN, TAN, and DSC tokens securely backed up for lifetime access.', badge: 'Bank-Grade AES 256' },
+      { title: 'Automated Compliance Calendar', desc: 'Never miss an ROC due date or DIR-3 KYC deadline with automated SMS & WhatsApp alerts.', badge: 'Zero Penalty' },
+    ],
+    comparisonTable: [
+      { feature: 'Practicing CA & CS Drafting', etaxwala: 'Included (100% Certified)', traditionalCA: 'Yes (High Hourly Billing)', cheapSites: 'Auto-generated (No review)' },
+      { feature: 'Name Approval Re-submission', etaxwala: 'Free 2nd RUN Resubmission', traditionalCA: 'Extra charges per filing', cheapSites: 'Paid extra fees' },
+      { feature: 'Government Fees Included', etaxwala: 'Transparent All-Inclusive', traditionalCA: 'Billed on actuals later', cheapSites: 'Hidden charges on checkout' },
+      { feature: 'Post-Incorporation Support (INC-20A)', etaxwala: 'Included in Smart Pack', traditionalCA: 'Separate billing ₹5,000+', cheapSites: 'Left stranded' },
+      { feature: 'Self-Service Client Portal', etaxwala: '24/7 Web & Mobile Portal', traditionalCA: 'Manual phone calls / WhatsApp', cheapSites: 'Basic email only' },
+    ],
+    faqs: [
+      { q: 'How many persons are required to form a Private Limited Company?', a: 'A minimum of 2 directors and 2 shareholders are required (one person can hold both roles). At least one director must be a resident of India.' },
+      { q: 'Is physical presence required at any government office or ROC?', a: 'No, the entire process is 100% digital and online. You do not need to visit any government office; documents are digitally signed using Class-3 DSC.' },
+      { q: 'Can a salaried employee become a director in a private limited company?', a: 'Yes, legally there is no restriction in the Companies Act. However, you should review your employment contract with your current employer for non-compete clauses.' },
+      { q: 'What is the minimum capital required to start a Pvt Ltd?', a: 'There is no minimum paid-up capital requirement under the Companies Act 2013. You can start with as little as ₹1,000 or ₹10,000 authorized capital.' },
+      { q: 'Can an NRI or foreign national become a director or shareholder?', a: 'Yes! NRIs and foreign citizens can be directors and hold up to 100% equity through automatic FDI route for most business sectors. Passports and overseas documents require apostille/notarization.' },
+    ],
+  },
   { id: next(), name: 'Limited Liability Partnership (LLP) Registration', slug: 'llp', category: 'registration', price: 16499, inclusions: ['Name Search & Approval', 'DSC for 2 Partners', 'DPIN for 2 Partners', 'PAN & TAN', 'Incorporation Certificate', 'LLP Agreement', 'Master file + Bank docs'] },
   { id: next(), name: 'Section 8 Company NGO Registration', slug: 'section-8-ngo', category: 'registration', price: 16499, inclusions: ['Name Search', 'Up to 5L authorized capital', '2 DSC', '2 DIN', 'Incorporation Certificate', 'MOA & AOA', 'PAN & TAN', 'Registration kit', 'Shares Certificate'] },
   { id: next(), name: 'Producer Company Registration', slug: 'producer-company', category: 'registration', price: 29999, inclusions: ['Free Name Search', '10 DSC', '5 DIN', 'Incorporation certificate', 'MOA & AOA', 'PAN & TAN', 'Shares Certificate', 'Bank A/C docs'] },
@@ -123,7 +326,154 @@ export const services: ServiceItem[] = [
   { id: next(), name: 'Turnover Certificate', slug: 'turnover-certificate', category: 'taxation', price: 4999, inclusions: ['Turnover Certificate'] },
   { id: next(), name: 'Projected Balance Sheet', slug: 'projected-balance-sheet', category: 'taxation', price: 4999, inclusions: ['Projected Balance Sheet'] },
 
-  // ── GST Returns ──
+  // ── GST Returns (Flagship & Plans) ──
+  {
+    id: next(),
+    name: 'GST Return Filing Online (GSTR-1 & GSTR-3B)',
+    slug: 'gst-return',
+    category: 'taxation',
+    price: 5999,
+    isFeatured: true,
+    subtitle: 'Accountant-led monthly and quarterly GST compliance powered by cloud reconciliation software. 100% ITC claims, zero mismatch notices, and on-time filing.',
+    rating: 4.95,
+    reviewCount: 5120,
+    turnaround: '2 - 3 Working Days',
+    stats: [
+      { label: 'Returns Filed Successfully', value: '65,000+' },
+      { label: 'Input Tax Credit Reconciled', value: '₹140+ Cr' },
+      { label: 'Audit Notice Rate', value: '< 0.05%' },
+      { label: 'On-Time Filing Record', value: '99.8%' },
+    ],
+    inclusions: [
+      'GSTR-1 Monthly / Quarterly Outward Supplies Filing',
+      'GSTR-3B Monthly Summary Return with Tax Payment Challan',
+      'Automated GSTR-2B Input Tax Credit (ITC) Reconciliation',
+      'Dedicated Chartered Accountant / GST Practitioner Assigned',
+      'E-Way Bill & E-Invoice Integration Support',
+      'GST Portal Notice Management & Advisory',
+      'Cloud Document & Invoicing Software Access',
+      'Instant ARN Generation & GST Tax Invoice with 18% ITC Credit',
+    ],
+    packages: [
+      {
+        id: 'nil-return',
+        name: 'Nil GST Filing Plan (Annual)',
+        price: 5999,
+        originalPrice: 9999,
+        period: '/ year (12 months)',
+        tagline: 'For registered entities with zero turnover seeking 100% active status.',
+        turnaround: 'Same Day Filing',
+        govtFeeNote: 'All-inclusive CA professional drafting fee for 12 months',
+        features: [
+          '12 Months GSTR-1 & GSTR-3B Nil Returns',
+          'Annual GSTR-9 filing guidance',
+          'Automatic due date SMS & email alerts',
+          'Avoidance of ₹50/day late fees',
+          'Active GSTIN status protection',
+          'E-Taxwala Cloud portal access',
+        ],
+      },
+      {
+        id: 'active-business',
+        name: 'Active Business Monthly Plan',
+        price: 17999,
+        originalPrice: 28999,
+        period: '/ year (up to 50 invoices/mo)',
+        popular: true,
+        tagline: 'Our best-selling plan for growing traders, manufacturers, and service providers.',
+        turnaround: '2-3 Days Before Deadline',
+        govtFeeNote: 'Includes full monthly accounting + 12 months GSTR-1 & 3B',
+        features: [
+          'Monthly GSTR-1 & GSTR-3B filing (12 months)',
+          'Up to 50 sales & purchase invoices per month',
+          'Deep GSTR-2B ITC reconciliation (never miss vendor credit)',
+          'Preparation of monthly Tax Payment Challans (PMT-06)',
+          'Monthly bookkeeping & Sales/Purchase ledgers included',
+          'HSN/SAC code verification for all items',
+          'E-Way Bill & E-Invoice generation assistance',
+          'Dedicated Chartered Accountant manager',
+        ],
+      },
+      {
+        id: 'enterprise-custom',
+        name: 'High-Volume Enterprise Compliance',
+        price: 35999,
+        originalPrice: 49999,
+        period: '/ year (up to 200+ invoices/mo)',
+        tagline: 'Comprehensive end-to-end compliance for high-turnover companies and multi-branch firms.',
+        turnaround: 'Priority 24-48 Hours',
+        govtFeeNote: 'Covers all returns, annual GSTR-9 audit preparation & notice defense',
+        features: [
+          'Everything in Active Business Plan',
+          'Up to 200+ invoices per month with batch upload',
+          'Supplier follow-up report for un-reflected ITC invoices',
+          'GSTR-9 Annual Return drafting & reconciliation',
+          'Drafting replies to GST Department Notices (ASMT-10, DRC-01)',
+          'Reverse Charge Mechanism (RCM) calculations',
+          'Multi-state GSTIN consolidated reporting',
+          'Quarterly CA strategy call via Zoom',
+        ],
+      },
+    ],
+    processSteps: [
+      { step: 1, title: 'Invoice & Data Collection', desc: 'Upload your sales and purchase bills, Excel registers, or sync from your billing software onto our secure portal.', duration: 'Day 1' },
+      { step: 2, title: 'ITC Audit & GSTR-2B Reconciliation', desc: 'Our CA cross-verifies purchases with supplier filings in GSTR-2B to maximize your eligible Input Tax Credit.', duration: 'Day 2' },
+      { step: 3, title: 'Tax Computation & Client Sign-Off', desc: 'We compute net tax liability, apply eligible ITC, generate payment challan, and send draft for your approval.', duration: 'Day 3' },
+      { step: 4, title: 'Filing on GSTN Portal & ARN Delivery', desc: 'Return is authenticated via DSC/EVC on the official government portal. ARN receipt sent to your WhatsApp.', duration: 'Instant ARN' },
+    ],
+    documentsRequired: [
+      {
+        entityType: 'Sales & Outward Supplies',
+        items: [
+          'Monthly Sales Register or Invoices (B2B, B2C Large, B2C Small)',
+          'Details of Credit Notes / Debit Notes issued during the tax period',
+          'Summary of advances received and adjusted against invoices',
+          'Total turnover and zero-rated export / SEZ supply details',
+        ],
+      },
+      {
+        entityType: 'Purchases & Inward Supplies (ITC)',
+        items: [
+          'Purchase bills and expense invoices with supplier GSTINs',
+          'Import of goods/services documentation (Bill of Entry where applicable)',
+          'Bank statement verifying payments made within 180 days',
+          'Capital goods purchase records for proportional credit',
+        ],
+      },
+      {
+        entityType: 'Portal Authentication',
+        items: [
+          'GSTIN Portal Username & Password (or Authorized Signatory OTP)',
+          'Class-3 Digital Signature Certificate (DSC) for Companies & LLPs',
+        ],
+      },
+    ],
+    complianceAlert: {
+      dueDate: 'GSTR-1 by the 11th of every month | GSTR-3B by the 20th of every month',
+      penaltyText: 'Late fee of ₹50 per day (₹20 per day for Nil returns) under Section 47 + 18% per annum interest on unpaid tax liability.',
+      legalSection: 'Section 37 (GSTR-1), Section 39 (GSTR-3B) & Section 47 (Late Fees)',
+      riskNotice: 'Failure to file GSTR-3B for 2 consecutive months leads to automatic GSTIN blocking and E-Way Bill generation freeze.',
+    },
+    softwareFeatures: [
+      { title: 'Intelligent GSTR-2B Reconciliation', desc: 'Automated matching algorithms identify mismatched and missing vendor invoices so you never lose legitimate tax credit.', badge: 'Save Money' },
+      { title: '1-Click Challan & Ledger Tracking', desc: 'Real-time sync of your electronic cash ledger and electronic credit ledger balances directly on your client dashboard.', badge: 'Live Portal' },
+      { title: 'Audit Trail & Document Archive', desc: 'Full 8-year historical record of all filed returns, JSON files, and ARN certificates stored in an encrypted vault.', badge: '100% Compliant' },
+    ],
+    comparisonTable: [
+      { feature: 'GSTR-2B Input Tax Credit Matching', etaxwala: 'Line-by-line automated + CA vetted', traditionalCA: 'Sample checking or manual', cheapSites: 'No matching (customer risk)' },
+      { feature: 'Timely Filing Guarantee', etaxwala: 'Guaranteed 48h before deadline', traditionalCA: 'Often rushed on deadline day', cheapSites: 'Unresponsive during peak dates' },
+      { feature: 'Books & Accounting Included', etaxwala: 'Included in standard packages', traditionalCA: 'Requires separate bookkeeper', cheapSites: 'Not provided' },
+      { feature: 'Department Notice Defense', etaxwala: 'Drafted by practicing CA team', traditionalCA: 'Separate fee ₹3,000 - ₹10,000', cheapSites: 'Declines to assist' },
+      { feature: 'Cloud Software & Invoicing Access', etaxwala: 'Free client portal & mobile app', traditionalCA: 'Manual Excel/Paper records', cheapSites: 'Extra software subscription' },
+    ],
+    faqs: [
+      { q: 'What is the difference between GSTR-1 and GSTR-3B?', a: 'GSTR-1 is a statement of outward supplies (sales) containing invoice-level details. GSTR-3B is a monthly summary return where you declare total sales, claim eligible Input Tax Credit (ITC), and pay the net tax liability.' },
+      { q: 'Can I claim Input Tax Credit if my supplier has not filed their return?', a: 'Under current GST rules, you can only claim ITC that appears in your auto-populated GSTR-2B statement. Our team runs reconciliation to identify non-compliant vendors and provide you a recovery list.' },
+      { q: 'What happens if I file my GST return after the due date?', a: 'A mandatory late fee of ₹50 per day (₹20 per day for Nil returns) applies under Section 47, subject to a maximum cap. In addition, 18% per annum interest is levied on any outstanding cash tax liability.' },
+      { q: 'Can I change my GST filing frequency from monthly to quarterly?', a: 'Yes! Small businesses with an aggregate turnover of up to ₹5 Crore can opt into the QRMP (Quarterly Return Monthly Payment) scheme on the GST portal at the beginning of any quarter.' },
+      { q: 'What if I made a mistake in an already submitted GST return?', a: 'GST returns cannot be revised once filed, but errors or omissions can be rectified in the subsequent month’s return or amendments table without penalty if corrected before statutory deadlines.' },
+    ],
+  },
   { id: next(), name: 'GST Return Filing Monthly (Nil) — 1 Year', slug: 'gst-return-monthly-nil', category: 'taxation', price: 5999, inclusions: ['Monthly Return Filing (12 Month)', 'All GST Returns'] },
   { id: next(), name: 'GST Return Filing Monthly (10 Bills + Accounting) — 1 Year', slug: 'gst-return-monthly-10', category: 'taxation', price: 9999, inclusions: ['Monthly Filing (12 Month)', 'All GST Returns', 'Accounting Included'] },
   { id: next(), name: 'GST Return Filing Monthly (50 Bills + Accounting) — 1 Year', slug: 'gst-return-monthly-50', category: 'taxation', price: 17999, inclusions: ['Monthly Filing (12 Month)', 'All GST Returns', 'Accounting Included'] },
@@ -332,9 +682,231 @@ export const services: ServiceItem[] = [
   { id: next(), name: 'ETaxwala Partner', slug: 'etaxwala-partner', category: 'consultancy', price: 0, inclusions: ['Become a Partner'] },
 ];
 
-// Helper functions
-export const getServiceBySlug = (slug: string) => services.find((s) => s.slug === slug);
+// ═══════════════════════════════════════════
+// HELPER FUNCTIONS & SMART FALLBACK GENERATORS
+// ═══════════════════════════════════════════
+
+const slugAliases: Record<string, string> = {
+  'gst-return': 'gst-return',
+  'gst': 'gst-regular',
+  'trademark': 'trademark-application',
+  'fssai': 'fssai-basic',
+  'pvt-ltd': 'private-limited',
+  'msme': 'msme',
+  'itr': 'itr-salary',
+  'tax-audit': 'tax-audit-with-acct',
+  'tds': 'tds-return',
+  'iec': 'import-export-code',
+  'copyright': 'copyright-registration',
+  'patent': 'patent-registration',
+  'iso': 'iso-certification',
+};
+
+export const getServiceBySlug = (slug: string): ServiceItem | undefined => {
+  if (!slug) return undefined;
+  const directMatch = services.find((s) => s.slug === slug);
+  if (directMatch) return directMatch;
+  const aliasedSlug = slugAliases[slug.toLowerCase()];
+  if (aliasedSlug) {
+    return services.find((s) => s.slug === aliasedSlug);
+  }
+  // Try partial match
+  return services.find((s) => s.slug.includes(slug) || slug.includes(s.slug));
+};
+
 export const getServicesByCategory = (categoryId: string) => services.filter((s) => s.category === categoryId);
 export const getFeaturedServices = () => services.filter((s) => s.isFeatured);
 export const getCategoryById = (id: string) => categories.find((c) => c.id === id);
-export const formatPrice = (price: number) => price === 0 ? 'Contact Us' : `₹${price.toLocaleString('en-IN')}`;
+export const formatPrice = (_price?: number) => '₹ * * * *';
+
+/**
+ * Returns custom packages if defined, or generates high-conversion 3-tier packages
+ */
+export const getServicePackages = (service: ServiceItem): ServicePackage[] => {
+  if (service.packages && service.packages.length > 0) {
+    return service.packages;
+  }
+
+  const basePrice = service.price || 4999;
+  const starterPrice = Math.max(999, Math.round(basePrice * 0.75));
+  const standardPrice = basePrice;
+  const premiumPrice = Math.round(basePrice * 1.8);
+
+  return [
+    {
+      id: 'starter',
+      name: 'Essential Plan',
+      price: starterPrice,
+      originalPrice: Math.round(starterPrice * 1.4),
+      period: 'one-time',
+      tagline: `Basic government filing and statutory documentation for ${service.name}.`,
+      turnaround: '5-7 Working Days',
+      govtFeeNote: 'Standard statutory fees and CA drafting included',
+      features: [
+        `Filing of ${service.name} on Government portal`,
+        'Expert CA/CS preliminary eligibility audit',
+        'Checklist & documentation vetting',
+        'Official government acknowledgement/receipt',
+        'E-Taxwala self-service portal tracking',
+      ],
+    },
+    {
+      id: 'standard',
+      name: 'Professional Plan',
+      price: standardPrice,
+      originalPrice: Math.round(standardPrice * 1.5),
+      period: 'all inclusive',
+      popular: true,
+      tagline: `Recommended for complete compliance with priority processing and expert support.`,
+      turnaround: '3-5 Working Days',
+      govtFeeNote: '100% all-inclusive statutory & professional charges',
+      features: [
+        'Everything in Essential Plan',
+        'Dedicated Senior Chartered Accountant assigned',
+        'Priority same-day document drafting',
+        'Re-submission support in case of department query',
+        '18% GST Invoice provided for business tax credit',
+        'WhatsApp & Phone direct CA advisory',
+      ],
+    },
+    {
+      id: 'premium',
+      name: 'Corporate Annual Suite',
+      price: premiumPrice,
+      originalPrice: Math.round(premiumPrice * 1.4),
+      period: 'full-year retainer',
+      tagline: `End-to-end execution plus continuous quarterly advisory and notice protection.`,
+      turnaround: 'Fast-Track 48 Hours',
+      govtFeeNote: 'Includes full statutory filings and quarterly advisory retainers',
+      features: [
+        'Everything in Professional Plan',
+        'Statutory compliance maintenance for 1 full year',
+        'Notice reply & legal defense against department letters',
+        'Quarterly 1-on-1 financial & tax strategy review with CA',
+        'Dedicated account manager with 2-hour SLA',
+        'Access to E-Taxwala proprietary business software & tools',
+      ],
+    },
+  ];
+};
+
+/**
+ * Returns process steps or sensible 4-step workflow
+ */
+export const getServiceProcessSteps = (service: ServiceItem): ServiceProcessStep[] => {
+  if (service.processSteps && service.processSteps.length > 0) {
+    return service.processSteps;
+  }
+
+  return [
+    {
+      step: 1,
+      title: 'Digital Onboarding & Doc Upload',
+      desc: 'Submit your basic business details and scanned KYC documents through our 256-bit encrypted portal.',
+      duration: 'Day 1',
+    },
+    {
+      step: 2,
+      title: 'Senior CA Review & Drafting',
+      desc: `Our practicing Chartered Accountant reviews eligibility, validates statutory details, and drafts formal legal applications.`,
+      duration: 'Day 2 - 3',
+    },
+    {
+      step: 3,
+      title: 'Government Portal Submission',
+      desc: 'We authenticate and submit the official filing with the appropriate statutory ministry or department.',
+      duration: 'Day 4 - 5',
+    },
+    {
+      step: 4,
+      title: 'Final Approval & Certificate Delivery',
+      desc: 'Download your government-issued certificate, acknowledgement receipt, and GST tax invoice from your client portal.',
+      duration: 'Day 6 - 7',
+    },
+  ];
+};
+
+/**
+ * Returns categorized documents or sensible defaults
+ */
+export const getServiceDocuments = (service: ServiceItem): DocumentGroup[] => {
+  if (service.documentsRequired && service.documentsRequired.length > 0) {
+    return service.documentsRequired;
+  }
+
+  return [
+    {
+      entityType: 'Identity & Address Proof',
+      items: [
+        'PAN Card of Business, Proprietor, or Directors / Partners',
+        'Aadhaar Card or Passport / Voter ID for KYC authentication',
+        'Passport size photograph of the authorized signatory',
+        'Active Mobile Number & Email ID for OTP verification',
+      ],
+    },
+    {
+      entityType: 'Business Premises Proof',
+      items: [
+        'Recent Electricity Bill or Water Bill of the business address (< 2 months old)',
+        'Rent Agreement with Landlord NOC (if premises are rented)',
+        'Property Tax receipt or Ownership deed (if self-owned)',
+      ],
+    },
+    {
+      entityType: 'Financial & Operational Records',
+      items: [
+        'Bank Account Details with cancelled cheque or latest bank statement',
+        'Existing business registrations (GST / MSME / CIN) if applicable',
+      ],
+    },
+  ];
+};
+
+/**
+ * Returns comparison features
+ */
+export const getServiceComparison = (service: ServiceItem): ServiceComparisonFeature[] => {
+  if (service.comparisonTable && service.comparisonTable.length > 0) {
+    return service.comparisonTable;
+  }
+
+  return [
+    { feature: 'Practicing CA/CS Verification', etaxwala: '100% Certified CA Oversight', traditionalCA: 'Yes (Billed by the hour)', cheapSites: 'Automated / No CA review' },
+    { feature: 'Turnaround Time Commitment', etaxwala: 'Defined SLA (3-7 Days)', traditionalCA: 'Uncertain / Depends on follow-ups', cheapSites: 'Delays without notification' },
+    { feature: 'All-Inclusive Transparent Pricing', etaxwala: 'Zero hidden government fee surprises', traditionalCA: 'Unexpected out-of-pocket bills', cheapSites: 'Hidden charges before download' },
+    { feature: 'Digital Document Vault & Tracking', etaxwala: '24/7 Client Dashboard & Mobile App', traditionalCA: 'Manual paper files & WhatsApp', cheapSites: 'Basic static email attachment' },
+    { feature: 'GST Tax Invoice (18% ITC)', etaxwala: 'Official Tax Invoice with ITC credit', traditionalCA: 'Sometimes cash / no invoice', cheapSites: 'Limited support' },
+  ];
+};
+
+/**
+ * Returns software features
+ */
+export const getServiceSoftwareFeatures = (service: ServiceItem): ServiceSoftwareFeature[] => {
+  if (service.softwareFeatures && service.softwareFeatures.length > 0) {
+    return service.softwareFeatures;
+  }
+
+  return [
+    { title: 'Real-Time Filing Milestone Tracker', desc: 'Monitor your document verification, departmental submission, and certificate approval live on your client dashboard.', badge: 'Live Updates' },
+    { title: 'Bank-Grade Document Vault', desc: 'Lifetime secure cloud storage for all your registration certificates, challans, and CA attested filings with 256-bit encryption.', badge: 'AES-256' },
+    { title: 'Automated Due Date & Notice Alerts', desc: 'Stay protected from late penalties with automated WhatsApp and email reminders well in advance of statutory deadlines.', badge: 'Zero Penalty' },
+  ];
+};
+
+/**
+ * Returns FAQs
+ */
+export const getServiceFaqs = (service: ServiceItem): { q: string; a: string }[] => {
+  if (service.faqs && service.faqs.length > 0) {
+    return service.faqs;
+  }
+
+  return [
+    { q: `What is the turnaround time for ${service.name}?`, a: 'Standard execution takes between 3 to 7 working days, subject to government department approval timelines.' },
+    { q: 'Are all government statutory fees included in the price?', a: 'Yes! Our quote is fully transparent and bundles standard government statutory fees together with our professional CA drafting charges.' },
+    { q: 'Will I get an official tax invoice to claim GST input tax credit?', a: 'Yes. You will receive an official GST tax invoice with our GSTIN, allowing your registered business to claim an 18% Input Tax Credit (ITC).' },
+    { q: 'Can I track the progress of my filing online?', a: 'Yes! Our self-service client portal gives you real-time milestone tracking, direct communication with your assigned CA, and instant certificate downloads.' },
+    { q: 'What happens if the government department raises a query or resubmission request?', a: 'Our practicing CA and legal team will draft and file the formal response at zero additional professional charge under our Professional and Corporate packages.' },
+  ];
+};

@@ -7,11 +7,15 @@ import {
   Star, CheckCircle2, Phone, MapPin, Globe, Clock,
   Zap, Lock, AlertCircle, Scale, ShieldCheck, Search,
   MessageSquare, Sparkles, User, Mail, Calculator, Award,
-  ChevronRight, Check, Users, ArrowUpRight, HelpCircle
+  ChevronRight, Check, Users, ArrowUpRight, HelpCircle,
+  Plus, Minus, ChevronDown
 } from 'lucide-react';
 import { services } from '@/lib/constants/services';
 import CtaBanner from '@/components/cta-banner';
 import QuickEnquiryModal from '@/components/quick-enquiry-modal';
+import LiveSocialProofGrid from '@/components/marketing/live-social-proof-grid';
+import ReelsShowcaseSection from '@/components/marketing/reels-showcase-section';
+import PhotoSliderSection from '@/components/marketing/photo-slider-section';
 
 /* ─── Hero Segment Categories ─── */
 const HERO_SEGMENTS = [
@@ -21,8 +25,8 @@ const HERO_SEGMENTS = [
     title: 'Private Limited Company Registration',
     badge: 'MCA V3 SPICe+ Integrated',
     turnaround: '7–10 Working Days',
-    price: '₹16,499',
-    originalPrice: '₹24,999',
+    price: '₹ * * * *',
+    originalPrice: '₹ * * * * *',
     desc: 'The complete corporate startup package: 2 Digital Signatures (DSC), 2 DIN, Name Reservation, MoA & AoA drafting, PAN, TAN, and Zero-Fee Corporate Bank Account.',
     inclusions: [
       '2 Class-3 Digital Signatures (DSC)',
@@ -40,8 +44,8 @@ const HERO_SEGMENTS = [
     title: 'GST Registration & Monthly Return Filing',
     badge: 'Penalty-Proof Guarantee',
     turnaround: '1–3 Working Days',
-    price: 'Starting @ ₹499',
-    originalPrice: '₹1,499',
+    price: 'Starting @ ₹ * * * *',
+    originalPrice: '₹ * * * * *',
     desc: 'Fast GSTIN allocation and penalty-proof GSTR-1 & 3B return filing with complete input tax credit (ITC) reconciliation audited by senior CAs.',
     inclusions: [
       'Instant GSTIN Government Approval',
@@ -59,8 +63,8 @@ const HERO_SEGMENTS = [
     title: 'Trademark Registration & Brand Protection',
     badge: 'Same-Day ™ Protection',
     turnaround: '24 Hours Filing',
-    price: '₹6,999',
-    originalPrice: '₹11,999',
+    price: '₹ * * * *',
+    originalPrice: '₹ * * * * *',
     desc: 'Secure legal ownership over your brand name, logo, or slogan. Includes an exhaustive IP India search clearance and attorney representation.',
     inclusions: [
       'Comprehensive IP India Search Clearance',
@@ -78,8 +82,8 @@ const HERO_SEGMENTS = [
     title: 'Farmer Producer Company (FPC) Registration',
     badge: '₹15L SFAC Subsidy Advisory',
     turnaround: '15–20 Days',
-    price: '₹24,999',
-    originalPrice: '₹35,000',
+    price: '₹ * * * *',
+    originalPrice: '₹ * * * * *',
     desc: 'Specialized corporate structure for farmer clusters. Comprehensive registration with NABARD scheme alignment, SFAC matching equity grants, and DPR preparation.',
     inclusions: [
       '10 Farmer Director DIN & DSCs',
@@ -97,8 +101,8 @@ const HERO_SEGMENTS = [
     title: 'Annual ROC Compliance & Secretarial Retainer',
     badge: 'Save ₹50,000+ in MCA Penalties',
     turnaround: 'Annual Retainer',
-    price: '₹9,999/yr',
-    originalPrice: '₹18,000',
+    price: '₹ * * * * /yr',
+    originalPrice: '₹ * * * * *',
     desc: 'Complete statutory governance: AOC-4 financial statement filing, MGT-7 annual return, DIR-3 KYC for directors, and board meeting resolution maintenance.',
     inclusions: [
       'AOC-4 Financial Statements Filing',
@@ -121,12 +125,139 @@ const LIVE_ACTIVITIES = [
   { name: 'Vikas Sharma', city: 'Ahmedabad', action: 'Completed Director KYC (DIR-3)', time: '15 mins ago' },
 ];
 
+/* ─── How It Works Steps ─── */
+const HOW_IT_WORKS = [
+  {
+    step: '01',
+    icon: Phone,
+    title: 'Book Free CA Consultation',
+    desc: 'Call us or submit a query. A Senior Chartered Accountant contacts you within 5 minutes to understand your requirement.',
+    color: '#7C3AED',
+    bg: '#F5F0FF',
+  },
+  {
+    step: '02',
+    icon: FileBadge,
+    title: 'Share Documents Securely',
+    desc: 'Upload required documents through our 256-bit SSL encrypted client portal. No physical visits needed — 100% online.',
+    color: '#0084D1',
+    bg: '#F0F8FF',
+  },
+  {
+    step: '03',
+    icon: ClipboardCheck,
+    title: 'CA Reviews & Files',
+    desc: 'Our in-house practicing CAs handle your filing directly — no outsourcing, no article trainees. Every filing is audited.',
+    color: '#059669',
+    bg: '#F0FDF4',
+  },
+  {
+    step: '04',
+    icon: CheckCircle2,
+    title: 'Certificate & Confirmation',
+    desc: 'Receive your certificate, acknowledgment, or compliance confirmation with a full milestone tracking report via SMS & WhatsApp.',
+    color: '#E11D48',
+    bg: '#FFF1F4',
+  },
+];
+
+/* ─── FAQ Items ─── */
+const FAQ_ITEMS = [
+  {
+    q: 'What is the ITR filing deadline for FY 2025-26?',
+    a: 'The ITR filing deadline for FY 2025-26 (AY 2026-27) is July 31, 2026 for salaried individuals (ITR-1/ITR-2). For businesses requiring tax audit (ITR-3/ITR-4), the extended deadline is October 31, 2026.',
+  },
+  {
+    q: 'How long does Private Limited Company registration take?',
+    a: 'With ETaxwala\'s MCA V3 SPICe+ integrated workflow, Private Limited Company registration takes 7-10 working days. This includes DSC procurement, name approval, SPICe+ Part A & B filing, and corporate PAN/TAN.',
+  },
+  {
+    q: 'What is the difference between Old vs New Tax Regime?',
+    a: 'The Old Regime allows deductions (80C, HRA, LTA, etc.) but has higher tax slabs. The New Regime has lower tax rates but removes most deductions. For income below ₹7 Lakh, the New Regime is better due to rebate u/s 87A. For those with heavy 80C investments, the Old Regime may save more tax.',
+  },
+  {
+    q: 'Is GST registration mandatory for my business?',
+    a: 'GST registration is mandatory if your annual turnover exceeds ₹40 Lakh (goods) or ₹20 Lakh (services). For inter-state supply, e-commerce operators, or businesses in special category states, registration is mandatory regardless of turnover.',
+  },
+  {
+    q: 'What is Trademark registration and how long does ™ protection last?',
+    a: 'Trademark registration gives legal ownership over your brand name, logo, or slogan. You can use ™ immediately after filing and ® after full registration. Protection lasts 10 years and is renewable indefinitely. ETaxwala files your application within 24 hours.',
+  },
+  {
+    q: 'How does the Annual ROC Compliance retainer work?',
+    a: 'Our Annual ROC Compliance retainer covers: AOC-4 financial statement filing, MGT-7 annual return, DIR-3 KYC for all directors, AGM documentation, and Statutory Auditor appointment (ADT-1). A dedicated CA handles all filings on your behalf throughout the year.',
+  },
+  {
+    q: 'What is FPC (Farmer Producer Company) and what subsidies are available?',
+    a: 'An FPC is a hybrid legal structure for farmer groups combining company and cooperative benefits. Key subsidies include SFAC Equity Matching Grant up to ₹15 Lakh, NABARD PRODUCE Fund support, and SMART project funding. ETaxwala is a specialist in FPC registration and DPR preparation.',
+  },
+  {
+    q: 'Do you handle GST & Income Tax notices?',
+    a: 'Yes. ETaxwala provides full notice management — GSTN notices, Section 143(1) intimations, 245 adjustment notices, and scrutiny assessment responses. Our CA desk responds within 24 hours and represents you before the tax authority.',
+  },
+  {
+    q: 'Is my data safe on ETaxwala\'s platform?',
+    a: 'Absolutely. All documents are stored in a 256-bit SSL encrypted vault accessible only to you and your assigned CA. We are ISO 9001:2015 certified and do not sell or share your data with any third party.',
+  },
+  {
+    q: 'What are your service fees? Why are prices shown as ₹****?',
+    a: 'We mask prices because government fees vary by state, capital, and entity type — showing a flat number would be misleading. After a free CA consultation, you receive a fixed all-inclusive quote with zero hidden charges. Our pricing is transparent and competitive vs. both offline CAs and generic portals.',
+  },
+];
+
+/* ─── Tax Regime Calculator Data ─── */
+const NEW_REGIME_SLABS_2526 = [
+  { min: 0, max: 400000, rate: 0 },
+  { min: 400000, max: 800000, rate: 0.05 },
+  { min: 800000, max: 1200000, rate: 0.10 },
+  { min: 1200000, max: 1600000, rate: 0.15 },
+  { min: 1600000, max: 2000000, rate: 0.20 },
+  { min: 2000000, max: 2400000, rate: 0.25 },
+  { min: 2400000, max: Infinity, rate: 0.30 },
+];
+
+const OLD_REGIME_SLABS = [
+  { min: 0, max: 250000, rate: 0 },
+  { min: 250000, max: 500000, rate: 0.05 },
+  { min: 500000, max: 1000000, rate: 0.20 },
+  { min: 1000000, max: Infinity, rate: 0.30 },
+];
+
+function calcTax(income: number, slabs: typeof NEW_REGIME_SLABS_2526) {
+  let tax = 0;
+  for (const slab of slabs) {
+    if (income <= slab.min) break;
+    const taxable = Math.min(income, slab.max) - slab.min;
+    tax += taxable * slab.rate;
+  }
+  return Math.round(tax);
+}
+
+function calcNewRegimeTax(income: number) {
+  let tax = calcTax(income, NEW_REGIME_SLABS_2526);
+  // Rebate u/s 87A: nil tax if income <= 12 Lakh
+  if (income <= 1200000) tax = 0;
+  // Surcharge & cess: 4% health & education cess
+  tax = Math.round(tax * 1.04);
+  return tax;
+}
+
+function calcOldRegimeTax(income: number, deductions: number) {
+  const taxableIncome = Math.max(0, income - deductions);
+  let tax = calcTax(taxableIncome, OLD_REGIME_SLABS);
+  // Rebate u/s 87A: nil tax if taxable income <= 5 Lakh
+  if (taxableIncome <= 500000) tax = 0;
+  // 4% cess
+  tax = Math.round(tax * 1.04);
+  return tax;
+}
+
 /* ─── 6 Core Bento Grid Cards ─── */
 const CORE_PRACTICE_CARDS = [
   {
     title: 'Private Limited Company',
     desc: 'Limited liability and equity scalability. The standard legal structure for venture funding.',
-    price: '₹16,499',
+    price: '₹ * * * *',
     timeline: '7–10 Days',
     icon: Building2,
     link: '/services/registration/private-limited',
@@ -135,7 +266,7 @@ const CORE_PRACTICE_CARDS = [
   {
     title: 'Limited Liability Partnership',
     desc: 'Combines the flexibility of a partnership with the limited liability benefits of a company.',
-    price: '₹9,999',
+    price: '₹ * * * *',
     timeline: '8–12 Days',
     icon: Building2,
     link: '/services/registration/llp',
@@ -144,7 +275,7 @@ const CORE_PRACTICE_CARDS = [
   {
     title: 'GST Registration & Return Filing',
     desc: 'Same-day GSTIN application and monthly ITC maximization audits by chartered accountants.',
-    price: 'Starting @ ₹499',
+    price: 'Starting @ ₹ * * * *',
     timeline: '1–3 Days',
     icon: Receipt,
     link: '/itr-filing',
@@ -153,7 +284,7 @@ const CORE_PRACTICE_CARDS = [
   {
     title: 'Trademark Registration (™)',
     desc: 'Safeguard your brand name, logo, or slogan with immediate legal rights and defense.',
-    price: '₹6,999',
+    price: '₹ * * * *',
     timeline: '24 Hours',
     icon: FileBadge,
     link: '/services/ip/trademark',
@@ -162,7 +293,7 @@ const CORE_PRACTICE_CARDS = [
   {
     title: 'Farmer Producer Company (FPC)',
     desc: 'Agribusiness legal incorporation to unlock up to ₹15 Lakhs in SFAC matching equity grants.',
-    price: '₹24,999',
+    price: '₹ * * * *',
     timeline: '15–20 Days',
     icon: Users,
     link: '/fpc-training',
@@ -171,7 +302,7 @@ const CORE_PRACTICE_CARDS = [
   {
     title: 'Annual ROC Compliance Retainer',
     desc: 'AOC-4, MGT-7, and DIR-3 KYC filings to keep your company active, compliant, and notice-free.',
-    price: '₹9,999/yr',
+    price: '₹ * * * * /yr',
     timeline: 'Annual Retainer',
     icon: ClipboardCheck,
     link: '/services/compliance/pvt-ltd',
@@ -179,7 +310,281 @@ const CORE_PRACTICE_CARDS = [
   },
 ];
 
+/* ─── Deadline Banner Sub-Component ─── */
+function DeadlineBanner() {
+  const DEADLINE = new Date('2026-10-31T23:59:59+05:30');
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
+
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const diff = DEADLINE.getTime() - now.getTime();
+      if (diff <= 0) return;
+      setTimeLeft({
+        days: Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        mins: Math.floor((diff % 3600000) / 60000),
+      });
+    };
+    tick();
+    const id = setInterval(tick, 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="bg-gradient-to-r from-[#E11D48] via-[#BE123C] to-[#9F1239] text-white py-3 px-4 border-b border-red-900/20">
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex h-2.5 w-2.5 shrink-0">
+            <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-white opacity-60" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
+          </span>
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider">⚠️ ITR Filing Extended Deadline</span>
+            <span className="hidden sm:inline text-white/80 text-xs ml-2">— FY 2025-26 (AY 2026-27) Tax Audit Cases</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            {[{ val: timeLeft.days, label: 'Days' }, { val: timeLeft.hours, label: 'Hrs' }, { val: timeLeft.mins, label: 'Mins' }].map(({ val, label }) => (
+              <div key={label} className="flex flex-col items-center bg-white/20 rounded-lg px-3 py-1.5 min-w-[44px]">
+                <span className="text-base font-extrabold font-mono leading-none">{String(val).padStart(2, '0')}</span>
+                <span className="text-[9px] font-bold text-white/70 uppercase tracking-wider">{label}</span>
+              </div>
+            ))}
+          </div>
+          <Link
+            to="/itr-filing"
+            className="text-xs font-bold bg-white text-[#E11D48] px-3.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors whitespace-nowrap shrink-0"
+          >
+            File Now →
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Certified By Bar Sub-Component ─── */
+function CertifiedByBar() {
+  const certs = [
+    { label: 'MCA SPICe+ V3', icon: '🏛️', sub: 'Company Registration' },
+    { label: 'ISO 9001:2015', icon: '🎖️', sub: 'Quality Certified' },
+    { label: 'GSTN Authorized', icon: '📋', sub: 'GST Suvidha Provider' },
+    { label: 'ICAI Partner', icon: '⚖️', sub: 'CA Firm Affiliated' },
+    { label: 'IP India Registered', icon: '™️', sub: 'Trademark Agent' },
+    { label: 'MSME Registered', icon: '🏭', sub: 'Udyam Certified' },
+    { label: 'CBDT e-Return Intermediary', icon: '🔐', sub: 'Income Tax Filing' },
+  ];
+
+  return (
+    <section className="py-8 bg-white border-t border-[#EAE6DD] overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">
+          Officially Certified & Registered With
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+          {certs.map((c, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#FAF9F5] rounded-xl border border-[#EAE6DD] hover:border-slate-300 hover:shadow-sm transition-all group"
+            >
+              <span className="text-base">{c.icon}</span>
+              <div>
+                <p className="text-[11px] font-bold text-slate-800 leading-tight whitespace-nowrap">{c.label}</p>
+                <p className="text-[9px] text-slate-400 font-medium">{c.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Old vs New Tax Regime Calculator Sub-Component ─── */
+function TaxRegimeCalculator() {
+  const [grossIncome, setGrossIncome] = useState(800000);
+  const [deductions, setDeductions] = useState(150000);
+
+  const newTax = calcNewRegimeTax(grossIncome);
+  const oldTax = calcOldRegimeTax(grossIncome, deductions);
+  const savings = Math.abs(newTax - oldTax);
+  const betterRegime = newTax <= oldTax ? 'New Regime' : 'Old Regime';
+  const betterColor = newTax <= oldTax ? '#059669' : '#7C3AED';
+
+  const fmt = (n: number) => n >= 100000
+    ? `₹${(n / 100000).toFixed(2)}L`
+    : `₹${n.toLocaleString('en-IN')}`;
+
+  return (
+    <section className="py-16 bg-[#FAF9F5] border-t border-[#EAE6DD]">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="text-center space-y-2">
+          <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider bg-white px-2.5 py-1 rounded-md border border-[#EAE6DD]">
+            🧮 Free Tax Calculator
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Old vs New Tax Regime Calculator
+          </h2>
+          <p className="text-xs text-slate-500">
+            FY 2025-26 (AY 2026-27) — Includes 4% Health & Education Cess + Rebate u/s 87A
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-[#EAE6DD] p-6 sm:p-8 space-y-6">
+          {/* Income Slider */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-bold text-slate-700">Annual Gross Income</label>
+              <span className="text-sm font-extrabold text-slate-900 font-mono">{fmt(grossIncome)}</span>
+            </div>
+            <input
+              type="range"
+              min="200000"
+              max="5000000"
+              step="50000"
+              value={grossIncome}
+              onChange={e => setGrossIncome(Number(e.target.value))}
+              className="tax-range-slider"
+              style={{ '--slider-thumb-color': '#7C3AED' } as React.CSSProperties}
+            />
+            <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+              <span>₹2L</span><span>₹25L</span><span>₹50L</span>
+            </div>
+          </div>
+
+          {/* Deductions Slider */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-bold text-slate-700">Total Deductions (80C, HRA, LTA, etc.) — Old Regime Only</label>
+              <span className="text-sm font-extrabold text-slate-900 font-mono">{fmt(deductions)}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="400000"
+              step="10000"
+              value={deductions}
+              onChange={e => setDeductions(Number(e.target.value))}
+              className="tax-range-slider"
+              style={{ '--slider-thumb-color': '#0084D1' } as React.CSSProperties}
+            />
+            <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+              <span>₹0</span><span>₹2L</span><span>₹4L</span>
+            </div>
+          </div>
+
+          {/* Results */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-[#EAE6DD]">
+            <div className="p-4 bg-[#F5F0FF] rounded-xl border border-purple-100 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-purple-600 mb-1">New Regime Tax</p>
+              <p className="text-xl font-extrabold text-slate-900 font-mono">{fmt(newTax)}</p>
+              <p className="text-[10px] text-slate-500 mt-1">Rate: As per new slabs</p>
+            </div>
+            <div className="p-4 bg-[#F0F8FF] rounded-xl border border-blue-100 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Old Regime Tax</p>
+              <p className="text-xl font-extrabold text-slate-900 font-mono">{fmt(oldTax)}</p>
+              <p className="text-[10px] text-slate-500 mt-1">After deductions: {fmt(Math.max(0, grossIncome - deductions))}</p>
+            </div>
+            <div className="p-4 rounded-xl border text-center" style={{ background: betterColor + '12', borderColor: betterColor + '30' }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: betterColor }}>You Save</p>
+              <p className="text-xl font-extrabold font-mono" style={{ color: betterColor }}>{fmt(savings)}</p>
+              <p className="text-[10px] font-bold mt-1" style={{ color: betterColor }}>with {betterRegime}</p>
+            </div>
+          </div>
+
+          <div className="text-center pt-2">
+            <p className="text-[11px] text-slate-400 mb-3">
+              * Indicative estimate only. Consult a CA for exact tax liability.
+            </p>
+            <Link
+              to="/itr-filing"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl btn-multicolor font-bold text-xs"
+            >
+              <span className="btn-galaxy__stars" aria-hidden="true" />
+              <span className="relative z-[2] inline-flex items-center justify-center gap-2">
+                <span>File ITR with Expert CA</span>
+                <ArrowRight className="btn-galaxy__icon w-3.5 h-3.5" />
+              </span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── FAQ Accordion Sub-Component ─── */
+function FaqSection() {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  return (
+    <section className="py-16 bg-white border-t border-[#EAE6DD]">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="text-center space-y-2">
+          <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider bg-[#FAF9F5] px-2.5 py-1 rounded-md border border-[#EAE6DD]">
+            ❓ Most Asked Questions
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-xs text-slate-500">
+            Everything you need to know about taxes, registrations, and compliance in India.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          {FAQ_ITEMS.map((item, i) => (
+            <div
+              key={i}
+              className={`rounded-xl border transition-all duration-200 overflow-hidden ${openIndex === i ? 'border-[#7C3AED]/30 shadow-sm bg-[#FAF9F5]' : 'border-[#EAE6DD] bg-white hover:border-slate-300'}`}
+            >
+              <button
+                type="button"
+                onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer"
+              >
+                <span className="text-sm font-semibold text-slate-900 pr-4 leading-snug">{item.q}</span>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors ${openIndex === i ? 'bg-[#7C3AED] text-white' : 'bg-[#FAF9F5] border border-[#EAE6DD] text-slate-400'}`}>
+                  {openIndex === i ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                </div>
+              </button>
+              <AnimatePresence initial={false}>
+                {openIndex === i && (
+                  <motion.div
+                    key="answer"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  >
+                    <div className="px-5 pb-5 text-xs text-slate-600 leading-relaxed border-t border-[#EAE6DD] pt-3">
+                      {item.a}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center pt-2">
+          <p className="text-xs text-slate-500 mb-3">Have more questions? Our CA team answers within 5 minutes.</p>
+          <Link
+            to="/contact"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs bg-[#FAF9F5] border border-[#EAE6DD] text-slate-800 hover:border-slate-300 hover:shadow-sm transition-all"
+          >
+            Ask a CA Directly <ArrowRight className="w-3.5 h-3.5 text-[#7C3AED]" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function HomePage() {
+
   const [selectedEnquiryService, setSelectedEnquiryService] = useState<string | null>(null);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState(0);
   const [tickerIndex, setTickerIndex] = useState(0);
@@ -346,7 +751,7 @@ export default function HomePage() {
           </div>
 
           {/* Split Content Grid (Details Left, Focused Lead Card Right) inside Folder Panel */}
-          <div className="etax-folder-panel p-6 sm:p-8 lg:p-10 mb-8">
+          <div className="etax-folder-panel p-4 sm:p-8 lg:p-10 mb-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             
             {/* Left Column: Selected Service Inclusions & Guarantees */}
@@ -371,9 +776,9 @@ export default function HomePage() {
 
                 {/* Price — hidden, contact for quote */}
                 <div className="flex items-center gap-3 pt-2">
-                  <span className="price-masked text-2xl">₹ ★ ★ ★</span>
+                  <span className="price-masked text-2xl font-mono tracking-widest font-extrabold text-slate-900">₹ * * * *</span>
                   <span className="text-xs font-bold text-[#7C3AED] bg-[#FAF9F5] border border-[#EAE6DD] px-2.5 py-1 rounded-md flex items-center gap-1">
-                    Contact us for exact quote
+                    Unlocked upon CA consultation
                   </span>
                 </div>
               </div>
@@ -604,6 +1009,11 @@ export default function HomePage() {
       </section>
 
       {/* ═════════════════════════════════════════════════════════════════
+          3b. ITR FILING DEADLINE COUNTDOWN BANNER
+          ═════════════════════════════════════════════════════════════════ */}
+      <DeadlineBanner />
+
+      {/* ═════════════════════════════════════════════════════════════════
           4. INSTANT SEARCH ACROSS 250+ SERVICES (Minimalist Light Hub)
           ═════════════════════════════════════════════════════════════════ */}
       <section className="py-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -715,7 +1125,7 @@ export default function HomePage() {
                   <div className="pt-4 mt-4 border-t border-[#EAE6DD] flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-slate-400 uppercase font-semibold block">Fee</span>
-                      <span className="price-masked text-base">₹ ★ ★ ★</span>
+                      <span className="price-masked text-base font-mono tracking-widest font-extrabold text-slate-900">₹ * * * *</span>
                     </div>
 
                     <button
@@ -734,6 +1144,74 @@ export default function HomePage() {
 
         </div>
       </section>
+
+      {/* ═════════════════════════════════════════════════════════════════
+          5b. HOW IT WORKS — 4-STEP PROCESS
+          ═════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 bg-white border-t border-[#EAE6DD]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center space-y-2 mb-12">
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider bg-[#FAF9F5] px-2.5 py-1 rounded-md border border-[#EAE6DD]">
+              Simple 4-Step Process
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              How ETaxwala Works
+            </h2>
+            <p className="text-xs text-slate-500 max-w-xl mx-auto">
+              From first consultation to final certificate — fully managed by practicing Chartered Accountants.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+            {/* Connector lines — desktop only */}
+            <div className="hidden lg:block absolute top-10 left-[calc(12.5%+12px)] right-[calc(12.5%+12px)] h-px bg-gradient-to-r from-transparent via-[#EAE6DD] to-transparent z-0" />
+
+            {HOW_IT_WORKS.map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={i}
+                  className="relative z-10 flex flex-col items-center text-center p-6 bg-[#FAF9F5] rounded-2xl border border-[#EAE6DD] hover:border-slate-300 hover:shadow-md transition-all group"
+                >
+                  {/* Step number */}
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 shrink-0 transition-transform group-hover:scale-110"
+                    style={{ background: step.bg }}
+                  >
+                    <Icon className="w-5 h-5" style={{ color: step.color }} />
+                  </div>
+                  <span
+                    className="text-[10px] font-extrabold uppercase tracking-widest mb-1"
+                    style={{ color: step.color }}
+                  >
+                    Step {step.step}
+                  </span>
+                  <h3 className="text-sm font-bold text-slate-900 mb-2">{step.title}</h3>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">{step.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              to="/appointment"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl btn-multicolor font-bold text-sm"
+            >
+              <span className="btn-galaxy__stars" aria-hidden="true" />
+              <span className="relative z-[2] inline-flex items-center justify-center gap-2">
+                <span>Book Free CA Consultation</span>
+                <ArrowRight className="btn-galaxy__icon w-4 h-4" />
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ═════════════════════════════════════════════════════════════════
+          5c. CERTIFIED BY — TRUST LOGOS BAR
+          ═════════════════════════════════════════════════════════════════ */}
+      <CertifiedByBar />
 
       {/* ═════════════════════════════════════════════════════════════════
           6. INTERACTIVE COMPANY INCORPORATION FEE CALCULATOR
@@ -802,23 +1280,23 @@ export default function HomePage() {
             <div className="bg-white rounded-xl border border-[#EAE6DD] p-5 space-y-3">
               <div className="flex justify-between text-xs text-slate-600">
                 <span>MCA Government Stamp Duty &amp; Name Approval:</span>
-                <span className="font-semibold text-slate-900">₹2,000 (Included)</span>
+                <span className="font-mono tracking-wider font-bold text-slate-900">₹ * * * * (Included)</span>
               </div>
               <div className="flex justify-between text-xs text-slate-600">
                 <span>Digital Signature Certificates ({calcDirectors} Class-3 DSCs):</span>
-                <span className="font-semibold text-slate-900">₹3,000 (Included)</span>
+                <span className="font-mono tracking-wider font-bold text-slate-900">₹ * * * * (Included)</span>
               </div>
               <div className="flex justify-between text-xs text-slate-600">
                 <span>CA Drafting (MoA, AoA, SPICe+ Filing &amp; PAN/TAN):</span>
-                <span className="font-semibold text-slate-900">₹11,499 (Included)</span>
+                <span className="font-mono tracking-wider font-bold text-slate-900">₹ * * * * (Included)</span>
               </div>
               <div className="pt-3 border-t border-[#EAE6DD] flex justify-between items-baseline">
                 <div>
                   <span className="text-xs font-bold text-slate-900 uppercase">Total All-Inclusive Fee:</span>
-                  <p className="text-[11px] text-slate-500 font-medium">Includes all statutory filings &amp; post-incorporation kit</p>
+                  <p className="text-[11px] text-slate-500 font-medium">All statutory filings &amp; post-incorporation kit included</p>
                 </div>
-                <span className="text-2xl font-extrabold text-slate-900">
-                  {calcEntityType === 'pvt_ltd' ? '₹16,499' : calcEntityType === 'llp' ? '₹9,999' : calcEntityType === 'opc' ? '₹11,999' : '₹24,999'}
+                <span className="text-2xl font-extrabold tracking-widest font-mono text-slate-900">
+                  ₹ * * * *
                 </span>
               </div>
             </div>
@@ -828,7 +1306,27 @@ export default function HomePage() {
       </section>
 
       {/* ═════════════════════════════════════════════════════════════════
-          7. TRANSPARENT COMPARISON TABLE (ETaxwala vs Others)
+          6b. OLD VS NEW TAX REGIME CALCULATOR
+          ═════════════════════════════════════════════════════════════════ */}
+      <TaxRegimeCalculator />
+
+      {/* ═════════════════════════════════════════════════════════════════
+          7. CA SHORTS & REELS SHOWCASE (Continuous Flowing Slider)
+          ═════════════════════════════════════════════════════════════════ */}
+      <ReelsShowcaseSection />
+
+      {/* ═════════════════════════════════════════════════════════════════
+          8. LIVE CUSTOMER REVIEWS & TRUST FLOW (CleverPe Style)
+          ═════════════════════════════════════════════════════════════════ */}
+      <LiveSocialProofGrid />
+
+      {/* ═════════════════════════════════════════════════════════════════
+          9. BEHIND THE SCENES: PHOTO SLIDER & OFFICES SHOWCASE
+          ═════════════════════════════════════════════════════════════════ */}
+      <PhotoSliderSection />
+
+      {/* ═════════════════════════════════════════════════════════════════
+          8. TRANSPARENT COMPARISON TABLE (ETaxwala vs Others)
           ═════════════════════════════════════════════════════════════════ */}
       <section className="py-16 bg-[#FAF9F5] border-t border-[#EAE6DD]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -847,42 +1345,28 @@ export default function HomePage() {
               <thead>
                 <tr className="border-b border-[#EAE6DD] text-slate-700 font-bold uppercase text-[10px] bg-[#FAF9F5]">
                   <th className="py-3.5 px-5">Deliverable</th>
-                  <th className="py-3.5 px-5 text-slate-900 font-extrabold text-xs">ETaxwala 2.0</th>
-                  <th className="py-3.5 px-5 text-slate-500">Traditional Offline CA</th>
-                  <th className="py-3.5 px-5 text-slate-500">Generic Portals</th>
+                  <th className="py-3.5 px-5 text-[#059669] font-extrabold text-xs">✅ ETaxwala 2.0</th>
+                  <th className="py-3.5 px-5 text-slate-500">❌ Traditional Offline CA</th>
+                  <th className="py-3.5 px-5 text-slate-500">❌ Generic Portals</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAE6DD] text-slate-700 font-medium">
-                <tr>
-                  <td className="py-4 px-5 font-bold text-slate-900">Pricing Transparency</td>
-                  <td className="py-4 px-5 text-slate-900 font-bold">100% Fixed &amp; All-Inclusive</td>
-                  <td className="py-4 px-5 text-slate-500">Variable with hidden extra fees</td>
-                  <td className="py-4 px-5 text-slate-500">Govt fees excluded on checkout</td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-5 font-bold text-slate-900">Milestone Visibility</td>
-                  <td className="py-4 px-5 text-slate-900 font-bold">10-Stage Real-Time Portal &amp; SMS</td>
-                  <td className="py-4 px-5 text-slate-500">Manual phone follow-ups required</td>
-                  <td className="py-4 px-5 text-slate-500">Static email notifications</td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-5 font-bold text-slate-900">Professional Handling</td>
-                  <td className="py-4 px-5 text-slate-900 font-bold">In-House Practicing CAs &amp; CSs</td>
-                  <td className="py-4 px-5 text-slate-500">Delegated to article trainees</td>
-                  <td className="py-4 px-5 text-slate-500">Automated bots / Non-CA teams</td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-5 font-bold text-slate-900">Document Security</td>
-                  <td className="py-4 px-5 text-slate-900 font-bold">256-Bit SSL Encrypted Vault</td>
-                  <td className="py-4 px-5 text-slate-500">Physical paper folders in office</td>
-                  <td className="py-4 px-5 text-slate-500">Basic shared storage</td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-5 font-bold text-slate-900">Turnaround Commitment</td>
-                  <td className="py-4 px-5 text-slate-900 font-bold">Guaranteed On-Time or Refund SLA</td>
-                  <td className="py-4 px-5 text-slate-500">No committed timeline</td>
-                  <td className="py-4 px-5 text-slate-500">Frequent portal delays</td>
-                </tr>
+                {[
+                  ['Pricing Transparency', '✅ 100% Fixed & All-Inclusive', '❌ Variable with hidden extra fees', '❌ Govt fees excluded on checkout'],
+                  ['Milestone Visibility', '✅ 10-Stage Real-Time Portal & SMS', '❌ Manual phone follow-ups required', '❌ Static email notifications'],
+                  ['Professional Handling', '✅ In-House Practicing CAs & CSs', '❌ Delegated to article trainees', '❌ Automated bots / Non-CA teams'],
+                  ['Document Security', '✅ 256-Bit SSL Encrypted Vault', '❌ Physical paper folders in office', '❌ Basic shared storage'],
+                  ['Turnaround Commitment', '✅ Guaranteed On-Time or Refund SLA', '❌ No committed timeline', '❌ Frequent portal delays'],
+                  ['Notice Management', '✅ Free GST & IT Notice Reply', '❌ Charged separately per notice', '❌ Not included'],
+                  ['WhatsApp Updates', '✅ Real-time WhatsApp milestone SMS', '❌ Manual calls only', '❌ Email only'],
+                ].map(([label, etax, trad, generic], i) => (
+                  <tr key={i}>
+                    <td className="py-3.5 px-5 font-bold text-slate-900">{label}</td>
+                    <td className="py-3.5 px-5 text-[#059669] font-bold">{etax}</td>
+                    <td className="py-3.5 px-5 text-slate-500">{trad}</td>
+                    <td className="py-3.5 px-5 text-slate-500">{generic}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -891,7 +1375,12 @@ export default function HomePage() {
       </section>
 
       {/* ═════════════════════════════════════════════════════════════════
-          8. SIGNATURE CONVERSION BANNER (Ready to Work with India's Best?)
+          8b. FAQ ACCORDION SECTION
+          ═════════════════════════════════════════════════════════════════ */}
+      <FaqSection />
+
+      {/* ═════════════════════════════════════════════════════════════════
+          9. SIGNATURE CONVERSION BANNER (Ready to Work with India's Best?)
           ═════════════════════════════════════════════════════════════════ */}
       <CtaBanner
         title="Ready to Work with India's Best?"

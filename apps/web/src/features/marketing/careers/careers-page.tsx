@@ -207,20 +207,20 @@ export default function CareersPage() {
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative z-10 w-full max-w-lg rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-[#EAE6DD] max-h-[90vh] overflow-y-auto"
+              className="relative z-10 w-full max-w-lg rounded-3xl bg-[#FFFDF9] p-6 sm:p-8 shadow-2xl border border-[#EAE6DD] max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="absolute right-4 top-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="absolute right-4 top-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"
               >
                 <X className="h-5 w-5" />
               </button>
 
               <div className="mb-5">
-                <span className="text-[11px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                <span className="text-[11px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                   Job Application
                 </span>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-2">
+                <h3 className="text-xl font-bold text-slate-900 mt-2">
                   Apply for {selectedJob}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">Fill out your profile details and attach your resume.</p>
@@ -228,43 +228,43 @@ export default function CareersPage() {
 
               {status === 'success' ? (
                 <div className="py-8 text-center space-y-3">
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <h4 className="text-lg font-bold text-slate-900 dark:text-slate-100">Application Submitted!</h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xs mx-auto">
+                  <h4 className="text-lg font-bold text-slate-900">Application Submitted!</h4>
+                  <p className="text-xs text-slate-600 max-w-xs mx-auto">
                     Thank you for applying. Our talent acquisition team will review your profile and contact you shortly.
                   </p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
                     <input
                       {...register('name')}
                       placeholder="e.g. Rahul Sharma"
-                      className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                     />
                     {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email *</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Email *</label>
                       <input
                         {...register('email')}
                         type="email"
                         placeholder="you@domain.com"
-                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                       />
                       {errors.email && <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>}
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phone Number *</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
                       <input
                         {...register('phone')}
                         placeholder="10-digit mobile"
-                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                       />
                       {errors.phone && <p className="mt-1 text-xs text-rose-500">{errors.phone.message}</p>}
                     </div>
@@ -272,18 +272,18 @@ export default function CareersPage() {
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Position *</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Position *</label>
                       <input
                         {...register('role')}
                         readOnly
-                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3.5 py-2.5 text-sm text-slate-600 dark:text-slate-400"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-600 font-medium"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Experience *</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Experience *</label>
                       <select
                         {...register('experience')}
-                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                       >
                         <option value="Fresher / 0-1 Year">Fresher / 0-1 Year</option>
                         <option value="1-3 Years">1-3 Years</option>
@@ -294,18 +294,18 @@ export default function CareersPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">LinkedIn / Portfolio URL</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">LinkedIn / Portfolio URL</label>
                     <input
                       {...register('linkedin')}
                       placeholder="https://linkedin.com/in/..."
-                      className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                     />
                   </div>
 
                   {/* Resume Upload Box */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Upload Resume (PDF / DOCX)</label>
-                    <div className="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center hover:border-blue-500 transition-colors">
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Upload Resume (PDF / DOCX)</label>
+                    <div className="relative border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-[#0084D1] transition-colors bg-[#FAF9F5]">
                       <input
                         type="file"
                         accept=".pdf,.doc,.docx"
@@ -318,10 +318,10 @@ export default function CareersPage() {
                       />
                       <UploadCloud className="w-7 h-7 text-slate-400 mx-auto mb-1.5" />
                       {fileName ? (
-                        <p className="text-xs font-bold text-blue-600 truncate">{fileName}</p>
+                        <p className="text-xs font-bold text-[#0084D1] truncate">{fileName}</p>
                       ) : (
                         <>
-                          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Click to upload or drag &amp; drop</p>
+                          <p className="text-xs font-semibold text-slate-700">Click to upload or drag &amp; drop</p>
                           <p className="text-[10px] text-slate-400">PDF, DOC, DOCX up to 10MB</p>
                         </>
                       )}
@@ -331,15 +331,17 @@ export default function CareersPage() {
                   <button
                     type="submit"
                     disabled={status === 'loading'}
-                    className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    className="btn-multicolor w-full py-3.5 rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                   >
-                    {status === 'loading' ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> Submitting Application...
-                      </>
-                    ) : (
-                      'Submit Application'
-                    )}
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      {status === 'loading' ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" /> Submitting Application...
+                        </>
+                      ) : (
+                        'Submit Application'
+                      )}
+                    </span>
                   </button>
 
                   {status === 'error' && (

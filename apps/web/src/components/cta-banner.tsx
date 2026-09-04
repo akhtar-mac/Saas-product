@@ -30,23 +30,23 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({
       <div className="container-etaxwala">
         {/* Card with Multicolour Gradient Outline */}
         <div className="group relative p-[1.5px] rounded-3xl bg-multicolor shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <div className="rounded-[22.5px] bg-[#FFFDF9] p-8 sm:p-12 text-center relative overflow-hidden">
+          <div className="rounded-[22.5px] bg-[#FFFDF9] p-5 sm:p-12 text-center relative overflow-hidden">
             {/* Subtle soft ambient glow in the corners */}
             <div className="absolute top-0 right-0 w-72 h-72 bg-radial from-[#7C3AED]/8 via-transparent to-transparent blur-2xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-72 h-72 bg-radial from-[#0084D1]/8 via-transparent to-transparent blur-2xl pointer-events-none" />
 
             <div className="relative z-10 max-w-2xl mx-auto">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mb-3 text-slate-900 tracking-tight">
+              <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold mb-3 text-slate-900 tracking-tight">
                 {title}
               </h2>
-              <p className="text-sm sm:text-base text-slate-600 max-w-xl mx-auto mb-8 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-600 max-w-xl mx-auto mb-6 sm:mb-8 leading-relaxed">
                 {subtitle}
               </p>
-              <div className="flex flex-wrap gap-3.5 justify-center items-center">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-3.5 justify-center items-stretch sm:items-center">
                 {/* Primary: Galaxy dark button */}
                 <Link
                   to={primaryButtonLink}
-                  className="px-6 py-3.5 rounded-xl btn-multicolor text-white"
+                  className="px-6 py-3.5 rounded-xl btn-multicolor text-white justify-center"
                 >
                   <span className="btn-galaxy__stars" aria-hidden="true" />
                   <span className="relative z-[2] inline-flex items-center gap-2 font-bold text-sm">
@@ -58,7 +58,7 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({
                 {secondaryIsPhone ? (
                   <a
                     href={`tel:${phoneNumber.replace(/[^0-9+]/g, '')}`}
-                    className="px-6 py-3.5 rounded-xl btn-outline-multicolor text-sm"
+                    className="px-6 py-3.5 rounded-xl btn-outline-multicolor text-sm justify-center"
                   >
                     <span className="btn-galaxy__stars" aria-hidden="true" />
                     <span className="relative z-[2] inline-flex items-center gap-2 font-bold">
@@ -69,7 +69,7 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({
                 ) : (
                   <Link
                     to={secondaryButtonLink}
-                    className="px-6 py-3.5 rounded-xl btn-outline-multicolor text-sm"
+                    className="px-6 py-3.5 rounded-xl btn-outline-multicolor text-sm justify-center"
                   >
                     <span className="btn-galaxy__stars" aria-hidden="true" />
                     <span className="relative z-[2] inline-flex items-center gap-2 font-bold">

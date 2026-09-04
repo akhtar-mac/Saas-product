@@ -102,32 +102,31 @@ export default function ClientSignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] dark:bg-slate-950 flex items-center justify-center p-4 sm:p-6 font-sans">
+    <div className="min-h-screen bg-[#FFFDF9] flex items-center justify-center p-4 sm:p-6 font-sans">
       <div className="w-full max-w-lg space-y-6">
         {/* Brand */}
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2.5">
-            <img src="/logo_black.png" alt="ETaxwala" className="h-10 w-auto dark:hidden" />
-            <img src="/logo_white.png" alt="ETaxwala" className="h-10 w-auto hidden dark:block" />
+            <img src="/logo_black.png" alt="ETaxwala" className="h-10 w-auto" />
           </Link>
           <div>
-            <span className="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold uppercase tracking-wider">
+            <span className="px-3 py-1 rounded-full bg-blue-50 text-[#0084D1] border border-blue-200 text-xs font-bold uppercase tracking-wider">
               Client Portal Account
             </span>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+            <h1 className="text-2xl font-bold text-slate-900 mt-2">
               Create Your Client Account
             </h1>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
               Track compliance progress, upload KYC documents securely, and get dedicated Chartered Accountant support.
             </p>
           </div>
         </div>
 
         {/* Signup Form Card */}
-        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#EAE6DD] shadow-sm space-y-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Full Name *
               </label>
               <div className="relative">
@@ -135,7 +134,7 @@ export default function ClientSignupPage() {
                 <input
                   {...register('name')}
                   placeholder="e.g. Rahul Sharma"
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                 />
               </div>
               {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
@@ -143,7 +142,7 @@ export default function ClientSignupPage() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Email Address *
                 </label>
                 <div className="relative">
@@ -152,14 +151,14 @@ export default function ClientSignupPage() {
                     {...register('email')}
                     type="email"
                     placeholder="you@company.com"
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   />
                 </div>
                 {errors.email && <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>}
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Mobile Number *
                 </label>
                 <div className="relative">
@@ -167,7 +166,7 @@ export default function ClientSignupPage() {
                   <input
                     {...register('mobile')}
                     placeholder="10-digit phone"
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   />
                 </div>
                 {errors.mobile && <p className="mt-1 text-xs text-rose-500">{errors.mobile.message}</p>}
@@ -176,7 +175,7 @@ export default function ClientSignupPage() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Create Password *
                 </label>
                 <div className="relative">
@@ -185,42 +184,42 @@ export default function ClientSignupPage() {
                     {...register('password')}
                     type="password"
                     placeholder="Min 6 characters"
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   />
                 </div>
                 {errors.password && <p className="mt-1 text-xs text-rose-500">{errors.password.message}</p>}
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   City / State *
                 </label>
                 <input
                   {...register('city')}
                   placeholder="e.g. Pune, MH"
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                 />
                 {errors.city && <p className="mt-1 text-xs text-rose-500">{errors.city.message}</p>}
               </div>
             </div>
 
-            {/* Searchable Service Autocomplete (2.1.2, 2.1.3) */}
+            {/* Searchable Service Autocomplete */}
             <div className="relative">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Select Service of Primary Interest *
               </label>
               <div
                 onClick={() => setIsDropdownOpen(true)}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-sm cursor-pointer flex items-center justify-between"
+                className="w-full rounded-xl border border-slate-300 bg-white p-2.5 text-sm cursor-pointer flex items-center justify-between"
               >
-                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                <span className="font-semibold text-slate-800 truncate">
                   {selectedService || 'Search from 250+ services...'}
                 </span>
                 <Search className="w-4 h-4 text-slate-400 shrink-0" />
               </div>
 
               {isDropdownOpen && (
-                <div className="absolute z-50 mt-1 w-full rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-2 space-y-2">
+                <div className="absolute z-50 mt-1 w-full rounded-2xl bg-white border border-[#EAE6DD] shadow-xl overflow-hidden p-2 space-y-2">
                   <div className="relative">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
@@ -229,7 +228,7 @@ export default function ClientSignupPage() {
                       placeholder="Type to search (e.g. GST, Pvt Ltd, Trademark)..."
                       value={serviceSearch}
                       onChange={(e) => setServiceSearch(e.target.value)}
-                      className="w-full rounded-xl bg-slate-50 dark:bg-slate-800 pl-9 pr-3 py-2 text-xs focus:outline-none"
+                      className="w-full rounded-xl bg-slate-50 border border-slate-200 pl-9 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                     />
                   </div>
                   <div className="max-h-48 overflow-y-auto space-y-1">
@@ -242,9 +241,9 @@ export default function ClientSignupPage() {
                           setIsDropdownOpen(false);
                           setServiceSearch('');
                         }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center justify-between text-slate-700 dark:text-slate-300 group"
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs hover:bg-blue-50 flex items-center justify-between text-slate-700 group cursor-pointer"
                       >
-                        <span className="truncate group-hover:text-blue-600 font-medium">{s.name}</span>
+                        <span className="truncate group-hover:text-[#0084D1] font-medium">{s.name}</span>
                         <span className="text-[10px] text-slate-400 uppercase font-bold shrink-0 ml-2">{s.category}</span>
                       </button>
                     ))}
@@ -256,24 +255,26 @@ export default function ClientSignupPage() {
             <button
               type="submit"
               disabled={status === 'loading'}
-              className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-2"
+              className="w-full py-3.5 rounded-xl btn-multicolor text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-2"
             >
-              {status === 'loading' ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Creating Account...
-                </>
-              ) : (
-                <>
-                  <span>Create Account &amp; Access Portal</span> <ArrowRight className="w-4 h-4" />
-                </>
-              )}
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {status === 'loading' ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Creating Account...
+                  </>
+                ) : (
+                  <>
+                    <span>Create Account &amp; Access Portal</span> <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </span>
             </button>
           </form>
 
           {/* Switch to Login */}
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-500">
+          <div className="pt-4 border-t border-[#EAE6DD] text-center text-xs text-slate-500">
             Already have an account?{' '}
-            <Link to="/portal/login" className="text-blue-600 font-bold hover:underline">
+            <Link to="/portal/login" className="text-[#0084D1] font-bold hover:underline">
               Sign In →
             </Link>
           </div>

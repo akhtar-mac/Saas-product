@@ -137,7 +137,7 @@ export default function ClientDocumentsPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1.5 bg-white rounded-xl border border-slate-200 shadow-sm w-fit">
+      <div className="flex flex-wrap gap-2 p-1.5 bg-white rounded-2xl border border-[#EAE6DD] shadow-xs w-fit">
         {[
           { id: 'all', label: 'All Documents', count: documentList.length },
           { id: 'kyc', label: 'KYC & Proofs', count: 4 },
@@ -147,14 +147,14 @@ export default function ClientDocumentsPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === tab.id
-                ? 'bg-brand-navy text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-50'
+                ? 'btn-multicolor text-white shadow-xs'
+                : 'text-slate-600 hover:bg-[#FAF9F5]'
             }`}
           >
             <span>{tab.label}</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
               activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
             }`}>
               {tab.count}
@@ -168,10 +168,10 @@ export default function ClientDocumentsPage() {
         {filteredDocs.map((doc) => (
           <div
             key={doc.id}
-            className={`bg-white p-5 rounded-2xl border flex flex-col justify-between transition-all shadow-sm ${
+            className={`bg-[#FFFDF9] p-5 rounded-2xl border flex flex-col justify-between transition-all shadow-xs ${
               doc.isActionRequired
                 ? 'border-amber-300 bg-amber-50/20'
-                : 'border-slate-200 hover:shadow-md'
+                : 'border-[#EAE6DD] hover:shadow-md hover:border-[#7C3AED]/30'
             }`}
           >
             <div>
@@ -190,13 +190,13 @@ export default function ClientDocumentsPage() {
                 </span>
               </div>
 
-              <h4 className="font-display font-bold text-sm text-slate-800 line-clamp-2">
+              <h4 className="font-bold text-sm text-slate-900 line-clamp-2">
                 {doc.title}
               </h4>
 
               <div className="mt-3 space-y-1 text-xs text-slate-500">
                 {doc.fileName ? (
-                  <p className="truncate font-mono text-[11px] text-brand-navy font-semibold">
+                  <p className="truncate font-mono text-[11px] text-[#0084D1] font-semibold">
                     📄 {doc.fileName}
                   </p>
                 ) : null}
@@ -205,21 +205,23 @@ export default function ClientDocumentsPage() {
               </div>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div className="mt-5 pt-3 border-t border-[#EAE6DD] flex items-center justify-between gap-2">
               {doc.status === 'PENDING_UPLOAD' ? (
                 <label className="w-full cursor-pointer">
                   <input type="file" className="hidden" onChange={handleFakeUpload} />
-                  <button className="btn btn-primary btn-sm w-full text-xs">
-                    <Upload className="w-3.5 h-3.5" /> Upload Now
+                  <button className="btn-multicolor btn-sm w-full text-xs cursor-pointer">
+                    <span className="relative z-10 flex items-center justify-center gap-1.5">
+                      <Upload className="w-3.5 h-3.5" /> Upload Now
+                    </span>
                   </button>
                 </label>
               ) : (
                 <>
-                  <button className="btn btn-outline btn-sm text-xs">
+                  <button className="btn-outline-multicolor btn-sm text-xs cursor-pointer">
                     <Eye className="w-3 h-3" /> Preview
                   </button>
-                  <button className="btn btn-sm text-brand-navy hover:bg-slate-100 text-xs">
-                    <Download className="w-3.5 h-3.5" /> Download
+                  <button className="btn-panda btn-sm text-xs cursor-pointer">
+                    <Download className="w-3.5 h-3.5 text-[#0084D1]" /> Download
                   </button>
                 </>
               )}

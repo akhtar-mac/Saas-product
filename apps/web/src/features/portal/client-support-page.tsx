@@ -187,14 +187,15 @@ export default function ClientSupportPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-brand-navy to-brand-navy-dark p-5 rounded-2xl text-white space-y-3 shadow-sm">
-            <h4 className="font-display font-bold text-sm">Central Grievance Helpline</h4>
-            <p className="text-xs text-blue-100/80 leading-relaxed">
+          <div className="bg-[#FFFDF9] border border-[#EAE6DD] p-6 rounded-3xl space-y-3 shadow-xs relative overflow-hidden">
+            <div className="h-0.5 w-10 bg-multicolor rounded-full" />
+            <h4 className="font-bold text-sm text-slate-900">Central Grievance Helpline</h4>
+            <p className="text-xs text-slate-600 leading-relaxed">
               If your assigned specialist is unavailable or you require urgent escalation:
             </p>
-            <div className="pt-2 border-t border-white/10 space-y-1 text-xs">
-              <p className="font-semibold">📞 Toll-Free: 080-6902-9999</p>
-              <p className="font-semibold">✉️ support@etaxwala.com</p>
+            <div className="pt-2 border-t border-[#EAE6DD] space-y-1.5 text-xs text-slate-700">
+              <p className="font-semibold flex items-center gap-2"><span>📞</span> Toll-Free: 080-6902-9999</p>
+              <p className="font-semibold flex items-center gap-2"><span>✉️</span> support@etaxwala.com</p>
             </div>
           </div>
         </div>
@@ -203,19 +204,19 @@ export default function ClientSupportPage() {
       {/* Ticket Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="bg-[#FFFDF9] rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-xl border border-[#EAE6DD] space-y-4">
+            <div className="flex items-center justify-between border-b border-[#EAE6DD] pb-3">
               <div>
-                <h3 className="font-display font-bold text-base text-slate-800">
+                <h3 className="font-bold text-base text-slate-900">
                   Create Support Ticket
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Our central support & compliance officers will respond within 4 hours
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Our central support &amp; compliance officers will respond within 4 hours
                 </p>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:bg-slate-100"
+                className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -229,48 +230,48 @@ export default function ClientSupportPage() {
               className="space-y-3.5 text-xs"
             >
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Subject / Query Topic</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Subject / Query Topic</label>
                 <input
                   type="text"
                   placeholder="e.g. Need clarification regarding MOA clause"
-                  className="input text-xs"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Service Related To
                 </label>
-                <select className="input text-xs font-semibold">
+                <select className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30">
                   <option>Order #101 - Private Limited Company Registration</option>
                   <option>Order #102 - GST Registration</option>
-                  <option>Billing & Payment Query</option>
+                  <option>Billing &amp; Payment Query</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Detailed Description
                 </label>
                 <textarea
                   rows={4}
                   placeholder="Describe your issue or question in detail..."
-                  className="input text-xs"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   required
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
+              <div className="pt-3 border-t border-[#EAE6DD] flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="btn btn-outline btn-sm"
+                  className="btn-outline-multicolor btn-sm cursor-pointer text-xs"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary btn-sm">
-                  Submit Ticket
+                <button type="submit" className="btn-multicolor btn-sm cursor-pointer text-xs">
+                  <span className="relative z-10">Submit Ticket</span>
                 </button>
               </div>
             </form>

@@ -87,9 +87,9 @@ export default function CrmLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] text-slate-800 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-[#FAF9F5] text-slate-800 flex flex-col md:flex-row font-sans">
       {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+      <div className="md:hidden flex items-center justify-between p-4 bg-[#FFFDF9] border-b border-[#EAE6DD] sticky top-0 z-30 shadow-xs">
         <Link to="/crm" className="flex items-center gap-2">
           <img src="/logo_black.png" alt="ETaxwala" className="h-7 w-auto" />
           <span className="badge badge-gold text-[10px]">{activeRole}</span>
@@ -97,30 +97,39 @@ export default function CrmLayout() {
 
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+          className="p-2 rounded-lg text-slate-600 hover:bg-[#FAF9F5]"
         >
           {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
+      {/* Mobile Drawer Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-slate-900/50 backdrop-blur-xs md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col justify-between transition-transform duration-300 shadow-sm ${
+        className={`fixed md:static inset-y-0 left-0 z-40 w-64 bg-[#FFFDF9] border-r border-[#EAE6DD] flex flex-col justify-between transition-transform duration-300 shadow-xs ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         <div className="flex flex-col h-full overflow-hidden">
           {/* Header & Logo */}
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="p-4 border-b border-[#EAE6DD] flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2.5">
               <img src="/logo_black.png" alt="ETaxwala" className="h-8 w-auto" />
             </Link>
           </div>
 
           {/* Current Staff User Card with Quick Switcher */}
-          <div className="p-3 m-3 rounded-2xl bg-[#F7F8FA] border border-slate-200">
+          <div className="p-3 m-3 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DD]">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-navy via-brand-purple to-brand-cyan text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0084D1] via-[#7C3AED] to-[#F97316] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
                 {staffUser?.username ? staffUser.username.charAt(0).toUpperCase() : 'S'}
               </div>
               <div className="overflow-hidden min-w-0">
@@ -410,19 +419,19 @@ export default function CrmLayout() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F7F8FA]">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#FAF9F5]">
         {/* Top Header */}
-        <header className="hidden md:flex items-center justify-between px-8 py-3 bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+        <header className="hidden md:flex items-center justify-between px-8 py-3 bg-[#FFFDF9] border-b border-[#EAE6DD] sticky top-0 z-20 shadow-xs">
           <div className="flex items-center gap-4 flex-1 max-w-md">
             {/* Search bar → opens Command Palette */}
             <button
               onClick={() => setCmdPaletteOpen(true)}
-              className="relative w-full flex items-center gap-2 bg-[#F7F8FA] border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:border-brand-navy hover:text-slate-600 transition-colors text-left"
+              className="relative w-full flex items-center gap-2 bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3.5 py-2 text-xs text-slate-400 hover:border-[#7C3AED]/40 hover:text-slate-600 transition-colors text-left cursor-pointer"
               id="cmd-palette-trigger"
             >
               <Search className="w-4 h-4 shrink-0" />
               <span className="flex-1">Search leads, tasks, staff... (Cmd+K)</span>
-              <kbd className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 text-[10px] font-mono">
+              <kbd className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px] font-mono border border-slate-200">
                 <Command className="w-2.5 h-2.5" />K
               </kbd>
             </button>

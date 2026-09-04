@@ -77,7 +77,7 @@ export default function ClientPaymentsPage() {
         ].map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <div key={kpi.title} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div key={kpi.title} className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#EAE6DD] shadow-xs flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-500">{kpi.title}</span>
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: kpi.bg }}>
@@ -85,7 +85,7 @@ export default function ClientPaymentsPage() {
                 </div>
               </div>
               <div className="mt-3">
-                <p className="font-display font-bold text-2xl text-slate-800">{kpi.value}</p>
+                <p className="font-bold text-2xl text-slate-900">{kpi.value}</p>
                 <p className="text-xs text-slate-400 mt-1">{kpi.sub}</p>
               </div>
             </div>
@@ -94,11 +94,11 @@ export default function ClientPaymentsPage() {
       </div>
 
       {/* Invoice Table */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div className="bg-[#FFFDF9] p-6 rounded-3xl border border-[#EAE6DD] shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-display font-bold text-base text-slate-800">
-              Tax Invoice History & Receipts
+            <h3 className="font-bold text-base text-slate-900">
+              Tax Invoice History &amp; Receipts
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">GST invoices are ready for input tax credit claims</p>
           </div>
@@ -120,14 +120,14 @@ export default function ClientPaymentsPage() {
             <tbody>
               {invoices.map((inv) => (
                 <tr key={inv.id}>
-                  <td className="font-mono text-xs font-bold text-brand-navy">
+                  <td className="font-mono text-xs font-bold text-[#0084D1]">
                     {inv.id}
                   </td>
                   <td className="text-xs text-slate-500">{inv.date}</td>
                   <td className="text-xs font-medium text-slate-800">
                     {inv.service}
                   </td>
-                  <td className="text-xs font-mono font-bold text-slate-800">
+                  <td className="text-xs font-mono font-bold text-slate-900">
                     ₹{inv.total.toLocaleString()}
                   </td>
                   <td>
@@ -136,8 +136,8 @@ export default function ClientPaymentsPage() {
                     </span>
                   </td>
                   <td className="text-right">
-                    <button className="btn btn-outline btn-sm text-xs">
-                      <Download className="w-3.5 h-3.5" /> Download GST PDF
+                    <button className="btn-panda btn-sm text-xs cursor-pointer">
+                      <Download className="w-3.5 h-3.5 text-[#0084D1]" /> Download GST PDF
                     </button>
                   </td>
                 </tr>

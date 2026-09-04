@@ -17,7 +17,9 @@ const AppointmentPage = lazy(() => import('@/features/marketing/appointment/appo
 const ITRFilingPage = lazy(() => import('@/features/marketing/funnels/itr-filing-page'));
 const FPCTrainingPage = lazy(() => import('@/features/marketing/funnels/fpc-training-page'));
 const LegalPage = lazy(() => import('@/features/marketing/legal/legal-page'));
+const SoftwareSolutionsPage = lazy(() => import('@/features/marketing/software/software-solutions-page'));
 const NotFoundPage = lazy(() => import('@/features/marketing/not-found/not-found-page'));
+const LoadingDemoPage = lazy(() => import('@/features/marketing/loading-demo-page'));
 
 // ─── Lazy load Client Portal ──────────────────────────────────────────────────
 const PortalLayout = lazy(() => import('@/features/portal/portal-layout'));
@@ -66,7 +68,10 @@ export default function App() {
           <Route path="/appointment" element={<AppointmentPage />} />
           <Route path="/itr-filing" element={<ITRFilingPage />} />
           <Route path="/fpc-training" element={<FPCTrainingPage />} />
+          <Route path="/software-solutions" element={<SoftwareSolutionsPage />} />
+          <Route path="/tech" element={<Navigate to="/software-solutions" replace />} />
           <Route path="/legal/:type" element={<LegalPage />} />
+          <Route path="/demo/loading" element={<LoadingDemoPage />} />
 
           {/* Legacy & Shortcut 301 Redirects */}
           <Route path="/privacy" element={<Navigate to="/legal/privacy" replace />} />

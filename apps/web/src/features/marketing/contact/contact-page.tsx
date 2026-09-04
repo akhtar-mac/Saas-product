@@ -123,83 +123,83 @@ export default function ContactPage() {
         }}
       />
 
-      {/* Hero Banner */}
-      <section className="bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 py-16 text-white relative">
-        <div className="absolute inset-0 opacity-10 pointer-events-none"
-             style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+      {/* Hero Banner with Signature Multicolour Accent Strip */}
+      <section className="relative bg-[#FFFDF9] py-14 lg:py-20 border-b border-[#EAE6DD] overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-multicolor" />
+        <div
+          className="absolute inset-0 opacity-[0.025] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(#7C3AED 1px, transparent 1px)', backgroundSize: '24px 24px' }}
+        />
         <div className="container-etaxwala relative z-10">
           <div className="mb-4">
-            <Breadcrumbs items={[{ label: 'Contact Us' }]} className="text-slate-400" />
+            <Breadcrumbs items={[{ label: 'Contact Us' }]} />
           </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold uppercase tracking-wider mb-4">
-            <Sparkles className="w-3.5 h-3.5" /> 5-Minute Guaranteed Response SLA
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 text-xs font-semibold uppercase tracking-wider mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> 5-Minute Guaranteed Response SLA
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-            Connect With Our Legal &amp; Tax Advisors
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
+            Connect With Our <span className="text-multicolor">Legal &amp; Tax Advisors</span>
           </h1>
-          <p className="mt-3 max-w-2xl text-base sm:text-lg text-slate-300">
-            Call our toll-free lines, email our operations desk, or visit our corporate compliance centers.
+          <p className="mt-3.5 max-w-2xl text-base sm:text-lg text-slate-600 leading-relaxed">
+            Call our direct lines, email our corporate operations desk, or visit our physical legal hubs across India.
           </p>
         </div>
       </section>
 
       {/* Main Content Layout */}
-      <section className="section bg-slate-50 dark:bg-slate-950 py-12">
+      <section className="section bg-[#FAF9F5] py-12">
         <div className="container-etaxwala max-w-6xl">
           <div className="grid gap-12 lg:grid-cols-12">
 
-            {/* Left: Contact Form (1.5.5) */}
+            {/* Left: Contact Form */}
             <div className="lg:col-span-7">
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE6DD] shadow-sm space-y-6">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Get In Touch</span>
-                  <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">
+                  <span className="text-xs font-bold uppercase tracking-widest text-[#7C3AED]">Get In Touch</span>
+                  <h2 className="text-2xl font-extrabold text-slate-900 mt-1">
                     Send Us an Inquiry
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Fill out the form below. An assigned CA will call you back within 30 minutes during desk hours.
+                    Fill out the form below. An assigned Chartered Accountant will call you back within 5 minutes during desk hours.
                   </p>
                 </div>
 
                 {status === 'success' ? (
                   <div className="py-10 text-center space-y-3">
-                    <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center mx-auto">
-                      <CheckCircle2 className="w-9 h-9" />
+                    <div className="w-16 h-16 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-[#7C3AED] flex items-center justify-center mx-auto">
+                      <CheckCircle2 className="w-8 h-8" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">Inquiry Dispatched!</h3>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xs mx-auto">
-                      Thank you for contacting ETaxwala. Our senior consultant is preparing your case and will call you shortly.
+                    <h3 className="text-xl font-bold text-slate-900">Inquiry Received Successfully</h3>
+                    <p className="text-xs text-slate-600 max-w-sm mx-auto">
+                      Thank you! A practicing Chartered Accountant from our legal desk has received your request and will call you shortly.
                     </p>
-                    <button
-                      onClick={() => setStatus('idle')}
-                      className="text-xs text-blue-600 font-bold hover:underline"
-                    >
-                      Send another message
-                    </button>
+                    <div className="inline-block p-3 rounded-xl bg-[#FAF9F5] border border-[#EAE6DD] text-xs font-bold text-slate-800">
+                      Direct Helpline: +91 70710 70707
+                    </div>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
                           Full Name *
                         </label>
                         <input
                           {...register('name')}
-                          placeholder="e.g. Rahul Sharma"
-                          className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          placeholder="e.g. Vikramaditya Rao"
+                          className="w-full rounded-xl border border-[#EAE6DD] bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED]"
                         />
                         {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
                           Phone Number *
                         </label>
                         <input
                           {...register('phone')}
                           placeholder="10-digit mobile"
-                          className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          className="w-full rounded-xl border border-[#EAE6DD] bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED]"
                         />
                         {errors.phone && <p className="mt-1 text-xs text-rose-500">{errors.phone.message}</p>}
                       </div>
@@ -207,25 +207,25 @@ export default function ContactPage() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
                           Email Address *
                         </label>
                         <input
                           {...register('email')}
                           type="email"
                           placeholder="you@domain.com"
-                          className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          className="w-full rounded-xl border border-[#EAE6DD] bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED]"
                         />
                         {errors.email && <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>}
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
                           Service Required *
                         </label>
                         <select
                           {...register('service')}
-                          className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                          className="w-full rounded-xl border border-[#EAE6DD] bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED]"
                         >
                           <option value="">Select a service category...</option>
                           <option value="Private Limited Company">Company Registration (Pvt Ltd / LLP)</option>
@@ -242,31 +242,36 @@ export default function ContactPage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
                         Describe Your Query (Optional)
                       </label>
                       <textarea
                         {...register('message')}
                         rows={4}
                         placeholder="Tell us about your business, turnover, or specific compliance questions..."
-                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                        className="w-full rounded-xl border border-[#EAE6DD] bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED]"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={status === 'loading'}
-                      className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                      className="w-full py-3.5 rounded-xl btn-multicolor cursor-pointer disabled:opacity-60"
                     >
-                      {status === 'loading' ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" /> Dispatching Inquiry...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4" /> Send Message
-                        </>
-                      )}
+                      <span className="btn-galaxy__stars" aria-hidden="true" />
+                      <span className="relative z-[2] inline-flex items-center justify-center gap-2 font-bold text-xs">
+                        {status === 'loading' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Connecting with Senior CA...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Request Free Consultation &amp; Callback</span>
+                            <ArrowRight className="btn-galaxy__icon w-4 h-4" />
+                          </>
+                        )}
+                      </span>
                     </button>
 
                     {status === 'error' && (

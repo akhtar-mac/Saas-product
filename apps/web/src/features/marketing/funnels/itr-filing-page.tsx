@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calculator, ShieldCheck, FileText, TrendingUp, CheckCircle2, ArrowRight,
@@ -90,6 +90,8 @@ const TESTIMONIALS = [
 
 export default function ITRFilingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [selectedPlan, setSelectedPlan] = useState<number>(1);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -286,7 +288,7 @@ export default function ITRFilingPage() {
               {
                 type: 'Salary & Single Form 16',
                 badge: 'Salaried Employees',
-                price: 'Starting @ ₹499',
+                price: '₹ * * * *',
                 features: [
                   'Salary & Single House Property Income',
                   'Chapter VI-A Deductions (80C, 80D, 80G)',
@@ -299,7 +301,7 @@ export default function ITRFilingPage() {
                 type: 'Business & Professionals',
                 badge: 'Freelancers & SMEs',
                 popular: true,
-                price: 'Starting @ ₹1,499',
+                price: '₹ * * * *',
                 features: [
                   'Presumptive Taxation (Section 44AD / 44ADA)',
                   'Profit & Loss and Balance Sheet Drafting',
@@ -311,7 +313,7 @@ export default function ITRFilingPage() {
               {
                 type: 'Capital Gains & Crypto',
                 badge: 'Traders & Investors',
-                price: 'Starting @ ₹2,499',
+                price: '₹ * * * *',
                 features: [
                   'Equity, Mutual Funds & Crypto VDA Reporting',
                   'F&O Trading Profit / Loss Computation',
@@ -320,56 +322,89 @@ export default function ITRFilingPage() {
                   'Foreign Stocks & RSU/ESOP Reporting',
                 ],
               },
-            ].map((plan) => (
-              <div
-                key={plan.type}
-                className={`rounded-3xl p-7 sm:p-8 flex flex-col justify-between transition-all relative ${
-                  plan.popular
-                    ? 'bg-white border-2 border-[#7C3AED] shadow-xl ring-4 ring-[#7C3AED]/10'
-                    : 'bg-[#FAF9F5] border border-[#EAE6DD] shadow-xs'
-                }`}
-              >
-                {plan.popular && (
-                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-multicolor text-white text-[10px] font-extrabold uppercase px-3.5 py-1 rounded-full shadow-md tracking-wider">
-                    Most Popular
-                  </span>
-                )}
-                <div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
-                    {plan.badge}
-                  </span>
-                  <h3 className="text-xl font-extrabold text-slate-900 mt-1">{plan.type}</h3>
-                  <div className="mt-4 pb-4 border-b border-[#EAE6DD]">
-                    <span className="text-xl font-extrabold text-[#7C3AED]">{plan.price}</span>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Includes full CA consultation</p>
-                  </div>
-
-                  <div className="mt-6 space-y-3">
-                    {plan.features.map((f) => (
-                      <div key={f} className="flex items-start gap-2.5 text-xs sm:text-sm">
-                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
-                        <span className="text-slate-600">{f}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Link
-                  to="/appointment"
-                  className={`mt-8 py-3.5 px-4 rounded-xl text-center ${
-                    plan.popular
-                      ? 'btn-multicolor'
-                      : 'btn-outline-multicolor'
+            ].map((plan, idx) => {
+              const isSelected = selectedPlan === idx;
+              return (
+                <div
+                  key={plan.type}
+                  onClick={() => setSelectedPlan(idx)}
+                  className={`rounded-3xl p-7 sm:p-8 flex flex-col justify-between transition-all duration-200 relative cursor-pointer ${
+                    isSelected
+                      ? 'bg-white shadow-xl scale-[1.02] z-10'
+                      : 'bg-[#FAF9F5] border border-[#EAE6DD] shadow-xs hover:border-slate-300 hover:shadow-md'
                   }`}
                 >
-                  <span className="btn-galaxy__stars" aria-hidden="true" />
-                  <span className="relative z-[2] inline-flex items-center gap-2 font-bold text-xs sm:text-sm">
-                    <span>File with CA Now</span>
-                    <ArrowRight className="btn-galaxy__icon w-4 h-4" />
-                  </span>
-                </Link>
-              </div>
-            ))}
+                  {/* Smooth Shifting Outline with Framer Motion layoutId */}
+                  {isSelected && (
+                    <motion.div
+                      layoutId="activeItrPlanOutline"
+                      className="absolute inset-0 rounded-3xl border-2 border-[#7C3AED] ring-4 ring-[#7C3AED]/15 pointer-events-none z-10"
+                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                    />
+                  )}
+
+                  {/* Top Badge */}
+                  {isSelected ? (
+                    <motion.div
+                      layoutId="activeItrPlanBadge"
+                      className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-multicolor text-white text-[10px] font-extrabold uppercase px-3.5 py-1 rounded-full shadow-md tracking-wider flex items-center gap-1.5 z-20 whitespace-nowrap"
+                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                    >
+                      <span>{plan.popular ? 'Most Popular' : 'Selected Plan'}</span>
+                    </motion.div>
+                  ) : plan.popular ? (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-slate-100 border border-[#EAE6DD] text-slate-600 text-[10px] font-extrabold uppercase px-3.5 py-1 rounded-full shadow-xs tracking-wider">
+                      Most Popular
+                    </div>
+                  ) : null}
+
+                  <div>
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                      {plan.badge}
+                    </span>
+                    <h3 className="text-xl font-extrabold text-slate-900 mt-1">{plan.type}</h3>
+                    <div className="mt-4 pb-4 border-b border-[#EAE6DD]">
+                      <span className="text-xl font-extrabold text-[#7C3AED]">{plan.price}</span>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Includes full CA consultation</p>
+                    </div>
+
+                    <div className="mt-6 space-y-3">
+                      {plan.features.map((f) => (
+                        <div key={f} className="flex items-start gap-2.5 text-xs sm:text-sm">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
+                          <span className="text-slate-600">{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-8 relative z-20">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isSelected) {
+                          setSelectedPlan(idx);
+                        } else {
+                          navigate('/appointment');
+                        }
+                      }}
+                      className={`w-full py-3.5 px-4 rounded-xl text-center cursor-pointer transition-all duration-200 ${
+                        isSelected
+                          ? 'btn-multicolor shadow-md'
+                          : 'btn-outline-multicolor'
+                      }`}
+                    >
+                      <span className="btn-galaxy__stars" aria-hidden="true" />
+                      <span className="relative z-[2] inline-flex items-center justify-center gap-2 font-bold text-xs sm:text-sm">
+                        <span>File with CA Now</span>
+                        <ArrowRight className="btn-galaxy__icon w-4 h-4" />
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

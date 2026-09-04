@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'multicolor' | 'outline' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'multicolor' | 'outline' | 'ghost' | 'danger' | 'panda' | 'gold';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -29,6 +29,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       multicolor: 'btn-multicolor',
       secondary:  'btn-outline-multicolor',
       outline:    'btn-outline-multicolor',
+      panda:      'btn-panda',
+      gold:       'btn-gold',
       ghost:
         'relative cursor-pointer overflow-hidden rounded-xl bg-transparent hover:bg-[#FAF9F5] text-slate-700 transition-colors duration-200 font-semibold',
       danger:

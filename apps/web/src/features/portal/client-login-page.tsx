@@ -196,9 +196,9 @@ export default function ClientLoginPage() {
                   <KeyRound className="w-3.5 h-3.5" />
                   {useOtp ? 'Use Password' : 'Login via OTP'}
                 </button>
-                <a href="#" className="text-slate-400 hover:text-slate-600 transition-colors">
+                <Link to="/portal/forgot-password" className="text-slate-400 hover:text-slate-600 transition-colors">
                   Forgot password?
-                </a>
+                </Link>
               </div>
 
               {/* Submit */}

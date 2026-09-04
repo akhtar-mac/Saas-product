@@ -202,7 +202,7 @@ export default function BlogDetailPage() {
       </section>
 
       {/* Article Content Layout */}
-      <section className="section bg-white dark:bg-slate-950 py-12">
+      <section className="section bg-[#FAF9F5] py-14">
         <div className="container-etaxwala max-w-4xl">
           <div className="grid gap-12 lg:grid-cols-12">
             
@@ -210,26 +210,26 @@ export default function BlogDetailPage() {
             <div className="lg:col-span-8 space-y-8">
               
               {/* Introduction Callout */}
-              <div className="p-5 rounded-2xl bg-blue-50/70 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-slate-700 dark:text-slate-300 text-sm sm:text-base leading-relaxed italic">
+              <div className="p-6 rounded-2xl bg-blue-50/70 border border-blue-100 text-slate-700 text-sm sm:text-base leading-relaxed italic shadow-xs">
                 "{post.content.intro}"
               </div>
 
               {/* Sections */}
               {post.content.sections.map((sec, i) => (
                 <div key={i} className="space-y-4">
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
                     {sec.heading}
                   </h2>
                   {sec.body.map((p, j) => (
-                    <p key={j} className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+                    <p key={j} className="text-sm sm:text-base text-slate-700 leading-relaxed">
                       {p}
                     </p>
                   ))}
                   {sec.list && (
-                    <ul className="space-y-2 pl-2">
+                    <ul className="space-y-2.5 pl-2">
                       {sec.list.map((item, k) => (
-                        <li key={k} className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300">
-                          <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-1" />
+                        <li key={k} className="flex items-start gap-2.5 text-sm text-slate-700">
+                          <CheckCircle2 className="w-4 h-4 text-[#0084D1] shrink-0 mt-1" />
                           <span>{item}</span>
                         </li>
                       ))}
@@ -239,21 +239,21 @@ export default function BlogDetailPage() {
               ))}
 
               {/* Conclusion */}
-              <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-                <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">Key Takeaway</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <div className="p-6 rounded-2xl bg-[#FFFDF9] border border-[#EAE6DD] shadow-xs space-y-2">
+                <h3 className="font-bold text-base text-slate-900">Key Takeaway</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
                   {post.content.conclusion}
                 </p>
               </div>
 
               {/* Action / Like Bar */}
-              <div className="flex items-center justify-between py-4 border-y border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between py-4 border-y border-[#EAE6DD]">
                 <button
                   onClick={handleLike}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                     hasLiked
-                      ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                      : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      ? 'bg-blue-50 text-[#0084D1] border border-blue-200'
+                      : 'hover:bg-white text-slate-700 border border-transparent'
                   }`}
                 >
                   <ThumbsUp className="w-4 h-4" />
@@ -266,7 +266,7 @@ export default function BlogDetailPage() {
                     href={`https://api.whatsapp.com/send?text=${encodeURIComponent(post.title + ' ' + window.location.href)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                    className="p-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
                     aria-label="Share on WhatsApp"
                   >
                     <Share2 className="w-4 h-4" />
@@ -274,42 +274,42 @@ export default function BlogDetailPage() {
                 </div>
               </div>
 
-              {/* Author Bio Card (1.13.4) */}
-              <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-lg flex items-center justify-center shrink-0">
+              {/* Author Bio Card */}
+              <div className="p-6 rounded-3xl bg-[#FFFDF9] border border-[#EAE6DD] shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#0084D1] to-[#7C3AED] text-white font-bold text-lg flex items-center justify-center shrink-0 shadow-xs">
                   {post.author.slice(0, 2)}
                 </div>
                 <div className="space-y-1 text-center sm:text-left">
                   <div className="flex items-center justify-center sm:justify-start gap-2">
-                    <h4 className="font-bold text-base text-slate-900 dark:text-slate-100">{post.author}</h4>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                    <h4 className="font-bold text-base text-slate-900">{post.author}</h4>
+                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                       Verified Author
                     </span>
                   </div>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">{post.authorRole}</p>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-1">
+                  <p className="text-xs text-[#0084D1] font-semibold">{post.authorRole}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed pt-1">
                     {post.authorBio}
                   </p>
                 </div>
               </div>
 
-              {/* Comments Section (1.13.4) */}
+              {/* Comments Section */}
               <div className="space-y-6 pt-4">
                 <div className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">
+                  <MessageSquare className="w-5 h-5 text-[#0084D1]" />
+                  <h3 className="font-bold text-lg text-slate-900">
                     Discussion ({comments.length})
                   </h3>
                 </div>
 
                 {/* Comment Form */}
-                <form onSubmit={handleCommentSubmit} className="space-y-3 bg-slate-50 dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <form onSubmit={handleCommentSubmit} className="space-y-3 bg-[#FFFDF9] p-6 rounded-3xl border border-[#EAE6DD] shadow-xs">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <input
                       placeholder="Your Name *"
                       value={newComment.name}
                       onChange={(e) => setNewComment({ ...newComment, name: e.target.value })}
-                      className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                       required
                     />
                   </div>
@@ -318,15 +318,17 @@ export default function BlogDetailPage() {
                     placeholder="Ask a question or leave your thoughts..."
                     value={newComment.text}
                     onChange={(e) => setNewComment({ ...newComment, text: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                     required
                   />
                   <div className="flex items-center justify-between">
                     <button
                       type="submit"
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
+                      className="btn-multicolor px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
                     >
-                      <Send className="w-3.5 h-3.5" /> Post Comment
+                      <span className="relative z-10 flex items-center gap-1.5">
+                        <Send className="w-3.5 h-3.5" /> Post Comment
+                      </span>
                     </button>
                     {commentSuccess && (
                       <span className="text-xs font-semibold text-emerald-600">Comment posted!</span>
@@ -337,12 +339,12 @@ export default function BlogDetailPage() {
                 {/* Comment List */}
                 <div className="space-y-3">
                   {comments.map((c, i) => (
-                    <div key={i} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                    <div key={i} className="p-4 rounded-2xl bg-[#FFFDF9] border border-[#EAE6DD] space-y-1 shadow-xs">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-slate-900 dark:text-slate-100">{c.name}</span>
+                        <span className="font-bold text-xs text-slate-900">{c.name}</span>
                         <span className="text-[11px] text-slate-400">{c.date}</span>
                       </div>
-                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">{c.text}</p>
+                      <p className="text-xs sm:text-sm text-slate-600">{c.text}</p>
                     </div>
                   ))}
                 </div>
@@ -354,31 +356,32 @@ export default function BlogDetailPage() {
             <div className="lg:col-span-4 space-y-6">
               
               {/* Service CTA Card */}
-              <div className="p-6 rounded-3xl bg-gradient-to-br from-blue-900 via-slate-900 to-slate-950 text-white shadow-xl space-y-4">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-500/30 text-blue-300">
+              <div className="p-6 rounded-3xl bg-[#FAF9F5] border border-[#EAE6DD] shadow-xs space-y-4 relative overflow-hidden">
+                <div className="h-0.5 w-12 bg-multicolor rounded-full" />
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white border border-[#EAE6DD] text-[#7C3AED]">
                   Ready to Incorporate?
                 </span>
-                <h3 className="font-bold text-lg text-white">Private Limited Incorporation in 7 Days</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <h3 className="font-bold text-lg text-slate-900">Private Limited Incorporation in 7 Days</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
                   Get 2 DSC, 2 DIN, SPICe+ MCA filing, MoA, AoA, PAN, TAN and corporate bank account @ ₹16,499.
                 </p>
                 <Link
                   to="/services/registration/private-limited"
-                  className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+                  className="w-full py-3.5 px-4 rounded-xl btn-multicolor font-bold text-xs flex items-center justify-center gap-2"
                 >
                   <span>Start Incorporation</span> <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
               {/* Consultation Card */}
-              <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
-                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">Need Custom Legal Advisory?</h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400">
+              <div className="p-6 rounded-3xl bg-[#FFFDF9] border border-[#EAE6DD] shadow-xs space-y-3">
+                <h4 className="font-bold text-sm text-slate-900">Need Custom Legal Advisory?</h4>
+                <p className="text-xs text-slate-600">
                   Book a free 1-on-1 consultation with our senior corporate attorneys.
                 </p>
                 <Link
                   to="/appointment"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0084D1] hover:underline"
                 >
                   <span>Book Free Consultation</span> <ArrowRight className="w-3.5 h-3.5" />
                 </Link>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '@/components/seo';
-import { Calendar, Clock, ArrowRight, Search, Tag, User } from 'lucide-react';
+import { Calendar, Clock, ArrowRight, Search, Tag, User, Sparkles } from 'lucide-react';
 
 const categories = ['All', 'Company Registration', 'GST & Taxation', 'ITR Filing', 'Trademark & IP', 'Business Tips', 'Compliance', 'Digital Services'];
 
@@ -38,15 +38,15 @@ const posts = [
     id: 5, slug: 'msme-udyam-registration-benefits',
     title: 'MSME / Udyam Registration: 15 Benefits Every Business Should Know',
     excerpt: 'Udyam registration unlocks bank loans at lower rates, government subsidies, priority sector benefits and more. Here\'s everything you need.',
-    category: 'Compliance', author: 'CS Rahul', date: '2024-07-20',
-    readTime: '6 min', img: '/4.jpg', featured: false,
+    category: 'Business Tips', author: 'Adv. Priya', date: '2024-07-20',
+    readTime: '5 min', img: '/service-1.jpg', featured: false,
   },
   {
-    id: 6, slug: 'pvt-ltd-vs-llp-vs-opc-comparison',
-    title: 'Pvt Ltd vs LLP vs OPC: Which Business Structure is Right for You?',
-    excerpt: 'Comparing India\'s three most popular business structures on compliance, taxation, liability, cost and scalability.',
-    category: 'Company Registration', author: 'CA Ravan', date: '2024-07-15',
-    readTime: '10 min', img: '/5.jpg', featured: false,
+    id: 6, slug: 'startup-india-tax-exemption-80iac',
+    title: 'Section 80-IAC: How Startups Get 3-Year 100% Tax Holiday in India',
+    excerpt: 'Eligibility criteria, DPIIT recognition process, Inter-Ministerial Board approval, and key documents needed for the 3-year tax exemption.',
+    category: 'GST & Taxation', author: 'CA Meena', date: '2024-07-15',
+    readTime: '6 min', img: '/2.jpg', featured: false,
   },
 ];
 
@@ -54,9 +54,11 @@ export default function BlogListPage() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [search, setSearch] = useState('');
 
-  const filtered = posts.filter(p => {
-    const matchCat = activeCategory === 'All' || p.category === activeCategory;
-    const matchSearch = !search || p.title.toLowerCase().includes(search.toLowerCase()) || p.excerpt.toLowerCase().includes(search.toLowerCase());
+  const filtered = posts.filter(post => {
+    const matchCat = activeCategory === 'All' || post.category === activeCategory;
+    const matchSearch = !search ||
+      post.title.toLowerCase().includes(search.toLowerCase()) ||
+      post.excerpt.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
 
@@ -69,45 +71,54 @@ export default function BlogListPage() {
       />
 
       {/* Hero */}
-      <section className="relative pt-32 pb-16 overflow-hidden" style={{ background: 'var(--navy)' }}>
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
-        <div className="container-etaxwala relative text-center text-white">
-          <p className="section-tag mx-auto" style={{ color: 'var(--gold-light)' }}>Knowledge Hub</p>
-          <h1 className="section-title text-white mb-4">Business & Tax Insights</h1>
-          <p className="section-subtitle mx-auto text-center" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            Expert articles from our CAs, Lawyers and Consultants to help you make better business decisions.
+      <section className="relative pt-28 pb-14 overflow-hidden bg-[#FAF9F5] border-b border-[#EAE6DD]">
+        <div className="absolute inset-0 pointer-events-none opacity-40">
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-br from-[#0084D1]/10 via-[#7C3AED]/10 to-[#F97316]/10 blur-3xl rounded-full" />
+        </div>
+
+        <div className="container-etaxwala relative text-center">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#EAE6DD] shadow-xs mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-[#0084D1]" />
+            <span className="text-xs font-bold text-slate-700">Knowledge Hub &amp; Insights</span>
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
+            Business, Tax &amp; Legal <span className="text-multicolor">Insights</span>
+          </h1>
+
+          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            Expert articles from our practicing CAs, CS, Advocates and Financial Analysts to empower your business decisions.
           </p>
+
           {/* Search */}
           <div className="max-w-lg mx-auto mt-8 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
-              className="w-full pl-11 pr-4 py-3 rounded-xl text-sm text-slate-800 outline-none"
-              style={{ border: '1px solid var(--border)' }}
-              placeholder="Search articles..."
+              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white text-sm text-slate-800 border border-[#EAE6DD] shadow-xs outline-none focus:ring-2 focus:ring-[#0084D1]/30 transition-all"
+              placeholder="Search guides, regulations, tax tips..."
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent" />
       </section>
 
       {/* Content */}
-      <section className="section-white">
+      <section className="py-14 bg-[#FAF9F5]">
         <div className="container-etaxwala">
           {/* Category filter */}
-          <div className="flex flex-wrap gap-2 mb-10 overflow-x-auto scrollbar-hide">
+          <div className="flex flex-wrap gap-2.5 mb-10 overflow-x-auto scrollbar-hide pb-2">
             {categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-150 whitespace-nowrap"
-                style={activeCategory === cat
-                  ? { background: 'var(--navy)', color: 'white' }
-                  : { background: 'var(--off-white)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }
-                }
+                className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-150 whitespace-nowrap cursor-pointer ${
+                  activeCategory === cat
+                    ? 'btn-multicolor shadow-sm'
+                    : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-[#FAF9F5] border border-[#EAE6DD]'
+                }`}
               >
-                {cat}
+                <span>{cat}</span>
               </button>
             ))}
           </div>
@@ -116,25 +127,25 @@ export default function BlogListPage() {
           {activeCategory === 'All' && !search && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {filtered.filter(p => p.featured).map(post => (
-                <Link key={post.id} to={`/blog/${post.slug}`} className="card group overflow-hidden">
+                <Link key={post.id} to={`/blog/${post.slug}`} className="bg-[#FFFDF9] rounded-3xl border border-[#EAE6DD] shadow-xs hover:border-[#7C3AED]/30 hover:shadow-md transition-all group overflow-hidden block">
                   <div className="relative h-52 overflow-hidden">
                     <img
                       src={post.img}
                       alt={post.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).parentElement!.style.background = 'linear-gradient(135deg,#003A66,#004d87)'; (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).parentElement!.style.background = 'linear-gradient(135deg,#0084D1,#7C3AED)'; (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                     />
                     <span className="absolute top-3 left-3 badge badge-navy">{post.category}</span>
                   </div>
-                  <div className="p-5">
-                    <h2 className="font-poppins font-bold text-slate-800 mb-2 group-hover:text-brand-navy transition-colors line-clamp-2" style={{ fontSize: '1rem' }}>
+                  <div className="p-6">
+                    <h2 className="font-bold text-slate-900 mb-2 group-hover:text-[#0084D1] transition-colors line-clamp-2 text-lg">
                       {post.title}
                     </h2>
-                    <p className="text-sm text-slate-500 mb-4 line-clamp-2">{post.excerpt}</p>
-                    <div className="flex items-center gap-4 text-xs text-slate-400">
-                      <span className="flex items-center gap-1"><User className="h-3 w-3" />{post.author}</span>
-                      <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{post.readTime}</span>
+                    <p className="text-xs sm:text-sm text-slate-500 mb-4 line-clamp-2 leading-relaxed">{post.excerpt}</p>
+                    <div className="flex items-center gap-4 text-xs text-slate-400 font-medium">
+                      <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5 text-[#0084D1]" />{post.author}</span>
+                      <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-[#7C3AED]" />{new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-[#F97316]" />{post.readTime}</span>
                     </div>
                   </div>
                 </Link>
@@ -143,26 +154,26 @@ export default function BlogListPage() {
           )}
 
           {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.filter(p => !(activeCategory === 'All' && !search && p.featured)).map(post => (
-              <Link key={post.id} to={`/blog/${post.slug}`} className="card-flat group overflow-hidden rounded-2xl">
-                <div className="relative h-44 overflow-hidden rounded-t-2xl">
+              <Link key={post.id} to={`/blog/${post.slug}`} className="bg-[#FFFDF9] rounded-2xl border border-[#EAE6DD] shadow-xs hover:border-[#7C3AED]/30 hover:shadow-md transition-all group overflow-hidden block">
+                <div className="relative h-44 overflow-hidden">
                   <img
                     src={post.img}
                     alt={post.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).parentElement!.style.background = 'var(--off-white)'; (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).parentElement!.style.background = '#FAF9F5'; (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                   />
                 </div>
                 <div className="p-5">
                   <span className="badge badge-gold mb-3">{post.category}</span>
-                  <h3 className="font-poppins font-semibold text-slate-800 mb-2 line-clamp-2 text-sm group-hover:text-brand-navy transition-colors">
+                  <h3 className="font-bold text-slate-900 mb-2 line-clamp-2 text-sm group-hover:text-[#0084D1] transition-colors">
                     {post.title}
                   </h3>
-                  <p className="text-xs text-slate-400 line-clamp-2 mb-3">{post.excerpt}</p>
-                  <div className="flex items-center justify-between text-xs text-slate-400">
+                  <p className="text-xs text-slate-500 line-clamp-2 mb-3 leading-relaxed">{post.excerpt}</p>
+                  <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
                     <span>{new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
-                    <span className="flex items-center gap-1 font-medium" style={{ color: 'var(--gold-dark)' }}>
+                    <span className="flex items-center gap-1 font-bold text-[#0084D1] group-hover:translate-x-1 transition-transform">
                       Read <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>
