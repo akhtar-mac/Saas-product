@@ -20,6 +20,7 @@ const LegalPage = lazy(() => import('@/features/marketing/legal/legal-page'));
 const SoftwareSolutionsPage = lazy(() => import('@/features/marketing/software/software-solutions-page'));
 const NotFoundPage = lazy(() => import('@/features/marketing/not-found/not-found-page'));
 const LoadingDemoPage = lazy(() => import('@/features/marketing/loading-demo-page'));
+const DirectPayPage = lazy(() => import('@/features/marketing/payment/direct-pay-page'));
 
 // ─── Lazy load Client Portal ──────────────────────────────────────────────────
 const PortalLayout = lazy(() => import('@/features/portal/portal-layout'));
@@ -49,6 +50,7 @@ const HrWorkforcePage = lazy(() => import('@/features/crm/hr-workforce-page'));
 const CrmUserManagementPage = lazy(() => import('@/features/crm/crm-user-management-page'));
 const CrmWonFormPage = lazy(() => import('@/features/crm/crm-won-form-page'));
 const CrmCallAnalyticsPage = lazy(() => import('@/features/crm/crm-call-analytics-page'));
+const CrmDesktopTrackingPage = lazy(() => import('@/features/crm/crm-desktop-tracking-page'));
 
 export default function App() {
   return (
@@ -63,6 +65,7 @@ export default function App() {
           <Route path="/services" element={<ServicesHubPage />} />
           <Route path="/services/:categorySlug" element={<ServicesHubPage />} />
           <Route path="/services/:categorySlug/:serviceSlug" element={<ServiceDetailPage />} />
+          <Route path="/service/:serviceSlug" element={<ServiceDetailPage />} />
           <Route path="/blog" element={<BlogListPage />} />
           <Route path="/blog/:slug" element={<BlogDetailPage />} />
           <Route path="/appointment" element={<AppointmentPage />} />
@@ -71,6 +74,10 @@ export default function App() {
           <Route path="/software-solutions" element={<SoftwareSolutionsPage />} />
           <Route path="/tech" element={<Navigate to="/software-solutions" replace />} />
           <Route path="/legal/:type" element={<LegalPage />} />
+          <Route path="/pay" element={<DirectPayPage />} />
+          <Route path="/payment" element={<DirectPayPage />} />
+          <Route path="/loading" element={<LoadingDemoPage />} />
+          <Route path="/loader" element={<LoadingDemoPage />} />
           <Route path="/demo/loading" element={<LoadingDemoPage />} />
 
           {/* Legacy & Shortcut 301 Redirects */}
@@ -123,9 +130,17 @@ export default function App() {
 
           {/* Shared CRM pages */}
           <Route path="leads" element={<CrmLeadsPage />} />
+          <Route path="sales-manage-leads" element={<CrmLeadsPage />} />
+          <Route path="sales-manage-leads-details" element={<CrmLeadsPage />} />
           <Route path="tasks" element={<CrmTasksPage />} />
+          <Route path="operation-manage-tasks" element={<CrmTasksPage />} />
           <Route path="quotations" element={<CrmQuotationsPage />} />
+          <Route path="quotation" element={<CrmQuotationsPage />} />
           <Route path="accounts" element={<CrmAccountsPage />} />
+          <Route path="operation-manage-customer" element={<CrmAccountsPage />} />
+          <Route path="desktop-report" element={<CrmDesktopTrackingPage />} />
+          <Route path="desktop-report-idle" element={<CrmDesktopTrackingPage />} />
+          <Route path="operation-manage-employee" element={<HrWorkforcePage />} />
           <Route path="workforce" element={<HrWorkforcePage />} />
 
           {/* Won Conversion Form — Sales Employees */}

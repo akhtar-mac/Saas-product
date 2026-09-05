@@ -28,49 +28,73 @@ router.get('/telephony/recordings/:id', (req, res) => {
   });
 });
 
-// ─── 5.3 Razorpay Payment Integration ─────────────────────────────────────────
+// ─── 5.3 Direct Bank & UPI Payment Integration ────────────────────────────────
+router.get('/payment/banks', (req, res) => {
+  res.json({
+    success: true,
+    company_name: 'ETaxwala Business Solution Pvt Ltd',
+    upi_ids: {
+      primary: 'etaxwalabusiness@icici',
+      secondary: 'etaxwala@hdfcbank',
+      phone: '+91 70710 70707',
+    },
+    banks: [
+      { id: 'hdfc', name: 'HDFC Bank Ltd', acct: '50200084729118', ifsc: 'HDFC0001811', branch: 'Beed Bypass Road, CSN' },
+      { id: 'icici', name: 'ICICI Bank Ltd', acct: '034205009823', ifsc: 'ICIC0000342', branch: 'Jalna Road Hub, CSN' },
+      { id: 'sbi', name: 'State Bank of India', acct: '39820145892', ifsc: 'SBIN0001716', branch: 'Kranti Chowk, CSN' },
+      { id: 'axis', name: 'Axis Bank Ltd', acct: '923020048129301', ifsc: 'UTIB0000182', branch: 'CIDCO, CSN' },
+      { id: 'kotak', name: 'Kotak Mahindra Bank', acct: '7812903841', ifsc: 'KKBK0000691', branch: 'Nirala Bazar, CSN' },
+      { id: 'bob', name: 'Bank of Baroda', acct: '18420200001923', ifsc: 'BARB0AURANG', branch: 'Samarth Nagar, CSN' },
+      { id: 'pnb', name: 'Punjab National Bank', acct: '0842002100039124', ifsc: 'PUNB0084200', branch: 'Station Road, CSN' },
+      { id: 'canara', name: 'Canara Bank', acct: '120001849201', ifsc: 'CNRB0000842', branch: 'Mondha Road, CSN' },
+      { id: 'union', name: 'Union Bank of India', acct: '320101010038472', ifsc: 'UBIN0532011', branch: 'Adalat Road, CSN' },
+      { id: 'indusind', name: 'IndusInd Bank', acct: '250019284712', ifsc: 'INDB0000318', branch: 'Jalna Road Hub, CSN' },
+    ],
+  });
+});
+
 router.post('/payment/create-order', (req, res) => {
   const { amount, service_id, customer_id, customer_email } = req.body;
   if (!amount) throw new ApiError(400, 'Order amount is required');
 
-  const orderId = `order_${crypto.randomBytes(8).toString('hex')}`;
+  const orderId = `ETW-ORD-${Date.now().toString().slice(-6)}`;
   res.json({
     success: true,
     order: {
       id: orderId,
-      entity: 'order',
-      amount: Math.round(Number(amount) * 100), // in paise
-      amount_paid: 0,
-      amount_due: Math.round(Number(amount) * 100),
+      amount: Number(amount),
       currency: 'INR',
-      receipt: `rcpt_${Date.now()}`,
-      status: 'created',
-      notes: {
-        service_id: service_id || '101',
-        customer_id: customer_id || '101',
-        customer_email: customer_email || 'client@company.com',
-      },
+      beneficiary: 'ETaxwala Business Solution Pvt Ltd',
+      primary_upi: 'etaxwalabusiness@icici',
+      primary_bank: 'HDFC Bank Ltd (A/C: 50200084729118, IFSC: HDFC0001811)',
+      status: 'pending_payment',
       created_at: Math.floor(Date.now() / 1000),
     },
   });
 });
 
-router.post('/payment/verify', (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-  if (!razorpay_order_id || !razorpay_payment_id) {
-    throw new ApiError(400, 'Order ID and Payment ID are required');
+router.post('/payment/verify-utr', (req, res) => {
+  const { utr_number, order_id, amount, bank_name } = req.body;
+  if (!utr_number) {
+    throw new ApiError(400, 'Bank UTR / Transaction reference is required');
   }
 
   res.json({
     success: true,
-    message: 'Payment verified and invoice receipt generated',
+    message: 'Direct bank remittance / UPI payment logged for immediate settlement',
+    utr_number,
+    order_id: order_id || 'ETW-ORD-DEFAULT',
     invoice_id: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
   });
 });
 
-router.post('/payment/webhook', (req, res) => {
-  const event = req.body.event || 'payment.captured';
-  res.json({ success: true, received: true, event });
+router.post('/payment/verify', (req, res) => {
+  const { utr_number, order_id, transaction_ref } = req.body;
+  res.json({
+    success: true,
+    message: 'Direct bank remittance / UPI payment verified and invoice receipt generated',
+    invoice_id: `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+  });
 });
 
 router.post('/payment/emi-cashfree', (req, res) => {

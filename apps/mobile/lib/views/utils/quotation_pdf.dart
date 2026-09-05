@@ -72,7 +72,7 @@ class QuotationPDF {
                   children: [
                     _buildAddressSection(
                       title: "From",
-                      name: "ETaxwala Business Solutions Pvt Ltd",
+                      name: "ETaxwala Business Solution Pvt Ltd",
                       address: "150, Jalna Road, Ambad, Maharashtra 431204",
                       email: "support@etaxwala.com",
                       phone: "+91 70710 70707 / 94206 73568",
@@ -289,7 +289,7 @@ class QuotationPDF {
           ),
           pw.Text("Bank: ICICI Bank"),
           pw.Text("Account No: 200805008777"),
-          pw.Text("Account Holder: ETaxwala Business Solutions Pvt Ltd"),
+          pw.Text("Account Holder: ETaxwala Business Solution Pvt Ltd"),
           pw.Text("IFSC Code: ICIC0002008"),
           pw.Text("Branch: Ambad"),
           pw.Text("UPI ID: etaxwala@icici"),

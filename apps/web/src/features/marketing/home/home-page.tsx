@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '@/components/seo';
@@ -310,52 +310,222 @@ const CORE_PRACTICE_CARDS = [
   },
 ];
 
-/* ─── Deadline Banner Sub-Component ─── */
+/* ─── Dynamic Darkening Deadline Banner Sub-Component ─── */
 function DeadlineBanner() {
-  const DEADLINE = new Date('2026-10-31T23:59:59+05:30');
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
+  const DEADLINE = useMemo(() => new Date('2026-10-31T23:59:59+05:30'), []);
+  const [timeLeft, setTimeLeft] = useState({ days: 56, hours: 5, mins: 32, secs: 0 });
+
+  // Optional manual test override (via ?days=X or clicking test pill)
+  const [testDaysOverride, setTestDaysOverride] = useState<number | null>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      const d = p.get('days');
+      if (d !== null && !isNaN(Number(d))) return Number(d);
+    }
+    return null;
+  });
 
   useEffect(() => {
     const tick = () => {
       const now = new Date();
       const diff = DEADLINE.getTime() - now.getTime();
-      if (diff <= 0) return;
+      if (diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, mins: 0, secs: 0 });
+        return;
+      }
       setTimeLeft({
         days: Math.floor(diff / 86400000),
         hours: Math.floor((diff % 86400000) / 3600000),
         mins: Math.floor((diff % 3600000) / 60000),
+        secs: Math.floor((diff % 60000) / 1000),
       });
     };
     tick();
-    const id = setInterval(tick, 30000);
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
+  }, [DEADLINE]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#itr-deadline-banner') {
+      setTimeout(() => {
+        document.getElementById('itr-deadline-banner')?.scrollIntoView({ behavior: 'instant', block: 'center' });
+      }, 300);
+    }
   }, []);
 
+  const effectiveDays = testDaysOverride !== null ? testDaysOverride : timeLeft.days;
+
+  // Calculate dynamic urgency theme and darkness according to time left
+  const theme = useMemo(() => {
+    const days = effectiveDays;
+    const hours = timeLeft.hours;
+    const totalHours = days * 24 + hours;
+
+    if (totalHours <= 72) {
+      // 0 - 3 Days: Extreme Urgency — Darkest Midnight Obsidian Crimson / Deep Wine Night
+      return {
+        stage: 'Extreme Last Call (< 3 Days)',
+        gradient: 'bg-gradient-to-r from-[#1A0105] via-[#36040F] to-[#120004]',
+        tag: '🚨 CRITICAL LAST CHANCE: ITR Extended Deadline Ending!',
+        sub: '— Portal Closes Soon • Avoid Section 234F Penalty of ₹5,000',
+        cardBg: 'bg-rose-950/70 border border-rose-500/40 text-rose-100 shadow-inner',
+        cardLabel: 'text-rose-400 font-bold',
+        buttonClass: 'bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_20px_rgba(225,29,72,0.8)] border border-rose-400/60 animate-pulse',
+        pingColor: 'bg-rose-400',
+        pingGlow: 'shadow-[0_0_8px_#F43F5E]',
+        borderBottom: 'border-b-2 border-rose-700/60',
+      };
+    }
+
+    if (days <= 7) {
+      // 4 - 7 Days: Highly Urgent — Very Dark Deep Blood Maroon
+      return {
+        stage: 'Final Week Notice (4 - 7 Days)',
+        gradient: 'bg-gradient-to-r from-[#4C0519] via-[#63071F] to-[#3B020D]',
+        tag: '⚠️ FINAL 7 DAYS: Statutory ITR Filing Deadline',
+        sub: '— High CBDT Server Traffic Expected • File with CA Today',
+        cardBg: 'bg-black/40 border border-white/20 text-white shadow-inner',
+        cardLabel: 'text-rose-200 font-bold',
+        buttonClass: 'bg-white text-[#63071F] hover:bg-rose-50 shadow-md font-extrabold',
+        pingColor: 'bg-rose-300',
+        pingGlow: 'shadow-[0_0_6px_#FB7185]',
+        borderBottom: 'border-b border-rose-900/50',
+      };
+    }
+
+    if (days <= 15) {
+      // 8 - 15 Days: Elevated Urgency — Deep Burgundy / Wine Red
+      return {
+        stage: '2 Weeks Remaining (8 - 15 Days)',
+        gradient: 'bg-gradient-to-r from-[#7F1D1D] via-[#991B1B] to-[#5C1111]',
+        tag: '⚠️ ITR EXTENDED DEADLINE: 2 Weeks Remaining',
+        sub: '— FY 2025-26 (AY 2026-27) Tax Audit Cases',
+        cardBg: 'bg-black/30 border border-white/20 text-white',
+        cardLabel: 'text-white/80',
+        buttonClass: 'bg-white text-[#991B1B] hover:bg-red-50 shadow-sm font-bold',
+        pingColor: 'bg-white',
+        pingGlow: 'shadow-sm',
+        borderBottom: 'border-b border-red-900/40',
+      };
+    }
+
+    if (days <= 30) {
+      // 16 - 30 Days: Moderate Alert — Deep Ruby Red (Noticeably Darker)
+      return {
+        stage: '1 Month Notice (16 - 30 Days)',
+        gradient: 'bg-gradient-to-r from-[#9F1239] via-[#BE123C] to-[#881337]',
+        tag: '⚠️ ITR EXTENDED DEADLINE: 1 Month Left',
+        sub: '— FY 2025-26 (AY 2026-27) Tax Audit Cases',
+        cardBg: 'bg-white/20 text-white',
+        cardLabel: 'text-white/75',
+        buttonClass: 'bg-white text-[#9F1239] hover:bg-rose-50 font-bold',
+        pingColor: 'bg-white',
+        pingGlow: 'shadow-sm',
+        borderBottom: 'border-b border-red-900/30',
+      };
+    }
+
+    if (days <= 45) {
+      // 31 - 45 Days: Standard Alert — Medium Crimson
+      return {
+        stage: 'Standard Advisory (31 - 45 Days)',
+        gradient: 'bg-gradient-to-r from-[#BE123C] via-[#E11D48] to-[#9F1239]',
+        tag: '⚠️ ITR FILING EXTENDED DEADLINE',
+        sub: '— FY 2025-26 (AY 2026-27) Tax Audit Cases',
+        cardBg: 'bg-white/20 text-white',
+        cardLabel: 'text-white/70',
+        buttonClass: 'bg-white text-[#BE123C] hover:bg-red-50 font-bold',
+        pingColor: 'bg-white',
+        pingGlow: 'shadow-sm',
+        borderBottom: 'border-b border-red-900/20',
+      };
+    }
+
+    // 46+ Days: Relaxed / Early Period — Vibrant Coral-Rose Red (Lighter, fresh)
+    return {
+      stage: 'Early Window (> 45 Days)',
+      gradient: 'bg-gradient-to-r from-[#F43F5E] via-[#E11D48] to-[#BE123C]',
+      tag: '⚠️ ITR FILING EXTENDED DEADLINE',
+      sub: '— FY 2025-26 (AY 2026-27) Tax Audit Cases',
+      cardBg: 'bg-white/20 text-white',
+      cardLabel: 'text-white/70',
+      buttonClass: 'bg-white text-[#E11D48] hover:bg-rose-50 font-bold',
+      pingColor: 'bg-white',
+      pingGlow: 'shadow-sm',
+      borderBottom: 'border-b border-rose-300/30',
+    };
+  }, [effectiveDays, timeLeft.hours]);
+
+  // Quick cycle through urgency stages for previewing when clicking the status tag
+  const cyclePreviewStage = () => {
+    if (testDaysOverride === null) setTestDaysOverride(30);
+    else if (testDaysOverride === 30) setTestDaysOverride(14);
+    else if (testDaysOverride === 14) setTestDaysOverride(6);
+    else if (testDaysOverride === 6) setTestDaysOverride(2);
+    else setTestDaysOverride(null); // Reset back to live countdown
+  };
+
   return (
-    <div className="bg-gradient-to-r from-[#E11D48] via-[#BE123C] to-[#9F1239] text-white py-3 px-4 border-b border-red-900/20">
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div
+      id="itr-deadline-banner"
+      className={`${theme.gradient} ${theme.borderBottom} text-white py-3 px-4 transition-all duration-700 select-none relative overflow-hidden`}
+    >
+      {/* Background ambient pulse for extreme states */}
+      {effectiveDays <= 7 && (
+        <div className="absolute inset-0 bg-rose-600/10 animate-pulse pointer-events-none" />
+      )}
+
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 relative z-10">
         <div className="flex items-center gap-3">
-          <span className="flex h-2.5 w-2.5 shrink-0">
-            <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-white opacity-60" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
+          <span className="flex h-2.5 w-2.5 shrink-0 relative">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${theme.pingColor} opacity-75`} />
+            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${theme.pingColor} ${theme.pingGlow}`} />
           </span>
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider">⚠️ ITR Filing Extended Deadline</span>
-            <span className="hidden sm:inline text-white/80 text-xs ml-2">— FY 2025-26 (AY 2026-27) Tax Audit Cases</span>
+          <div className="flex flex-wrap items-center">
+            <button
+              onClick={cyclePreviewStage}
+              title="Click to preview different urgency darkness stages"
+              className="text-xs font-extrabold uppercase tracking-wider text-left hover:underline focus:outline-none flex items-center gap-1.5"
+            >
+              <span>{theme.tag}</span>
+            </button>
+            <span className="hidden sm:inline text-white/80 text-xs ml-2">
+              {theme.sub}
+            </span>
+
+            {testDaysOverride !== null && (
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-black/40 text-[10px] font-mono text-rose-200 border border-white/20">
+                Preview: {theme.stage} (Click tag to cycle)
+              </span>
+            )}
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            {[{ val: timeLeft.days, label: 'Days' }, { val: timeLeft.hours, label: 'Hrs' }, { val: timeLeft.mins, label: 'Mins' }].map(({ val, label }) => (
-              <div key={label} className="flex flex-col items-center bg-white/20 rounded-lg px-3 py-1.5 min-w-[44px]">
-                <span className="text-base font-extrabold font-mono leading-none">{String(val).padStart(2, '0')}</span>
-                <span className="text-[9px] font-bold text-white/70 uppercase tracking-wider">{label}</span>
+
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {[
+              { val: effectiveDays, label: 'Days' },
+              { val: timeLeft.hours, label: 'Hrs' },
+              { val: timeLeft.mins, label: 'Mins' },
+              { val: timeLeft.secs, label: 'Secs' },
+            ].map(({ val, label }) => (
+              <div
+                key={label}
+                className={`flex flex-col items-center ${theme.cardBg} rounded-lg px-2.5 sm:px-3 py-1.5 min-w-[42px] transition-all duration-500`}
+              >
+                <span className="text-base font-extrabold font-mono leading-none">
+                  {String(val).padStart(2, '0')}
+                </span>
+                <span className={`text-[9px] uppercase tracking-wider ${theme.cardLabel}`}>
+                  {label}
+                </span>
               </div>
             ))}
           </div>
+
           <Link
             to="/itr-filing"
-            className="text-xs font-bold bg-white text-[#E11D48] px-3.5 py-1.5 rounded-lg hover:bg-red-50 transition-colors whitespace-nowrap shrink-0"
+            className={`text-xs ${theme.buttonClass} px-3.5 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0`}
           >
             File Now →
           </Link>

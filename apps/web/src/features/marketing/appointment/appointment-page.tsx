@@ -112,7 +112,7 @@ export default function AppointmentPage() {
           name: 'CA Consultation Appointment',
           provider: {
             '@type': 'Organization',
-            name: 'ETaxwala Business Solutions',
+            name: 'ETaxwala Business Solution Pvt Ltd',
             telephone: '+91-7071070707',
           },
         }}

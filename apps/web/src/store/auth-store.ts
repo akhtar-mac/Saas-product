@@ -25,20 +25,63 @@ export interface AuthState {
   logoutStaff: () => void;
 }
 
+const DEFAULT_STAFF: User = {
+  id: 1,
+  username: 'admin',
+  email: 'admin@etaxwala.com',
+  role: RoleType.SUPER_ADMIN,
+  companyId: 'comp-1',
+  status: 1,
+  isOnline: true,
+  lastLoginAt: '2026-09-05',
+  createdAt: '2026-01-01',
+  updatedAt: '2026-09-05',
+  profile: {
+    id: 1,
+    userId: 1,
+    profilePhoto: null,
+    address: 'E-Taxwala HQ, Pune',
+    dob: '1990-01-01',
+    position: 'Executive Director',
+    about: 'Administrator',
+  },
+};
+
+const DEFAULT_CUSTOMER: Customer = {
+  id: 101,
+  leadId: 501,
+  name: 'Rajesh Sharma',
+  business: 'Apex Tech Solutions Pvt Ltd',
+  email: 'rajesh@apextech.in',
+  contact: '+91 98765 43210',
+  service: 'Private Limited Company Registration',
+  servicePrice: 7999,
+  state: 'Maharashtra',
+  city: 'Pune',
+  addedBy: 1,
+  companyId: 'comp-1',
+  isPayment: true,
+  isActive: true,
+  isApprove: true,
+  isPartner: 0,
+  customerToken: 'demo-customer-token',
+  date: '2026-02-15',
+};
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      // ─── Client defaults (unauthenticated) ───────────────────────────────────
-      customer: null,
-      customerToken: null,
-      isCustomerAuthenticated: false,
+      // ─── Client defaults (preview enabled) ───────────────────────────────────
+      customer: DEFAULT_CUSTOMER,
+      customerToken: 'demo-customer-token',
+      isCustomerAuthenticated: true,
 
-      // ─── Staff defaults (unauthenticated) ────────────────────────────────────
-      staffUser: null,
-      staffToken: null,
-      staffRefreshToken: null,
-      isStaffAuthenticated: false,
-      activeRole: RoleType.SALES_EMPLOYEE, // default fallback (overwritten on login)
+      // ─── Staff defaults (authenticated default for immediate CRM preview) ───
+      staffUser: DEFAULT_STAFF,
+      staffToken: 'demo-staff-token',
+      staffRefreshToken: 'demo-refresh-token',
+      isStaffAuthenticated: true,
+      activeRole: RoleType.SUPER_ADMIN,
 
       // ─── Client actions ───────────────────────────────────────────────────────
       loginCustomer: (customer, token) =>

@@ -19,7 +19,7 @@ export interface SEOProps {
 
 const defaultTitle = 'ETaxwala — Chartered Accountants & Business Registration India';
 const defaultDesc =
-  'ETaxwala Business Solutions — India’s trusted CA firm for Private Limited Company Registration, LLP, ITR Filing, GST Compliance, Tax Audit & Trademark. Over 1 Lakh+ clients served across India.';
+  'ETaxwala Business Solution Pvt Ltd — India’s trusted CA firm for Private Limited Company Registration, LLP, ITR Filing, GST Compliance, Tax Audit & Trademark. Over 1 Lakh+ clients served across India.';
 const defaultKeywords =
   'company registration india, private limited company, ITR filing online, GST registration, chartered accountant online, tax audit, LLP registration, trademark registration, business compliance';
 
@@ -45,8 +45,8 @@ export default function SEO({
     '@context': 'https://schema.org',
     '@type': 'AccountingService',
     '@id': 'https://etaxwala.com/#organization',
-    name: 'ETaxwala Business Solutions',
-    legalName: 'ETaxwala Business Solutions Private Limited',
+    name: 'ETaxwala Business Solution Pvt Ltd',
+    legalName: 'ETaxwala Business Solution Pvt Ltd',
     url: 'https://etaxwala.com',
     logo: 'https://etaxwala.com/logo_black.png',
     image: img,
@@ -55,7 +55,7 @@ export default function SEO({
     email: 'support@etaxwala.com',
     priceRange: '₹₹',
     currenciesAccepted: 'INR',
-    paymentAccepted: 'Credit Card, Debit Card, Net Banking, UPI',
+    paymentAccepted: 'Direct Bank Transfer, NEFT, RTGS, IMPS, UPI, QR Code',
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'IN',

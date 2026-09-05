@@ -1,55 +1,151 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Sparkles, Play, RotateCcw, ExternalLink, ShieldCheck,
+  Cpu, Eye, Layers, CheckCircle2, ArrowRight
+} from 'lucide-react';
+import SEO from '@/components/seo';
+import { PageLoader } from '@/components/loading';
 import { Skeleton, SkeletonText, SkeletonCircle, SkeletonCard, SkeletonGrid, SkeletonStats, SkeletonTable } from '@/components/ui/skeleton';
 import { LazyImage } from '@/components/ui/lazy-image';
 import { LoadingPage, PaginatedList, InfiniteScroll } from '@/components/loading-page';
-import { PageLoader, DashboardSkeleton } from '@/components/loading';
+import { DashboardSkeleton } from '@/components/loading';
 
 export default function LoadingDemoPage() {
+  const [showFullscreenLoader, setShowFullscreenLoader] = useState(false);
+  const [customMessage, setCustomMessage] = useState('');
+  const [key, setKey] = useState(0);
+
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setData([
-        { id: 1, title: 'Item 1', description: 'Description 1' },
-        { id: 2, title: 'Item 2', description: 'Description 2' },
-        { id: 3, title: 'Item 3', description: 'Description 3' },
-        { id: 4, title: 'Item 4', description: 'Description 4' },
-        { id: 5, title: 'Item 5', description: 'Description 5' },
+        { id: 1, title: 'Private Limited SPICe+ Filing', description: 'MCA V3 Gateway verified' },
+        { id: 2, title: 'GST Return GSTR-3B Auto-Reconciled', description: 'Input Tax Credit calculated' },
+        { id: 3, title: 'Tax Audit 44AB Report', description: 'Senior CA digital signature attached' },
       ]);
       setIsLoading(false);
-    }, 2000);
+    }, 2500);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [key]);
 
   return (
-    <div className="min-h-screen bg-[#FAF9F5] p-6 sm:p-10 space-y-12">
-      <div className="max-w-6xl mx-auto space-y-10">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#EAE6DD] text-xs font-bold text-slate-700 mb-3">
-            Developer Tooling &amp; Design System
-          </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Loading &amp; Skeleton States</h1>
-          <p className="text-slate-500 text-sm">Comprehensive preview of all UX loading states and animated skeletons</p>
-        </div>
+    <>
+      <SEO
+        title="MNC Enterprise Loading Experience — ETaxwala Business Solution Pvt Ltd"
+        description="State-of-the-art corporate loading screen with orbital particle rings, multi-stage compliance telemetry, and 256-bit encryption handshakes."
+      />
 
-        {/* 1. Page Loader Demo */}
-        <section className="bg-[#FFFDF9] p-6 sm:p-8 rounded-3xl border border-[#EAE6DD] shadow-xs">
-          <h2 className="text-xl font-bold text-slate-900 mb-4">1. Page Loader with LoadingPage Wrapper</h2>
-          <LoadingPage isLoading={isLoading}>
-            <div className="p-4 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 text-sm font-medium">
-              ✓ Content loaded successfully!
+      {/* Fullscreen Loader Triggered State */}
+      <AnimatePresence>
+        {showFullscreenLoader && (
+          <div className="fixed inset-0 z-[9999]">
+            <PageLoader
+              message={customMessage || undefined}
+              onComplete={() => {
+                // Auto-close after completion after a brief pause
+                setTimeout(() => setShowFullscreenLoader(false), 1200);
+              }}
+              fullScreen={true}
+            />
+            <button
+              onClick={() => setShowFullscreenLoader(false)}
+              className="fixed top-6 right-6 z-[10000] px-4 py-2 bg-slate-900/80 hover:bg-slate-900 text-white rounded-full text-xs font-bold backdrop-blur-md shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span>✕ Close Preview</span>
+            </button>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <div className="min-h-screen bg-[#FAF9F5] pt-28 pb-16 px-4 sm:px-8">
+        <div className="max-w-5xl mx-auto space-y-10">
+
+          {/* Header */}
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#EAE6DD] text-xs font-bold text-[#7C3AED] shadow-xs">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>MNC Legal-Tech UI Standard</span>
             </div>
-          </LoadingPage>
-          <button
-            onClick={() => setIsLoading(true)}
-            className="mt-4 px-5 py-2.5 btn-multicolor text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
-          >
-            <span className="relative z-10">Reload Demo</span>
-          </button>
-        </section>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Enterprise Corporate Loading System
+            </h1>
+            <p className="text-slate-500 text-sm max-w-2xl">
+              Engineered for <strong>ETaxwala Business Solution Pvt Ltd</strong> with dual-ring orbital motion, multi-stage statutory telemetry, dynamic laser progress tracking, and bank-grade SSL trust compliance.
+            </p>
+          </div>
+
+          {/* 1. Live Interactive MNC Loading Console */}
+          <section className="bg-white rounded-3xl border border-[#EAE6DD] shadow-sm p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#EAE6DD]">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <span>1. Live MNC Enterprise Loading Console</span>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Active
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Embedded preview matching the official site theme.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setKey((k) => k + 1)}
+                  className="px-4 py-2.5 rounded-xl border border-[#EAE6DD] bg-[#FAF9F5] hover:bg-white text-xs font-bold text-slate-700 flex items-center gap-2 transition-all shadow-xs cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Replay Animation</span>
+                </button>
+
+                <button
+                  onClick={() => setShowFullscreenLoader(true)}
+                  className="px-5 py-2.5 rounded-xl btn-multicolor text-white text-xs font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Launch Fullscreen Preview</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Embedded Live Loader View */}
+            <div className="relative rounded-2xl overflow-hidden border border-[#EAE6DD] shadow-inner">
+              <PageLoader
+                key={key}
+                message={customMessage || undefined}
+                fullScreen={false}
+              />
+            </div>
+
+            {/* Interactive Controller */}
+            <div className="pt-2">
+              <label className="block text-xs font-semibold text-slate-600 mb-2">
+                Test Custom Loading Message (Optional):
+              </label>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  placeholder="e.g. Generating SPICe+ Incorporation Certificate..."
+                  value={customMessage}
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                  className="flex-1 px-4 py-2.5 text-xs bg-white border border-[#EAE6DD] rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                />
+                {customMessage && (
+                  <button
+                    onClick={() => setCustomMessage('')}
+                    className="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+            </div>
+          </section>
 
         {/* 2. Basic Skeleton Components */}
         <section className="bg-white p-6 rounded-xl border border-slate-200">
@@ -176,5 +272,6 @@ export default function LoadingDemoPage() {
         </section>
       </div>
     </div>
+    </>
   );
 }

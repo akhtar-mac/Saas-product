@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, Navigate } from 'react-router-dom';
 import {
   Search, Building2, FileBadge, Receipt, ClipboardCheck,
   Lightbulb, Sparkles, FileText, ArrowRight, TrendingUp,
@@ -10,10 +10,18 @@ import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
 import CtaBanner from '@/components/cta-banner';
 import QuickEnquiryModal from '@/components/quick-enquiry-modal';
-import { services, categories, formatPrice, getFeaturedServices } from '@/lib/constants/services';
+import { services, categories, formatPrice, getFeaturedServices, getServiceBySlug } from '@/lib/constants/services';
 
 export default function ServicesHubPage() {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
+
+  // If the param is actually a direct service slug, route directly to its detail page
+  const directService = useMemo(() => categorySlug ? getServiceBySlug(categorySlug) : null, [categorySlug]);
+  if (directService) {
+    const catSlug = directService.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    return <Navigate to={`/services/${catSlug}/${directService.slug}`} replace />;
+  }
+
   const [selectedEnquiryService, setSelectedEnquiryService] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>(categorySlug || 'all');

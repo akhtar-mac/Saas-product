@@ -72,7 +72,7 @@ app.use('/v1/customer', customerRoutes);
 app.use('/v1/crm', crmRoutes);
 app.use('/v1/staff', crmRoutes);
 
-// 4. External Integrations (Telephony, Razorpay/Cashfree, Brevo Email/SMS/WhatsApp, R2 Storage)
+// 4. External Integrations (Telephony, Direct Bank Remittances / UPI, Brevo Email/SMS/WhatsApp, R2 Storage)
 app.use('/v1', integrationsRoutes);
 
 // ─── Public inquiry & appointment endpoints ───────────────────────────────────

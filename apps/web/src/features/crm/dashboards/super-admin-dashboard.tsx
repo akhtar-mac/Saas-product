@@ -96,7 +96,7 @@ const STATUS_MAP: Record<string, { bg: string; dot: string }> = {
 const AUDIT_LOGS = [
   { icon: Target, action: 'Lead Campaign Synced', user: 'Rahul Sharma', detail: 'Assigned 15 fresh Google Ads leads to Sneha Jadhav (TN zone)', time: '10m ago', color: '#003A66' },
   { icon: FileCheck2, action: 'Task Stage Advanced', user: 'CA Pooja Kulkarni', detail: 'Order #2204 moved → GOVT_FILING_IN_PROGRESS on MCA V3', time: '25m ago', color: '#7C3AED' },
-  { icon: DollarSign, action: 'Payment Confirmed', user: 'Anil Mehta', detail: '₹16,499 received via Razorpay for Pvt Ltd Order #2201', time: '1h ago', color: '#059669' },
+  { icon: DollarSign, action: 'Payment Confirmed', user: 'Anil Mehta', detail: '₹16,499 received via HDFC Bank NEFT for Pvt Ltd Order #2201', time: '1h ago', color: '#059669' },
   { icon: PhoneCall, action: 'Mobile App Sync', user: 'Flutter Sales App', detail: '148 call logs & GPS locations synced from field agents', time: '2h ago', color: '#D97706' },
   { icon: ShieldCheck, action: 'QC Completed', user: 'CA Deepak Verma', detail: 'Annual Filing for Supriya Traders LLP reviewed & signed', time: '3h ago', color: '#0891B2' },
 ];
@@ -167,7 +167,7 @@ export default function SuperAdminDashboard() {
           <StatusPill label="Flutter App" status="green" detail="Mobile API connected" />
           <StatusPill label="API Gateway" status="green" detail="99.98% uptime" />
           <StatusPill label="SLA Engine" status="green" detail="92% on-time delivery" />
-          <StatusPill label="Razorpay Gateway" status="green" detail="Payment processing OK" />
+          <StatusPill label="Multi-Bank Gateway" status="green" detail="10 Accounts & UPI QR Live" />
         </div>
       </div>
 
@@ -288,7 +288,7 @@ export default function SuperAdminDashboard() {
               { icon: Database, label: 'PostgreSQL (etaxwala_v2)', detail: '66 Tables · 300ms avg', status: 'green', val: '66 Tables' },
               { icon: PhoneCall, label: 'Flutter Sales Mobile App', detail: 'Push sync every 5 mins', status: 'green', val: 'Live' },
               { icon: Wifi, label: 'API Gateway (Express)', detail: 'v3 REST + JWT Auth', status: 'green', val: '99.98%' },
-              { icon: Lock, label: 'Razorpay Payment Gateway', detail: 'PCI-DSS compliant', status: 'green', val: 'Active' },
+              { icon: Lock, label: 'Multi-Bank & QR System', detail: '10 Accounts & Direct UPI', status: 'green', val: 'Active' },
               { icon: Cpu, label: 'Desktrack Productivity', detail: 'Screenshot + time tracker', status: 'green', val: 'Recording' },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-[#F7F8FA] border border-slate-200">

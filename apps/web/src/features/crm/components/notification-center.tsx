@@ -23,7 +23,7 @@ interface Notification {
 
 const DEMO_NOTIFICATIONS: Notification[] = [
   { id: '1', type: 'lead', title: 'New Inbound Lead', detail: 'Mahesh Patil (9822011223) inquired about Pvt Ltd Registration from Google Ads.', time: '2 min ago', isRead: false },
-  { id: '2', type: 'payment', title: 'Razorpay Payment Received', detail: '₹16,499 confirmed for Order #2201 — GST Registration (Pune).', time: '14 min ago', isRead: false },
+  { id: '2', type: 'payment', title: 'Bank NEFT Payment Received', detail: '₹16,499 confirmed for Order #2201 — GST Registration (Pune) via HDFC Bank.', time: '14 min ago', isRead: false },
   { id: '3', type: 'sla', title: 'SLA Overdue Warning', detail: 'Task #4809 (FSSAI License) has breached the 48-hour SLA deadline. Escalate to Operations Manager.', time: '30 min ago', isRead: false, urgent: true },
   { id: '4', type: 'qc', title: 'QC Review Requested', detail: 'CA Pooja Kulkarni submitted Order #2204 for QC sign-off before delivery.', time: '1 hr ago', isRead: false },
   { id: '5', type: 'system', title: 'Flutter App Sync Complete', detail: '148 call logs from sales mobile agents synced successfully.', time: '2 hr ago', isRead: true },

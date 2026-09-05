@@ -17,6 +17,6 @@ export const env = {
   R2_BUCKET_NAME: process.env.R2_BUCKET_NAME || 'etaxwala-documents',
   BREVO_API_KEY: process.env.BREVO_API_KEY || '',
   BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL || 'support@etaxwala.com',
-  RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || '',
-  RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || '',
+  COMPANY_LEGAL_NAME: 'ETaxwala Business Solution Pvt Ltd',
+  PRIMARY_UPI_ID: 'etaxwalabusiness@icici',
 };

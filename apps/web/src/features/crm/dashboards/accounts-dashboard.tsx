@@ -13,10 +13,10 @@ import {
 
 export default function AccountsDashboard() {
   const transactions = [
-    { id: 'TXN-901', client: 'Sharma Agri Exports Pvt Ltd', service: 'Pvt Ltd Incorporation', amount: '₹19,468.82', method: 'Razorpay UPI', status: 'Settled', date: 'Today, 11:20 AM' },
+    { id: 'TXN-901', client: 'Sharma Agri Exports Pvt Ltd', service: 'Pvt Ltd Incorporation', amount: '₹19,468.82', method: 'HDFC Direct UPI QR', status: 'Settled', date: 'Today, 11:20 AM' },
     { id: 'TXN-902', client: 'Green Leaf Bio Organics', service: 'Trademark Registration', amount: '₹8,258.82', method: 'PhonePe QR', status: 'Settled', date: 'Today, 09:45 AM' },
-    { id: 'TXN-903', client: 'Deshmukh & Associates', service: 'GST Annual Audit Package', amount: '₹14,160.00', method: 'NetBanking NEFT', status: 'Pending Recon', date: 'Yesterday' },
-    { id: 'TXN-904', client: 'Kisan Samridhi Producer Co', service: 'FPC Annual Compliance', amount: '₹24,999.00', method: 'Razorpay Card', status: 'Settled', date: '22 Aug 2026' },
+    { id: 'TXN-903', client: 'Deshmukh & Associates', service: 'GST Annual Audit Package', amount: '₹14,160.00', method: 'SBI NetBanking NEFT', status: 'Pending Recon', date: 'Yesterday' },
+    { id: 'TXN-904', client: 'Kisan Samridhi Producer Co', service: 'FPC Annual Compliance', amount: '₹24,999.00', method: 'ICICI Bank IMPS', status: 'Settled', date: '22 Aug 2026' },
   ];
 
   return (
@@ -31,7 +31,7 @@ export default function AccountsDashboard() {
             <span className="badge badge-gold">Finance & Accounts</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Payment gateway reconciliations (Razorpay / UPI), GST tax invoices, customer dues & partner commission payouts.
+            Multi-bank reconciliations (10 Verified Bank Accounts & Dynamic UPI QR), GST tax invoices, customer dues & partner commission payouts.
           </p>
         </div>
 
@@ -71,9 +71,9 @@ export default function AccountsDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-display font-bold text-base text-slate-800">
-              Recent Receipts & Payment Gateway Settlement Logs
+              Recent Receipts & Multi-Bank Settlement Logs
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Automated Razorpay Webhook reconciliation & GST invoice generation</p>
+            <p className="text-xs text-slate-400 mt-0.5">Automated Multi-Bank UTR reconciliation & GST invoice generation</p>
           </div>
           <span className="badge badge-navy">Live Transactions</span>
         </div>

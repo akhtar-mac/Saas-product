@@ -1,488 +1,1049 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
-  ClipboardList,
   Search,
-  Filter,
-  CheckCircle2,
+  Plus,
+  Trash2,
+  Calendar,
   Clock,
+  User,
+  CheckCircle2,
   AlertTriangle,
-  ArrowRight,
-  ShieldCheck,
-  ChevronRight,
-  Layers,
-  X,
-  RefreshCw,
-  LayoutGrid,
-  Table2,
-  Timer,
+  Play,
+  Square,
+  Upload,
+  MessageSquare,
   FileText,
+  X,
   ChevronDown,
+  UserCheck,
 } from 'lucide-react';
-import { TaskStatus, TASK_STATUS_LABELS } from '@etaxwala/types';
 
-/* ─── Types ─── */
-type ViewMode = 'table' | 'kanban';
+interface TaskTimelineStep {
+  id: number;
+  dateTime: string;
+  timeSpent: string;
+  staff: string;
+  status: 'Completed' | 'Pending From Client' | 'In Progress' | 'Not Started';
+  comment: string;
+}
 
-/* ─── Kanban phase config ─── */
-const KANBAN_PHASES = [
+interface OperationTask {
+  id: number;
+  taskName: string;
+  customerName: string;
+  companyName: string;
+  service: string;
+  assignTo: string;
+  addedBy: string;
+  assignDate: string;
+  dueDate: string;
+  status: 'completed' | 'not-started' | 'wip' | 'pendingfromclient';
+  email: string;
+  phone: string;
+  state: string;
+  city: string;
+  timeline: TaskTimelineStep[];
+}
+
+const INITIAL_TASKS: OperationTask[] = [
   {
-    id: 'doc-collection',
-    label: 'Doc Collection & KYC',
-    stages: [1, 2],
-    color: '#64748b',
-    bg: 'bg-slate-50',
-    border: 'border-slate-200',
-    headerBg: 'bg-slate-100',
-    badge: 'bg-slate-200 text-slate-700',
+    id: 1,
+    taskName: 'Niti Aayog/Darpan Registration',
+    customerName: 'Siddheshwar Sherekar',
+    companyName: 'Shubuusha Micro Service Association',
+    service: 'Microfinance Company (Section 8) Registration',
+    assignTo: 'Avinash Mate',
+    addedBy: 'Kailas Gadekar',
+    assignDate: '03-09-2026 12:30',
+    dueDate: '04-09-2026',
+    status: 'completed',
+    email: 'sidhuw840@gmail.com',
+    phone: '8237377731',
+    state: 'Maharashtra',
+    city: 'Satara',
+    timeline: [
+      { id: 1, dateTime: '2026-09-03 13:52:16', timeSpent: '00:00:00', staff: 'Avinash Mate', status: 'Completed', comment: 'ALL DONE' },
+      { id: 2, dateTime: '2026-09-03 13:52:16', timeSpent: '00:00:00', staff: 'Avinash Mate', status: 'Completed', comment: 'ALL DONE' },
+      { id: 3, dateTime: '2026-09-03 12:40:47', timeSpent: '00:00:00', staff: 'Avinash Mate', status: 'Pending From Client', comment: 'nomani docs pending' },
+    ],
   },
   {
-    id: 'filing-prep',
-    label: 'Govt Filing Prep',
-    stages: [3],
-    color: '#D97706',
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
-    headerBg: 'bg-amber-100',
-    badge: 'bg-amber-200 text-amber-800',
+    id: 2,
+    taskName: 'Banking Stationary and Documentation',
+    customerName: 'Balasaheb Ghadge',
+    companyName: 'Mauli Micro Association',
+    service: 'MoA/AoA Alteration',
+    assignTo: 'Swarupa Patwardhan',
+    addedBy: 'Kailas Gadekar',
+    assignDate: '03-09-2026 11:59',
+    dueDate: '05-09-2026',
+    status: 'not-started',
+    email: 'growthfund8894@gmail.com',
+    phone: '7249696992',
+    state: 'Maharashtra',
+    city: 'Ratnagiri',
+    timeline: [
+      { id: 1, dateTime: '2026-09-03 11:59:00', timeSpent: '00:00:00', staff: 'Kailas Gadekar', status: 'In Progress', comment: 'Task assigned to Swarupa' },
+    ],
   },
   {
-    id: 'submitted',
-    label: 'Submitted on Portal',
-    stages: [4],
-    color: '#7C3AED',
-    bg: 'bg-purple-50',
-    border: 'border-purple-200',
-    headerBg: 'bg-purple-100',
-    badge: 'bg-purple-200 text-purple-800',
+    id: 3,
+    taskName: 'Banking Stationary and Documentation',
+    customerName: 'Dashrath Madhukar Waghmare',
+    companyName: 'Hopewings Micro Association',
+    service: 'Microfinance Company (Section 8) Registration',
+    assignTo: 'Swarupa Patwardhan',
+    addedBy: 'Kailas Gadekar',
+    assignDate: '02-09-2026 16:50',
+    dueDate: '04-09-2026',
+    status: 'not-started',
+    email: 'dashrath@gmail.com',
+    phone: '9822001122',
+    state: 'Maharashtra',
+    city: 'Pune',
+    timeline: [],
   },
   {
-    id: 'qc-ca',
-    label: 'QC & CA Sign-off',
-    stages: [5, 6],
-    color: '#0284c7',
-    bg: 'bg-sky-50',
-    border: 'border-sky-200',
-    headerBg: 'bg-sky-100',
-    badge: 'bg-sky-200 text-sky-800',
+    id: 4,
+    taskName: 'Members Addition in Online Form',
+    customerName: 'Santosh Eknathrao Thadke',
+    companyName: 'NA',
+    service: 'Multi State Credit Co-Operative Society Registration',
+    assignTo: 'Ganesh Nikam',
+    addedBy: 'Kailas Gadekar',
+    assignDate: '02-09-2026 14:23',
+    dueDate: '30-09-2026',
+    status: 'not-started',
+    email: 'santosh@yahoo.com',
+    phone: '9850123456',
+    state: 'Maharashtra',
+    city: 'Latur',
+    timeline: [],
   },
   {
-    id: 'delivered',
-    label: 'Approved & Delivered',
-    stages: [7, 8, 9, 10],
-    color: '#059669',
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-200',
-    headerBg: 'bg-emerald-100',
-    badge: 'bg-emerald-200 text-emerald-800',
+    id: 5,
+    taskName: 'Form MGT 7A FY 25-26',
+    customerName: 'Sri Vidya Digital Offer Nidhi Limited',
+    companyName: 'Sudhir Vyas',
+    service: 'Nidhi Company Audit and Compliances',
+    assignTo: 'Kailas Gadekar OS',
+    addedBy: 'Netra Divekar',
+    assignDate: '01-09-2026 18:12',
+    dueDate: '01-11-2026',
+    status: 'not-started',
+    email: 'sudhirvyas06@gmail.com',
+    phone: '9111503756',
+    state: 'Maharashtra',
+    city: 'Amravati',
+    timeline: [],
+  },
+  {
+    id: 6,
+    taskName: 'Form AOC 4 FY 25-26',
+    customerName: 'Sri Vidya Digital Offer Nidhi Limited',
+    companyName: 'Sudhir Vyas',
+    service: 'Nidhi Company Audit and Compliances',
+    assignTo: 'Kailas Gadekar OS',
+    addedBy: 'Netra Divekar',
+    assignDate: '01-09-2026 18:12',
+    dueDate: '01-11-2026',
+    status: 'not-started',
+    email: 'sudhirvyas06@gmail.com',
+    phone: '9111503756',
+    state: 'Maharashtra',
+    city: 'Amravati',
+    timeline: [],
   },
 ];
 
-/* ─── SLA Badge helper ─── */
-function SlaBadge({ assignDate }: { assignDate?: string }) {
-  if (!assignDate) return null;
-  const hoursElapsed = Math.floor((Date.now() - new Date(assignDate).getTime()) / 3600000);
-
-  if (hoursElapsed > 48) {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-100 text-red-700">
-        <Timer className="w-2.5 h-2.5" /> OVERDUE
-      </span>
-    );
-  } else if (hoursElapsed > 24) {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-700">
-        <Timer className="w-2.5 h-2.5" /> {'<'}24h left
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700">
-      <Timer className="w-2.5 h-2.5" /> On Track
-    </span>
-  );
-}
-
-/* ─── Status badge (shared) ─── */
-const getStatusBadge = (status: number) => {
-  const map: Record<number, { label: string; bg: string }> = {
-    1: { label: 'Doc Collection', bg: 'bg-slate-100 text-slate-700' },
-    2: { label: 'Verification', bg: 'bg-blue-50 text-blue-700' },
-    3: { label: 'Govt Filing Prep', bg: 'bg-amber-50 text-amber-700' },
-    4: { label: 'Submitted on Portal', bg: 'bg-purple-50 text-purple-700' },
-    5: { label: 'Govt Approved', bg: 'bg-emerald-50 text-emerald-700' },
-    6: { label: 'Delivered / Closed', bg: 'bg-emerald-100 text-emerald-800' },
-  };
-  return map[status] ?? { label: `Stage ${status}`, bg: 'bg-slate-50 text-slate-600' };
-};
-
-/* ─── Kanban Card ─── */
-function KanbanCard({ task, onAdvance }: { task: any; onAdvance: (task: any) => void }) {
-  const statusInfo = getStatusBadge(task.original_task_status);
-  return (
-    <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm hover:shadow-md transition-shadow group space-y-2">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-xs font-bold text-slate-800 leading-tight">
-            {task.sub_customer_name || `Customer #${task.cust_id}`}
-          </p>
-          <p className="text-[10px] text-slate-400 font-mono mt-0.5">Task #{task.task_id}</p>
-        </div>
-        <SlaBadge assignDate={task.assign_date} />
-      </div>
-
-      <p className="text-[11px] text-slate-600 font-medium line-clamp-1">
-        {task.task_name || 'Statutory Compliance'}
-      </p>
-
-      <div className="flex items-center justify-between gap-2">
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusInfo.bg}`}>
-          {statusInfo.label}
-        </span>
-        <button
-          onClick={() => onAdvance(task)}
-          className="opacity-0 group-hover:opacity-100 flex items-center gap-1 text-[10px] font-bold text-brand-navy bg-brand-navy/5 hover:bg-brand-navy hover:text-white px-2 py-1 rounded-lg transition-all"
-        >
-          Advance <ArrowRight className="w-3 h-3" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Kanban Board ─── */
-function KanbanBoard({ tasks, onAdvance }: { tasks: any[]; onAdvance: (task: any) => void }) {
-  const groupByPhase = (phaseStages: number[]) =>
-    tasks.filter((t) => phaseStages.includes(t.original_task_status));
-
-  if (tasks.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-48 text-xs text-slate-400">
-        <RefreshCw className="w-5 h-5 animate-spin mr-2 text-brand-navy" /> Loading tasks...
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex gap-4 overflow-x-auto pb-2">
-      {KANBAN_PHASES.map((phase) => {
-        const phaseTasks = groupByPhase(phase.stages);
-        return (
-          <div key={phase.id} className="flex-1 min-w-[220px] max-w-[280px] flex flex-col gap-2">
-            {/* Phase Header */}
-            <div className={`flex items-center justify-between px-3 py-2 rounded-xl ${phase.headerBg} border ${phase.border}`}>
-              <span className="text-[11px] font-bold" style={{ color: phase.color }}>
-                {phase.label}
-              </span>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${phase.badge}`}>
-                {phaseTasks.length}
-              </span>
-            </div>
-            {/* Cards */}
-            <div className="flex flex-col gap-2 flex-1">
-              {phaseTasks.length === 0 ? (
-                <div className="flex items-center justify-center h-16 rounded-xl border-2 border-dashed border-slate-200 text-[10px] text-slate-300">
-                  Empty
-                </div>
-              ) : (
-                phaseTasks.map((task) => (
-                  <KanbanCard key={task.task_id} task={task} onAdvance={onAdvance} />
-                ))
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ─── Main Page ─── */
 export default function CrmTasksPage() {
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
-  const [selectedTask, setSelectedTask] = useState<any | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newStatus, setNewStatus] = useState<number>(1);
-  const [milestoneRemarks, setMilestoneRemarks] = useState('');
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [tasks, setTasks] = useState<OperationTask[]>(INITIAL_TASKS);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [expandedId, setExpandedId] = useState<number | null>(1); // default row 1 expanded like screenshot
+  const [searchTerm, setSearchTerm] = useState('');
+  const [pageSize, setPageSize] = useState(10);
 
-  // Staff name map: userId -> name
-  const [staffMap, setStaffMap] = useState<Record<number, string>>({});
+  // Filters
+  const [taskFilter, setTaskFilter] = useState('Tasks');
+  const [categoryFilter, setCategoryFilter] = useState('Category');
+  const [staffFilter, setStaffFilter] = useState('Staff');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
+  const location = useLocation();
+
+  // Modals
+  const [effortModalTask, setEffortModalTask] = useState<OperationTask | null>(
+    new URLSearchParams(location.search).get('effort') === '1' ? INITIAL_TASKS[0] : null
+  );
+  const [assignModalOpen, setAssignModalOpen] = useState(
+    new URLSearchParams(location.search).get('assign') === '1'
+  );
+  const [assignTargetTask, setAssignTargetTask] = useState<OperationTask | null>(
+    new URLSearchParams(location.search).get('assign') === '1' ? INITIAL_TASKS[0] : null
+  );
+  const [assignUser, setAssignUser] = useState('Avinash Mate');
+  const [assignDueDate, setAssignDueDate] = useState('2026-09-06');
+
+  // Effort Modal Timer state
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [startTimeCapture, setStartTimeCapture] = useState('--:--');
+  const [endTimeCapture, setEndTimeCapture] = useState('--:--');
+  const [effortStatus, setEffortStatus] = useState('Completed');
+  const [effortNotes, setEffortNotes] = useState('');
+  const [uploadedDocs, setUploadedDocs] = useState<{ name: string; date: string }[]>([]);
+  const [docNameInput, setDocNameInput] = useState('');
+
+  // Live timer tick
   useEffect(() => {
-    fetch('/v1/crm/staff')
-      .then((r) => r.json())
-      .then((d) => { if (d?.success) setStaffMap(d.data || {}); })
-      .catch(() => {});
-  }, []);
-
-  const resolveOfficerName = (id: number | null): string => {
-    if (!id) return '—';
-    return staffMap[id] || `Officer #${id}`;
-  };
-
-  const fetchTasks = () => {
-    setIsLoading(true);
-    const query = new URLSearchParams({
-      limit: '50',
-      ...(statusFilter !== 'ALL' && { status: statusFilter }),
-    });
-
-    fetch(`/v1/crm/tasks?${query.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.success && Array.isArray(data.data)) {
-          setTasks(data.data);
-        }
-      })
-      .catch((err) => console.error('Error fetching tasks:', err))
-      .finally(() => setIsLoading(false));
-  };
-
-  useEffect(() => {
-    fetchTasks();
-  }, [statusFilter]);
-
-  const handleOpenAdvance = (task: any) => {
-    setSelectedTask(task);
-    setNewStatus((task.original_task_status || 1) + 1);
-    setIsModalOpen(true);
-  };
-
-  const handleSaveStatus = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedTask) return;
-
-    try {
-      await fetch(`/v1/crm/tasks/${selectedTask.task_id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          new_status: Number(newStatus),
-          remarks: milestoneRemarks,
-          updated_by: 'Operations Executive',
-        }),
-      });
-
-      alert(`✅ Milestone for Task #${selectedTask.task_id} advanced successfully in PostgreSQL!`);
-      setIsModalOpen(false);
-      setMilestoneRemarks('');
-      fetchTasks();
-    } catch (err) {
-      console.error('Failed to update status:', err);
+    let interval: any = null;
+    if (isTimerRunning) {
+      interval = setInterval(() => {
+        setTimerSeconds((prev) => prev + 1);
+      }, 1000);
     }
+    return () => clearInterval(interval);
+  }, [isTimerRunning]);
+
+  const formatTimer = (sec: number) => {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
+
+  const startEffortTimer = () => {
+    const now = new Date();
+    setStartTimeCapture(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+    setIsTimerRunning(true);
+  };
+
+  const stopEffortTimer = () => {
+    const now = new Date();
+    setEndTimeCapture(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+    setIsTimerRunning(false);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === tasks.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(tasks.map((t) => t.id)));
+  };
+
+  const toggleSelect = (id: number) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const handleResetFilters = () => {
+    setTaskFilter('Tasks');
+    setCategoryFilter('Category');
+    setStaffFilter('Staff');
+    setFromDate('');
+    setToDate('');
+    setSearchTerm('');
+  };
+
+  const handleAssignSave = () => {
+    if (assignTargetTask) {
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === assignTargetTask.id
+            ? { ...t, assignTo: assignUser, dueDate: assignDueDate, assignDate: new Date().toLocaleDateString() }
+            : t
+        )
+      );
+    } else if (selectedIds.size > 0) {
+      setTasks((prev) =>
+        prev.map((t) =>
+          selectedIds.has(t.id)
+            ? { ...t, assignTo: assignUser, dueDate: assignDueDate, assignDate: new Date().toLocaleDateString() }
+            : t
+        )
+      );
+      setSelectedIds(new Set());
+    }
+    setAssignModalOpen(false);
+    setAssignTargetTask(null);
+    alert('Task assigned successfully!');
+  };
+
+  const handleSaveEffort = () => {
+    if (!effortModalTask) return;
+    const newStep: TaskTimelineStep = {
+      id: Date.now(),
+      dateTime: new Date().toLocaleString(),
+      timeSpent: formatTimer(timerSeconds),
+      staff: effortModalTask.assignTo || 'Avinash Mate',
+      status: effortStatus as any,
+      comment: effortNotes || 'Effort logged',
+    };
+
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === effortModalTask.id
+          ? {
+              ...t,
+              status: effortStatus.toLowerCase().includes('completed') ? 'completed' : 'wip',
+              timeline: [newStep, ...t.timeline],
+            }
+          : t
+      )
+    );
+    setEffortModalTask(null);
+    setTimerSeconds(0);
+    setIsTimerRunning(false);
+    setEffortNotes('');
+    alert('Effort logged and timeline updated!');
+  };
+
+  const filteredTasks = tasks.filter(
+    (t) =>
+      t.taskName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.assignTo.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto font-sans">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-display font-bold text-brand-navy">
-              10-Stage Task & Service Delivery Engine
-            </h1>
-            <span className="badge badge-gold font-mono">4,911 Live DB Tasks</span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Standardized operational milestones from document collection to government approval & certificate issuance.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* View Mode Toggle */}
-          <div className="flex items-center gap-0.5 bg-slate-100 rounded-xl p-1">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                viewMode === 'table' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-500 hover:text-slate-700'
-              }`}
+    <div className="space-y-4">
+      {/* ─── Top KPI Metric Cards with Single-Color Moving Outline ─── */}
+      <div className="flex flex-wrap items-center gap-2.5">
+        {[
+          { label: 'OVER DUES', count: 0, cBase: '#EF4444', cLight: '#FCA5A5', cDark: '#B91C1C' },
+          { label: 'ON HOLD', count: 29, cBase: '#DC2626', cLight: '#F87171', cDark: '#991B1B' },
+          { label: "TODAY'S TASKS", count: 6, cBase: '#1F2937', cLight: '#64748B', cDark: '#0F172A' },
+          { label: "TOMORROW'S", count: 22, cBase: '#16A34A', cLight: '#86EFAC', cDark: '#15803D' },
+          { label: 'NEXT 7 DAYS', count: 786, cBase: '#F97316', cLight: '#FDBA74', cDark: '#C2410C' },
+          { label: 'NEXT 15 DAYS', count: 15, cBase: '#6366F1', cLight: '#A5B4FC', cDark: '#4338CA' },
+        ].map((kpi) => (
+          <button
+            key={kpi.label}
+            onClick={() => setSearchTerm(kpi.label === 'OVER DUES' ? '' : kpi.label)}
+            className="kpi-single-moving group flex items-center gap-2 px-3.5 py-1.5 rounded-full text-slate-800 text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer"
+            style={
+              {
+                '--c-base': kpi.cBase,
+                '--c-light': kpi.cLight,
+                '--c-dark': kpi.cDark,
+              } as React.CSSProperties
+            }
+          >
+            <span className="tracking-tight text-[11px] uppercase font-bold text-slate-700 group-hover:text-slate-900">
+              {kpi.label}
+            </span>
+            <span
+              className="px-2 py-0.5 rounded-full text-[10px] font-extrabold text-white shadow-2xs"
+              style={{ backgroundColor: kpi.cBase }}
             >
-              <Table2 className="w-3.5 h-3.5" /> Table
-            </button>
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                viewMode === 'kanban' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" /> Kanban
-            </button>
-          </div>
-
-          <button onClick={fetchTasks} className="btn btn-outline btn-sm">
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh Pipeline
+              {kpi.count}
+            </span>
           </button>
-          <span className="badge badge-green text-xs py-1.5 px-3">SLA Engine Live</span>
+        ))}
+      </div>
+
+      {/* ─── Search & Filter Bar (Website Clean UI Style) ─── */}
+      <div className="bg-white p-4 rounded-3xl border border-[#EAE6DD] shadow-xs space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 items-center">
+          <select
+            value={taskFilter}
+            onChange={(e) => setTaskFilter(e.target.value)}
+            className="text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+          >
+            <option value="Tasks">Tasks</option>
+            <option value="PAN Registration">PAN Registration</option>
+            <option value="TAN Registration">TAN Registration</option>
+            <option value="Income Tax Return">Income Tax Return</option>
+          </select>
+
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+          >
+            <option value="Category">Category</option>
+            <option value="Taxation">Taxation</option>
+            <option value="Registration">Registration</option>
+            <option value="Compliances">Compliances</option>
+          </select>
+
+          <select
+            value={staffFilter}
+            onChange={(e) => setStaffFilter(e.target.value)}
+            className="text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+          >
+            <option value="Staff">Staff</option>
+            <option value="Avinash Mate">Avinash Mate</option>
+            <option value="Swarupa Patwardhan">Swarupa Patwardhan</option>
+            <option value="Ganesh Nikam">Ganesh Nikam</option>
+            <option value="Kailas Gadekar">Kailas Gadekar</option>
+          </select>
+
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            placeholder="From Date"
+            className="text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+          />
+
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            placeholder="To Date"
+            className="text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+          />
+
+          <button
+            onClick={() => alert('Filtered tasks.')}
+            className="btn-single-moving btn-single-moving-solid px-4 py-2 rounded-full text-xs font-bold text-white shadow-2xs cursor-pointer"
+            style={
+              {
+                '--c-base': '#06B6D4',
+                '--c-light': '#67E8F9',
+                '--c-dark': '#0891B2',
+              } as React.CSSProperties
+            }
+          >
+            <span>Filter</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (selectedIds.size === 0) {
+                alert('Please select tasks to bulk assign.');
+                return;
+              }
+              setAssignTargetTask(null);
+              setAssignModalOpen(true);
+            }}
+            className="btn-single-moving btn-single-moving-solid px-4 py-2 rounded-full text-xs font-bold text-white shadow-2xs cursor-pointer"
+            style={
+              {
+                '--c-base': '#1E3A8A',
+                '--c-light': '#3B82F6',
+                '--c-dark': '#172554',
+              } as React.CSSProperties
+            }
+          >
+            <span>Bulk Assign</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2.5 pt-1">
+          <button
+            onClick={() => {
+              const nd = prompt('Enter new due date (YYYY-MM-DD):');
+              if (nd && selectedIds.size > 0) {
+                setTasks((prev) =>
+                  prev.map((t) => (selectedIds.has(t.id) ? { ...t, dueDate: nd } : t))
+                );
+                alert(`Due date updated for ${selectedIds.size} tasks.`);
+              }
+            }}
+            className="btn-single-moving btn-single-moving-solid px-5 py-2 rounded-full text-xs font-bold text-white shadow-2xs cursor-pointer"
+            style={
+              {
+                '--c-base': '#7C3AED',
+                '--c-light': '#A78BFA',
+                '--c-dark': '#5B21B6',
+              } as React.CSSProperties
+            }
+          >
+            <span>Change Due Date</span>
+          </button>
+
+          <button
+            onClick={handleResetFilters}
+            className="flex-1 btn-single-moving btn-single-moving-solid px-5 py-2 rounded-full text-xs font-bold text-white shadow-2xs text-center cursor-pointer"
+            style={
+              {
+                '--c-base': '#1F2937',
+                '--c-light': '#4B5563',
+                '--c-dark': '#111827',
+              } as React.CSSProperties
+            }
+          >
+            <span>Reset All</span>
+          </button>
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-display font-bold text-base text-slate-800">
-              {viewMode === 'kanban' ? 'Kanban Pipeline View' : `Active Service Orders (${tasks.length} showing)`}
-            </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {viewMode === 'kanban'
-                ? 'Drag cards or use "Advance" button to move tasks through stages'
-                : "Connected to PostgreSQL `operation_tasks`"}
-            </p>
+      {/* ─── Task Table Card with Expandable Horizontal Timeline ─── */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        {/* Table Action Bar */}
+        <div className="p-3 bg-slate-50/70 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 text-xs text-slate-600">
+              <span>Show</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-white border border-slate-300 rounded px-2 py-1 text-xs font-semibold focus:outline-none"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              {['Copy', 'Excel', 'CSV', 'PDF', 'Print'].map((btn) => (
+                <button
+                  key={btn}
+                  onClick={() => alert(`${btn} export executed`)}
+                  className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded shadow-2xs"
+                >
+                  {btn}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {viewMode === 'table' && (
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-[#F7F8FA] border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700"
-            >
-              <option value="ALL">All Milestones</option>
-              <option value="1">1. Doc Collection</option>
-              <option value="2">2. Verification</option>
-              <option value="3">3. Govt Filing Prep</option>
-              <option value="4">4. Submitted to Portal</option>
-              <option value="5">5. Approval Received</option>
-              <option value="6">6. Completed</option>
-            </select>
-          )}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Search Data..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="text-xs bg-white border border-slate-300 rounded px-3 py-1 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#003A66] w-48"
+            />
+          </div>
         </div>
 
-        {/* Table View */}
-        {viewMode === 'table' && (
-          <div className="overflow-x-auto">
-            <table className="table-etaxwala">
-              <thead>
-                <tr>
-                  <th>Task ID / Client</th>
-                  <th>Task / Service Name</th>
-                  <th>Assigned Officer</th>
-                  <th>Current Milestone</th>
-                  <th>SLA Status</th>
-                  <th>Date Assigned</th>
-                  <th className="text-right">Advance Stage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-8 text-xs text-slate-400">
-                      <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-brand-navy" />
-                      Fetching operational tasks from PostgreSQL...
+        {/* Table Data */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider">
+                <th className="py-2.5 px-3 w-8 text-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.size === tasks.length && tasks.length > 0}
+                    onChange={toggleSelectAll}
+                    className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
+                  />
+                </th>
+                <th className="py-2.5 px-3 font-bold">Task Name</th>
+                <th className="py-2.5 px-3 font-bold">Customer Name</th>
+                <th className="py-2.5 px-3 font-bold">Company Name</th>
+                <th className="py-2.5 px-3 font-bold">Service</th>
+                <th className="py-2.5 px-3 font-bold">Assign To</th>
+                <th className="py-2.5 px-3 font-bold">Added By</th>
+                <th className="py-2.5 px-3 font-bold">Assign Date</th>
+                <th className="py-2.5 px-3 font-bold">Due Date</th>
+                <th className="py-2.5 px-3 font-bold">Status</th>
+                <th className="py-2.5 px-3 font-bold text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredTasks.map((task, idx) => (
+                <React.Fragment key={task.id}>
+                  <tr
+                    className={
+                      expandedId === task.id
+                        ? 'bg-sky-50/60'
+                        : idx % 2 === 0
+                        ? 'bg-white hover:bg-sky-50/30'
+                        : 'bg-[#F9FAFB] hover:bg-sky-50/30'
+                    }
+                  >
+                    <td className="py-2.5 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(task.id)}
+                        onChange={() => toggleSelect(task.id)}
+                        className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
+                      />
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setExpandedId(expandedId === task.id ? null : task.id)}
+                          className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center font-bold text-[11px]"
+                          title="Expand timeline"
+                        >
+                          {expandedId === task.id ? '-' : '+'}
+                        </button>
+                        <button
+                          onClick={() => setEffortModalTask(task)}
+                          className="font-semibold text-slate-900 hover:text-[#0284c7] text-left hover:underline"
+                        >
+                          {task.taskName}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-800">{task.customerName}</td>
+                    <td className="py-2.5 px-3 text-slate-600">{task.companyName}</td>
+                    <td className="py-2.5 px-3 text-slate-700 font-medium">{task.service}</td>
+                    <td className="py-2.5 px-3 text-slate-800 font-medium">{task.assignTo}</td>
+                    <td className="py-2.5 px-3 text-slate-600">{task.addedBy}</td>
+                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{task.assignDate}</td>
+                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{task.dueDate}</td>
+                    <td className="py-2.5 px-3">
+                      {task.status === 'completed' ? (
+                        <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          completed
+                        </span>
+                      ) : (
+                        <span className="bg-[#DC2626] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          not-started
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            setAssignTargetTask(task);
+                            setAssignModalOpen(true);
+                          }}
+                          className="w-6 h-6 rounded-full bg-[#003A66] hover:bg-[#002B4D] text-white flex items-center justify-center"
+                          title="Assign"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete task ${task.taskName}?`)) {
+                              setTasks((prev) => prev.filter((t) => t.id !== task.id));
+                            }
+                          }}
+                          className="w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ) : tasks.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-8 text-xs text-slate-400">
-                      No tasks found matching filter.
-                    </td>
-                  </tr>
-                ) : (
-                  tasks.map((task) => {
-                    const statusInfo = getStatusBadge(task.original_task_status);
-                    return (
-                      <tr key={task.task_id}>
-                        <td>
-                          <p className="font-bold text-slate-800 text-xs">
-                            {task.sub_customer_name || `Customer #${task.cust_id}`}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-mono">Task #{task.task_id}</p>
-                        </td>
-                        <td className="text-xs font-semibold text-slate-700">
-                          {task.task_name || 'Statutory Compliance'}
-                        </td>
-                        <td className="text-xs font-semibold text-brand-navy">
-                          {resolveOfficerName(task.added_by)}
-                        </td>
 
-                        <td>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusInfo.bg}`}>
-                            {statusInfo.label}
-                          </span>
-                        </td>
-                        <td>
-                          <SlaBadge assignDate={task.assign_date} />
-                        </td>
-                        <td className="text-xs text-slate-500">
-                          {task.assign_date ? new Date(task.assign_date).toLocaleDateString() : 'Active'}
-                        </td>
-                        <td className="text-right">
-                          <button onClick={() => handleOpenAdvance(task)} className="btn btn-primary btn-sm">
-                            Update Stage →
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                  {/* ─── Expandable Visual Stepper Timeline ─── */}
+                  {expandedId === task.id && (
+                    <tr className="bg-[#FAF9F5]">
+                      <td colSpan={11} className="p-5">
+                        <div className="bg-white rounded-2xl p-5 border border-[#EAE6DD] shadow-xs">
+                          <h4 className="text-xs font-bold text-[#1B365D] uppercase mb-4 flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-emerald-600" />
+                            <span>Task Progress Timeline & Action Audit</span>
+                          </h4>
+
+                          {task.timeline.length === 0 ? (
+                            <p className="text-xs text-slate-500 italic py-2">No timeline steps logged yet.</p>
+                          ) : (
+                            <div className="relative flex items-start gap-12 overflow-x-auto py-4 px-2">
+                              {/* Continuous timeline connector bar centered on node */}
+                              <div className="absolute top-[68px] left-12 right-12 h-0.5 bg-blue-200 -z-0" />
+
+                              {task.timeline.map((step) => (
+                                <div key={step.id} className="relative z-10 flex flex-col items-center text-center min-w-[160px]">
+                                  <p className="text-[11px] font-mono text-slate-600 font-semibold">{step.dateTime}</p>
+                                  <p className="text-[10px] text-slate-400">Time Spent: {step.timeSpent}</p>
+                                  <p className="text-[11px] font-bold text-slate-800 mt-0.5">{step.staff}</p>
+
+                                  {/* Step Node */}
+                                  <div className="w-5 h-5 rounded-full bg-blue-600 border-2 border-white shadow-xs my-2 flex items-center justify-center text-[9px] text-white font-bold" />
+
+                                  {/* Status Pill */}
+                                  <span
+                                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-2xs ${
+                                      step.status === 'Completed'
+                                        ? 'bg-[#16A34A] text-white'
+                                        : 'bg-[#EF4444] text-white'
+                                    }`}
+                                  >
+                                    {step.status}
+                                  </span>
+
+                                  {/* Comment */}
+                                  <p className="text-xs font-bold text-slate-700 mt-2 max-w-[180px]">
+                                    {step.comment}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Bar */}
+        <div className="p-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>Showing 1 to {filteredTasks.length} of 1,280 entries</span>
+          <div className="flex items-center gap-1">
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+              Previous
+            </button>
+            <button className="px-2.5 py-1 rounded bg-[#1E3A8A] text-white font-bold">1</button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">2</button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">3</button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+              Next
+            </button>
           </div>
-        )}
-
-        {/* Kanban View */}
-        {viewMode === 'kanban' && (
-          <KanbanBoard tasks={isLoading ? [] : tasks} onAdvance={handleOpenAdvance} />
-        )}
+        </div>
       </div>
 
-      {/* Advance Milestone Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="font-display font-bold text-base text-slate-800">
-                  Advance Milestone for Task #{selectedTask?.task_id}
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">{selectedTask?.task_name}</p>
+      {/* ─── CLIENT INFO & EFFORT TRACKING MODAL (Website Clean UI Style) ─── */}
+      {effortModalTask && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-2xl w-full animate-scale-in">
+            {/* Signature Top Multicolor Strip */}
+            <div className="h-1 bg-multicolor" />
+
+            {/* Modal Header */}
+            <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-[#1B365D]">Client Info & Effort Tracking</h3>
+                  <p className="text-[10px] text-slate-500 font-medium">Task #{effortModalTask.id} • {effortModalTask.taskName}</p>
+                </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-1 rounded-lg text-slate-400 hover:bg-slate-100">
-                <X className="w-5 h-5" />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => alert(`Opening live WhatsApp chat with ${effortModalTask.phone}`)}
+                  className="btn-single-moving btn-single-moving-solid px-3.5 py-1.5 rounded-full text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  style={
+                    {
+                      '--c-base': '#F59E0B',
+                      '--c-light': '#FCD34D',
+                      '--c-dark': '#D97706',
+                    } as React.CSSProperties
+                  }
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Chat</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const n = prompt('Add operational note:');
+                    if (n) alert('Note saved!');
+                  }}
+                  className="btn-single-moving btn-single-moving-solid px-3.5 py-1.5 rounded-full text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  style={
+                    {
+                      '--c-base': '#06B6D4',
+                      '--c-light': '#67E8F9',
+                      '--c-dark': '#0891B2',
+                    } as React.CSSProperties
+                  }
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Note</span>
+                </button>
+                <button
+                  onClick={() => setEffortModalTask(null)}
+                  className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6 text-xs max-h-[82vh] overflow-y-auto">
+              {/* Upper Section: Client Details & Add Effort */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Left: Client Details */}
+                <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4 space-y-3">
+                  <h4 className="text-xs font-bold text-[#1B365D] uppercase tracking-wide flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-[#1B365D]" />
+                    <span>Client Details</span>
+                  </h4>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Customer Name</label>
+                    <input
+                      type="text"
+                      readOnly
+                      defaultValue={effortModalTask.customerName}
+                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Email Address</label>
+                    <input
+                      type="email"
+                      readOnly
+                      defaultValue={effortModalTask.email}
+                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Mobile Contact</label>
+                    <input
+                      type="text"
+                      readOnly
+                      defaultValue={effortModalTask.phone}
+                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Service Assigned</label>
+                    <input
+                      type="text"
+                      readOnly
+                      defaultValue={effortModalTask.service}
+                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-medium"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">State</label>
+                      <input
+                        type="text"
+                        readOnly
+                        defaultValue={effortModalTask.state}
+                        className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">City</label>
+                      <input
+                        type="text"
+                        readOnly
+                        defaultValue={effortModalTask.city}
+                        className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Add Effort & Live Stopwatch */}
+                <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4 space-y-3">
+                  <h4 className="text-xs font-bold text-[#1B365D] uppercase tracking-wide flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Add Effort & Timer</span>
+                  </h4>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Task Status</label>
+                    <select
+                      value={effortStatus}
+                      onChange={(e) => setEffortStatus(e.target.value)}
+                      className="w-full text-xs bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    >
+                      <option value="Completed">Completed</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Pending From Client">Pending From Client</option>
+                      <option value="Not Started">Not Started</option>
+                    </select>
+                  </div>
+
+                  {/* Start Time & End Time buttons */}
+                  <div className="grid grid-cols-2 gap-2.5 text-center">
+                    <div>
+                      <button
+                        onClick={startEffortTimer}
+                        disabled={isTimerRunning}
+                        className="btn-single-moving btn-single-moving-solid w-full px-3 py-2.5 rounded-full text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer"
+                        style={
+                          {
+                            '--c-base': '#16A34A',
+                            '--c-light': '#86EFAC',
+                            '--c-dark': '#15803D',
+                          } as React.CSSProperties
+                        }
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        <span>Start Time</span>
+                      </button>
+                      <p className="text-[10px] text-slate-500 mt-1 font-mono">Captured: {startTimeCapture}</p>
+                    </div>
+
+                    <div>
+                      <button
+                        onClick={stopEffortTimer}
+                        disabled={!isTimerRunning}
+                        className="btn-single-moving btn-single-moving-solid w-full px-3 py-2.5 rounded-full text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer"
+                        style={
+                          {
+                            '--c-base': '#EF4444',
+                            '--c-light': '#FCA5A5',
+                            '--c-dark': '#B91C1C',
+                          } as React.CSSProperties
+                        }
+                      >
+                        <Square className="w-3.5 h-3.5 fill-current" />
+                        <span>End Time</span>
+                      </button>
+                      <p className="text-[10px] text-slate-500 mt-1 font-mono">Captured: {endTimeCapture}</p>
+                    </div>
+                  </div>
+
+                  {/* Live Clock Display */}
+                  <div className="bg-[#1B365D] text-white font-mono text-xl font-black py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2.5 shadow-md border border-white/10 tracking-widest">
+                    <Clock className="w-4 h-4 text-emerald-400 animate-pulse" />
+                    <span>{formatTimer(timerSeconds)}</span>
+                  </div>
+
+                  {/* Add Efforts Textarea */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Operational Notes</label>
+                    <textarea
+                      rows={2}
+                      value={effortNotes}
+                      onChange={(e) => setEffortNotes(e.target.value)}
+                      placeholder="Add efforts or status update..."
+                      className="w-full text-xs bg-white border border-[#EAE6DD] rounded-xl p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleSaveEffort}
+                    className="btn-single-moving btn-single-moving-solid w-full py-2.5 rounded-full text-xs font-extrabold text-white shadow-xs cursor-pointer"
+                    style={
+                      {
+                        '--c-base': '#1E3A8A',
+                        '--c-light': '#3B82F6',
+                        '--c-dark': '#172554',
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span>Update</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Lower Section: Document Management */}
+              <div className="pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4">
+                    <h5 className="font-bold text-[#1B365D] mb-2 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Send Documents</span>
+                    </h5>
+                    <div className="p-3 bg-white border border-[#EAE6DD] rounded-xl text-[11px] text-slate-500">
+                      No sent documents yet.
+                    </div>
+                  </div>
+
+                  <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4">
+                    <h5 className="font-bold text-[#1B365D] mb-2 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Received Documents</span>
+                    </h5>
+                    <div className="p-3 bg-white border border-[#EAE6DD] rounded-xl text-[11px] text-slate-700 font-medium">
+                      PAN Card, Aadhaar, Bank Statement
+                    </div>
+                  </div>
+
+                  <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4">
+                    <h5 className="font-bold text-[#1B365D] mb-2 flex items-center gap-1.5">
+                      <Upload className="w-3.5 h-3.5 text-purple-600" />
+                      <span>Upload Documents</span>
+                    </h5>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Document Name..."
+                        value={docNameInput}
+                        onChange={(e) => setDocNameInput(e.target.value)}
+                        className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-1.5 text-xs focus:outline-none"
+                      />
+                      <input type="file" className="text-[11px] text-slate-500" />
+                      <button
+                        onClick={() => {
+                          if (docNameInput) {
+                            setUploadedDocs([...uploadedDocs, { name: docNameInput, date: new Date().toLocaleDateString() }]);
+                            setDocNameInput('');
+                            alert('Document uploaded successfully.');
+                          }
+                        }}
+                        className="btn-single-moving btn-single-moving-solid w-full py-2 rounded-full text-xs font-bold text-white cursor-pointer"
+                        style={
+                          {
+                            '--c-base': '#1F2937',
+                            '--c-light': '#4B5563',
+                            '--c-dark': '#111827',
+                          } as React.CSSProperties
+                        }
+                      >
+                        <span>Upload</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── ASSIGN TASK TO MODAL (Website Clean UI Style) ─── */}
+      {assignModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-sm w-full animate-scale-in">
+            {/* Signature Top Multicolor Strip */}
+            <div className="h-1 bg-multicolor" />
+
+            <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-[#1B365D] text-white flex items-center justify-center">
+                  <UserCheck className="w-3.5 h-3.5 text-white" />
+                </div>
+                <h3 className="font-extrabold text-sm text-[#1B365D]">Assign Task To</h3>
+              </div>
+              <button
+                onClick={() => setAssignModalOpen(false)}
+                className="w-7 h-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveStatus} className="space-y-3.5 text-xs">
+            <div className="p-5 space-y-4 text-xs">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Select New Milestone Stage</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">Select User</label>
                 <select
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(Number(e.target.value))}
-                  className="input text-xs font-semibold"
+                  value={assignUser}
+                  onChange={(e) => setAssignUser(e.target.value)}
+                  className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                 >
-                  <option value={1}>1. Documents Pending</option>
-                  <option value={2}>2. Verification in Progress</option>
-                  <option value={3}>3. Govt Filing Preparation</option>
-                  <option value={4}>4. Submitted on Government Portal (SRN Generated)</option>
-                  <option value={5}>5. Government Approval Received</option>
-                  <option value={6}>6. Certificate Delivered & Completed</option>
+                  <option value="Avinash Mate">Avinash Mate</option>
+                  <option value="Swarupa Patwardhan">Swarupa Patwardhan</option>
+                  <option value="Ganesh Nikam">Ganesh Nikam</option>
+                  <option value="Kailas Gadekar">Kailas Gadekar</option>
+                  <option value="Netra Divekar">Netra Divekar</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Officer Remarks & Portal Filing Notes
-                </label>
-                <textarea
-                  rows={3}
-                  value={milestoneRemarks}
-                  onChange={(e) => setMilestoneRemarks(e.target.value)}
-                  placeholder="e.g. SPICe+ Part B filed on MCA V3 portal with SRN #F9912034. Awaiting ROC approval."
-                  className="input text-xs"
-                  required
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">Due Date</label>
+                <input
+                  type="date"
+                  value={assignDueDate}
+                  onChange={(e) => setAssignDueDate(e.target.value)}
+                  className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-outline btn-sm">
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary btn-sm">
-                  Commit Stage to DB
+              <div className="pt-2">
+                <button
+                  onClick={handleAssignSave}
+                  className="btn-single-moving btn-single-moving-solid w-full py-2.5 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                  style={
+                    {
+                      '--c-base': '#EF4444',
+                      '--c-light': '#FCA5A5',
+                      '--c-dark': '#B91C1C',
+                    } as React.CSSProperties
+                  }
+                >
+                  <span>Assign</span>
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

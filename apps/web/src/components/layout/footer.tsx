@@ -29,6 +29,7 @@ const footerColumns = {
   company: [
     { label: 'About ETaxwala', to: '/about' },
     { label: 'Careers', to: '/careers' },
+    { label: 'Official Bank Accounts & UPI', to: '/pay' },
     { label: 'Knowledge Hub & Blog', to: '/blog' },
     { label: 'Legal Hubs & Offices', to: '/contact' },
     { label: 'Book CA Consultation', to: '/appointment' },
@@ -112,7 +113,7 @@ export default function Footer() {
             </Link>
             
             <p className="text-xs text-slate-600 leading-relaxed max-w-sm">
-              ETaxwala Financial Services Pvt Ltd is India’s modern institutional legal, tax, and compliance platform. Advised by senior Chartered Accountants, Company Secretaries, and Corporate Advocates.
+              ETaxwala Business Solution Pvt Ltd is India’s modern institutional legal, tax, and compliance platform. Advised by senior Chartered Accountants, Company Secretaries, and Corporate Advocates.
             </p>
 
             <div className="space-y-2 pt-2 text-xs">
@@ -190,7 +191,7 @@ export default function Footer() {
       {/* ── Bottom Copyright & Statutory Disclaimer ── */}
       <div className="border-t border-[#EAE6DD] py-6 bg-[#FAF9F5] text-[11px] text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} ETaxwala Financial Services Pvt Ltd. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} ETaxwala Business Solution Pvt Ltd. All rights reserved.</p>
           <p className="text-slate-400 text-center sm:text-right max-w-xl">
             Disclaimer: ETaxwala is a technology platform that connects businesses with independent Chartered Accountants, Advocates, and Company Secretaries.
           </p>

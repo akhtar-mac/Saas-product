@@ -156,7 +156,7 @@ export default function ServiceDetailPage() {
           category: category?.name || service.category,
           provider: {
             '@type': 'Organization',
-            name: 'ETaxwala Business Solutions Pvt Ltd',
+            name: 'ETaxwala Business Solution Pvt Ltd',
             url: 'https://etaxwala.com',
             telephone: '080-6902-9999',
           },

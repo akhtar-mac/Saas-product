@@ -23,7 +23,7 @@ const legalDocs: Record<string, LegalSection> = {
       {
         heading: '1. Acceptance of Terms',
         content: [
-          'Welcome to ETaxwala. These Terms of Service constitute a legally binding agreement between you and ETaxwala Business Solutions Private Limited.',
+          'Welcome to ETaxwala. These Terms of Service constitute a legally binding agreement between you and ETaxwala Business Solution Pvt Ltd.',
           'By accessing our website (etaxwala.com), engaging our professional services, or signing up on our client portal, you confirm that you have read, understood, and agree to be bound by these terms.',
         ],
       },
@@ -146,7 +146,7 @@ export default function LegalPage() {
     <>
       <SEO
         title={`${doc.title} | ETaxwala Legal & Compliance`}
-        description={`Read the official ${doc.title} for ETaxwala Business Solutions. Understand your consumer rights, data privacy protections, and statutory guidelines.`}
+        description={`Read the official ${doc.title} for ETaxwala Business Solution Pvt Ltd. Understand your consumer rights, data privacy protections, and statutory guidelines.`}
         url={`/legal/${activeKey}`}
       />
 

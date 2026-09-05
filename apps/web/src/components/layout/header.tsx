@@ -79,6 +79,7 @@ const navDropdowns: NavItem[] = [
     label: 'Consultation',
     items: [
       { label: '1-on-1 Chartered Accountant Meeting', to: '/appointment', badge: 'Online' },
+      { label: 'Direct Bank & UPI Payment', to: '/pay', badge: '10 Banks' },
       { label: 'Virtual CFO Services', to: '/services/consultancy/cfo-services' },
       { label: 'FPC Farmer Producer Training', to: '/fpc-training', badge: '🌾 Agri' },
       { label: 'Detailed Project Report (DPR)', to: '/services/taxation/dpr' },

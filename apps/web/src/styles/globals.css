@@ -146,7 +146,7 @@
   gap: 0.45rem;
   cursor: pointer;
   overflow: hidden;
-  z-index: 1;
+  isolation: isolate;
   border: none;
   border-radius: 0.75rem;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -191,7 +191,7 @@
   content: "";
   position: absolute;
   inset: -4px;
-  z-index: 0;
+  z-index: -2;
   background: conic-gradient(
     from 0deg,
     #EAE6DD         0deg,
@@ -254,7 +254,7 @@
   inset: 2px;
   background: var(--gbtn-bg-inner);
   border-radius: 0.6rem;
-  z-index: 1;
+  z-index: -1;
 }
 
 .btn-galaxy > *,
@@ -944,6 +944,126 @@
   100% {
     background-position: 250% 50%;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CRM SINGLE-COLOR MOVING OUTLINE PILLS & BUTTONS
+   Exact match to the landing page animated pill, but using single-color flows!
+   ═══════════════════════════════════════════════════════════════ */
+.kpi-single-moving,
+.btn-single-moving {
+  --c-base: #1B365D;
+  --c-light: #60A5FA;
+  --c-dark: #0F172A;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    var(--c-base) 0%,
+    var(--c-light) 35%,
+    var(--c-base) 70%,
+    var(--c-dark) 85%,
+    var(--c-base) 100%
+  );
+  background-size: 250% 100%;
+  animation: panda-border-flow 3.2s linear infinite;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  overflow: visible;
+  isolation: isolate;
+  user-select: none;
+}
+
+.kpi-single-moving:hover,
+.btn-single-moving:hover {
+  transform: translateY(-1.5px) scale(1.02);
+}
+
+.kpi-single-moving:active,
+.btn-single-moving:active {
+  transform: scale(0.97);
+}
+
+.kpi-single-moving > *,
+.btn-single-moving > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Inner white mask (keeps interior crisp, clean and readable like Image 2) */
+.kpi-single-moving::before,
+.btn-single-moving::before {
+  content: "";
+  position: absolute;
+  inset: 1.8px;
+  background: #FFFFFF;
+  border-radius: 9999px;
+  z-index: 1;
+  transition: background-color 0.25s ease, opacity 0.25s ease;
+}
+
+.btn-single-moving-solid::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: var(--c-base, #1B365D);
+  border-radius: 9999px;
+  z-index: 1;
+  transition: background-color 0.25s ease;
+}
+
+.btn-single-moving-solid:hover::before {
+  background: var(--c-dark, #0F172A);
+}
+
+.btn-single-moving-solid > * {
+  color: #FFFFFF !important;
+}
+
+.kpi-single-moving:hover::before,
+.btn-single-moving:hover::before {
+  background: #FFFDF9;
+}
+
+/* Active / selected status pill */
+.kpi-single-moving.active::before {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* Ambient glow in matching single color */
+.kpi-single-moving::after,
+.btn-single-moving::after {
+  content: "";
+  position: absolute;
+  inset: 0px;
+  background: linear-gradient(
+    90deg,
+    var(--c-base) 0%,
+    var(--c-light) 35%,
+    var(--c-base) 70%,
+    var(--c-dark) 85%,
+    var(--c-base) 100%
+  );
+  background-size: 250% 100%;
+  animation: panda-border-flow 3.2s linear infinite;
+  border-radius: 9999px;
+  opacity: 0.3;
+  filter: blur(8px);
+  z-index: -1;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.kpi-single-moving:hover::after,
+.btn-single-moving:hover::after {
+  opacity: 0.85;
+  filter: blur(12px);
+  animation-duration: 1.8s;
 }
 
 /* ═══════════════════════════════════════════════════════════════

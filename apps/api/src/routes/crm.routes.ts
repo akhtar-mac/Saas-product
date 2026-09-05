@@ -651,7 +651,7 @@ router.get('/settings', (_req, res) => {
   res.json({
     success: true,
     data: {
-      companyName: 'ETaxwala Financial Services Pvt Ltd',
+      companyName: 'ETaxwala Business Solution Pvt Ltd',
       phone: '080-6902-9999',
       supportEmail: 'support@etaxwala.com',
       workingHours: '9:30 AM - 6:30 PM (Mon - Sat)',

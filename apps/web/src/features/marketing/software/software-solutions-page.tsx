@@ -68,7 +68,7 @@ const capabilities = [
       'Bridge the gap between accounting and engineering. We build automated billing systems that handle recurrent subscriptions, GST tax calculation, automated E-Way bill generation, and bank payout reconciliation.',
     features: [
       'Automated GST E-Invoice & E-Way Bill Generation',
-      'Payment Gateway Integration (Razorpay, Cashfree, Stripe)',
+      'Corporate Banking & UPI Payment Workflows (Direct Bank APIs, Dynamic QR, Multi-Bank Reconciliations)',
       'Automated Bank Statement Parsing & Reconciliation',
       'Recurring Subscription & Dunning Management',
       'Government Portal & Sandbox API Connectors',

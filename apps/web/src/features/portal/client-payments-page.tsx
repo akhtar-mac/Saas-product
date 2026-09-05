@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   CreditCard,
   Download,
@@ -8,9 +8,15 @@ import {
   ShieldCheck,
   FileText,
   AlertCircle,
+  Building2,
+  QrCode,
 } from 'lucide-react';
+import DirectBankPaymentModal from '@/components/payment/direct-bank-payment-modal';
+import { OFFICIAL_COMPANY_NAME, OFFICIAL_BANK_ACCOUNTS, OFFICIAL_UPI_DETAILS } from '@/lib/constants/banking';
 
 export default function ClientPaymentsPage() {
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
   const invoices = [
     {
       id: 'INV-2026-0891',
@@ -20,7 +26,7 @@ export default function ClientPaymentsPage() {
       tax: 2969.82,
       total: 19468.82,
       status: 'Paid',
-      method: 'Razorpay UPI / NetBanking',
+      method: 'HDFC Bank NEFT / Direct Remittance',
       receiptUrl: '#',
     },
     {
@@ -31,7 +37,7 @@ export default function ClientPaymentsPage() {
       tax: 179.82,
       total: 1178.82,
       status: 'Paid',
-      method: 'PhonePe QR',
+      method: 'Official UPI QR Code',
       receiptUrl: '#',
     },
     {
@@ -42,7 +48,7 @@ export default function ClientPaymentsPage() {
       tax: 89.82,
       total: 588.82,
       status: 'Paid',
-      method: 'Credit Card',
+      method: 'ICICI Bank IMPS',
       receiptUrl: '#',
     },
   ];
@@ -50,7 +56,7 @@ export default function ClientPaymentsPage() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#EAE6DD] shadow-2xs">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-display font-bold text-brand-navy">
@@ -59,13 +65,26 @@ export default function ClientPaymentsPage() {
             <span className="badge badge-gold">GST Invoicing</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Download GST-compliant tax invoices, view past transaction receipts & input tax credit (ITC) ledgers.
+            Official Beneficiary: <strong className="text-slate-800">{OFFICIAL_COMPANY_NAME}</strong> • 10 Verified Bank Accounts &amp; Instant UPI QR
           </p>
         </div>
 
-        <span className="badge badge-green text-xs py-1.5 px-3">
-          100% Payments Clear
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsPaymentModalOpen(true)}
+            className="btn-single-moving btn-single-moving-solid py-2 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer flex items-center gap-1.5"
+            style={
+              {
+                '--c-base': '#1B365D',
+                '--c-light': '#3B82F6',
+                '--c-dark': '#0F172A',
+              } as React.CSSProperties
+            }
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            <span>Pay via Bank / UPI QR</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -146,6 +165,13 @@ export default function ClientPaymentsPage() {
           </table>
         </div>
       </div>
+
+      <DirectBankPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        serviceTitle="Outstanding Invoice / Statutory Filing"
+        amount={16499}
+      />
     </div>
   );
 }

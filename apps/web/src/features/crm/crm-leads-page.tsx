@@ -1,690 +1,1603 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  Users,
   Search,
-  Filter,
-  PhoneCall,
-  MessageCircle,
   Plus,
-  Send,
-  Download,
-  Calendar,
-  UserCheck,
-  CheckCircle2,
-  Clock,
-  X,
-  MapPin,
-  RefreshCw,
-  Eye,
-  Columns3,
   Trash2,
-  UserCog,
+  Edit3,
+  Eye,
+  FileText,
+  Phone,
+  Calendar,
+  Check,
   ChevronDown,
-  Trophy,
-  Award,
+  X,
+  HelpCircle,
+  Clock,
+  Info,
+  Building,
+  User,
+  ArrowRight,
+  Upload,
 } from 'lucide-react';
 
+interface Lead {
+  id: number;
+  date: string;
+  name: string;
+  contact: string;
+  email?: string;
+  state: string;
+  city: string;
+  service: string;
+  addedBy: string;
+  isAssign: boolean;
+  leadScore?: string;
+  leadSource?: string;
+  fDate?: string;
+  assignTo?: string;
+  assignDate?: string;
+  status: string;
+  remarks?: { staff: string; note: string; date: string; source: string }[];
+  note?: string;
+}
+
+const INITIAL_LEADS: Lead[] = [
+  {
+    id: 1,
+    date: '2026-09-04',
+    name: 'Suresh Nimbalkar',
+    contact: '9822440789',
+    email: 'suresh.n@gmail.com',
+    state: 'Maharashtra',
+    city: 'Daund',
+    service: 'Multistate Registration',
+    addedBy: 'Facebook',
+    isAssign: false,
+    leadScore: '85%',
+    leadSource: 'ETaxwala',
+    fDate: '2026-07-01',
+    assignTo: 'Krushna Shinde',
+    assignDate: '2026-09-04 10:02:17',
+    status: 'New',
+    note: 'Interested in Multistate Cooperative Society setup for sugar factory area.',
+    remarks: [
+      { staff: 'Krushna Shinde', note: 'DONE', date: '20/7/2026, 6:52:13 pm', source: 'etaxwala' },
+      { staff: 'Krushna Shinde', note: 'CALL NOT REC...', date: '11/7/2026, 5:31:32 pm', source: 'etaxwala' },
+    ],
+  },
+  {
+    id: 2,
+    date: '2026-09-04',
+    name: 'Ramesh pandurang Nakhate',
+    contact: '7588090566',
+    email: 'nakhate.ramesh@gmail.com',
+    state: 'Maharashtra',
+    city: 'Karanja',
+    service: 'Multistate Registration',
+    addedBy: 'Facebook',
+    isAssign: false,
+    leadScore: '70%',
+    leadSource: 'ETaxwala',
+    fDate: '2026-07-04',
+    assignTo: 'Krushna Shinde',
+    assignDate: '2026-09-04 10:02:17',
+    status: 'New',
+    remarks: [
+      { staff: 'Krushna Shinde', note: 'CALL NOT REC...', date: '9/7/2026, 4:11:34 pm', source: 'etaxwala' },
+    ],
+  },
+  {
+    id: 3,
+    date: '2026-09-04',
+    name: 'Adv Kailas Khandbahale',
+    contact: '9922624141',
+    email: 'adv.kailas@yahoo.com',
+    state: 'Maharashtra',
+    city: 'Nashik',
+    service: 'Multistate Registration',
+    addedBy: 'Facebook',
+    isAssign: false,
+    leadScore: '92%',
+    leadSource: 'ETaxwala',
+    fDate: '2026-07-20',
+    assignTo: 'Krushna Shinde',
+    assignDate: '2026-09-04 10:02:17',
+    status: 'New',
+    remarks: [
+      { staff: 'Krushna Shinde', note: 'HE SAID COME TO OFFICE', date: '7/7/2026, 2:43:01 pm', source: 'etaxwala' },
+    ],
+  },
+  {
+    id: 4,
+    date: '2026-09-04',
+    name: 'Mahesh Solanke',
+    contact: '9767942942',
+    email: 'solankem@gmail.com',
+    state: 'Maharashtra',
+    city: 'Beed',
+    service: 'Multistate Registration',
+    addedBy: 'Facebook',
+    isAssign: false,
+    leadScore: '60%',
+    leadSource: 'ETaxwala',
+    fDate: '2026-08-01',
+    assignTo: 'Krushna Shinde',
+    assignDate: '2026-09-04 10:02:17',
+    status: 'New',
+    remarks: [
+      { staff: 'Krushna Shinde', note: 'ASK FOR STATEMENTS...', date: '17/6/2026, 7:20:02 pm', source: 'etaxwala' },
+    ],
+  },
+  {
+    id: 5,
+    date: '2026-09-04',
+    name: 'Akash Sonar',
+    contact: '8378889970',
+    email: 'akashsonar@gmail.com',
+    state: 'NA',
+    city: 'Malegaon',
+    service: 'Multistate Registration',
+    addedBy: 'Facebook',
+    isAssign: false,
+    leadScore: '50%',
+    leadSource: 'ETaxwala',
+    fDate: 'No Date',
+    assignTo: 'Not Assigned',
+    assignDate: '2026-09-04 00:00:00',
+    status: 'New',
+  },
+  {
+    id: 6,
+    date: '2026-09-04',
+    name: 'Babu rane',
+    contact: '8425900269',
+    email: 'baburane@gmail.com',
+    state: 'Maharashtra',
+    city: 'Mumbai',
+    service: 'Multistate Registration',
+    addedBy: 'Facebook',
+    isAssign: false,
+    leadScore: '75%',
+    leadSource: 'ETaxwala',
+    fDate: '2026-07-20',
+    assignTo: 'Krushna Shinde',
+    assignDate: '2026-09-04 10:02:17',
+    status: 'New',
+  },
+  {
+    id: 7,
+    date: '2026-09-04',
+    name: 'फुलारी',
+    contact: '7218881000',
+    email: 'fulari@gmail.com',
+    state: 'Maharashtra',
+    city: 'Solapur',
+    service: 'Multistate Registration',
+    addedBy: 'Facebook',
+    isAssign: false,
+    leadScore: '80%',
+    leadSource: 'ETaxwala',
+    fDate: 'No Date',
+    assignTo: 'Not Assigned',
+    assignDate: '2026-09-04 00:00:00',
+    status: 'New',
+  },
+  {
+    id: 8,
+    date: '2026-09-04',
+    name: 'gurudatt traders',
+    contact: '8884390121',
+    email: 'gurudatt@gmail.com',
+    state: 'Karnataka',
+    city: 'Kagwad',
+    service: 'Multistate Registration',
+    addedBy: 'Facebook',
+    isAssign: false,
+    leadScore: '65%',
+    leadSource: 'ETaxwala',
+    fDate: 'No Date',
+    assignTo: 'Not Assigned',
+    assignDate: '2026-09-04 00:00:00',
+    status: 'New',
+  },
+  {
+    id: 9,
+    date: '2026-09-04',
+    name: 'Tushar Tapele 2891',
+    contact: '9764361576',
+    email: 'tushar2891@gmail.com',
+    state: 'Maharashtra',
+    city: 'Magalvedha',
+    service: 'Multistate Registration',
+    addedBy: 'Facebook',
+    isAssign: false,
+    leadScore: '55%',
+    leadSource: 'ETaxwala',
+    fDate: 'No Date',
+    assignTo: 'Not Assigned',
+    assignDate: '2026-09-04 00:00:00',
+    status: 'New',
+  },
+  {
+    id: 10,
+    date: '2026-09-04',
+    name: 'ANTKALA BHAURAV JADHAV',
+    contact: '8080085328',
+    email: 'antkala@gmail.com',
+    state: 'Maharashtra',
+    city: 'NA',
+    service: 'Producer Company Audit and Compliances',
+    addedBy: 'Krushna Shinde',
+    isAssign: true,
+    leadScore: '88%',
+    leadSource: 'ETaxwala',
+    fDate: '2026-07-20',
+    assignTo: 'Krushna Shinde',
+    assignDate: '2026-09-04 10:02:17',
+    status: 'New',
+    note: 'Required FPC annual compliances and auditor appointment documentation.',
+    remarks: [
+      { staff: 'Krushna Shinde', note: 'DONE', date: '20/7/2026, 6:52:13 pm', source: 'etaxwala' },
+      { staff: 'Krushna Shinde', note: 'CALL NOT REC...', date: '11/7/2026, 5:31:32 pm', source: 'etaxwala' },
+      { staff: 'Krushna Shinde', note: 'CALL NOT REC...', date: '9/7/2026, 4:11:34 pm', source: 'etaxwala' },
+      { staff: 'Krushna Shinde', note: 'HE SAID COME TO OFFICE', date: '7/7/2026, 2:43:01 pm', source: 'etaxwala' },
+      { staff: 'Krushna Shinde', note: 'ASK FOR STATEMENTS...', date: '17/6/2026, 7:20:02 pm', source: 'etaxwala' },
+      { staff: 'Krushna Shinde', note: 'Follow-up: CALL BACK', date: '18/7/2026, 6:28:22 pm', source: 'etaxwala' },
+      { staff: 'Krushna Shinde', note: 'Follow-up: CALL BACK', date: '14/7/2026, 5:23:01 pm', source: 'etaxwala' },
+      { staff: 'Krushna Shinde', note: 'Follow-up: CALL BACK', date: '13/7/2026, 6:20:13 pm', source: 'etaxwala' },
+      { staff: 'Krushna Shinde', note: 'Follow-up: CALL BACK', date: '11/7/2026, 5:31:41 pm', source: 'etaxwala' },
+    ],
+  },
+];
+
+const STATUS_KPIS = [
+  { id: 'all', label: 'Total', count: '16680', cBase: '#1B365D', cLight: '#60A5FA', cDark: '#0F172A' },
+  { id: 'New', label: 'New', count: '331', cBase: '#10B981', cLight: '#6EE7B7', cDark: '#047857' },
+  { id: 'Not Interested', label: 'Not Intrested', count: '11337', cBase: '#EF4444', cLight: '#FCA5A5', cDark: '#B91C1C' },
+  { id: 'Prospect', label: 'Prospect', count: '2068', cBase: '#059669', cLight: '#34D399', cDark: '#065F46' },
+  { id: 'Interested', label: 'Intrested', count: '434', cBase: '#06B6D4', cLight: '#67E8F9', cDark: '#0E7490' },
+  { id: 'Quotation', label: 'Quotation', count: '76', cBase: '#7C3AED', cLight: '#C4B5FD', cDark: '#5B21B6' },
+  { id: 'Hot', label: 'Hot', count: '176', cBase: '#EA580C', cLight: '#FDBA74', cDark: '#9A3412' },
+  { id: 'Meetings', label: 'Meetings', count: '145', cBase: '#D97706', cLight: '#FDE68A', cDark: '#92400E' },
+  { id: 'Customer', label: 'Customer', count: '486', cBase: '#8B5CF6', cLight: '#DDD6FE', cDark: '#6D28D9' },
+  { id: 'Not Connected', label: 'Not Connected', count: '1594', cBase: '#6366F1', cLight: '#A5B4FC', cDark: '#4338CA' },
+  { id: 'Negotiation', label: 'Negotiation', count: '33', cBase: '#A855F7', cLight: '#E9D5FF', cDark: '#7E22CE' },
+  { id: 'Todays Followup', label: 'Todays Followup', count: '171', cBase: '#4F46E5', cLight: '#818CF8', cDark: '#3730A3' },
+  { id: 'Tomorrows Followup', label: 'Tomorrows Followup', count: '160', cBase: '#3730A3', cLight: '#6366F1', cDark: '#1E1B4B' },
+  { id: 'DayAfterTomorrows', label: 'DayAfterTomorrows', count: '3', cBase: '#312E81', cLight: '#4F46E5', cDark: '#0F172A' },
+];
+
 export default function CrmLeadsPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [sourceFilter, setSourceFilter] = useState('ALL');
-  const [isCallModalOpen, setIsCallModalOpen] = useState(false);
-  const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
-  const [selectedLead, setSelectedLead] = useState<any | null>(null);
-  const [callRemarks, setCallRemarks] = useState('');
-  const [callStatus, setCallStatus] = useState('1');
-  const [isLoading, setIsLoading] = useState(true);
-  const [leads, setLeads] = useState<any[]>([]);
-  const [totalCount, setTotalCount] = useState(17281);
-  const [page, setPage] = useState(1);
+  const location = useLocation();
+  const navigate = useNavigate();
 
+  // Mode: 'list' (Lead List) vs 'details' (Leads Details) vs 'inquiry' (Customer Inquiries)
+  const isDetailsView = location.pathname.includes('details') || location.search.includes('view=details');
+  const isInquiryView = location.pathname.includes('inquiry') || location.search.includes('view=inquiry');
+
+  const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS);
+  const [activeStatusKpi, setActiveStatusKpi] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [pageSize, setPageSize] = useState(10);
+  const [assignStaff, setAssignStaff] = useState('Assign Leads To');
+  const [statusDropdown, setStatusDropdown] = useState('Status');
 
-  // Service ID → Name map (fetched once)
-  const [serviceMap, setServiceMap] = useState<Record<string, string>>({});
+  // Modals
+  const [detailsModalLead, setDetailsModalLead] = useState<Lead | null>(
+    new URLSearchParams(location.search).get('modal') === '1' ? INITIAL_LEADS[0] : null
+  );
+  const [detailsActiveTab, setDetailsActiveTab] = useState<'client' | 'status' | 'followup' | 'services'>('client');
+  const [remarksModalLead, setRemarksModalLead] = useState<Lead | null>(
+    new URLSearchParams(location.search).get('remarks') === '1' ? INITIAL_LEADS[0] : null
+  );
+  const [addLeadModalOpen, setAddLeadModalOpen] = useState(
+    new URLSearchParams(location.search).get('add') === '1'
+  );
 
+  // Form states inside Details Modal
+  const [editStatus, setEditStatus] = useState('Interested');
+  const [editRemark, setEditRemark] = useState('');
+  const [followupDate, setFollowupDate] = useState('2026-09-05');
+  const [followupTime, setFollowupTime] = useState('11:00');
+  const [followupRemark, setFollowupRemark] = useState('');
+  const [selectedAdditionalService, setSelectedAdditionalService] = useState('Section 8 Company NGO Registration');
+  const [additionalServices, setAdditionalServices] = useState<string[]>([]);
+
+  // New lead form state
+  const [newLeadName, setNewLeadName] = useState('');
+  const [newLeadContact, setNewLeadContact] = useState('');
+  const [newLeadEmail, setNewLeadEmail] = useState('');
+  const [newLeadService, setNewLeadService] = useState('Multistate Registration');
+  const [newLeadState, setNewLeadState] = useState('Maharashtra');
+  const [newLeadCity, setNewLeadCity] = useState('');
+
+  // Fetch real leads from API if available
   useEffect(() => {
-    fetch('/v1/crm/services')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.success && Array.isArray(d.data)) {
-          const map: Record<string, string> = {};
-          d.data.forEach((s: any) => {
-            map[String(s.service_id)] = s.service_name;
-          });
-          setServiceMap(map);
+    fetch('/v1/crm/leads?limit=25')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data?.leads) && data.data.leads.length > 0) {
+          const mapped: Lead[] = data.data.leads.map((l: any, i: number) => ({
+            id: l.id || i + 1,
+            date: l.date?.split('T')[0] || '2026-09-04',
+            name: l.name || 'Client Lead',
+            contact: l.contact || '9876543210',
+            email: l.email || 'client@example.com',
+            state: l.state || 'Maharashtra',
+            city: l.city || 'Pune',
+            service: l.service || 'Multistate Registration',
+            addedBy: l.lead_source || 'Facebook',
+            isAssign: Boolean(l.assigned_to),
+            leadScore: '80%',
+            leadSource: 'ETaxwala',
+            fDate: l.followup_date || 'No Date',
+            assignTo: l.assigned_to ? `Staff #${l.assigned_to}` : 'Not Assigned',
+            assignDate: l.date?.split('T')[0] || '2026-09-04 10:00:00',
+            status: l.status || 'New',
+            note: l.note || '',
+            remarks: [],
+          }));
+          setLeads(mapped);
         }
       })
       .catch(() => {});
   }, []);
 
-  const resolveServiceName = (raw: any): string => {
-    if (!raw) return '—';
-    const key = String(raw).trim();
-    // If it's a numeric key, look up in serviceMap
-    if (/^\d+$/.test(key)) {
-      return serviceMap[key] || `Service #${key}`;
-    }
-    return key; // Already a name string
-  };
-
-
-  // Column visibility
-  const [colDropOpen, setColDropOpen] = useState(false);
-  const colDropRef = useRef<HTMLDivElement>(null);
-  const [visibleCols, setVisibleCols] = useState({
-    city: true,
-    contact: true,
-    email: true,
-    service: true,
-    source: true,
-    status: true,
-  });
-  type ColKey = keyof typeof visibleCols;
-  const COL_LABELS: Record<ColKey, string> = {
-    city: 'Lead / City', contact: 'Contact Phone', email: 'Email',
-    service: 'Service', source: 'Source', status: 'Status',
-  };
-
-  // Close col dropdown on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (colDropRef.current && !colDropRef.current.contains(e.target as Node)) {
-        setColDropOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  // Export CSV
-  const exportToCSV = () => {
-    const rows = [
-      ['Name', 'City', 'Contact', 'Email', 'Service', 'Source', 'Status'],
-      ...leads.map((l) => [
-        l.name ?? '',
-        l.city ?? '',
-        l.contact ?? '',
-        l.email ?? '',
-        l.service ?? '',
-        l.source ?? '',
-        l.lead_type === 0 ? 'New' : l.lead_type === 1 ? 'Assigned' : 'Active',
-      ]),
-    ];
-    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `etaxwala-leads-page${page}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Bulk helpers
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-  const toggleAll = () => {
+  const toggleSelectAll = () => {
     if (selectedIds.size === leads.length) {
       setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(leads.map((l) => l.id)));
     }
   };
-  const clearSelection = () => setSelectedIds(new Set());
 
-  const [newLeadName, setNewLeadName] = useState('');
-  const [newLeadContact, setNewLeadContact] = useState('');
-  const [newLeadEmail, setNewLeadEmail] = useState('');
-  const [newLeadService, setNewLeadService] = useState('Private Limited Company Registration');
-  const [newLeadCity, setNewLeadCity] = useState('Pune');
-  const [newLeadSource, setNewLeadSource] = useState('Direct Inflow');
-
-  const fetchLeads = () => {
-    setIsLoading(true);
-    const query = new URLSearchParams({
-      page: String(page),
-      limit: '50',
-      ...(searchTerm && { search: searchTerm }),
-      ...(statusFilter !== 'ALL' && { status: statusFilter }),
-      ...(sourceFilter !== 'ALL' && { source: sourceFilter }),
-    });
-
-    fetch(`/v1/crm/leads?${query.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.success && Array.isArray(data.data)) {
-          setLeads(data.data);
-          if (data.pagination?.total) {
-            setTotalCount(data.pagination.total);
-          }
-        }
-      })
-      .catch((err) => console.error('Error loading leads:', err))
-      .finally(() => setIsLoading(false));
+  const toggleSelect = (id: number) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
   };
 
-  useEffect(() => {
-    fetchLeads();
-  }, [page, statusFilter, sourceFilter]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    fetchLeads();
-  };
-
-  const handleOpenCallModal = (lead: any) => {
-    setSelectedLead(lead);
-    setIsCallModalOpen(true);
-  };
-
-  const handleSaveCall = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedLead) return;
-
-    try {
-      await fetch('/v1/crm/calls/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lead_id: selectedLead.id,
-          caller_id: 1,
-          status: Number(callStatus),
-          remarks: callRemarks,
-          contact: selectedLead.contact,
-        }),
-      });
-      alert('✅ Call outcome saved to database successfully!');
-    } catch (err) {
-      console.error('Failed to log call:', err);
+  const handleBulkAssign = () => {
+    if (assignStaff === 'Assign Leads To' || selectedIds.size === 0) {
+      alert('Please select leads and choose a staff member to assign.');
+      return;
     }
-
-    setIsCallModalOpen(false);
-    setCallRemarks('');
+    setLeads((prev) =>
+      prev.map((l) =>
+        selectedIds.has(l.id)
+          ? { ...l, assignTo: assignStaff, isAssign: true, assignDate: '2026-09-05 16:50:00' }
+          : l
+      )
+    );
+    alert(`Assigned ${selectedIds.size} leads to ${assignStaff}.`);
+    setSelectedIds(new Set());
   };
 
-  const handleCreateLead = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await fetch('/v1/crm/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newLeadName,
-          contact: newLeadContact,
-          email: newLeadEmail,
-          service: newLeadService,
-          city: newLeadCity,
-          source: newLeadSource,
-        }),
-      });
-      const data = await res.json();
-      if (data?.success) {
-        alert('🎉 New lead saved into PostgreSQL database!');
-        setIsAddLeadModalOpen(false);
-        setNewLeadName('');
-        setNewLeadContact('');
-        setNewLeadEmail('');
-        fetchLeads();
-      }
-    } catch (err) {
-      console.error('Failed to create lead:', err);
+  const handleAddRemark = () => {
+    if (!editRemark.trim() || !detailsModalLead) return;
+    const newEntry = {
+      staff: 'Current Staff',
+      note: editRemark,
+      date: new Date().toLocaleString(),
+      source: 'etaxwala',
+    };
+    setLeads((prev) =>
+      prev.map((l) =>
+        l.id === detailsModalLead.id
+          ? {
+              ...l,
+              status: editStatus,
+              remarks: [newEntry, ...(l.remarks || [])],
+            }
+          : l
+      )
+    );
+    setEditRemark('');
+    alert('Lead status and remark updated successfully!');
+  };
+
+  const handleAddFollowup = () => {
+    if (!followupRemark.trim() || !detailsModalLead) return;
+    const newEntry = {
+      staff: 'Current Staff',
+      note: `Follow-up (${followupDate} ${followupTime}): ${followupRemark}`,
+      date: new Date().toLocaleString(),
+      source: 'etaxwala',
+    };
+    setLeads((prev) =>
+      prev.map((l) =>
+        l.id === detailsModalLead.id
+          ? {
+              ...l,
+              fDate: followupDate,
+              remarks: [newEntry, ...(l.remarks || [])],
+            }
+          : l
+      )
+    );
+    setFollowupRemark('');
+    alert('Followup scheduled successfully!');
+  };
+
+  const handleAddService = () => {
+    if (selectedAdditionalService && !additionalServices.includes(selectedAdditionalService)) {
+      setAdditionalServices([...additionalServices, selectedAdditionalService]);
     }
   };
+
+  const handleCreateLead = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLeadName || !newLeadContact) {
+      alert('Name and Contact are required.');
+      return;
+    }
+    const created: Lead = {
+      id: Date.now(),
+      date: '2026-09-05',
+      name: newLeadName,
+      contact: newLeadContact,
+      email: newLeadEmail || 'NA@gmail.com',
+      state: newLeadState,
+      city: newLeadCity || 'NA',
+      service: newLeadService,
+      addedBy: 'Direct Add',
+      isAssign: false,
+      leadScore: '80%',
+      leadSource: 'ETaxwala',
+      fDate: 'No Date',
+      assignTo: 'Not Assigned',
+      assignDate: '2026-09-05 16:50:00',
+      status: 'New',
+      remarks: [],
+    };
+    setLeads([created, ...leads]);
+    setAddLeadModalOpen(false);
+    setNewLeadName('');
+    setNewLeadContact('');
+    setNewLeadEmail('');
+    setNewLeadCity('');
+    alert('New lead added successfully!');
+  };
+
+  const filteredLeads = leads.filter((l) => {
+    const matchesSearch =
+      l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      l.contact.includes(searchTerm) ||
+      l.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      l.city.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      !activeStatusKpi || activeStatusKpi === 'all'
+        ? true
+        : l.status.toLowerCase().replace(/\s+/g, '') === activeStatusKpi.toLowerCase().replace(/\s+/g, '');
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto font-sans">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-display font-bold text-brand-navy">
-              Lead Pipeline Management
-            </h1>
-            <span className="badge badge-gold font-mono">{totalCount.toLocaleString()} Live Leads</span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Search, filter by lead source/campaign, assign to telecallers & log live customer calls in PostgreSQL.
-          </p>
-        </div>
-
-        <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setIsAddLeadModalOpen(true)} className="btn btn-primary btn-sm">
-            <Plus className="w-3.5 h-3.5" /> + Add Manual Lead
+    <div className="space-y-4">
+      {/* View Switcher for Lead List vs Leads Details */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/crm/sales-manage-leads')}
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+              !isDetailsView && !isInquiryView
+                ? 'bg-[#003A66] text-white shadow-xs'
+                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            Lead List View
           </button>
-          <button onClick={exportToCSV} className="btn btn-outline btn-sm">
-            <Download className="w-3.5 h-3.5" /> Export CSV
+          <button
+            onClick={() => navigate('/crm/sales-manage-leads-details')}
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+              isDetailsView
+                ? 'bg-[#003A66] text-white shadow-xs'
+                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            Leads Details View
           </button>
-          <button onClick={fetchLeads} className="btn btn-outline btn-sm">
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh
+          <button
+            onClick={() => navigate('/crm/sales-manage-customer-inquiry')}
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+              isInquiryView
+                ? 'bg-[#003A66] text-white shadow-xs'
+                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            Customer Inquiries
           </button>
         </div>
       </div>
 
-      {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
-        <form onSubmit={handleSearch} className="relative w-full md:w-96">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by lead name, mobile (+91), email, or city..."
-            className="w-full bg-[#F7F8FA] border border-slate-200 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 focus:outline-none focus:border-brand-navy"
-          />
-        </form>
-
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(1);
-            }}
-            className="bg-[#F7F8FA] border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-brand-navy"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="0">New Leads</option>
-            <option value="1">Assigned</option>
-            <option value="2">In Progress</option>
-            <option value="3">Follow Up</option>
-            <option value="4">Converted / Closed</option>
-          </select>
-
-          <select
-            value={sourceFilter}
-            onChange={(e) => {
-              setSourceFilter(e.target.value);
-              setPage(1);
-            }}
-            className="bg-[#F7F8FA] border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-brand-navy"
-          >
-            <option value="ALL">All Sources</option>
-            <option value="Google Ads">Google Ads</option>
-            <option value="Website Inquiry">Website Inquiry</option>
-            <option value="Direct Referral">Direct Referral</option>
-            <option value="Udyomi Sub-brand">Udyami Kisan</option>
-            <option value="Sahakar Sub-brand">Sahakar Samriddhi</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Leads Table */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h3 className="font-display font-bold text-base text-slate-800">
-            Live Leads Queue ({leads.length} Showing on Page {page})
-          </h3>
-          <div className="flex items-center gap-2">
-            <span className="badge badge-navy">Connected to PostgreSQL `leads`</span>
-            {/* Column Visibility Dropdown */}
-            <div className="relative" ref={colDropRef}>
+      {/* Top Status KPI Badges (Single-Color Moving Outline Pills matching Explore button style) */}
+      {(isDetailsView || true) && (
+        <div className="space-y-2.5">
+          {/* Row 1 Badges (11 status pills) */}
+          <div className="flex flex-wrap items-center gap-2">
+            {STATUS_KPIS.slice(0, 11).map((kpi) => (
               <button
-                onClick={() => setColDropOpen((o) => !o)}
-                className="btn btn-outline btn-sm flex items-center gap-1.5"
-                id="col-visibility-btn"
+                key={kpi.id}
+                type="button"
+                onClick={() => setActiveStatusKpi(activeStatusKpi === kpi.id ? null : kpi.id)}
+                className={`kpi-single-moving py-1 px-3 transition-all ${
+                  activeStatusKpi === kpi.id ? 'active ring-2 ring-slate-800 scale-105 shadow-md' : 'shadow-2xs'
+                }`}
+                style={{
+                  '--c-base': kpi.cBase,
+                  '--c-light': kpi.cLight,
+                  '--c-dark': kpi.cDark,
+                } as React.CSSProperties}
+                title={`Filter leads by ${kpi.label}`}
               >
-                <Columns3 className="w-3.5 h-3.5" /> Columns <ChevronDown className="w-3 h-3" />
-              </button>
-              {colDropOpen && (
-                <div className="absolute right-0 top-full mt-1 z-30 bg-white rounded-xl border border-slate-200 shadow-lg p-3 w-48 space-y-1 animate-fade-in">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-2">Show / Hide Columns</p>
-                  {(Object.keys(visibleCols) as ColKey[]).map((col) => (
-                    <label key={col} className="flex items-center gap-2.5 px-1 py-1 rounded-lg hover:bg-slate-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={visibleCols[col]}
-                        onChange={() => setVisibleCols((prev) => ({ ...prev, [col]: !prev[col] }))}
-                        className="w-3.5 h-3.5 accent-brand-navy"
-                      />
-                      <span className="text-xs font-medium text-slate-700">{COL_LABELS[col]}</span>
-                    </label>
-                  ))}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-extrabold uppercase tracking-tight text-slate-800">
+                    {kpi.label}
+                  </span>
+                  <span
+                    className="text-[11px] font-mono font-bold px-1.5 py-0.2 rounded-full text-white shadow-2xs"
+                    style={{ background: kpi.cBase }}
+                  >
+                    {kpi.count}
+                  </span>
                 </div>
-              )}
+              </button>
+            ))}
+          </div>
+
+          {/* Row 2 Badges (Followup status pills) */}
+          <div className="flex flex-wrap items-center gap-2">
+            {STATUS_KPIS.slice(11).map((kpi) => (
+              <button
+                key={kpi.id}
+                type="button"
+                onClick={() => setActiveStatusKpi(activeStatusKpi === kpi.id ? null : kpi.id)}
+                className={`kpi-single-moving py-1 px-3 transition-all ${
+                  activeStatusKpi === kpi.id ? 'active ring-2 ring-slate-800 scale-105 shadow-md' : 'shadow-2xs'
+                }`}
+                style={{
+                  '--c-base': kpi.cBase,
+                  '--c-light': kpi.cLight,
+                  '--c-dark': kpi.cDark,
+                } as React.CSSProperties}
+                title={`Filter leads by ${kpi.label}`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-extrabold uppercase tracking-tight text-slate-800">
+                    {kpi.label}
+                  </span>
+                  <span
+                    className="text-[11px] font-mono font-bold px-1.5 py-0.2 rounded-full text-white shadow-2xs"
+                    style={{ background: kpi.cBase }}
+                  >
+                    {kpi.count}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Main Table Card */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        {/* Card Header & Exact Action Bar with Single-Color Moving Outlines */}
+        <div className="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-[#FCFCFD]">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* (+) Button */}
+            <button
+              onClick={() => setAddLeadModalOpen(true)}
+              className="btn-single-moving w-9 h-9 text-slate-700 shadow-2xs"
+              style={{
+                '--c-base': '#64748B',
+                '--c-light': '#94A3B8',
+                '--c-dark': '#334155',
+              } as React.CSSProperties}
+              title="Add Lead"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+
+            {/* Assign Leads To (Teal moving outline) */}
+            <div
+              className="btn-single-moving relative shadow-2xs"
+              style={{
+                '--c-base': '#00A896',
+                '--c-light': '#2DD4BF',
+                '--c-dark': '#0F766E',
+              } as React.CSSProperties}
+            >
+              <select
+                value={assignStaff}
+                onChange={(e) => setAssignStaff(e.target.value)}
+                className="bg-transparent text-slate-800 font-bold text-xs py-2 px-3 pr-7 focus:outline-none cursor-pointer appearance-none relative z-2"
+              >
+                <option value="Assign Leads To">Assign Leads To</option>
+                <option value="Krushna Shinde">Krushna Shinde</option>
+                <option value="Netra Divekar">Netra Divekar</option>
+                <option value="Manisha Shinde">Manisha Shinde</option>
+                <option value="Shashikant Panchal">Shashikant Panchal</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-600 absolute right-2 top-2.5 pointer-events-none z-2" />
             </div>
+
+            {/* Status Dropdown (Slate moving outline) */}
+            <div
+              className="btn-single-moving relative shadow-2xs"
+              style={{
+                '--c-base': '#94A3B8',
+                '--c-light': '#CBD5E1',
+                '--c-dark': '#64748B',
+              } as React.CSSProperties}
+            >
+              <select
+                value={statusDropdown}
+                onChange={(e) => setStatusDropdown(e.target.value)}
+                className="bg-transparent text-slate-700 font-semibold text-xs py-2 px-3 pr-7 focus:outline-none cursor-pointer appearance-none relative z-2"
+              >
+                <option value="Status">Status</option>
+                <option value="New">New</option>
+                <option value="Prospect">Prospect</option>
+                <option value="Hot">Hot</option>
+                <option value="Interested">Interested</option>
+                <option value="Not Interested">Not Interested</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2.5 pointer-events-none z-2" />
+            </div>
+
+            {/* Bulk Add (Red single-color moving outline) */}
+            <button
+              onClick={handleBulkAssign}
+              className="btn-single-moving py-2 px-4 shadow-2xs"
+              style={{
+                '--c-base': '#EF4444',
+                '--c-light': '#FCA5A5',
+                '--c-dark': '#DC2626',
+              } as React.CSSProperties}
+            >
+              <span className="text-xs font-bold text-slate-800">Bulk Add</span>
+            </button>
+
+            {/* Sample Excel (Blue single-color moving outline) */}
+            <button
+              onClick={() => alert('Sample Excel download template initiated.')}
+              className="btn-single-moving py-2 px-4 shadow-2xs"
+              style={{
+                '--c-base': '#2563EB',
+                '--c-light': '#93C5FD',
+                '--c-dark': '#1D4ED8',
+              } as React.CSSProperties}
+            >
+              <span className="text-xs font-bold text-slate-800">Sample Excel</span>
+            </button>
+
+            {/* Import FB (Navy single-color moving outline) */}
+            <button
+              onClick={() => alert('Facebook Leads Sync API triggered.')}
+              className="btn-single-moving py-2 px-4 shadow-2xs"
+              style={{
+                '--c-base': '#1E3A8A',
+                '--c-light': '#60A5FA',
+                '--c-dark': '#0F172A',
+              } as React.CSSProperties}
+            >
+              <span className="text-xs font-bold text-slate-800">Import FB</span>
+            </button>
+          </div>
+
+          {isDetailsView && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-[#003A66] uppercase">MANAGE LEAD'S</span>
+              <button
+                onClick={() => setAddLeadModalOpen(true)}
+                className="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Standard Export Toolbar (Show entries, Copy, Excel, CSV, PDF, Print, Search) */}
+        <div className="p-3 bg-slate-50/70 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 text-xs text-slate-600">
+              <span>Show</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-white border border-slate-300 rounded px-2 py-1 text-xs font-semibold focus:outline-none"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              {['Copy', 'Excel', 'CSV', 'PDF', 'Print'].map((b) => (
+                <button
+                  key={b}
+                  onClick={() => alert(`${b} action executed`)}
+                  className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded shadow-2xs transition-colors"
+                >
+                  {b}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Search Data..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="text-xs bg-white border border-slate-300 rounded px-3 py-1 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#003A66] w-48"
+            />
           </div>
         </div>
 
-        {/* Bulk Action Bar */}
-        {selectedIds.size > 0 && (
-          <div className="flex items-center justify-between bg-brand-navy/5 border border-brand-navy/20 rounded-xl px-4 py-2.5 animate-fade-in">
-            <span className="text-xs font-bold text-brand-navy">{selectedIds.size} lead(s) selected</span>
-            <div className="flex items-center gap-2">
-              <button className="btn btn-outline btn-sm text-xs">
-                <UserCog className="w-3.5 h-3.5" /> Reassign
-              </button>
-              <button className="btn btn-outline btn-sm text-xs text-red-500 border-red-200 hover:bg-red-50">
-                <Trash2 className="w-3.5 h-3.5" /> Delete
-              </button>
-              <button onClick={clearSelection} className="text-xs text-slate-500 hover:text-slate-700 p-1">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-
+        {/* Table View */}
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="w-full text-left text-xs">
             <thead>
-              <tr>
-                {/* Bulk select checkbox */}
-                <th className="w-8">
+              <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider">
+                <th className="py-2.5 px-3 w-8 text-center">
                   <input
                     type="checkbox"
-                    checked={leads.length > 0 && selectedIds.size === leads.length}
-                    onChange={toggleAll}
-                    className="w-3.5 h-3.5 accent-brand-navy"
+                    checked={selectedIds.size === leads.length && leads.length > 0}
+                    onChange={toggleSelectAll}
+                    className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
                   />
                 </th>
-                {visibleCols.city && <th>Lead / City</th>}
-                {visibleCols.contact && <th>Contact Phone</th>}
-                {visibleCols.service && <th>Inquired Service</th>}
-                {visibleCols.source && <th>Source</th>}
-                {visibleCols.status && <th>Status</th>}
-                <th className="text-right">Quick Dial & Actions</th>
+                {isDetailsView ? (
+                  <>
+                    <th className="py-2.5 px-2 w-8 text-center">#</th>
+                    <th className="py-2.5 px-3 font-bold">Name</th>
+                    <th className="py-2.5 px-3 font-bold">Lead Score</th>
+                    <th className="py-2.5 px-3 font-bold">Lead Source</th>
+                    <th className="py-2.5 px-3 font-bold">F Date</th>
+                    <th className="py-2.5 px-3 font-bold">Contact</th>
+                    <th className="py-2.5 px-3 font-bold">State</th>
+                    <th className="py-2.5 px-3 font-bold">City</th>
+                    <th className="py-2.5 px-3 font-bold">Service</th>
+                    <th className="py-2.5 px-3 font-bold">Added By</th>
+                    <th className="py-2.5 px-3 font-bold">Assign To</th>
+                    <th className="py-2.5 px-3 font-bold">Assign Date</th>
+                    <th className="py-2.5 px-3 font-bold">Status</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="py-2.5 px-3 font-bold">Date</th>
+                    <th className="py-2.5 px-3 font-bold">Name</th>
+                    <th className="py-2.5 px-3 font-bold">Contact</th>
+                    <th className="py-2.5 px-3 font-bold">State</th>
+                    <th className="py-2.5 px-3 font-bold">City</th>
+                    <th className="py-2.5 px-3 font-bold">Service</th>
+                    <th className="py-2.5 px-3 font-bold">Added By</th>
+                    <th className="py-2.5 px-3 font-bold">Is Assign</th>
+                    <th className="py-2.5 px-3 font-bold text-center">Action</th>
+                  </>
+                )}
               </tr>
             </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={8} className="text-center py-8 text-xs text-slate-400">
-                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-brand-navy" />
-                    Fetching live leads from database...
+            <tbody className="divide-y divide-slate-100">
+              {filteredLeads.map((item, idx) => (
+                <tr
+                  key={item.id}
+                  className={idx % 2 === 0 ? 'bg-white hover:bg-sky-50/40' : 'bg-[#F9FAFB] hover:bg-sky-50/40'}
+                >
+                  <td className="py-2.5 px-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(item.id)}
+                      onChange={() => toggleSelect(item.id)}
+                      className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
+                    />
                   </td>
-                </tr>
-              ) : leads.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="text-center py-8 text-xs text-slate-400">
-                    No leads found matching your criteria.
-                  </td>
-                </tr>
-              ) : (
-                leads.map((lead) => (
-                  <tr key={lead.id} className={selectedIds.has(lead.id) ? 'bg-blue-50/40' : ''}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(lead.id)}
-                        onChange={() => toggleSelect(lead.id)}
-                        className="w-3.5 h-3.5 accent-brand-navy"
-                      />
-                    </td>
-                    {visibleCols.city && (
-                      <td>
-                        <p className="font-bold text-slate-800 text-xs">{lead.name}</p>
-                        <p className="text-[10px] text-slate-400">
-                          {lead.city || 'India'} • #{lead.id}
-                        </p>
-                      </td>
-                    )}
-                    {visibleCols.contact && (
-                      <td>
-                        <p className="text-xs font-mono font-bold text-brand-navy">{lead.contact}</p>
-                        {visibleCols.email && (
-                          <p className="text-[10px] text-slate-400 truncate max-w-[140px]">{lead.email}</p>
-                        )}
-                      </td>
-                    )}
-                    {visibleCols.service && (
-                      <td className="text-xs text-slate-700 font-medium" title={resolveServiceName(lead.service)}>
-                        {resolveServiceName(lead.service).length > 32
-                          ? resolveServiceName(lead.service).slice(0, 32) + '…'
-                          : resolveServiceName(lead.service)}
-                      </td>
-                    )}
 
-                    {visibleCols.source && (
-                      <td>
-                        <span className="badge badge-navy text-[10px]">
-                          {lead.source || 'Inbound'}
+                  {isDetailsView ? (
+                    <>
+                      <td className="py-2.5 px-2 text-center">
+                        <button
+                          onClick={() => {
+                            setDetailsModalLead(item);
+                            setDetailsActiveTab('client');
+                          }}
+                          className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center font-bold text-xs"
+                          title="Open Lead Details"
+                        >
+                          +
+                        </button>
+                      </td>
+                      <td className="py-2.5 px-3 font-medium text-slate-900">
+                        <button
+                          onClick={() => {
+                            setDetailsModalLead(item);
+                            setDetailsActiveTab('client');
+                          }}
+                          className="hover:text-[#0284c7] hover:underline text-left font-bold"
+                        >
+                          {item.name}
+                        </button>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600 font-semibold">{item.leadScore}</td>
+                      <td className="py-2.5 px-3">
+                        <span className="bg-[#0284c7] text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                          {item.leadSource || 'ETaxwala'}
                         </span>
                       </td>
-                    )}
-                    {visibleCols.status && (
-                      <td>
-                        {(() => {
-                          const statusConfig: Record<number, { label: string; bg: string; text: string }> = {
-                            0: { label: 'New', bg: 'bg-blue-50', text: 'text-blue-700' },
-                            1: { label: 'Assigned', bg: 'bg-amber-50', text: 'text-amber-700' },
-                            2: { label: 'Contacted', bg: 'bg-indigo-50', text: 'text-indigo-700' },
-                            3: { label: 'Follow-up', bg: 'bg-purple-50', text: 'text-purple-700' },
-                            4: { label: 'Won', bg: 'bg-emerald-50', text: 'text-emerald-700' },
-                            5: { label: 'Lost', bg: 'bg-rose-50', text: 'text-rose-700' },
-                          };
-                          const sc = statusConfig[lead.lead_type] || { label: 'Active', bg: 'bg-slate-100', text: 'text-slate-700' };
-                          return (
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${sc.bg} ${sc.text}`}
-                            >
-                              {sc.label}
-                            </span>
-                          );
-                        })()}
+                      <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{item.fDate}</td>
+                      <td className="py-2.5 px-3 font-mono text-slate-700">{item.contact}</td>
+                      <td className="py-2.5 px-3 text-slate-600">{item.state}</td>
+                      <td className="py-2.5 px-3 text-slate-600">{item.city}</td>
+                      <td className="py-2.5 px-3 text-slate-700 font-medium">{item.service}</td>
+                      <td className="py-2.5 px-3 text-slate-600">{item.addedBy}</td>
+                      <td className="py-2.5 px-3">
+                        {item.assignTo === 'Not Assigned' ? (
+                          <span className="text-red-600 font-bold">{item.assignTo}</span>
+                        ) : (
+                          <span className="text-slate-800 font-medium">{item.assignTo}</span>
+                        )}
                       </td>
-                    )}
-                    <td className="text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Link
-                          to={`/crm/leads/${lead.id}/won`}
-                          className="btn btn-sm text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1 shadow-sm px-2.5"
-                          title="Convert to Won Customer"
+                      <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{item.assignDate}</td>
+                      <td className="py-2.5 px-3">
+                        <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                          {item.status}
+                        </span>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{item.date}</td>
+                      <td className="py-2.5 px-3 font-medium text-slate-900">
+                        <button
+                          onClick={() => {
+                            setDetailsModalLead(item);
+                            setDetailsActiveTab('client');
+                          }}
+                          className="hover:text-[#0284c7] hover:underline text-left font-bold"
                         >
-                          <Trophy className="w-3 h-3" /> Won
-                        </Link>
-                        <button onClick={() => handleOpenCallModal(lead)} className="btn btn-primary btn-sm text-xs">
-                          <PhoneCall className="w-3 h-3" /> Call
+                          {item.name}
                         </button>
-                        <a
-                          href={`https://wa.me/${String(lead.contact).replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(
-                            lead.name
-                          )},%20I%20am%20calling%20from%20ETaxwala%20regarding%20your%20inquiry.`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-sm text-xs px-2"
-                          style={{ background: '#25D366', color: 'white' }}
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-slate-700">{item.contact}</td>
+                      <td className="py-2.5 px-3 text-slate-600">{item.state}</td>
+                      <td className="py-2.5 px-3 text-slate-600">{item.city}</td>
+                      <td className="py-2.5 px-3 text-slate-700 font-medium">{item.service}</td>
+                      <td className="py-2.5 px-3 text-slate-600">{item.addedBy}</td>
+                      <td className="py-2.5 px-3">
+                        {item.isAssign ? (
+                          <button
+                            onClick={() => {
+                              setLeads((prev) =>
+                                prev.map((l) => (l.id === item.id ? { ...l, isAssign: false } : l))
+                              );
+                            }}
+                            className="bg-[#16A34A] hover:bg-[#15803D] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-2xs"
+                          >
+                            Assigned
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setLeads((prev) =>
+                                prev.map((l) => (l.id === item.id ? { ...l, isAssign: true } : l))
+                              );
+                            }}
+                            className="bg-[#DC2626] hover:bg-[#B91C1C] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-2xs"
+                          >
+                            Un-Assign
+                          </button>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setDetailsModalLead(item);
+                              setDetailsActiveTab('client');
+                            }}
+                            className="p-1 text-slate-500 hover:text-[#0284c7] hover:bg-slate-100 rounded"
+                            title="Edit"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setRemarksModalLead(item)}
+                            className="p-1 text-slate-500 hover:text-emerald-600 hover:bg-slate-100 rounded"
+                            title="Call Remarks"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Delete lead ${item.name}?`)) {
+                                setLeads((prev) => prev.filter((l) => l.id !== item.id));
+                              }
+                            }}
+                            className="p-1 text-slate-500 hover:text-red-600 hover:bg-slate-100 rounded"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs text-slate-500">
-          <span>Showing page {page} of {Math.ceil(totalCount / 50)}</span>
-          <div className="flex gap-1.5">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-              className="btn btn-outline btn-sm"
-            >
+        {/* Pagination Bar */}
+        <div className="p-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>Showing 1 to {filteredLeads.length} of 16,619 entries</span>
+          <div className="flex items-center gap-1">
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
               Previous
             </button>
-            <button
-              disabled={page >= Math.ceil(totalCount / 50)}
-              onClick={() => setPage(page + 1)}
-              className="btn btn-outline btn-sm"
-            >
+            <button className="px-2.5 py-1 rounded bg-[#1E3A8A] text-white font-bold">1</button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">2</button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">3</button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">4</button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">5</button>
+            <span className="px-1 text-slate-400">...</span>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">1662</button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
               Next
             </button>
           </div>
         </div>
       </div>
 
-      {/* Call Log Modal */}
-      {isCallModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="font-display font-bold text-base text-slate-800">
-                  Log Call with {selectedLead?.name}
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {selectedLead?.contact} • {selectedLead?.service}
-                </p>
+      {/* ─── LEAD DETAILS MODAL (Exact match with Screenshots 111120, 111130, 111137, 111149) ─── */}
+      {detailsModalLead && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in">
+            {/* Signature Top Multicolor Strip */}
+            <div className="h-1 bg-multicolor" />
+
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 bg-white border-b border-[#EAE6DD] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#1B365D] flex items-center justify-center font-bold text-sm">
+                  {detailsModalLead.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-[#1B365D] tracking-tight">Lead Details & Activity</h3>
+                  <p className="text-[11px] text-slate-500">{detailsModalLead.service}</p>
+                </div>
               </div>
-              <button
-                onClick={() => setIsCallModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setRemarksModalLead(detailsModalLead)}
+                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition-colors"
+                  title="View Remarks Audit"
+                >
+                  <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Audit</span>
+                </button>
+                <button
+                  onClick={() => setDetailsModalLead(null)}
+                  className="w-7 h-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleSaveCall} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Call Outcome Status
-                </label>
-                <select
-                  value={callStatus}
-                  onChange={(e) => setCallStatus(e.target.value)}
-                  className="input text-xs font-semibold"
-                >
-                  <option value="1">Interested - Send Quotation</option>
-                  <option value="2">Callback Requested / Follow Up Later</option>
-                  <option value="3">Ringing / Not Answered</option>
-                  <option value="4">Line Busy</option>
-                  <option value="5">Payment Committed / Won</option>
-                  <option value="6">Not Interested / Closed</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Conversation Remarks & Notes
-                </label>
-                <textarea
-                  rows={3}
-                  value={callRemarks}
-                  onChange={(e) => setCallRemarks(e.target.value)}
-                  placeholder="e.g. Client agreed on ₹14,999 Pvt Ltd incorporation quote. Follow up tomorrow."
-                  className="input text-xs"
-                  required
-                />
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 space-y-4">
+              {/* Modern Segmented Pill Tabs */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl">
                 <button
-                  type="button"
-                  onClick={() => setIsCallModalOpen(false)}
-                  className="btn btn-outline btn-sm"
+                  onClick={() => setDetailsActiveTab('client')}
+                  className={`py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all ${
+                    detailsActiveTab === 'client'
+                      ? 'bg-white text-[#1B365D] shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
                 >
-                  Cancel
+                  Client Info
                 </button>
-                <button type="submit" className="btn btn-primary btn-sm">
-                  Save Call Record
+                <button
+                  onClick={() => setDetailsActiveTab('status')}
+                  className={`py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all ${
+                    detailsActiveTab === 'status'
+                      ? 'bg-white text-[#1B365D] shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Update Status
+                </button>
+                <button
+                  onClick={() => setDetailsActiveTab('followup')}
+                  className={`py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all ${
+                    detailsActiveTab === 'followup'
+                      ? 'bg-white text-[#1B365D] shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Followup
+                </button>
+                <button
+                  onClick={() => setDetailsActiveTab('services')}
+                  className={`py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all ${
+                    detailsActiveTab === 'services'
+                      ? 'bg-white text-[#1B365D] shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Other Services
                 </button>
               </div>
-            </form>
+
+              {/* Tab 1: Client Info */}
+              {detailsActiveTab === 'client' && (
+                <div className="space-y-3.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Customer Name</label>
+                      <input
+                        type="text"
+                        defaultValue={detailsModalLead.name}
+                        className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Contact Phone</label>
+                      <input
+                        type="text"
+                        defaultValue={detailsModalLead.contact}
+                        className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-mono focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Email Address</label>
+                      <input
+                        type="email"
+                        defaultValue={detailsModalLead.email || 'NA@gmail.com'}
+                        className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Selected Service</label>
+                      <select
+                        defaultValue={detailsModalLead.service}
+                        className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all font-semibold"
+                      >
+                        <option value={detailsModalLead.service}>{detailsModalLead.service}</option>
+                        <option value="Producer Company Registration">Producer Company Registration</option>
+                        <option value="Multistate Registration">Multistate Registration</option>
+                        <option value="Microfinance Company (Section 8)">Microfinance Company (Section 8)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">State</label>
+                      <input
+                        type="text"
+                        defaultValue={detailsModalLead.state}
+                        className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">City</label>
+                      <input
+                        type="text"
+                        defaultValue={detailsModalLead.city}
+                        className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Exact Action Buttons: Cancel, Update Lead, Create Quotation, View */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      onClick={() => setDetailsModalLead(null)}
+                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      style={
+                        {
+                          '--c-base': '#1E293B',
+                          '--c-light': '#475569',
+                          '--c-dark': '#0F172A',
+                        } as React.CSSProperties
+                      }
+                    >
+                      <span>Cancel</span>
+                    </button>
+                    <button
+                      onClick={() => alert('Lead details updated.')}
+                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      style={
+                        {
+                          '--c-base': '#1B365D',
+                          '--c-light': '#3B82F6',
+                          '--c-dark': '#0F172A',
+                        } as React.CSSProperties
+                      }
+                    >
+                      <span>Update Lead</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDetailsModalLead(null);
+                        navigate('/crm/quotations');
+                      }}
+                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      style={
+                        {
+                          '--c-base': '#10B981',
+                          '--c-light': '#6EE7B7',
+                          '--c-dark': '#047857',
+                        } as React.CSSProperties
+                      }
+                    >
+                      <span>Create Quotation</span>
+                    </button>
+                    <button
+                      onClick={() => setRemarksModalLead(detailsModalLead)}
+                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      style={
+                        {
+                          '--c-base': '#06B6D4',
+                          '--c-light': '#67E8F9',
+                          '--c-dark': '#0891B2',
+                        } as React.CSSProperties
+                      }
+                    >
+                      <span>View</span>
+                    </button>
+                  </div>
+
+                  {/* Lead Note Box underneath button bar */}
+                  <div className="pt-2">
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Lead Note</label>
+                    <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl p-3 text-xs text-slate-600 min-h-[50px] leading-relaxed">
+                      {detailsModalLead.note || 'No Note Found'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 2: Update Status */}
+              {detailsActiveTab === 'status' && (
+                <div className="space-y-3.5">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Select Lead Status</label>
+                    <select
+                      value={editStatus}
+                      onChange={(e) => setEditStatus(e.target.value)}
+                      className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                    >
+                      <option value="Interested">Interested</option>
+                      <option value="Not Interested">Not Interested</option>
+                      <option value="Prospect">Prospect</option>
+                      <option value="Hot">Hot</option>
+                      <option value="Quotation">Quotation</option>
+                      <option value="Meetings">Meetings</option>
+                      <option value="Customer">Customer</option>
+                      <option value="Not Connected">Not Connected</option>
+                      <option value="Negotiation">Negotiation</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Lead Remark Note</label>
+                    <textarea
+                      rows={3}
+                      value={editRemark}
+                      onChange={(e) => setEditRemark(e.target.value)}
+                      placeholder="Enter update note, customer objections or next step..."
+                      className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl p-3 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Last Lead Remark</label>
+                    <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl p-3 text-xs text-slate-700 font-semibold">
+                      {detailsModalLead.remarks?.[0]?.note || 'CALL BACK'}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-2 border-t border-[#EAE6DD]">
+                    <button
+                      onClick={() => setDetailsModalLead(null)}
+                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      style={
+                        {
+                          '--c-base': '#1E293B',
+                          '--c-light': '#475569',
+                          '--c-dark': '#0F172A',
+                        } as React.CSSProperties
+                      }
+                    >
+                      <span>Cancel</span>
+                    </button>
+                    <button
+                      onClick={handleAddRemark}
+                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      style={
+                        {
+                          '--c-base': '#1B365D',
+                          '--c-light': '#3B82F6',
+                          '--c-dark': '#0F172A',
+                        } as React.CSSProperties
+                      }
+                    >
+                      <span>Add</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 3: Followup */}
+              {detailsActiveTab === 'followup' && (
+                <div className="space-y-3.5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Followup Date</label>
+                      <input
+                        type="date"
+                        value={followupDate}
+                        onChange={(e) => setFollowupDate(e.target.value)}
+                        className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Followup Time</label>
+                      <input
+                        type="time"
+                        value={followupTime}
+                        onChange={(e) => setFollowupTime(e.target.value)}
+                        className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Followup Discussion Remark</label>
+                    <textarea
+                      rows={3}
+                      value={followupRemark}
+                      onChange={(e) => setFollowupRemark(e.target.value)}
+                      placeholder="Enter scheduled topic / customer request..."
+                      className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl p-3 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Last Followup Remark</label>
+                    <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl p-3 text-xs text-slate-700 font-semibold">
+                      {detailsModalLead.remarks?.[0]?.note || 'CALL BACK'}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-2 border-t border-[#EAE6DD]">
+                    <button
+                      onClick={() => setDetailsModalLead(null)}
+                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      style={
+                        {
+                          '--c-base': '#1E293B',
+                          '--c-light': '#475569',
+                          '--c-dark': '#0F172A',
+                        } as React.CSSProperties
+                      }
+                    >
+                      <span>Cancel</span>
+                    </button>
+                    <button
+                      onClick={handleAddFollowup}
+                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      style={
+                        {
+                          '--c-base': '#1B365D',
+                          '--c-light': '#3B82F6',
+                          '--c-dark': '#0F172A',
+                        } as React.CSSProperties
+                      }
+                    >
+                      <span>Add</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 4: Other Services */}
+              {detailsActiveTab === 'services' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Add Complementary Service</label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={selectedAdditionalService}
+                        onChange={(e) => setSelectedAdditionalService(e.target.value)}
+                        className="flex-1 text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all font-semibold"
+                      >
+                        <option value="Section 8 Company NGO Registration">Section 8 Company NGO Registration</option>
+                        <option value="Producer Company Registration">Producer Company Registration</option>
+                        <option value="80G & 12A Income Tax Exemption">80G & 12A Income Tax Exemption</option>
+                        <option value="GST Return Filing (Quarterly)">GST Return Filing (Quarterly)</option>
+                        <option value="Digital Signature Certificate (DSC)">Digital Signature Certificate (DSC)</option>
+                      </select>
+                      <button
+                        onClick={handleAddService}
+                        className="btn-single-moving btn-single-moving-solid py-2 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                        style={
+                          {
+                            '--c-base': '#EF4444',
+                            '--c-light': '#FCA5A5',
+                            '--c-dark': '#DC2626',
+                          } as React.CSSProperties
+                        }
+                      >
+                        <span>Add</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Attached Services</label>
+                    {additionalServices.length === 0 ? (
+                      <p className="text-xs text-slate-400 py-3 text-center bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl">
+                        No additional services attached to this lead proposal yet.
+                      </p>
+                    ) : (
+                      <ul className="divide-y divide-[#EAE6DD] border border-[#EAE6DD] rounded-xl overflow-hidden">
+                        {additionalServices.map((srv, idx) => (
+                          <li key={idx} className="p-3 text-xs text-slate-800 flex items-center justify-between bg-white hover:bg-[#FAF9F5] transition-colors">
+                            <span className="font-semibold">{srv}</span>
+                            <button
+                              onClick={() => setAdditionalServices(additionalServices.filter((_, i) => i !== idx))}
+                              className="text-rose-600 hover:text-rose-700 text-xs font-bold"
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Add Manual Lead Modal */}
-      {isAddLeadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      {/* ─── LEAD REMARKS MODAL (Exact match with Screenshot 111333.png) ─── */}
+      {remarksModalLead && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in">
+            {/* Signature Top Multicolor Strip */}
+            <div className="h-1 bg-multicolor" />
+
+            {/* Header */}
+            <div className="p-4 sm:p-5 bg-white border-b border-[#EAE6DD] flex items-center justify-between">
               <div>
-                <h3 className="font-display font-bold text-base text-slate-800">
-                  Add New Manual Lead
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Direct entry into PostgreSQL `leads` table
-                </p>
+                <h3 className="font-extrabold text-sm text-[#1B365D]">Lead Remarks & Audit History</h3>
+                <p className="text-[11px] text-slate-500">Live communication logs & call outcomes</p>
               </div>
-              <button
-                onClick={() => setIsAddLeadModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
+
+              <div className="flex items-center gap-1.5">
+                <span className="badge badge-navy text-[11px] font-bold px-2 py-0.5">
+                  (i)
+                </span>
+                <span className="badge badge-gold text-[11px] font-bold px-2 py-0.5">
+                  --%
+                </span>
+                <span className="badge badge-green text-[11px] font-bold px-2 py-0.5">
+                  ₹ --
+                </span>
+                <button
+                  onClick={() => {
+                    const rem = prompt('Enter new call remark:');
+                    if (rem) {
+                      const newRem = {
+                        staff: 'Current Staff',
+                        note: rem,
+                        date: new Date().toLocaleString(),
+                        source: 'etaxwala',
+                      };
+                      setRemarksModalLead({
+                        ...remarksModalLead,
+                        remarks: [newRem, ...(remarksModalLead.remarks || [])],
+                      });
+                    }
+                  }}
+                  className="btn-single-moving btn-single-moving-solid py-1 px-3 rounded-full text-white shadow-xs ml-1 cursor-pointer"
+                  style={
+                    {
+                      '--c-base': '#1B365D',
+                      '--c-light': '#3B82F6',
+                      '--c-dark': '#0F172A',
+                    } as React.CSSProperties
+                  }
+                >
+                  <span className="text-[11px] font-bold text-white">+ Remark</span>
+                </button>
+                <button
+                  onClick={() => setRemarksModalLead(null)}
+                  className="w-7 h-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors ml-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleCreateLead} className="space-y-3.5 text-xs">
+            {/* Client Summary Box */}
+            <div className="p-4 bg-[#FAF9F5] border-b border-[#EAE6DD]">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Name: {remarksModalLead.name}</span>
+                  </p>
+                  <p className="text-xs text-slate-600 flex items-center gap-1.5 mt-1 font-mono">
+                    <Phone className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Contact: {remarksModalLead.contact}</span>
+                  </p>
+                </div>
+                <div className="text-right text-xs text-slate-600">
+                  <p>Location: <span className="font-semibold text-slate-800">{remarksModalLead.city}, {remarksModalLead.state}</span></p>
+                </div>
+              </div>
+            </div>
+
+            {/* Remarks History List */}
+            <div className="max-h-80 overflow-y-auto divide-y divide-[#EAE6DD] text-xs">
+              <div className="bg-[#FAF9F5] text-slate-600 font-bold p-2.5 grid grid-cols-12 text-[11px] uppercase tracking-wider border-b border-[#EAE6DD]">
+                <div className="col-span-6">Call Notes</div>
+                <div className="col-span-4">Call Date</div>
+                <div className="col-span-2 text-right">Source</div>
+              </div>
+              {remarksModalLead.remarks && remarksModalLead.remarks.length > 0 ? (
+                remarksModalLead.remarks.map((r, i) => (
+                  <div key={i} className="p-3 grid grid-cols-12 items-start hover:bg-[#FAF9F5] transition-colors">
+                    <div className="col-span-6 pr-2">
+                      <p className="font-bold text-[#1B365D]">{r.staff}</p>
+                      <p className="text-slate-700 mt-0.5 leading-relaxed">{r.note}</p>
+                    </div>
+                    <div className="col-span-4 text-slate-500 font-mono text-[11px]">
+                      {r.date}
+                    </div>
+                    <div className="col-span-2 text-right">
+                      <span className="badge badge-navy text-[10px] uppercase font-bold">{r.source}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-slate-400">
+                  No call remarks recorded yet for this lead.
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-[#FAF9F5] border-t border-[#EAE6DD] flex justify-end">
+              <button
+                onClick={() => setRemarksModalLead(null)}
+                className="btn btn-outline btn-sm rounded-xl text-xs font-bold"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── ADD LEAD MODAL ─── */}
+      {addLeadModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in">
+            {/* Signature Top Multicolor Strip */}
+            <div className="h-1 bg-multicolor" />
+
+            <div className="p-4 sm:p-5 bg-white border-b border-[#EAE6DD] flex items-center justify-between">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Lead Full Name</label>
+                <h3 className="font-extrabold text-sm text-[#1B365D]">Add New Lead</h3>
+                <p className="text-[11px] text-slate-500">Create new customer prospect entry</p>
+              </div>
+              <button onClick={() => setAddLeadModalOpen(false)} className="w-7 h-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateLead} className="p-5 space-y-3.5 text-xs">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Customer Name *</label>
                 <input
                   type="text"
+                  required
                   value={newLeadName}
                   onChange={(e) => setNewLeadName(e.target.value)}
-                  placeholder="e.g. Mahesh Patil"
-                  className="input text-xs"
-                  required
+                  placeholder="Enter customer or entity name"
+                  className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Mobile Contact</label>
-                  <input
-                    type="tel"
-                    value={newLeadContact}
-                    onChange={(e) => setNewLeadContact(e.target.value)}
-                    placeholder="9822011223"
-                    className="input text-xs"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    value={newLeadEmail}
-                    onChange={(e) => setNewLeadEmail(e.target.value)}
-                    placeholder="mahesh@patil.com"
-                    className="input text-xs"
-                  />
-                </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Mobile Contact *</label>
+                <input
+                  type="tel"
+                  required
+                  value={newLeadContact}
+                  onChange={(e) => setNewLeadContact(e.target.value)}
+                  placeholder="10-digit mobile number"
+                  className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-mono focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                />
               </div>
-
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={newLeadEmail}
+                  onChange={(e) => setNewLeadEmail(e.target.value)}
+                  placeholder="name@company.com"
+                  className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Required Service *</label>
+                <select
+                  value={newLeadService}
+                  onChange={(e) => setNewLeadService(e.target.value)}
+                  className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                >
+                  <option value="Producer Company Registration">Producer Company Registration</option>
+                  <option value="Multistate Registration">Multistate Registration</option>
+                  <option value="Private Limited Company Registration">Private Limited Company Registration</option>
+                  <option value="Microfinance Company (Section 8)">Microfinance Company (Section 8)</option>
+                  <option value="GST Return Filing">GST Return Filing</option>
+                  <option value="Trademark Registration">Trademark Registration</option>
+                </select>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Inquired Service</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">State</label>
                   <input
                     type="text"
-                    value={newLeadService}
-                    onChange={(e) => setNewLeadService(e.target.value)}
-                    className="input text-xs"
-                    required
+                    value={newLeadState}
+                    onChange={(e) => setNewLeadState(e.target.value)}
+                    className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">City</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">City</label>
                   <input
                     type="text"
                     value={newLeadCity}
                     onChange={(e) => setNewLeadCity(e.target.value)}
-                    className="input text-xs"
+                    placeholder="City name"
+                    className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
                   />
                 </div>
               </div>
-
-              <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#EAE6DD]">
                 <button
                   type="button"
-                  onClick={() => setIsAddLeadModalOpen(false)}
-                  className="btn btn-outline btn-sm"
+                  onClick={() => setAddLeadModalOpen(false)}
+                  className="btn btn-outline btn-sm rounded-xl text-xs font-bold"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary btn-sm">
-                  Save Lead to Database
+                <button
+                  type="submit"
+                  className="btn-single-moving py-2 px-5 shadow-xs"
+                  style={{
+                    '--c-base': '#10B981',
+                    '--c-light': '#6EE7B7',
+                    '--c-dark': '#047857',
+                  } as React.CSSProperties}
+                >
+                  <span className="text-xs font-bold text-slate-800">Save Lead</span>
                 </button>
               </div>
             </form>
