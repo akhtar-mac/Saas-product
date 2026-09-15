@@ -223,14 +223,14 @@ export default function CrmDesktopTrackingPage({ defaultTab = 'tracking' }: { de
 
         {/* Table View: Tracking Report */}
         {activeTab === 'tracking' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
+          <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl">
+            <table className="w-full text-left text-xs border-separate border-spacing-0">
+              <thead className="sticky top-0 z-10">
                 <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider">
-                  <th className="py-2.5 px-4 font-bold">Name</th>
-                  <th className="py-2.5 px-4 font-bold">Login Time</th>
-                  <th className="py-2.5 px-4 font-bold">Logout Time</th>
-                  <th className="py-2.5 px-4 font-bold">Screenshots</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-4 font-bold">Name</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-4 font-bold">Login Time</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-4 font-bold">Logout Time</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-4 font-bold">Screenshots</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -264,18 +264,18 @@ export default function CrmDesktopTrackingPage({ defaultTab = 'tracking' }: { de
           </div>
         ) : (
           /* Table View: Session Report */
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
+          <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl">
+            <table className="w-full text-left text-xs border-separate border-spacing-0">
+              <thead className="sticky top-0 z-10">
                 <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider">
-                  <th className="py-2.5 px-3 font-bold">Name</th>
-                  <th className="py-2.5 px-3 font-bold">Login Time</th>
-                  <th className="py-2.5 px-3 font-bold">Logout Time</th>
-                  <th className="py-2.5 px-3 font-bold">Lunch Time</th>
-                  <th className="py-2.5 px-3 font-bold">Meeting Time</th>
-                  <th className="py-2.5 px-3 font-bold">Outside Work Time</th>
-                  <th className="py-2.5 px-3 font-bold">Idle Time</th>
-                  <th className="py-2.5 px-3 font-bold">Working Time</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-3 font-bold">Name</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-3 font-bold">Login Time</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-3 font-bold">Logout Time</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-3 font-bold">Lunch Time</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-3 font-bold">Meeting Time</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-3 font-bold">Outside Work Time</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-3 font-bold">Idle Time</th>
+                  <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-3 font-bold">Working Time</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

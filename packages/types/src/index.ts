@@ -47,6 +47,7 @@ export interface User {
   lastLoginAt: string | null;
   createdAt: string;
   updatedAt: string;
+  permissions?: string[];
   profile?: Profile;
 }
 

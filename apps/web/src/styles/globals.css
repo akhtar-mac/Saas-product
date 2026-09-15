@@ -431,7 +431,7 @@
   border: 1px solid #FECACA;
 }
 
-/* Universal Clean ETaxwala Table */
+/* Universal Clean ETaxwala Table & Sticky Header System */
 .table-etaxwala {
   width: 100%;
   border-collapse: separate;
@@ -439,10 +439,21 @@
   font-size: 0.8rem;
   text-align: left;
 }
+.table-etaxwala thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
 .table-etaxwala thead tr {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background-color: #FAF9F5;
 }
 .table-etaxwala th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   padding: 0.75rem 1rem;
   font-size: 0.7rem;
   font-weight: 700;
@@ -450,6 +461,7 @@
   letter-spacing: 0.05em;
   color: #475569;
   border-bottom: 1px solid #EAE6DD;
+  background-color: #FAF9F5;
 }
 .table-etaxwala td {
   padding: 0.85rem 1rem;
@@ -463,6 +475,46 @@
 }
 .table-etaxwala tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* Global Sticky Table Header & Scrollable Table Rows */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+table thead tr {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Table scroll container auto max height */
+.table-container,
+.table-scroll-container {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 280px);
+}
+
+/* Any overflow-x-auto div wrapping a table also gets vertical scroll */
+.overflow-x-auto:has(> table),
+.overflow-x-auto:has(> .table-etaxwala) {
+  overflow-y: auto;
+  max-height: calc(100vh - 280px);
 }
 
 /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Star Particles ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */

@@ -47,9 +47,10 @@ import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
 import CommandPalette from './components/command-palette';
 import NotificationCenter, { NotificationBadge } from './components/notification-center';
+import { hasUserPermission } from './permissions';
 
 export default function CrmLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     sales: true,
     operations: true,
@@ -99,13 +100,44 @@ export default function CrmLayout() {
     navigate('/crm/login');
   };
 
-  const isActive = (path: string) => {
-    if (path === '/crm') return location.pathname === '/crm';
-    return location.pathname.startsWith(path);
+  const can = (permKey: string) => {
+    return hasUserPermission(staffUser?.permissions, activeRole, permKey);
   };
 
+  const handleNavClick = () => {
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
+
+  const showOpsSection =
+    can('operations:view') ||
+    can('desktop_tracking:view') ||
+    can('operations:employees') ||
+    can('operations:customers') ||
+    can('operations:tasks') ||
+    can('accounts:view');
+
+  const showFranchiseSection =
+    can('franchise:view') ||
+    can('franchise:partners') ||
+    can('franchise:inquiries') ||
+    can('franchise:training');
+
+  const showSalesSection =
+    can('sales:view') ||
+    can('leads:view') ||
+    can('leads:subbrands') ||
+    can('quotations:view') ||
+    can('tasks:view') ||
+    can('workforce:view') ||
+    can('accounts:view');
+
+  const showAdminSection =
+    can('admin:view') || can('users:manage') || can('call_analytics:view');
+
   return (
-    <div className="min-h-screen bg-[#FAF9F5] text-slate-800 flex flex-col md:flex-row font-sans">
+    <div className="h-screen bg-[#FAF9F5] text-slate-800 flex flex-col md:flex-row font-sans overflow-hidden">
       {/* Mobile Top Bar */}
       <div className="md:hidden flex items-center justify-between p-4 bg-[#FFFDF9] border-b border-[#EAE6DD] sticky top-0 z-30 shadow-xs">
         <Link to="/crm" className="flex items-center gap-2">
@@ -132,8 +164,8 @@ export default function CrmLayout() {
 
       {/* Sidebar Navigation matching the exact hierarchy from staff screenshots */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-40 w-64 bg-[#FFFDF9] border-r border-[#EAE6DD] flex flex-col justify-between transition-transform duration-300 shadow-xs ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`fixed md:sticky inset-y-0 left-0 z-40 bg-[#FFFDF9] border-r border-[#EAE6DD] flex flex-col justify-between transition-all duration-300 shadow-xs h-screen shrink-0 ${
+          sidebarOpen ? 'w-64 translate-x-0 opacity-100' : '-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 overflow-hidden border-none'
         }`}
       >
         <div className="flex flex-col h-full overflow-hidden">
@@ -185,374 +217,429 @@ export default function CrmLayout() {
           {/* Navigation Accordion Menus */}
           <nav className="p-3 space-y-1.5 flex-1 overflow-y-auto text-xs">
             {/* 1. Main Dashboard */}
-            <Link
-              to="/crm"
-              onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-xl font-bold transition-all ${
-                location.pathname === '/crm'
-                  ? 'bg-[#1B365D] text-white shadow-sm'
-                  : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-              }`}
-            >
-              <LayoutDashboard className={`w-4 h-4 shrink-0 ${location.pathname === '/crm' ? 'text-white' : 'text-[#1B365D]'}`} />
-              <span>Dashboard</span>
-            </Link>
+            {can('dashboard:view') && (
+              <Link
+                to="/crm"
+                onClick={handleNavClick}
+                className={`flex items-center gap-3 px-3 py-2 rounded-xl font-bold transition-all ${
+                  location.pathname === '/crm'
+                    ? 'bg-[#1B365D] text-white shadow-sm'
+                    : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+                }`}
+              >
+                <LayoutDashboard className={`w-4 h-4 shrink-0 ${location.pathname === '/crm' ? 'text-white' : 'text-[#1B365D]'}`} />
+                <span>Dashboard</span>
+              </Link>
+            )}
 
             {/* 2. OPERATION MANAGER ACCORDION */}
-            <div className="space-y-0.5">
-              <button
-                onClick={() => toggleSection('operations')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
-              >
-                <div className="flex items-center gap-2.5">
-                  <ClipboardList className="w-4 h-4 text-[#00A896] shrink-0" />
-                  <span>Operation Manager</span>
-                </div>
-                {openSections.operations ? (
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                )}
-              </button>
+            {showOpsSection && (
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => toggleSection('operations')}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ClipboardList className="w-4 h-4 text-[#00A896] shrink-0" />
+                    <span>Operation Manager</span>
+                  </div>
+                  {openSections.operations ? (
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  )}
+                </button>
 
-              {openSections.operations && (
-                <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
-                  {/* Manage Desktop Sub-menu */}
-                  <div className="space-y-0.5">
-                    <button
-                      onClick={() => toggleSection('desktop')}
-                      className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Monitor className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Manage Desktop</span>
-                      </div>
-                      {openSections.desktop ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                    </button>
+                {openSections.operations && (
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
+                    {/* Manage Desktop Sub-menu */}
+                    {can('desktop_tracking:view') && (
+                      <div className="space-y-0.5">
+                        <button
+                          onClick={() => toggleSection('desktop')}
+                          className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <Monitor className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Manage Desktop</span>
+                          </div>
+                          {openSections.desktop ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        </button>
 
-                    {openSections.desktop && (
-                      <div className="pl-5 space-y-1 py-1 text-[11px]">
-                        <Link
-                          to="/crm/desktop-report"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`block py-1 px-2 rounded-md ${
-                            location.pathname === '/crm/desktop-report'
-                              ? 'bg-[#1B365D] text-white font-bold'
-                              : 'text-slate-600 hover:text-[#1B365D]'
-                          }`}
-                        >
-                          Tracking Report
-                        </Link>
-                        <Link
-                          to="/crm/desktop-report-idle"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`block py-1 px-2 rounded-md ${
-                            location.pathname === '/crm/desktop-report-idle'
-                              ? 'bg-[#1B365D] text-white font-bold'
-                              : 'text-slate-600 hover:text-[#1B365D]'
-                          }`}
-                        >
-                          Session Report
-                        </Link>
-                        <span className="block py-1 px-2 text-slate-400 cursor-not-allowed">
-                          Block Website
-                        </span>
+                        {openSections.desktop && (
+                          <div className="pl-5 space-y-1 py-1 text-[11px]">
+                            <Link
+                              to="/crm/desktop-report"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/desktop-report'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              Tracking Report
+                            </Link>
+                            <Link
+                              to="/crm/desktop-report-idle"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/desktop-report-idle'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              Session Report
+                            </Link>
+                            <span className="block py-1 px-2 text-slate-400 cursor-not-allowed">
+                              Block Website
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
+
+                    {can('operations:employees') && (
+                      <Link
+                        to="/crm/operation-manage-employee"
+                        onClick={handleNavClick}
+                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                      >
+                        <span>Manage Employee</span>
+                      </Link>
+                    )}
+
+                    {can('operations:customers') && (
+                      <Link
+                        to="/crm/operation-manage-customer"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/operation-manage-customer' || location.pathname === '/crm/accounts'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Customer</span>
+                      </Link>
+                    )}
+
+                    {can('operations:tasks') && (
+                      <Link
+                        to="/crm/operation-manage-tasks"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/operation-manage-tasks' || location.pathname === '/crm/tasks'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Tasks</span>
+                        <span className="badge badge-green text-[9px] px-1 py-0.2">Live</span>
+                      </Link>
+                    )}
+
+                    {can('accounts:view') && (
+                      <Link
+                        to="/crm/accounts"
+                        onClick={handleNavClick}
+                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                      >
+                        <span>Customers Details</span>
+                      </Link>
+                    )}
+                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
+                      Locations
+                    </span>
                   </div>
-
-                  <Link
-                    to="/crm/operation-manage-employee"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Manage Employee</span>
-                  </Link>
-
-                  <Link
-                    to="/crm/operation-manage-customer"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                      location.pathname === '/crm/operation-manage-customer' || location.pathname === '/crm/accounts'
-                        ? 'bg-blue-50 text-[#1B365D] font-bold'
-                        : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
-                    }`}
-                  >
-                    <span>Manage Customer</span>
-                  </Link>
-
-                  <Link
-                    to="/crm/operation-manage-tasks"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                      location.pathname === '/crm/operation-manage-tasks' || location.pathname === '/crm/tasks'
-                        ? 'bg-blue-50 text-[#1B365D] font-bold'
-                        : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
-                    }`}
-                  >
-                    <span>Manage Tasks</span>
-                    <span className="badge badge-green text-[9px] px-1 py-0.2">Live</span>
-                  </Link>
-
-                  <Link
-                    to="/crm/accounts"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Customers Details</span>
-                  </Link>
-                  <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                    Locations
-                  </span>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* 3. FRANCHISE MANAGER ACCORDION */}
-            <div className="space-y-0.5">
-              <button
-                onClick={() => toggleSection('franchise')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Briefcase className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>Franchise Manager</span>
-                </div>
-                {openSections.franchise ? (
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                )}
-              </button>
+            {showFranchiseSection && (
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => toggleSection('franchise')}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Briefcase className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Franchise Manager</span>
+                  </div>
+                  {openSections.franchise ? (
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  )}
+                </button>
 
-              {openSections.franchise && (
-                <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
-                  <Link
-                    to="/crm/franchise"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Manage Partners</span>
-                    <span className="badge badge-gold text-[9px] px-1 py-0.2">120+</span>
-                  </Link>
-                  <Link
-                    to="/crm/franchise"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Manage Partners Orders</span>
-                  </Link>
-                  <Link
-                    to="/crm/leads"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Manage Inquiries</span>
-                  </Link>
-                  <Link
-                    to="/crm/leads"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Partners Leads</span>
-                  </Link>
-                  <Link
-                    to="/portal/videos"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Training Videos</span>
-                  </Link>
-                  <Link
-                    to="/portal/documents"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Service Documents</span>
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* 4. SALES MANAGER ACCORDION */}
-            <div className="space-y-0.5">
-              <button
-                onClick={() => toggleSection('sales')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
-              >
-                <div className="flex items-center gap-2.5">
-                  <PhoneCall className="w-4 h-4 text-[#1B365D] shrink-0" />
-                  <span>Sales Manager</span>
-                </div>
-                {openSections.sales ? (
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                )}
-              </button>
-
-              {openSections.sales && (
-                <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
-                  {/* Manage Leads sub-group */}
-                  <div className="space-y-0.5">
-                    <button
-                      onClick={() => toggleSection('leadsSub')}
-                      className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Users className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Manage Leads</span>
-                      </div>
-                      {openSections.leadsSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                    </button>
-
-                    {openSections.leadsSub && (
-                      <div className="pl-5 space-y-1 py-1 text-[11px]">
+                {openSections.franchise && (
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
+                    {can('franchise:partners') && (
+                      <>
                         <Link
-                          to="/crm/sales-manage-leads"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`block py-1 px-2 rounded-md ${
-                            location.pathname === '/crm/sales-manage-leads' || location.pathname === '/crm/leads'
-                              ? 'bg-[#1B365D] text-white font-bold'
-                              : 'text-slate-600 hover:text-[#1B365D]'
-                          }`}
+                          to="/crm/franchise"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
                         >
-                          Lead List
+                          <span>Manage Partners</span>
+                          <span className="badge badge-gold text-[9px] px-1 py-0.2">120+</span>
                         </Link>
                         <Link
-                          to="/crm/sales-manage-leads-details"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`block py-1 px-2 rounded-md ${
-                            location.pathname === '/crm/sales-manage-leads-details'
-                              ? 'bg-[#1B365D] text-white font-bold'
-                              : 'text-slate-600 hover:text-[#1B365D]'
-                          }`}
+                          to="/crm/franchise"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
                         >
-                          Leads Details
+                          <span>Manage Partners Orders</span>
+                        </Link>
+                      </>
+                    )}
+
+                    {can('franchise:inquiries') && (
+                      <>
+                        <Link
+                          to="/crm/leads"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <span>Manage Inquiries</span>
                         </Link>
                         <Link
                           to="/crm/leads"
-                          onClick={() => setSidebarOpen(false)}
-                          className="block py-1 px-2 text-slate-600 hover:text-[#1B365D]"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
                         >
-                          Customer Inquiries
+                          <span>Partners Leads</span>
                         </Link>
-                      </div>
+                      </>
+                    )}
+
+                    {can('franchise:training') && (
+                      <>
+                        <Link
+                          to="/portal/videos"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <span>Training Videos</span>
+                        </Link>
+                        <Link
+                          to="/portal/documents"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <span>Service Documents</span>
+                        </Link>
+                      </>
                     )}
                   </div>
+                )}
+              </div>
+            )}
 
-                  <Link
-                    to="/crm/sub-brands"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Udyomi Leads</span>
-                  </Link>
+            {/* 4. SALES MANAGER ACCORDION */}
+            {showSalesSection && (
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => toggleSection('sales')}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <PhoneCall className="w-4 h-4 text-[#1B365D] shrink-0" />
+                    <span>Sales Manager</span>
+                  </div>
+                  {openSections.sales ? (
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  )}
+                </button>
 
-                  <Link
-                    to="/crm/sub-brands"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Sahakar Leads</span>
-                  </Link>
+                {openSections.sales && (
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
+                    {/* Manage Leads sub-group */}
+                    {can('leads:view') && (
+                      <div className="space-y-0.5">
+                        <button
+                          onClick={() => toggleSection('leadsSub')}
+                          className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Manage Leads</span>
+                          </div>
+                          {openSections.leadsSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        </button>
 
-                  <Link
-                    to="/crm/quotations"
-                    onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                      location.pathname.startsWith('/crm/quotation')
-                        ? 'bg-blue-50 text-[#1B365D] font-bold'
-                        : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
-                    }`}
-                  >
-                    <span>Quotations</span>
-                    <span className="badge badge-gold text-[9px] px-1 py-0.2">Letterhead</span>
-                  </Link>
+                        {openSections.leadsSub && (
+                          <div className="pl-5 space-y-1 py-1 text-[11px]">
+                            <Link
+                              to="/crm/sales-manage-leads"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/sales-manage-leads' || location.pathname === '/crm/leads'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              Lead List
+                            </Link>
+                            <Link
+                              to="/crm/sales-manage-leads-details"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/sales-manage-leads-details'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              Leads Details
+                            </Link>
+                            <Link
+                              to="/crm/leads"
+                              onClick={handleNavClick}
+                              className="block py-1 px-2 text-slate-600 hover:text-[#1B365D]"
+                            >
+                              Customer Inquiries
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                  <Link
-                    to="/crm/tasks"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>My Tasks</span>
-                  </Link>
+                    {can('leads:subbrands') && (
+                      <>
+                        <Link
+                          to="/crm/sub-brands"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <span>Udyomi Leads</span>
+                        </Link>
+                        <Link
+                          to="/crm/sub-brands"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <span>Sahakar Leads</span>
+                        </Link>
+                      </>
+                    )}
 
-                  <Link
-                    to="/crm/workforce"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Manage Employee</span>
-                  </Link>
+                    {can('quotations:view') && (
+                      <Link
+                        to="/crm/quotations"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname.startsWith('/crm/quotation')
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Quotations</span>
+                        <span className="badge badge-gold text-[9px] px-1 py-0.2">Letterhead</span>
+                      </Link>
+                    )}
 
-                  <Link
-                    to="/crm/accounts"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Manage Customers</span>
-                  </Link>
+                    {can('tasks:view') && (
+                      <Link
+                        to="/crm/tasks"
+                        onClick={handleNavClick}
+                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                      >
+                        <span>My Tasks</span>
+                      </Link>
+                    )}
 
-                  <Link
-                    to="/crm/leads"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>My Leads</span>
-                  </Link>
-                </div>
-              )}
-            </div>
+                    {can('workforce:view') && (
+                      <Link
+                        to="/crm/workforce"
+                        onClick={handleNavClick}
+                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                      >
+                        <span>Manage Employee</span>
+                      </Link>
+                    )}
+
+                    {can('accounts:view') && (
+                      <Link
+                        to="/crm/accounts"
+                        onClick={handleNavClick}
+                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                      >
+                        <span>Manage Customers</span>
+                      </Link>
+                    )}
+
+                    {can('leads:view') && (
+                      <Link
+                        to="/crm/leads"
+                        onClick={handleNavClick}
+                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                      >
+                        <span>My Leads</span>
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* 5. ADMIN / SUPPORT ACCORDION */}
-            <div className="space-y-0.5">
-              <button
-                onClick={() => toggleSection('admin')}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Shield className="w-4 h-4 text-purple-600 shrink-0" />
-                  <span>Admin / Support</span>
-                </div>
-                {openSections.admin ? (
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                )}
-              </button>
+            {showAdminSection && (
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => toggleSection('admin')}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Shield className="w-4 h-4 text-purple-600 shrink-0" />
+                    <span>Admin / Support</span>
+                  </div>
+                  {openSections.admin ? (
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  )}
+                </button>
 
-              {openSections.admin && (
-                <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
-                  <Link
-                    to="/crm/users"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>Manage Manager</span>
-                  </Link>
-                  <Link
-                    to="/crm/call-analytics"
-                    onClick={() => setSidebarOpen(false)}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                  >
-                    <span>User Activities</span>
-                  </Link>
-                  <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                    Manage Blogs
-                  </span>
-                  <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                    Appointments
-                  </span>
-                  <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                    Webinar
-                  </span>
-                  <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                    Reports
-                  </span>
-                </div>
-              )}
-            </div>
+                {openSections.admin && (
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
+                    {can('users:manage') && (
+                      <Link
+                        to="/crm/users"
+                        onClick={handleNavClick}
+                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                      >
+                        <span>Manage Manager</span>
+                      </Link>
+                    )}
+
+                    {can('call_analytics:view') && (
+                      <Link
+                        to="/crm/call-analytics"
+                        onClick={handleNavClick}
+                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                      >
+                        <span>User Activities</span>
+                      </Link>
+                    )}
+
+                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
+                      Manage Blogs
+                    </span>
+                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
+                      Appointments
+                    </span>
+                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
+                      Webinar
+                    </span>
+                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
+                      Reports
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Desktrack Live Indicator */}
             <div className="p-2.5 mt-2 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
@@ -593,9 +680,17 @@ export default function CrmLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#FAF9F5]">
         {/* Top Header matching exact screenshot banner ("ETaxwala Business Solution Pvt Ltd" / Employee Name) */}
-        <header className="hidden md:flex items-center justify-between px-8 py-3 bg-[#FFFDF9] border-b border-[#EAE6DD] sticky top-0 z-20 shadow-xs">
-          {/* Company / Brand Banner */}
-          <div className="flex items-center gap-4">
+        <header className="hidden md:flex items-center justify-between px-4 py-3 bg-[#FFFDF9] border-b border-[#EAE6DD] sticky top-0 z-20 shadow-xs">
+          {/* Sidebar toggle + Company / Brand Banner */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-lg text-slate-500 hover:text-[#1B365D] hover:bg-slate-100 transition-colors shrink-0"
+              title={sidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
+              id="sidebar-toggle-btn"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
             <div className="flex items-center gap-2">
               <span className="font-bold text-sm text-[#1B365D]">
                 ETaxwala Business Solution Pvt Ltd
@@ -654,7 +749,7 @@ export default function CrmLayout() {
         </header>
 
         {/* Dashboard View */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto h-full">
           <Outlet />
         </main>
       </div>

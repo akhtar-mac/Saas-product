@@ -165,6 +165,46 @@ export default function CrmQuotationsPage() {
   const [entriesCount, setEntriesCount] = useState(10);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
+  // Fetch real quotations from DB
+  React.useEffect(() => {
+    fetch(`${API_BASE}/v1/crm/quotations`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+          const mapped: QuotationRecord[] = data.data.map((q: any, i: number) => ({
+            id: String(q.id || i + 1),
+            quotationNo: `ETW-QUO-2026-${String(q.id || i + 100).padStart(3, '0')}`,
+            customerName: `Lead #${q.lead_id}`,
+            companyName: 'Client Enterprise',
+            mobile: '+91 98765 43210',
+            email: 'client@etaxwala.in',
+            address: 'Maharashtra, India',
+            date: q.created_at ? q.created_at.split('T')[0] : '04 Sep 2026',
+            validUntil: '11 Sep 2026',
+            createdBy: q.created_by || 'Staff Admin',
+            status: 'Sent',
+            notes: q.note || 'Standard 7-day validity.',
+            items: [
+              {
+                id: `item-${q.id}`,
+                serviceName: 'Taxation & Advisory Service',
+                description: q.note || 'Includes full compliance and advisory services',
+                sacCode: '998311',
+                qty: 1,
+                unitPrice: 1499,
+                discountPercent: 0,
+                gstPercent: 18,
+              },
+            ],
+          }));
+          setQuotations(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
@@ -245,22 +285,49 @@ export default function CrmQuotationsPage() {
     setCurrentView('edit');
   };
 
-  const handleSaveQuote = () => {
+  const handleSaveQuote = async () => {
     if (!activeQuote.customerName) {
       showToast('Please enter customer name');
       return;
     }
-    setQuotations((prev) => {
-      const idx = prev.findIndex((q) => q.id === activeQuote.id);
-      if (idx >= 0) {
-        const copy = [...prev];
-        copy[idx] = activeQuote;
-        return copy;
+
+    const totals = calculateTotals(activeQuote.items);
+    try {
+      const isExisting = quotations.some((q) => q.id === activeQuote.id);
+      if (isExisting) {
+        await fetch(`${API_BASE}/v1/crm/quotations/${activeQuote.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note: activeQuote.notes }),
+        });
+      } else {
+        await fetch(`${API_BASE}/v1/crm/quotations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lead_id: 1,
+            client_name: activeQuote.customerName,
+            total: totals.grandTotal,
+            service_name: activeQuote.items[0]?.serviceName || 'Taxation Service',
+            note: activeQuote.notes,
+          }),
+        });
       }
-      return [activeQuote, ...prev];
-    });
-    showToast('Quotation saved successfully!');
-    setCurrentView('list');
+
+      setQuotations((prev) => {
+        const idx = prev.findIndex((q) => q.id === activeQuote.id);
+        if (idx >= 0) {
+          const copy = [...prev];
+          copy[idx] = activeQuote;
+          return copy;
+        }
+        return [activeQuote, ...prev];
+      });
+      showToast('Quotation saved to database successfully!');
+      setCurrentView('list');
+    } catch {
+      showToast('Failed to save quotation in database.');
+    }
   };
 
   const handleAddItem = () => {
@@ -417,9 +484,9 @@ export default function CrmQuotationsPage() {
             </div>
 
             {/* Quotations Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#F8FAFC] text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+            <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl shadow-2xs">
+              <table className="w-full text-left text-xs border-separate border-spacing-0">
+                <thead className="sticky top-0 z-10 bg-[#F8FAFC] text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                   <tr>
                     <th className="py-3 px-4 w-12 text-center">SR NO.</th>
                     <th className="py-3 px-4">QUOTATION ID</th>
@@ -695,25 +762,25 @@ export default function CrmQuotationsPage() {
                 <button
                   type="button"
                   onClick={handleAddItem}
-                  className="btn btn-sm bg-[#00A896] hover:bg-[#008f80] text-white text-xs font-bold flex items-center gap-1"
+                              className="btn btn-sm bg-[#00A896] hover:bg-[#008f80] text-white text-xs font-bold flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" /> + Add Row
                 </button>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#F8FAFC] text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+            <div className="overflow-x-auto overflow-y-auto max-h-96">
+              <table className="w-full text-left text-xs border-separate border-spacing-0">
+                <thead className="sticky top-0 z-10">
                   <tr>
-                    <th className="py-2.5 px-3 w-8">#</th>
-                    <th className="py-2.5 px-3 min-w-[280px]">PRODUCT / SERVICE NAME & DESCRIPTION</th>
-                    <th className="py-2.5 px-3 w-20">QTY</th>
-                    <th className="py-2.5 px-3 w-28">PRICE (₹)</th>
-                    <th className="py-2.5 px-3 w-24">DISC (%)</th>
-                    <th className="py-2.5 px-3 w-24">GST (%)</th>
-                    <th className="py-2.5 px-3 w-28 text-right">AMOUNT (₹)</th>
-                    <th className="py-2.5 px-3 w-12 text-center">ACTION</th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-8 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">#</th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 min-w-[280px] text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">PRODUCT / SERVICE NAME & DESCRIPTION</th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-20 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">QTY</th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-28 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">PRICE (₹)</th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-24 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">DISC (%)</th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-24 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">GST (%)</th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-28 text-right text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">AMOUNT (₹)</th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-12 text-center text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">ACTION</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
@@ -1023,18 +1090,18 @@ export default function CrmQuotationsPage() {
             </div>
 
             {/* Itemized Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border border-slate-200">
-                <thead className="bg-[#1B365D] text-white font-bold uppercase tracking-wider text-[11px]">
+            <div className="overflow-x-auto overflow-y-auto max-h-72">
+              <table className="w-full text-left text-xs border border-slate-200 border-separate border-spacing-0">
+                <thead className="sticky top-0 z-10">
                   <tr>
-                    <th className="py-2.5 px-3 w-8 text-center">#</th>
-                    <th className="py-2.5 px-3">Description of Services</th>
-                    <th className="py-2.5 px-3 w-16 text-center">SAC</th>
-                    <th className="py-2.5 px-3 w-12 text-center">Qty</th>
-                    <th className="py-2.5 px-3 w-24 text-right">Rate (₹)</th>
-                    <th className="py-2.5 px-3 w-20 text-center">Disc (%)</th>
-                    <th className="py-2.5 px-3 w-28 text-right">Taxable (₹)</th>
-                    <th className="py-2.5 px-3 w-28 text-right">Total (₹)</th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-8 text-center font-bold uppercase tracking-wider text-[11px]">#</th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 font-bold uppercase tracking-wider text-[11px]">Description of Services</th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-16 text-center font-bold uppercase tracking-wider text-[11px]">SAC</th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-12 text-center font-bold uppercase tracking-wider text-[11px]">Qty</th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-24 text-right font-bold uppercase tracking-wider text-[11px]">Rate (₹)</th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-20 text-center font-bold uppercase tracking-wider text-[11px]">Disc (%)</th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-28 text-right font-bold uppercase tracking-wider text-[11px]">Taxable (₹)</th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-28 text-right font-bold uppercase tracking-wider text-[11px]">Total (₹)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-slate-700">

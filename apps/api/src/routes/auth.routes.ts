@@ -108,6 +108,11 @@ router.post('/staff/login', async (req: Request, res: Response) => {
         email: staffUser.email,
       };
 
+      let userPermissions: string[] = [];
+      if (staffUser.permissions) {
+        try { userPermissions = JSON.parse(staffUser.permissions); } catch {}
+      }
+
       const tokens = signTokens(payload);
       return res.json({
         success: true,
@@ -120,6 +125,7 @@ router.post('/staff/login', async (req: Request, res: Response) => {
             email: staffUser.email,
             role_id: staffUser.role_id,
             role_name: ROLE_MAP[staffUser.role_id] || 'staff',
+            permissions: userPermissions,
             profile_photo: staffUser.profile_photo,
             position: staffUser.position,
           },
@@ -153,6 +159,7 @@ router.post('/staff/login', async (req: Request, res: Response) => {
             email: builtin.email,
             role_id: builtin.role_id,
             role_name: ROLE_MAP[builtin.role_id] || 'staff',
+            permissions: [],
             profile_photo: null,
             position: builtin.position,
           },

@@ -202,6 +202,38 @@ export default function CrmAccountsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
 
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
+  // Fetch real customers from database
+  React.useEffect(() => {
+    fetch(`${API_BASE}/v1/crm/customers`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+          const mapped: CustomerItem[] = data.data.map((c: any, i: number) => ({
+            id: c.id || i + 1,
+            name: c.name || 'Client',
+            company: c.business || 'Company',
+            subCustomer: '',
+            mobile: c.contact || '9876543210',
+            email: c.email || 'client@etaxwala.in',
+            state: c.state || 'Maharashtra',
+            city: c.city || 'Pune',
+            category: 'Taxation & Filing',
+            service: c.service || 'Advisory',
+            type: 'Basic',
+            addedBy: `Staff #${c.added_by || 1}`,
+            total: c.service_price || 1499,
+            paid: c.is_payment ? (c.service_price || 1499) : 0,
+            unpaid: c.is_payment ? 0 : (c.service_price || 1499),
+            dueDate: '—',
+          }));
+          setCustomers(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const location = useLocation();
 
   // Modals state
@@ -335,10 +367,10 @@ export default function CrmAccountsPage() {
         </div>
 
         {/* Customers Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider">
+        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl shadow-2xs">
+          <table className="w-full text-left text-xs border-separate border-spacing-0">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider sticky top-0 z-10">
                 <th className="py-2.5 px-3 font-bold">Name</th>
                 <th className="py-2.5 px-3 font-bold">Company</th>
                 <th className="py-2.5 px-3 font-bold">Mobile</th>

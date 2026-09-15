@@ -164,6 +164,46 @@ export default function CrmTasksPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10);
 
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
+  // Fetch real tasks from backend DB
+  useEffect(() => {
+    fetch(`${API_BASE}/v1/crm/tasks?limit=50`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+          const mapped: OperationTask[] = data.data.map((t: any, i: number) => ({
+            id: t.task_id || t.id || i + 1,
+            taskName: t.task_name || `Milestone Task #${t.task_id || i + 1}`,
+            customerName: t.sub_customer_name || `Customer #${t.cust_id}`,
+            companyName: 'ETaxwala Client',
+            service: `Service #${t.service_id}`,
+            assignTo: t.added_by ? `Officer #${t.added_by}` : 'Avinash Mate',
+            addedBy: 'System Admin',
+            assignDate: t.assign_date ? t.assign_date.split('T')[0] : '2026-09-03',
+            dueDate: '2026-09-10',
+            status: t.original_task_status === 10 ? 'completed' : t.original_task_status > 1 ? 'wip' : 'not-started',
+            email: 'client@etaxwala.in',
+            phone: '9876543210',
+            state: 'Maharashtra',
+            city: 'Pune',
+            timeline: [
+              {
+                id: 1,
+                dateTime: t.updated_at ? new Date(t.updated_at).toLocaleString() : '2026-09-03 13:50',
+                timeSpent: '00:00:00',
+                staff: `Officer #${t.added_by || 1}`,
+                status: t.original_task_status === 10 ? 'Completed' : 'In Progress',
+                comment: `Current Milestone Stage: ${t.original_task_status || 1}`,
+              },
+            ],
+          }));
+          setTasks(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Filters
   const [taskFilter, setTaskFilter] = useState('Tasks');
   const [categoryFilter, setCategoryFilter] = useState('Category');
@@ -271,33 +311,48 @@ export default function CrmTasksPage() {
     alert('Task assigned successfully!');
   };
 
-  const handleSaveEffort = () => {
+  const handleSaveEffort = async () => {
     if (!effortModalTask) return;
-    const newStep: TaskTimelineStep = {
-      id: Date.now(),
-      dateTime: new Date().toLocaleString(),
-      timeSpent: formatTimer(timerSeconds),
-      staff: effortModalTask.assignTo || 'Avinash Mate',
-      status: effortStatus as any,
-      comment: effortNotes || 'Effort logged',
-    };
+    const newStage = effortStatus.toLowerCase().includes('completed') ? 10 : 2;
+    try {
+      await fetch(`${API_BASE}/v1/crm/tasks/${effortModalTask.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          new_status: newStage,
+          remarks: effortNotes || `Milestone updated to ${effortStatus}`,
+          updated_by: effortModalTask.assignTo || 'Operations Specialist',
+        }),
+      });
 
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === effortModalTask.id
-          ? {
-              ...t,
-              status: effortStatus.toLowerCase().includes('completed') ? 'completed' : 'wip',
-              timeline: [newStep, ...t.timeline],
-            }
-          : t
-      )
-    );
-    setEffortModalTask(null);
-    setTimerSeconds(0);
-    setIsTimerRunning(false);
-    setEffortNotes('');
-    alert('Effort logged and timeline updated!');
+      const newStep: TaskTimelineStep = {
+        id: Date.now(),
+        dateTime: new Date().toLocaleString(),
+        timeSpent: formatTimer(timerSeconds),
+        staff: effortModalTask.assignTo || 'Avinash Mate',
+        status: effortStatus as any,
+        comment: effortNotes || 'Effort logged',
+      };
+
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === effortModalTask.id
+            ? {
+                ...t,
+                status: effortStatus.toLowerCase().includes('completed') ? 'completed' : 'wip',
+                timeline: [newStep, ...t.timeline],
+              }
+            : t
+        )
+      );
+      setEffortModalTask(null);
+      setTimerSeconds(0);
+      setIsTimerRunning(false);
+      setEffortNotes('');
+      alert('Effort logged and milestone saved to database successfully!');
+    } catch {
+      alert('Failed to save effort/milestone to database.');
+    }
   };
 
   const filteredTasks = tasks.filter(
@@ -516,10 +571,10 @@ export default function CrmTasksPage() {
         </div>
 
         {/* Table Data */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider">
+        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl shadow-2xs">
+          <table className="w-full text-left text-xs border-separate border-spacing-0">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider sticky top-0 z-10">
                 <th className="py-2.5 px-3 w-8 text-center">
                   <input
                     type="checkbox"

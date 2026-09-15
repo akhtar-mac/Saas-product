@@ -229,6 +229,8 @@ export default function CrmLoginPage() {
           lastLoginAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          // Pass permissions from the API so sidebar gating works correctly
+          permissions: Array.isArray(user.permissions) ? user.permissions : [],
         },
         accessToken,
         refreshToken

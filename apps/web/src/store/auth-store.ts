@@ -36,6 +36,7 @@ const DEFAULT_STAFF: User = {
   lastLoginAt: '2026-09-05',
   createdAt: '2026-01-01',
   updatedAt: '2026-09-05',
+  permissions: ['*'],
   profile: {
     id: 1,
     userId: 1,

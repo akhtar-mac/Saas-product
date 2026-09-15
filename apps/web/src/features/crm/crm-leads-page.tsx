@@ -313,30 +313,32 @@ export default function CrmLeadsPage() {
   const [newLeadState, setNewLeadState] = useState('Maharashtra');
   const [newLeadCity, setNewLeadCity] = useState('');
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
   // Fetch real leads from API if available
   useEffect(() => {
-    fetch('/v1/crm/leads?limit=25')
+    fetch(`${API_BASE}/v1/crm/leads?limit=50`)
       .then((res) => res.json())
       .then((data) => {
-        if (data?.success && Array.isArray(data?.data?.leads) && data.data.leads.length > 0) {
-          const mapped: Lead[] = data.data.leads.map((l: any, i: number) => ({
+        if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+          const mapped: Lead[] = data.data.map((l: any, i: number) => ({
             id: l.id || i + 1,
-            date: l.date?.split('T')[0] || '2026-09-04',
+            date: l.date?.split('T')[0] || l.created_at?.split('T')[0] || '2026-09-04',
             name: l.name || 'Client Lead',
             contact: l.contact || '9876543210',
             email: l.email || 'client@example.com',
             state: l.state || 'Maharashtra',
             city: l.city || 'Pune',
             service: l.service || 'Multistate Registration',
-            addedBy: l.lead_source || 'Facebook',
-            isAssign: Boolean(l.assigned_to),
+            addedBy: l.source || l.lead_source || 'ETaxwala',
+            isAssign: Boolean(l.is_assign),
             leadScore: '80%',
-            leadSource: 'ETaxwala',
+            leadSource: l.source || 'ETaxwala',
             fDate: l.followup_date || 'No Date',
-            assignTo: l.assigned_to ? `Staff #${l.assigned_to}` : 'Not Assigned',
+            assignTo: l.added_by ? `Staff #${l.added_by}` : 'Not Assigned',
             assignDate: l.date?.split('T')[0] || '2026-09-04 10:00:00',
-            status: l.status || 'New',
-            note: l.note || '',
+            status: l.lead_type === 4 ? 'Won' : l.lead_type === 1 ? 'Interested' : 'New',
+            note: l.lead_note || '',
             remarks: [],
           }));
           setLeads(mapped);
@@ -360,66 +362,114 @@ export default function CrmLeadsPage() {
     setSelectedIds(next);
   };
 
-  const handleBulkAssign = () => {
+  const handleBulkAssign = async () => {
     if (assignStaff === 'Assign Leads To' || selectedIds.size === 0) {
       alert('Please select leads and choose a staff member to assign.');
       return;
     }
-    setLeads((prev) =>
-      prev.map((l) =>
-        selectedIds.has(l.id)
-          ? { ...l, assignTo: assignStaff, isAssign: true, assignDate: '2026-09-05 16:50:00' }
-          : l
-      )
-    );
-    alert(`Assigned ${selectedIds.size} leads to ${assignStaff}.`);
-    setSelectedIds(new Set());
+    const idsArray = Array.from(selectedIds);
+    try {
+      await fetch(`${API_BASE}/v1/crm/leads/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_ids: idsArray, assign_to_user_id: 1 }),
+      });
+      setLeads((prev) =>
+        prev.map((l) =>
+          selectedIds.has(l.id)
+            ? { ...l, assignTo: assignStaff, isAssign: true, assignDate: new Date().toLocaleString() }
+            : l
+        )
+      );
+      alert(`Assigned ${selectedIds.size} leads to ${assignStaff} and saved in database.`);
+      setSelectedIds(new Set());
+    } catch {
+      alert('Failed to save assignment in database.');
+    }
   };
 
-  const handleAddRemark = () => {
+  const handleAddRemark = async () => {
     if (!editRemark.trim() || !detailsModalLead) return;
-    const newEntry = {
-      staff: 'Current Staff',
-      note: editRemark,
-      date: new Date().toLocaleString(),
-      source: 'etaxwala',
-    };
-    setLeads((prev) =>
-      prev.map((l) =>
-        l.id === detailsModalLead.id
-          ? {
-              ...l,
-              status: editStatus,
-              remarks: [newEntry, ...(l.remarks || [])],
-            }
-          : l
-      )
-    );
-    setEditRemark('');
-    alert('Lead status and remark updated successfully!');
+    try {
+      await fetch(`${API_BASE}/v1/crm/calls/log`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lead_id: detailsModalLead.id,
+          status: editStatus === 'Won' ? 4 : 1,
+          remarks: editRemark,
+        }),
+      });
+
+      await fetch(`${API_BASE}/v1/crm/leads/${detailsModalLead.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: editStatus === 'Won' ? 4 : 1,
+          note: editRemark,
+        }),
+      }).catch(() => {});
+
+      const newEntry = {
+        staff: 'Current Staff',
+        note: editRemark,
+        date: new Date().toLocaleString(),
+        source: 'etaxwala',
+      };
+      setLeads((prev) =>
+        prev.map((l) =>
+          l.id === detailsModalLead.id
+            ? {
+                ...l,
+                status: editStatus,
+                remarks: [newEntry, ...(l.remarks || [])],
+              }
+            : l
+        )
+      );
+      setEditRemark('');
+      alert('Lead status and remark saved to database successfully!');
+    } catch {
+      alert('Failed to save remark to database.');
+    }
   };
 
-  const handleAddFollowup = () => {
+  const handleAddFollowup = async () => {
     if (!followupRemark.trim() || !detailsModalLead) return;
-    const newEntry = {
-      staff: 'Current Staff',
-      note: `Follow-up (${followupDate} ${followupTime}): ${followupRemark}`,
-      date: new Date().toLocaleString(),
-      source: 'etaxwala',
-    };
-    setLeads((prev) =>
-      prev.map((l) =>
-        l.id === detailsModalLead.id
-          ? {
-              ...l,
-              fDate: followupDate,
-              remarks: [newEntry, ...(l.remarks || [])],
-            }
-          : l
-      )
-    );
-    setFollowupRemark('');
-    alert('Followup scheduled successfully!');
+    try {
+      await fetch(`${API_BASE}/v1/crm/leads/followup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lead_id: detailsModalLead.id,
+          followup_date: followupDate,
+          followup_time: followupTime,
+          followup_remark: followupRemark,
+        }),
+      });
+
+      const newEntry = {
+        staff: 'Current Staff',
+        note: `Follow-up (${followupDate} ${followupTime}): ${followupRemark}`,
+        date: new Date().toLocaleString(),
+        source: 'etaxwala',
+      };
+      setLeads((prev) =>
+        prev.map((l) =>
+          l.id === detailsModalLead.id
+            ? {
+                ...l,
+                fDate: followupDate,
+                remarks: [newEntry, ...(l.remarks || [])],
+              }
+            : l
+        )
+      );
+      setFollowupRemark('');
+      alert('Followup saved to database successfully!');
+    } catch {
+      alert('Failed to save followup in database.');
+    }
   };
 
   const handleAddService = () => {
@@ -428,38 +478,60 @@ export default function CrmLeadsPage() {
     }
   };
 
-  const handleCreateLead = (e: React.FormEvent) => {
+  const handleCreateLead = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLeadName || !newLeadContact) {
       alert('Name and Contact are required.');
       return;
     }
-    const created: Lead = {
-      id: Date.now(),
-      date: '2026-09-05',
-      name: newLeadName,
-      contact: newLeadContact,
-      email: newLeadEmail || 'NA@gmail.com',
-      state: newLeadState,
-      city: newLeadCity || 'NA',
-      service: newLeadService,
-      addedBy: 'Direct Add',
-      isAssign: false,
-      leadScore: '80%',
-      leadSource: 'ETaxwala',
-      fDate: 'No Date',
-      assignTo: 'Not Assigned',
-      assignDate: '2026-09-05 16:50:00',
-      status: 'New',
-      remarks: [],
-    };
-    setLeads([created, ...leads]);
-    setAddLeadModalOpen(false);
-    setNewLeadName('');
-    setNewLeadContact('');
-    setNewLeadEmail('');
-    setNewLeadCity('');
-    alert('New lead added successfully!');
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newLeadName,
+          contact: newLeadContact,
+          email: newLeadEmail || undefined,
+          service: newLeadService,
+          state: newLeadState,
+          city: newLeadCity || 'Pune',
+          source: 'ETaxwala Web',
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const created: Lead = {
+          id: data.data.id || Date.now(),
+          date: new Date().toISOString().split('T')[0],
+          name: newLeadName,
+          contact: newLeadContact,
+          email: newLeadEmail || 'NA@gmail.com',
+          state: newLeadState,
+          city: newLeadCity || 'NA',
+          service: newLeadService,
+          addedBy: 'Direct Add',
+          isAssign: false,
+          leadScore: '80%',
+          leadSource: 'ETaxwala',
+          fDate: 'No Date',
+          assignTo: 'Not Assigned',
+          assignDate: new Date().toISOString().split('T')[0],
+          status: 'New',
+          remarks: [],
+        };
+        setLeads([created, ...leads]);
+        setAddLeadModalOpen(false);
+        setNewLeadName('');
+        setNewLeadContact('');
+        setNewLeadEmail('');
+        setNewLeadCity('');
+        alert('New lead saved to database successfully!');
+      } else {
+        alert(data.error || 'Failed to create lead');
+      }
+    } catch {
+      alert('Network error: Failed to save lead to database.');
+    }
   };
 
   const filteredLeads = leads.filter((l) => {
@@ -745,10 +817,10 @@ export default function CrmLeadsPage() {
         </div>
 
         {/* Table View */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider">
+        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl shadow-2xs">
+          <table className="w-full text-left text-xs border-separate border-spacing-0">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider sticky top-0 z-10">
                 <th className="py-2.5 px-3 w-8 text-center">
                   <input
                     type="checkbox"

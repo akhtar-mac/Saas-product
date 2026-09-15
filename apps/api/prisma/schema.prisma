@@ -17,6 +17,7 @@ model staff_users {
   password_hash   String    @db.VarChar(255)
   phone           String?   @db.VarChar(20)
   role_id         Int       // 1=super_admin … 15=website_manager
+  permissions     String?   // JSON array of permission keys (e.g. ["dashboard:view", "sales:view"])
   profile_photo   String?   @db.VarChar(500)
   position        String?   @db.VarChar(100)
   is_active       Boolean   @default(true)

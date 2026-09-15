@@ -22,7 +22,7 @@ import {
 import { useAuthStore } from '@/store/auth-store';
 
 export default function PortalLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const { customer, logoutCustomer } = useAuthStore();
@@ -67,15 +67,13 @@ export default function PortalLayout() {
     },
   ];
 
-
-
   const handleLogout = () => {
     logoutCustomer();
     navigate('/portal/login');
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] text-slate-800 flex flex-col md:flex-row font-sans">
+    <div className="h-screen bg-[#F7F8FA] text-slate-800 flex flex-col md:flex-row font-sans overflow-hidden">
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <Link to="/portal" className="flex items-center gap-2">
@@ -102,16 +100,24 @@ export default function PortalLayout() {
 
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col justify-between transition-transform duration-300 shadow-sm ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`fixed md:relative inset-y-0 left-0 z-40 md:z-30 h-full bg-white border-r border-slate-200 flex flex-col justify-between transition-all duration-300 shadow-sm shrink-0 ${sidebarOpen
+            ? 'w-64 translate-x-0 opacity-100'
+            : '-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 overflow-hidden border-none'
+          }`}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
           {/* Brand Header */}
-          <div className="p-4 border-b border-slate-100">
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2.5">
               <img src="/logo_black.png" alt="ETaxwala" className="h-8 w-auto" />
             </Link>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              title="Close Sidebar"
+            >
+              <X className="w-4.5 h-4.5" />
+            </button>
           </div>
 
           {/* Client Info Card */}
@@ -151,12 +157,10 @@ export default function PortalLayout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                    isActive
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${isActive
                       ? 'bg-brand-navy text-white shadow-sm font-bold'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-brand-navy'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <Icon className="w-4 h-4 shrink-0" />
@@ -164,11 +168,10 @@ export default function PortalLayout() {
                   </div>
                   {item.badge ? (
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                        isActive
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isActive
                           ? 'bg-white/20 text-white'
                           : 'bg-emerald-50 text-emerald-700'
-                      }`}
+                        }`}
                     >
                       {item.badge}
                     </span>
@@ -217,8 +220,19 @@ export default function PortalLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F7F8FA]">
         {/* Top Navbar */}
-        <header className="hidden md:flex items-center justify-between px-8 py-3.5 bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+        <header className="hidden md:flex items-center justify-between px-6 py-3.5 bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm shrink-0">
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen((prev) => !prev)}
+              className="p-2 rounded-xl text-slate-700 hover:text-brand-navy hover:bg-slate-100 transition-colors border border-slate-200 flex items-center gap-2 font-semibold text-xs cursor-pointer shadow-2xs shrink-0"
+              title={sidebarOpen ? "Sidebar Band Karein" : "Sidebar Chalu Karein"}
+            >
+              <Menu className="w-4 h-4 text-brand-navy" />
+              <span className="hidden lg:inline text-slate-700">
+                {sidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
+              </span>
+            </button>
+
             <h1 className="text-base font-display font-bold text-brand-navy">
               Client Service Portal
             </h1>

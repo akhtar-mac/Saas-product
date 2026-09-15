@@ -151,10 +151,73 @@ router.post('/leads', async (req, res) => {
   }
 });
 
+// 3b. Update Lead Status
+router.patch('/leads/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, note } = req.body;
+    const updated = await prisma.leads.update({
+      where: { id: Number(id) },
+      data: {
+        lead_type: Number(status) || 0,
+        lead_note: note || undefined,
+        updated_at: new Date(),
+      },
+    });
+    res.json({ success: true, message: 'Lead status updated in database', data: serializeBigInt(updated) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to update lead status' });
+  }
+});
+
+// 3c. Add Lead Followup
+router.post('/leads/followup', async (req, res) => {
+  try {
+    const { lead_id, user_id = 1, followup_date, followup_time, followup_remark } = req.body;
+    const maxFollowup = await prisma.lead_followups.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
+    const nextId = (maxFollowup?.id || 1000) + 1;
+    const record = await prisma.lead_followups.create({
+      data: {
+        id: nextId,
+        lead_id: Number(lead_id),
+        user_id: Number(user_id),
+        followup_date: new Date(followup_date || Date.now()),
+        followup_time: followup_time || '10:00 AM',
+        followup_remark: followup_remark || 'Follow-up scheduled',
+        date: new Date(),
+      },
+    });
+    res.json({ success: true, message: 'Followup scheduled in database', data: serializeBigInt(record) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to schedule followup' });
+  }
+});
+
+// 3d. Bulk Assign Leads
+router.post('/leads/assign', async (req, res) => {
+  try {
+    const { lead_ids, assign_to_user_id } = req.body;
+    if (!Array.isArray(lead_ids) || lead_ids.length === 0) {
+      return res.status(400).json({ success: false, error: 'lead_ids must be non-empty array' });
+    }
+    await prisma.leads.updateMany({
+      where: { id: { in: lead_ids.map(Number) } },
+      data: {
+        is_assign: 1,
+        added_by: Number(assign_to_user_id) || 1,
+        updated_at: new Date(),
+      },
+    });
+    res.json({ success: true, message: `Assigned ${lead_ids.length} leads successfully in database` });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to assign leads' });
+  }
+});
+
 // 4. Log Call Conversation in Database
 router.post('/calls/log', async (req, res) => {
   try {
-    const { lead_id, caller_id = 1, status = 1, remarks, contact = '+91 98220 11223' } = req.body;
+    const { lead_id, caller_id = 1, status = 1, remarks } = req.body;
     if (!lead_id) {
       return res.status(400).json({ success: false, error: 'lead_id is required' });
     }
@@ -411,27 +474,63 @@ router.post('/notifications/read', (_req, res) => {
 });
 
 // 16. Quotation CRUD (3.9.26 & 3.9.27)
-router.post('/quotations', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Quotation generated successfully',
-    data: {
-      id: Date.now(),
-      quote_number: `Q-${Date.now().toString().slice(-4)}`,
-      client_name: req.body.client_name || 'Client',
-      total: req.body.total || 1499,
-      status: 'SENT',
-      created_at: new Date().toISOString(),
-    },
-  });
+router.post('/quotations', async (req, res) => {
+  try {
+    const { lead_id = 1, note, client_name, total = 1499, service_name = 'Tax Advisory Service' } = req.body;
+    const maxQ = await prisma.quotations.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
+    const nextQId = (maxQ?.id ? BigInt(maxQ.id) : 1874n) + 1n;
+
+    const quotation = await prisma.quotations.create({
+      data: {
+        id: nextQId,
+        lead_id: BigInt(lead_id),
+        created_by: 'Staff Admin',
+        note: note || `Quotation for ${client_name || 'Client'} - ${service_name}`,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+
+    const maxSale = await prisma.sales.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
+    const nextSaleId = (maxSale?.id ? BigInt(maxSale.id) : 2000n) + 1n;
+
+    await prisma.sales.create({
+      data: {
+        id: nextSaleId,
+        quotation_id: nextQId,
+        service_name,
+        qty: 1,
+        price: Number(total),
+        dis: 0,
+        amount: Number(total),
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    }).catch(() => null);
+
+    res.json({
+      success: true,
+      message: 'Quotation generated and saved to DB',
+      data: serializeBigInt(quotation),
+    });
+  } catch (error) {
+    console.error('Error creating quotation:', error);
+    res.status(500).json({ success: false, error: 'Failed to generate quotation' });
+  }
 });
 
-router.put('/quotations/:id', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Quotation updated successfully',
-    data: { id: req.params.id, ...req.body },
-  });
+router.put('/quotations/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { note } = req.body;
+    const updated = await prisma.quotations.update({
+      where: { id: BigInt(id) },
+      data: { note, updated_at: new Date() },
+    });
+    res.json({ success: true, message: 'Quotation updated in DB', data: serializeBigInt(updated) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to update quotation' });
+  }
 });
 
 // 17. Employee Management (3.9.28, 3.9.29, 3.9.30)
@@ -446,8 +545,6 @@ router.get('/employees', async (_req, res) => {
     });
     res.json({ success: true, data: serializeBigInt(users) });
   } catch {
-
-
     res.json({
       success: true,
       data: [
@@ -461,20 +558,38 @@ router.get('/employees', async (_req, res) => {
   }
 });
 
-router.post('/employees', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Employee onboarding created',
-    data: { id: Date.now(), ...req.body },
-  });
+router.post('/employees', async (req, res) => {
+  try {
+    const { username, email, position } = req.body;
+    const maxUser = await prisma.desktop_users.findFirst({ orderBy: { id: 'desc' }, select: { id: true, user_id: true } });
+    const nextId = (maxUser?.id || 10) + 1;
+    const newUser = await prisma.desktop_users.create({
+      data: {
+        id: nextId,
+        username: username || email || `user_${nextId}`,
+        user_id: nextId,
+        idle_time: 0,
+        screenshot_time: 5,
+      },
+    });
+    res.json({ success: true, message: 'Employee onboarding created in DB', data: serializeBigInt(newUser) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to onboard employee' });
+  }
 });
 
-router.put('/employees/:id', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Employee details updated',
-    data: { id: req.params.id, ...req.body },
-  });
+router.put('/employees/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username } = req.body;
+    const updated = await prisma.desktop_users.update({
+      where: { id: Number(id) },
+      data: { username },
+    });
+    res.json({ success: true, message: 'Employee details updated in DB', data: serializeBigInt(updated) });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to update employee' });
+  }
 });
 
 // ─── 4.14: Advanced Staff API Routes ─────────────────────────────────────────
@@ -553,15 +668,38 @@ router.get('/desktrack/sessions', (_req, res) => {
   });
 });
 
-router.get('/desktrack/blocked', (_req, res) => {
-  res.json({
-    success: true,
-    data: ['facebook.com', 'instagram.com', 'netflix.com', 'youtube.com/shorts', 'gaming.com'],
-  });
+router.get('/desktrack/blocked', async (_req, res) => {
+  try {
+    const blocked = await prisma.blocked_websites.findMany({
+      take: 100,
+      orderBy: { created_at: 'desc' },
+    });
+    const urls = blocked.map((b: any) => b.website_url);
+    res.json({ success: true, data: urls.length > 0 ? urls : ['facebook.com', 'instagram.com', 'netflix.com'] });
+  } catch {
+    res.json({ success: true, data: ['facebook.com', 'instagram.com', 'netflix.com'] });
+  }
 });
 
-router.post('/desktrack/blocked', (req, res) => {
-  res.json({ success: true, message: `URL ${req.body.url || 'website'} added to blocked list` });
+router.post('/desktrack/blocked', async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) return res.status(400).json({ success: false, error: 'URL is required' });
+    const maxB = await prisma.blocked_websites.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
+    const nextId = (maxB?.id ? Number(maxB.id) : 100) + 1;
+    await prisma.blocked_websites.create({
+      data: {
+        id: nextId,
+        user_id: 1,
+        website_url: url.trim(),
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+    res.json({ success: true, message: `URL ${url} added to blocked list in database` });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to block website' });
+  }
 });
 
 // 4.14.11 - 4.14.15: System Reports
@@ -621,29 +759,103 @@ router.get('/reports/task-comments', (_req, res) => {
 });
 
 // 4.14.16 - 4.14.19: User & Role Management
+const USER_ROLE_MAP: Record<number, string> = {
+  1: 'Super Admin', 2: 'Admin', 3: 'Operations Manager',
+  4: 'Sales Manager', 5: 'Marketing Manager', 6: 'Franchise Manager',
+  7: 'Sales Employee', 8: 'Operations Employee', 9: 'Marketing Employee',
+  10: 'Franchise Partner', 11: 'Consultation', 12: 'Operations Assistant',
+  13: 'Sales Assistant', 14: 'HR', 15: 'Website Manager',
+};
+
 router.get('/users', async (_req, res) => {
+  try {
+    const users = await (prisma as any).staff_users.findMany({
+      orderBy: { id: 'desc' },
+    });
+    if (users && users.length > 0) {
+      return res.json({
+        success: true,
+        data: users.map((u: any) => ({
+          ...u,
+          role_name: USER_ROLE_MAP[u.role_id] || 'Staff Employee',
+        })),
+      });
+    }
+  } catch (err) {}
   res.json({
     success: true,
     data: [
-      { id: 1, username: 'admin@etaxwala.com', name: 'Super Admin', role: 1, role_name: 'SUPER_ADMIN', status: 1 },
-      { id: 2, username: 'general.admin@etaxwala.com', name: 'Administrator', role: 2, role_name: 'ADMIN', status: 1 },
-      { id: 3, username: 'ops.manager@etaxwala.com', name: 'Operations Manager', role: 3, role_name: 'OPERATIONS_MANAGER', status: 1 },
-      { id: 4, username: 'sales.manager@etaxwala.com', name: 'Sales Manager', role: 4, role_name: 'SALES_MANAGER', status: 1 },
-      { id: 7, username: 'priya.sales@etaxwala.com', name: 'Priya Sharma', role: 7, role_name: 'SALES_EMPLOYEE', status: 1 },
+      { id: 1, username: 'admin@etaxwala.com', name: 'Super Admin', role_id: 1, role_name: 'SUPER_ADMIN', is_active: true },
+      { id: 2, username: 'general.admin@etaxwala.com', name: 'Administrator', role_id: 2, role_name: 'ADMIN', is_active: true },
+      { id: 3, username: 'ops.manager@etaxwala.com', name: 'Operations Manager', role_id: 3, role_name: 'OPERATIONS_MANAGER', is_active: true },
+      { id: 4, username: 'sales.manager@etaxwala.com', name: 'Sales Manager', role_id: 4, role_name: 'SALES_MANAGER', is_active: true },
+      { id: 7, username: 'priya.sales@etaxwala.com', name: 'Priya Sharma', role_id: 7, role_name: 'SALES_EMPLOYEE', is_active: true },
     ],
   });
 });
 
-router.post('/users', (req, res) => {
-  res.json({ success: true, message: 'User provisioned successfully', user_id: Date.now() });
+router.post('/users', async (req, res) => {
+  try {
+    const { name, email, password = 'Password@123', phone, role_id = 8, position, permissions } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ success: false, error: 'Name and email are required' });
+    }
+    const permsJson = permissions && Array.isArray(permissions) ? JSON.stringify(permissions) : null;
+    const user = await (prisma as any).staff_users.create({
+      data: {
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        password_hash: '$2b$12$dummyHashForDevModeUserOnboarding2026',
+        phone: phone || null,
+        role_id: Number(role_id),
+        permissions: permsJson,
+        position: position || USER_ROLE_MAP[Number(role_id)] || 'Staff Specialist',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+    res.status(201).json({
+      success: true,
+      message: 'User created in database successfully',
+      data: {
+        ...user,
+        role_name: USER_ROLE_MAP[user.role_id] || 'Staff Employee',
+      },
+    });
+  } catch (err: any) {
+    console.error('Error creating user in DB:', err);
+    res.status(500).json({ success: false, error: 'Failed to save user in database' });
+  }
 });
 
-router.put('/users/:id', (req, res) => {
-  res.json({ success: true, message: 'User updated successfully' });
+router.put('/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone, role_id, position } = req.body;
+    const updated = await (prisma as any).staff_users.update({
+      where: { id: Number(id) },
+      data: { name, email, phone, role_id: role_id ? Number(role_id) : undefined, position, updated_at: new Date() },
+    });
+    res.json({ success: true, message: 'User updated in database', data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to update user in DB' });
+  }
 });
 
-router.put('/users/:id/role', (req, res) => {
-  res.json({ success: true, message: 'User role permissions updated successfully' });
+router.put('/users/:id/role', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role_id, permissions } = req.body;
+    const permsJson = permissions && Array.isArray(permissions) ? JSON.stringify(permissions) : null;
+    const updated = await (prisma as any).staff_users.update({
+      where: { id: Number(id) },
+      data: { role_id: Number(role_id), permissions: permsJson, updated_at: new Date() },
+    });
+    res.json({ success: true, message: 'User role updated in database', data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to update user role in DB' });
+  }
 });
 
 // 4.14.20 & 4.14.21: Settings

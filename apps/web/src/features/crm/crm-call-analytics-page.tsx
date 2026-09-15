@@ -280,17 +280,17 @@ export default function CrmCallAnalyticsPage() {
               <h3 className="text-sm font-bold text-slate-900">Team Leaderboard</h3>
               <Award className="w-4 h-4 text-amber-400" />
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
+            <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)]">
+              <table className="w-full text-sm border-separate border-spacing-0">
+                <thead className="sticky top-0 z-10">
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">#</th>
-                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Employee</th>
-                    <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">Total</th>
-                    <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">Answered</th>
-                    <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase hidden md:table-cell">Missed</th>
-                    <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase hidden lg:table-cell">Talk Time</th>
-                    <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">Rate</th>
+                    <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">#</th>
+                    <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Employee</th>
+                    <th className="sticky top-0 z-10 bg-slate-50 text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">Total</th>
+                    <th className="sticky top-0 z-10 bg-slate-50 text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">Answered</th>
+                    <th className="sticky top-0 z-10 bg-slate-50 text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase hidden md:table-cell">Missed</th>
+                    <th className="sticky top-0 z-10 bg-slate-50 text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase hidden lg:table-cell">Talk Time</th>
+                    <th className="sticky top-0 z-10 bg-slate-50 text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">Rate</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

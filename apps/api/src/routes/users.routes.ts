@@ -27,7 +27,7 @@ router.get('/', async (_req: Request, res: Response) => {
     const users = await (prisma as any).staff_users.findMany({
       select: {
         id: true, name: true, email: true, phone: true,
-        role_id: true, profile_photo: true, position: true,
+        role_id: true, permissions: true, profile_photo: true, position: true,
         is_active: true, last_login_at: true, created_at: true,
       },
       orderBy: { created_at: 'desc' },
@@ -36,10 +36,17 @@ router.get('/', async (_req: Request, res: Response) => {
     if (users && users.length > 0) {
       return res.json({
         success: true,
-        data: users.map((u: any) => ({
-          ...u,
-          role_name: ROLE_MAP[u.role_id] || 'Unknown',
-        })),
+        data: users.map((u: any) => {
+          let permsArray: string[] = [];
+          if (u.permissions) {
+            try { permsArray = JSON.parse(u.permissions); } catch { permsArray = []; }
+          }
+          return {
+            ...u,
+            permissions: permsArray,
+            role_name: ROLE_MAP[u.role_id] || 'Unknown',
+          };
+        }),
       });
     }
   } catch (err) {}
@@ -52,6 +59,7 @@ router.get('/', async (_req: Request, res: Response) => {
     phone: '+91 98765 43210',
     role_id: Number(roleId),
     role_name: ROLE_MAP[Number(roleId)],
+    permissions: [],
     position: `${ROLE_MAP[Number(roleId)]} Specialist`,
     is_active: true,
     last_login_at: new Date().toISOString(),
@@ -67,7 +75,7 @@ router.get('/', async (_req: Request, res: Response) => {
 // ─── POST /v1/admin/users ─────────────────────────────────────────────────────
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, email, password, phone, role_id, position } = req.body;
+    const { name, email, password, phone, role_id, position, permissions } = req.body;
 
     if (!name || !email || !password || !role_id) {
       return res.status(400).json({
@@ -88,6 +96,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     const password_hash = await bcrypt.hash(password, 12);
+    const permsJson = permissions && Array.isArray(permissions) ? JSON.stringify(permissions) : null;
 
     const user = await (prisma as any).staff_users.create({
       data: {
@@ -96,20 +105,30 @@ router.post('/', async (req: Request, res: Response) => {
         password_hash,
         phone: phone || null,
         role_id: Number(role_id),
+        permissions: permsJson,
         position: position || null,
         is_active: true,
         created_by: req.user!.user_id,
       },
       select: {
         id: true, name: true, email: true, phone: true,
-        role_id: true, position: true, is_active: true, created_at: true,
+        role_id: true, permissions: true, position: true, is_active: true, created_at: true,
       },
     });
+
+    let permsArray: string[] = [];
+    if (user.permissions) {
+      try { permsArray = JSON.parse(user.permissions); } catch {}
+    }
 
     res.status(201).json({
       success: true,
       message: `User created successfully as ${ROLE_MAP[Number(role_id)]}.`,
-      data: { ...user, role_name: ROLE_MAP[user.role_id] },
+      data: {
+        ...user,
+        permissions: permsArray,
+        role_name: ROLE_MAP[user.role_id],
+      },
     });
   } catch (err) {
     console.error('Create user error:', err);
@@ -121,7 +140,7 @@ router.post('/', async (req: Request, res: Response) => {
 router.patch('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, role_id, position, password } = req.body;
+    const { name, email, phone, role_id, position, password, permissions } = req.body;
 
     const updateData: any = {};
     if (name)     updateData.name     = name.trim();
@@ -130,20 +149,32 @@ router.patch('/:id', async (req: Request, res: Response) => {
     if (role_id)  updateData.role_id  = Number(role_id);
     if (position) updateData.position = position;
     if (password) updateData.password_hash = await bcrypt.hash(password, 12);
+    if (permissions && Array.isArray(permissions)) {
+      updateData.permissions = JSON.stringify(permissions);
+    }
 
     const user = await (prisma as any).staff_users.update({
       where: { id: Number(id) },
       data: updateData,
       select: {
         id: true, name: true, email: true, phone: true,
-        role_id: true, position: true, is_active: true,
+        role_id: true, permissions: true, position: true, is_active: true,
       },
     });
+
+    let permsArray: string[] = [];
+    if (user.permissions) {
+      try { permsArray = JSON.parse(user.permissions); } catch {}
+    }
 
     res.json({
       success: true,
       message: 'User updated.',
-      data: { ...user, role_name: ROLE_MAP[user.role_id] },
+      data: {
+        ...user,
+        permissions: permsArray,
+        role_name: ROLE_MAP[user.role_id],
+      },
     });
   } catch (err: any) {
     if (err.code === 'P2025') {
