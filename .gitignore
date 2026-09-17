@@ -37,7 +37,11 @@ coverage/
 # Migration & SQL Dumps
 migration-output/
 *.sql
+!apps/api/prisma/migrations/**/*.sql
 *.sql.gz
 
 # OS
 Thumbs.db
+
+# Uploads
+apps/api/uploads/

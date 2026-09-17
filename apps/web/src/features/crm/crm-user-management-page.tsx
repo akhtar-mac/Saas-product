@@ -29,6 +29,7 @@ const ROLES = [
   { id: 13, name: 'Sales Assistant', color: '#047857', group: 'Sales' },
   { id: 14, name: 'HR', color: '#4F46E5', group: 'Administration' },
   { id: 15, name: 'Website Manager', color: '#16A34A', group: 'Administration' },
+  { id: 16, name: 'Staff / Support', color: '#64748B', group: 'Administration' },
 ];
 
 interface StaffUser {
@@ -38,10 +39,15 @@ interface StaffUser {
   phone?: string;
   role_id: number;
   role_name: string;
+  role_ids?: number[];
+  assigned_roles?: Array<{ id: number; name: string }>;
   permissions?: string[];
   position?: string;
+  department?: string;
   is_active: boolean;
+  is_online?: boolean;
   last_login_at?: string;
+  last_seen_at?: string;
   created_at: string;
 }
 
@@ -52,7 +58,9 @@ interface UserFormState {
   password?: string;
   phone: string;
   role_id: number;
+  role_ids: number[];
   position: string;
+  department: string;
   permissions: string[];
 }
 
@@ -84,13 +92,20 @@ export default function CrmUserManagementPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [selectedUserForRole, setSelectedUserForRole] = useState<StaffUser | null>(null);
+  const [additionalRoleId, setAdditionalRoleId] = useState<number>(4);
+  const [assigningRole, setAssigningRole] = useState(false);
+
   const [form, setForm] = useState<UserFormState>({
     name: '',
     email: '',
     password: '',
     phone: '',
     role_id: 7,
+    role_ids: [7],
     position: '',
+    department: '',
     permissions: ROLE_DEFAULT_PERMISSIONS[7] || [],
   });
 
@@ -134,16 +149,26 @@ export default function CrmUserManagementPage() {
   }, []);
 
   useEffect(() => {
-    let result = users;
-    if (search) {
+    let result = [...users];
+    if (search.trim()) {
+      const q = search.toLowerCase();
       result = result.filter(
         (u) =>
-          u.name.toLowerCase().includes(search.toLowerCase()) ||
-          u.email.toLowerCase().includes(search.toLowerCase())
+          u.name.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          (u.phone && u.phone.includes(q)) ||
+          (u.position && u.position.toLowerCase().includes(q)) ||
+          (u.department && u.department.toLowerCase().includes(q)) ||
+          (u.assigned_roles && u.assigned_roles.some((r) => r.name.toLowerCase().includes(q))) ||
+          u.role_name.toLowerCase().includes(q)
       );
     }
-    if (roleFilter) {
-      result = result.filter((u) => u.role_id === roleFilter);
+    if (roleFilter !== 0) {
+      result = result.filter(
+        (u) =>
+          u.role_id === roleFilter ||
+          (u.role_ids && u.role_ids.includes(roleFilter))
+      );
     }
     setFiltered(result);
   }, [search, roleFilter, users]);
@@ -159,7 +184,9 @@ export default function CrmUserManagementPage() {
       password: '',
       phone: '',
       role_id: defaultRoleId,
+      role_ids: [defaultRoleId],
       position: '',
+      department: '',
       permissions: ROLE_DEFAULT_PERMISSIONS[defaultRoleId] || [],
     });
     setActionError(null);
@@ -175,6 +202,8 @@ export default function CrmUserManagementPage() {
         ? user.permissions
         : ROLE_DEFAULT_PERMISSIONS[user.role_id] || [];
 
+    const userRoleIds = user.role_ids && user.role_ids.length > 0 ? user.role_ids : [user.role_id];
+
     setForm({
       id: user.id,
       name: user.name,
@@ -182,19 +211,78 @@ export default function CrmUserManagementPage() {
       password: '',
       phone: user.phone || '',
       role_id: user.role_id,
+      role_ids: userRoleIds,
       position: user.position || '',
+      department: user.department || '',
       permissions: userPerms,
     });
     setActionError(null);
     setShowModal(true);
   };
 
-  // When role changes, auto-set permissions to that role's default set
+  // Open modal for adding an extra role
+  const openRoleAssignModal = (user: StaffUser) => {
+    setSelectedUserForRole(user);
+    const assigned = user.role_ids || [user.role_id];
+    const available = ROLES.find((r) => !assigned.includes(r.id));
+    setAdditionalRoleId(available ? available.id : 4);
+    setShowRoleModal(true);
+  };
+
+  // Add additional role without overwriting
+  const handleAssignAdditionalRole = async () => {
+    if (!selectedUserForRole || !additionalRoleId) return;
+    setAssigningRole(true);
+    setActionError(null);
+    try {
+      const res = await fetch(`${API_BASE}/v1/admin/users/${selectedUserForRole.id}/roles`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ role_id: additionalRoleId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActionSuccess(data.message || `Role assigned successfully.`);
+        setShowRoleModal(false);
+        fetchUsers();
+      } else {
+        setActionError(data.error || 'Failed to assign role.');
+      }
+    } catch {
+      setActionError('Failed to connect to server.');
+    } finally {
+      setAssigningRole(false);
+    }
+  };
+
+  // Remove specific role from user
+  const handleRemoveRole = async (user: StaffUser, roleId: number, roleName: string) => {
+    if (!confirm(`Are you sure you want to remove role "${roleName}" from ${user.name}?`)) return;
+    setActionError(null);
+    try {
+      const res = await fetch(`${API_BASE}/v1/admin/users/${user.id}/roles/${roleId}`, {
+        method: 'DELETE',
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActionSuccess(data.message || `Role "${roleName}" removed.`);
+        fetchUsers();
+      } else {
+        setActionError(data.error || 'Failed to remove role.');
+      }
+    } catch {
+      setActionError('Failed to remove role.');
+    }
+  };
+
+  // When primary role changes, auto-set permissions to that role's default set
   const handleRoleChange = (newRoleId: number) => {
     const defaultPerms = ROLE_DEFAULT_PERMISSIONS[newRoleId] || [];
     setForm((prev) => ({
       ...prev,
       role_id: newRoleId,
+      role_ids: Array.from(new Set([newRoleId, ...prev.role_ids])),
       permissions: defaultPerms,
     }));
   };
@@ -468,7 +556,40 @@ export default function CrmUserManagementPage() {
                       </td>
 
                       <td className="px-4 py-3">
-                        <RoleBadge roleId={user.role_id} />
+                        <div className="flex flex-wrap items-center gap-1.5 max-w-xs">
+                          {user.assigned_roles && user.assigned_roles.length > 0 ? (
+                            user.assigned_roles.map((r) => (
+                              <span
+                                key={r.id}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold text-white shadow-xs"
+                                style={{
+                                  backgroundColor:
+                                    ROLES.find((rl) => rl.id === r.id)?.color || '#64748b',
+                                }}
+                              >
+                                {r.name}
+                                {user.assigned_roles!.length > 1 && (
+                                  <button
+                                    onClick={() => handleRemoveRole(user, r.id, r.name)}
+                                    className="hover:bg-black/30 rounded-full w-3.5 h-3.5 flex items-center justify-center text-white/80 hover:text-white transition-colors ml-0.5"
+                                    title={`Remove role ${r.name}`}
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </span>
+                            ))
+                          ) : (
+                            <RoleBadge roleId={user.role_id} />
+                          )}
+                          <button
+                            onClick={() => openRoleAssignModal(user)}
+                            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF9F5] hover:bg-slate-200 text-[#1B365D] border border-[#EAE6DD] transition-colors"
+                            title="Add an additional role to this user"
+                          >
+                            <Plus className="w-2.5 h-2.5" /> Role
+                          </button>
+                        </div>
                       </td>
 
                       <td className="px-4 py-3">
@@ -782,6 +903,94 @@ export default function CrmUserManagementPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Adding an Additional Role */}
+      {showRoleModal && selectedUserForRole && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Assign Additional Role
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  User: <strong className="text-[#1B365D]">{selectedUserForRole.name}</strong> ({selectedUserForRole.email})
+                </p>
+              </div>
+              <button
+                onClick={() => setShowRoleModal(false)}
+                className="p-1.5 rounded-xl hover:bg-slate-200 text-slate-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-sm">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Currently Assigned Roles:
+                </label>
+                <div className="flex flex-wrap gap-1.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  {selectedUserForRole.assigned_roles && selectedUserForRole.assigned_roles.length > 0 ? (
+                    selectedUserForRole.assigned_roles.map((r) => (
+                      <span
+                        key={r.id}
+                        className="px-2 py-0.5 rounded-md text-xs font-bold text-white shadow-xs"
+                        style={{ backgroundColor: ROLES.find((rl) => rl.id === r.id)?.color || '#64748B' }}
+                      >
+                        {r.name}
+                      </span>
+                    ))
+                  ) : (
+                    <RoleBadge roleId={selectedUserForRole.role_id} />
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Select Role to Add:
+                </label>
+                <select
+                  value={additionalRoleId}
+                  onChange={(e) => setAdditionalRoleId(Number(e.target.value))}
+                  className="input text-sm w-full font-semibold text-[#1B365D] bg-white"
+                >
+                  {ROLES.filter(
+                    (r) => !(selectedUserForRole.role_ids || [selectedUserForRole.role_id]).includes(r.id)
+                  ).map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name} ({r.group})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Adding this role expands user access. Existing roles will NOT be overwritten.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowRoleModal(false)}
+                  className="flex-1 btn border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={assigningRole}
+                  onClick={handleAssignAdditionalRole}
+                  className="flex-1 btn btn-primary text-sm font-bold shadow-md flex items-center justify-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" />
+                  {assigningRole ? 'Assigning...' : 'Add Role'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

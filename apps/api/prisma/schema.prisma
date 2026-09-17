@@ -9,22 +9,243 @@ datasource db {
 
 // ─── NEW MODELS for ETaxwala 2.0 CRM ─────────────────────────────────────────
 
-/// Staff user accounts — authentication table for all 15 roles
+/// Staff user accounts — authentication table for all 16 roles
 model staff_users {
   id              Int       @id @default(autoincrement())
   name            String    @db.VarChar(100)
   email           String    @unique @db.VarChar(150)
   password_hash   String    @db.VarChar(255)
   phone           String?   @db.VarChar(20)
-  role_id         Int       // 1=super_admin … 15=website_manager
+  role_id         Int       // Primary role: 1=super_admin … 16=staff
+  roles           String?   // JSON array of all assigned role IDs, e.g. [1, 4, 14]
   permissions     String?   // JSON array of permission keys (e.g. ["dashboard:view", "sales:view"])
   profile_photo   String?   @db.VarChar(500)
   position        String?   @db.VarChar(100)
+  department      String?   @db.VarChar(100)
   is_active       Boolean   @default(true)
+  is_online       Boolean   @default(false)
   last_login_at   DateTime?
+  last_seen_at    DateTime?
   created_by      Int?      // user_id of admin who created this account
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
+}
+
+model staff_user_roles {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  role_id     Int
+  assigned_by Int?
+  assigned_at DateTime @default(now())
+
+  @@unique([user_id, role_id])
+  @@index([user_id])
+  @@index([role_id])
+}
+
+model audit_logs {
+  id          Int      @id @default(autoincrement())
+  actor_id    Int?
+  actor_email String?  @db.VarChar(150)
+  actor_role  String?  @db.VarChar(50)
+  action      String   @db.VarChar(100)
+  resource    String   @db.VarChar(100)
+  resource_id String?  @db.VarChar(50)
+  payload     String?  @db.Text
+  ip_address  String?  @db.VarChar(45)
+  user_agent  String?  @db.VarChar(500)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([actor_id])
+  @@index([action])
+  @@index([resource])
+  @@index([created_at])
+}
+
+// ─── ATS & RECRUITMENT MODELS (Phase 1) ──────────────────────────────────────
+
+model job_applications {
+  id                 Int       @id @default(autoincrement())
+  job_id             Int?
+  first_name         String    @db.VarChar(100)
+  last_name          String?   @db.VarChar(100)
+  email              String    @db.VarChar(150)
+  phone              String    @db.VarChar(30)
+  role_applied       String    @db.VarChar(150)
+  department         String?   @default("General") @db.VarChar(100)
+  current_company    String?   @db.VarChar(150)
+  current_title      String?   @db.VarChar(150)
+  experience_years   String?   @db.VarChar(50)
+  expected_ctc       String?   @db.VarChar(50)
+  notice_period_days String?   @db.VarChar(50)
+  linkedin_url       String?   @db.VarChar(500)
+  portfolio_url      String?   @db.VarChar(500)
+  source             String?   @default("Careers Page") @db.VarChar(100)
+  status             String    @default("APPLIED") @db.VarChar(50)
+  rating             Int?      @default(0) @db.SmallInt
+  created_at         DateTime  @default(now()) @db.Timestamp(6)
+  updated_at         DateTime  @default(now()) @db.Timestamp(6)
+
+  documents          candidate_documents[]
+  notes              application_notes[]
+  interviews         interviews[]
+  offers             job_offers[]
+  events             application_events[]
+
+  @@index([status])
+  @@index([email])
+  @@index([created_at])
+}
+
+model candidate_documents {
+  id             Int              @id @default(autoincrement())
+  application_id Int
+  document_type  String           @default("RESUME") @db.VarChar(50)
+  file_name      String           @db.VarChar(255)
+  file_key       String           @db.VarChar(500)
+  file_size      Int?
+  mime_type      String?          @db.VarChar(100)
+  uploaded_at    DateTime         @default(now()) @db.Timestamp(6)
+
+  application    job_applications @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  @@index([application_id])
+}
+
+model application_notes {
+  id             Int              @id @default(autoincrement())
+  application_id Int
+  author_id      Int?
+  author_name    String?          @db.VarChar(150)
+  note_content   String           @db.Text
+  is_private     Boolean          @default(false)
+  created_at     DateTime         @default(now()) @db.Timestamp(6)
+
+  application    job_applications @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  @@index([application_id])
+}
+
+model interviews {
+  id               Int                  @id @default(autoincrement())
+  application_id   Int
+  round_number     Int                  @default(1) @db.SmallInt
+  round_name       String               @default("Technical Round") @db.VarChar(100)
+  interview_type   String               @default("GOOGLE_MEET") @db.VarChar(50)
+  scheduled_at     DateTime             @db.Timestamp(6)
+  duration_minutes Int                  @default(45)
+  meeting_link     String?              @db.VarChar(500)
+  interviewer_id   Int?
+  interviewer_name String?              @db.VarChar(150)
+  status           String               @default("SCHEDULED") @db.VarChar(50)
+  created_at       DateTime             @default(now()) @db.Timestamp(6)
+
+  application      job_applications     @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  feedback         interview_feedback[]
+
+  @@index([application_id])
+}
+
+model interview_feedback {
+  id               Int        @id @default(autoincrement())
+  interview_id     Int
+  interviewer_id   Int?
+  interviewer_name String?    @db.VarChar(150)
+  score            Int        @default(3) @db.SmallInt
+  strengths        String?    @db.Text
+  weaknesses       String?    @db.Text
+  recommendation   String     @default("HIRE") @db.VarChar(50)
+  notes            String?    @db.Text
+  submitted_at     DateTime   @default(now()) @db.Timestamp(6)
+
+  interview        interviews @relation(fields: [interview_id], references: [id], onDelete: Cascade)
+}
+
+model job_offers {
+  id               Int              @id @default(autoincrement())
+  application_id   Int
+  offered_ctc      String           @db.VarChar(50)
+  designation      String           @db.VarChar(150)
+  joining_date     DateTime?        @db.Date
+  offer_letter_key String?          @db.VarChar(500)
+  status           String           @default("DRAFT") @db.VarChar(50)
+  approved_by      Int?
+  created_at       DateTime         @default(now()) @db.Timestamp(6)
+
+  application      job_applications @relation(fields: [application_id], references: [id], onDelete: Cascade)
+}
+
+model application_events {
+  id             Int              @id @default(autoincrement())
+  application_id Int
+  actor_id       Int?
+  actor_name     String?          @db.VarChar(150)
+  from_status    String?          @db.VarChar(50)
+  to_status      String           @db.VarChar(50)
+  reason         String?          @db.Text
+  created_at     DateTime         @default(now()) @db.Timestamp(6)
+
+  application    job_applications @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  @@index([application_id])
+}
+
+model chat_conversations {
+  id              Int       @id @default(autoincrement())
+  type            String    @default("direct") @db.VarChar(20) // "direct" | "group"
+  title           String?   @db.VarChar(150)
+  created_by      Int?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @default(now()) @updatedAt
+  last_message_at DateTime?
+}
+
+model chat_members {
+  id              Int       @id @default(autoincrement())
+  conversation_id Int
+  user_id         Int
+  role            String    @default("member") @db.VarChar(20)
+  last_read_at    DateTime?
+  joined_at       DateTime  @default(now())
+
+  @@unique([conversation_id, user_id])
+  @@index([user_id])
+  @@index([conversation_id])
+}
+
+model chat_messages {
+  id              Int       @id @default(autoincrement())
+  conversation_id Int
+  sender_id       Int
+  content         String    @db.Text
+  message_type    String    @default("text") @db.VarChar(20) // "text" | "file" | "system"
+  created_at      DateTime  @default(now())
+
+  @@index([conversation_id, created_at])
+  @@index([sender_id])
+}
+
+model chat_attachments {
+  id          Int      @id @default(autoincrement())
+  message_id  Int
+  file_name   String   @db.VarChar(255)
+  file_path   String   @db.VarChar(500)
+  file_size   Int
+  mime_type   String   @db.VarChar(100)
+  uploaded_at DateTime @default(now())
+
+  @@index([message_id])
+}
+
+model user_presence {
+  id           Int      @id @default(autoincrement())
+  user_id      Int      @unique
+  status       String   @default("offline") @db.VarChar(20) // "online" | "away" | "offline"
+  socket_id    String?  @db.VarChar(100)
+  last_seen_at DateTime @default(now())
+  updated_at   DateTime @default(now()) @updatedAt
+
+  @@index([user_id])
 }
 
 /// Android call log entries synced from Flutter sales app
@@ -622,7 +843,7 @@ model meetings {
   contact       String   @db.VarChar(30)
   email         String   @db.VarChar(100)
   city          String   @db.VarChar(50)
-  hostedBy      String   @db.VarChar(50)
+  hostedby      String?  @db.VarChar(50)
   date          DateTime @db.Date
   time          DateTime @default(dbgenerated("CURRENT_TIMESTAMP(6)")) @db.Timestamp(6)
   status        Int      @default(0)
@@ -862,3 +1083,376 @@ model system_logs {
   created_at      DateTime? @db.Timestamp(6)
   updated_at      DateTime? @db.Timestamp(6)
 }
+
+model users {
+  id            Int       @id @default(autoincrement())
+  username      String    @db.VarChar(100)
+  email         String    @unique @db.VarChar(150)
+  contact       String?   @db.VarChar(20)
+  password      String    @db.VarChar(255)
+  user_type     Int       @default(6)
+  status        Int       @default(1) @db.SmallInt
+  company_id    String?   @db.VarChar(20)
+  user_token    String?   @db.VarChar(255)
+  is_online     Int       @default(0) @db.SmallInt
+  last_login_at DateTime? @db.Timestamp(6)
+  created_at    DateTime  @default(now()) @db.Timestamp(6)
+  updated_at    DateTime  @default(now()) @db.Timestamp(6)
+
+  @@index([user_type])
+}
+
+// ─── Phase 2: Super-Advanced IT & Solutions Command Center Models ────────────
+
+model it_tech_leads {
+  id                 Int                     @id @default(autoincrement())
+  lead_id            BigInt?
+  client_name        String                  @db.VarChar(150)
+  company_name       String?                 @db.VarChar(150)
+  email              String                  @db.VarChar(150)
+  phone              String                  @db.VarChar(30)
+  project_type       String                  @default("SaaS Platform") @db.VarChar(100)
+  budget_estimate    String?                 @db.VarChar(100)
+  timeline           String?                 @db.VarChar(100)
+  requirements       String
+  status             String                  @default("NEW") @db.VarChar(50)
+  assigned_engineer  String?                 @default("Lead Architect") @db.VarChar(150)
+  created_at         DateTime                @default(now()) @db.Timestamp(6)
+  updated_at         DateTime                @default(now()) @db.Timestamp(6)
+  discovery_meetings it_discovery_meetings[]
+
+  @@index([status])
+  @@index([created_at])
+}
+
+model it_discovery_meetings {
+  id               Int            @id @default(autoincrement())
+  tech_lead_id     Int?
+  client_name      String         @db.VarChar(150)
+  meeting_title    String         @db.VarChar(200)
+  scheduled_at     DateTime       @db.Timestamp(6)
+  duration_minutes Int            @default(45)
+  meet_url         String         @db.VarChar(500)
+  platform         String         @default("Google Meet") @db.VarChar(50)
+  status           String         @default("SCHEDULED") @db.VarChar(50)
+  attendees        String?
+  client_notes     String?
+  recording_url    String?        @db.VarChar(500)
+  created_at       DateTime       @default(now()) @db.Timestamp(6)
+  tech_lead        it_tech_leads? @relation(fields: [tech_lead_id], references: [id], onDelete: SetNull)
+
+  @@index([tech_lead_id])
+  @@index([scheduled_at])
+}
+
+model quotation_versions {
+  id                  Int       @id @default(autoincrement())
+  quotation_number    String    @db.VarChar(100)
+  version_number      Int       @default(1)
+  parent_quotation_id BigInt?
+  superseded_by_id    Int?
+  is_current          Boolean   @default(true)
+  client_name         String    @db.VarChar(150)
+  company_name        String?   @db.VarChar(150)
+  client_email        String    @db.VarChar(150)
+  project_title       String    @db.VarChar(250)
+  tech_stack          String?
+  currency            String    @default("INR") @db.VarChar(10)
+  line_items          String
+  subtotal            Decimal   @default(0) @db.Decimal(12, 2)
+  tax_amount          Decimal   @default(0) @db.Decimal(12, 2)
+  discount_amount     Decimal   @default(0) @db.Decimal(12, 2)
+  grand_total         Decimal   @default(0) @db.Decimal(12, 2)
+  valid_until         DateTime? @db.Date
+  terms               String?
+  status              String    @default("DRAFT") @db.VarChar(50)
+  created_by          Int?
+  created_at          DateTime  @default(now()) @db.Timestamp(6)
+  updated_at          DateTime  @default(now()) @db.Timestamp(6)
+
+  @@unique([quotation_number, version_number], map: "quotation_versions_number_version_unique")
+  @@index([quotation_number])
+  @@index([is_current])
+}
+
+model it_projects {
+  id                 Int                        @id @default(autoincrement())
+  project_code       String                     @unique @db.VarChar(50)
+  client_id          Int?
+  title              String                     @db.VarChar(250)
+  client_name        String                     @db.VarChar(150)
+  lead_engineer      String                     @default("Lead Architect") @db.VarChar(150)
+  stage              String                     @default("Discovery") @db.VarChar(50)
+  progress_percent   Int                        @default(0)
+  tech_stack         String?
+  repo_url           String?                    @db.VarChar(500)
+  staging_url        String?                    @db.VarChar(500)
+  production_url     String?                    @db.VarChar(500)
+  deadline           DateTime?                  @db.Date
+  status             String                     @default("ON_TRACK") @db.VarChar(50)
+  created_at         DateTime                   @default(now()) @db.Timestamp(6)
+  updated_at         DateTime                   @default(now()) @db.Timestamp(6)
+  milestones         it_project_milestones[]
+  credentials        client_credentials_vault[]
+
+  @@index([status])
+}
+
+model it_project_milestones {
+  id              Int         @id @default(autoincrement())
+  project_id      Int
+  milestone_order Int         @default(1) @db.SmallInt
+  title           String      @db.VarChar(200)
+  description     String?
+  percentage      Decimal     @default(0) @db.Decimal(5, 2)
+  amount          Decimal     @default(0) @db.Decimal(12, 2)
+  estimated_weeks Int?        @default(2) @db.SmallInt
+  due_date        DateTime?   @db.Date
+  status          String      @default("PENDING") @db.VarChar(50)
+  created_at      DateTime    @default(now()) @db.Timestamp(6)
+  project         it_projects @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@index([project_id])
+}
+
+model client_credentials_vault {
+  id               Int          @id @default(autoincrement())
+  client_id        Int?
+  project_id       Int?
+  credential_title String       @db.VarChar(150)
+  service_type     String       @default("HOSTING") @db.VarChar(50)
+  host_or_url      String?      @db.VarChar(500)
+  username         String?      @db.VarChar(150)
+  encrypted_secret String
+  encryption_iv    String       @db.VarChar(100)
+  encryption_tag   String       @db.VarChar(100)
+  notes            String?
+  last_accessed_by Int?
+  last_accessed_at DateTime?    @db.Timestamp(6)
+  created_at       DateTime     @default(now()) @db.Timestamp(6)
+  project          it_projects? @relation(fields: [project_id], references: [id], onDelete: SetNull)
+
+  @@index([project_id])
+}
+
+model it_telemetry_logs {
+  id           Int      @id @default(autoincrement())
+  metric_type  String   @db.VarChar(50)
+  metric_value Decimal  @db.Decimal(10, 2)
+  metadata     String?
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([metric_type])
+  @@index([created_at])
+}
+
+// ─── PHASE 3: MARKETING, SOCIAL MEDIA PLANNER & PAID ADS DESK ────────────────
+
+model social_channel_accounts {
+  id                     Int               @id @default(autoincrement())
+  platform               String            @db.VarChar(50)
+  account_name           String            @db.VarChar(150)
+  account_handle         String            @db.VarChar(100)
+  profile_url            String?           @db.VarChar(500)
+  followers_count        Int?              @default(0)
+  engagement_rate        Decimal?          @default(0) @db.Decimal(5, 2)
+  is_connected           Boolean           @default(true)
+  access_token_encrypted String?
+  created_at             DateTime          @default(now()) @db.Timestamp(6)
+  updated_at             DateTime          @default(now()) @db.Timestamp(6)
+  posts                  marketing_posts[]
+}
+
+model marketing_posts {
+  id             Int                      @id @default(autoincrement())
+  post_code      String                   @unique @db.VarChar(50)
+  platform       String                   @db.VarChar(50)
+  channel_id     Int?
+  title          String                   @db.VarChar(250)
+  caption        String
+  hashtags       String?
+  creative_url   String?                  @db.VarChar(500)
+  media_type     String?                  @default("IMAGE") @db.VarChar(50)
+  scheduled_date DateTime?                @db.Timestamp(6)
+  status         String                   @default("DRAFT") @db.VarChar(50)
+  author_id      Int?
+  author_name    String?                  @default("Growth Lead") @db.VarChar(150)
+  likes_count    Int?                     @default(0)
+  comments_count Int?                     @default(0)
+  shares_count   Int?                     @default(0)
+  reach_count    Int?                     @default(0)
+  leads_count    Int?                     @default(0)
+  published_at   DateTime?                @db.Timestamp(6)
+  created_at     DateTime                 @default(now()) @db.Timestamp(6)
+  updated_at     DateTime                 @default(now()) @db.Timestamp(6)
+  channel        social_channel_accounts? @relation(fields: [channel_id], references: [id], onDelete: SetNull)
+
+  @@index([platform])
+  @@index([status])
+  @@index([scheduled_date])
+}
+
+model ad_campaigns {
+  id               Int                             @id @default(autoincrement())
+  campaign_code    String                          @unique @db.VarChar(50)
+  name             String                          @db.VarChar(200)
+  platform         String                          @db.VarChar(50)
+  objective        String?                         @default("LEAD_GENERATION") @db.VarChar(100)
+  daily_budget     Decimal                         @default(0) @db.Decimal(12, 2)
+  total_spent      Decimal                         @default(0) @db.Decimal(12, 2)
+  impressions      Int                             @default(0)
+  clicks           Int                             @default(0)
+  leads_generated  Int                             @default(0)
+  conversions      Int                             @default(0)
+  cpl              Decimal                         @default(0) @db.Decimal(10, 2)
+  roas             Decimal                         @default(0) @db.Decimal(6, 2)
+  status           String                          @default("ACTIVE") @db.VarChar(50)
+  start_date       DateTime?                       @db.Date
+  end_date         DateTime?                       @db.Date
+  target_audience  String?
+  landing_page_url String?                         @db.VarChar(500)
+  created_at       DateTime                        @default(now()) @db.Timestamp(6)
+  updated_at       DateTime                        @default(now()) @db.Timestamp(6)
+  snapshots        ad_metrics_snapshots[]
+  attributions     marketing_attribution_events[]
+
+  @@index([platform])
+  @@index([status])
+}
+
+model ad_metrics_snapshots {
+  id            Int          @id @default(autoincrement())
+  campaign_id   Int
+  snapshot_date DateTime     @db.Date
+  spend_amount  Decimal      @default(0) @db.Decimal(12, 2)
+  impressions   Int          @default(0)
+  clicks        Int          @default(0)
+  leads_count   Int          @default(0)
+  cpl           Decimal      @default(0) @db.Decimal(10, 2)
+  created_at    DateTime     @default(now()) @db.Timestamp(6)
+  campaign      ad_campaigns @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+
+  @@index([snapshot_date])
+}
+
+model marketing_attribution_events {
+  id                  Int           @id @default(autoincrement())
+  lead_id             BigInt?
+  campaign_id         Int?
+  utm_source          String?       @db.VarChar(100)
+  utm_medium          String?       @db.VarChar(100)
+  utm_campaign        String?       @db.VarChar(150)
+  utm_term            String?       @db.VarChar(150)
+  utm_content         String?       @db.VarChar(150)
+  referrer_url        String?       @db.VarChar(500)
+  landing_page        String?       @db.VarChar(500)
+  ip_address          String?       @db.VarChar(45)
+  device_type         String?       @db.VarChar(50)
+  touchpoint_sequence Int?          @default(1) @db.SmallInt
+  converted_to_order  Boolean       @default(false)
+  attributed_revenue  Decimal?      @default(0) @db.Decimal(12, 2)
+  created_at          DateTime      @default(now()) @db.Timestamp(6)
+  campaign            ad_campaigns? @relation(fields: [campaign_id], references: [id], onDelete: SetNull)
+
+  @@index([lead_id])
+  @@index([utm_source])
+}
+
+// ─── PHASE 4: EXTERNAL MARKETING INTEGRATIONS, OAUTH VAULT & WEBHOOKS ────────
+
+model integration_credentials {
+  id                       Int                     @id @default(autoincrement())
+  provider                 String                  @db.VarChar(50)
+  account_id               String                  @db.VarChar(150)
+  account_name             String                  @db.VarChar(150)
+  encrypted_access_token   String
+  encrypted_refresh_token  String?
+  token_iv                 String                  @db.VarChar(64)
+  token_auth_tag           String                  @db.VarChar(64)
+  webhook_secret_encrypted String?
+  webhook_secret_iv        String?                 @db.VarChar(64)
+  webhook_secret_tag       String?                 @db.VarChar(64)
+  status                   String                  @default("ACTIVE") @db.VarChar(50)
+  token_expiry             DateTime?               @db.Timestamp(6)
+  last_synced_at           DateTime?               @db.Timestamp(6)
+  created_at               DateTime                @default(now()) @db.Timestamp(6)
+  updated_at               DateTime                @default(now()) @db.Timestamp(6)
+  sync_jobs                integration_sync_jobs[]
+
+  @@index([provider])
+  @@index([status])
+}
+
+model integration_sync_jobs {
+  id              Int                     @id @default(autoincrement())
+  job_code        String                  @unique @db.VarChar(50)
+  integration_id  Int
+  job_type        String                  @default("DAILY_METRICS_SYNC") @db.VarChar(50)
+  status          String                  @default("RUNNING") @db.VarChar(50)
+  records_synced  Int                     @default(0)
+  summary_payload String?
+  error_message   String?
+  started_at      DateTime                @default(now()) @db.Timestamp(6)
+  completed_at    DateTime?               @db.Timestamp(6)
+  integration     integration_credentials @relation(fields: [integration_id], references: [id], onDelete: Cascade)
+
+  @@index([integration_id])
+  @@index([status])
+  @@index([started_at])
+}
+
+model integration_webhooks {
+  id           Int       @id @default(autoincrement())
+  webhook_code String    @unique @db.VarChar(50)
+  provider     String    @db.VarChar(50)
+  event_type   String    @db.VarChar(100)
+  payload_json String
+  signature    String?   @db.VarChar(255)
+  is_verified  Boolean   @default(false)
+  processed    Boolean   @default(false)
+  error_log    String?
+  received_at  DateTime  @default(now()) @db.Timestamp(6)
+  processed_at DateTime? @db.Timestamp(6)
+
+  @@index([provider])
+  @@index([event_type])
+  @@index([processed])
+}
+
+// ─── PHASE 5: ISOLATED INFRASTRUCTURE TELEMETRY & AI AUTOMATION ─────────────
+
+model system_health_snapshots {
+  id                  Int      @id @default(autoincrement())
+  cpu_load_percent    Float
+  memory_rss_mb       Float
+  memory_heap_used_mb Float
+  memory_heap_total_mb Float
+  db_pool_active      Int      @default(0)
+  db_pool_idle        Int      @default(0)
+  db_latency_ms       Float    @default(0.0)
+  system_status       String   @default("HEALTHY") @db.VarChar(30)
+  metadata            Json?
+  created_at          DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([created_at(sort: Desc)])
+  @@index([system_status])
+}
+
+model ai_automation_tasks {
+  id            Int         @id @default(autoincrement())
+  task_code     String      @unique @db.VarChar(50)
+  task_type     String      @db.VarChar(50)
+  input_payload Json
+  output_result Json
+  tokens_used   Int         @default(0)
+  latency_ms    Int         @default(0)
+  status        String      @default("COMPLETED") @db.VarChar(30)
+  error_message String?
+  created_by    Int?
+  created_at    DateTime    @default(now()) @db.Timestamp(6)
+
+  @@index([task_type])
+  @@index([created_at(sort: Desc)])
+  @@index([status])
+}
+

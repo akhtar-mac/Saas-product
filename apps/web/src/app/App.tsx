@@ -51,6 +51,10 @@ const CrmUserManagementPage = lazy(() => import('@/features/crm/crm-user-managem
 const CrmWonFormPage = lazy(() => import('@/features/crm/crm-won-form-page'));
 const CrmCallAnalyticsPage = lazy(() => import('@/features/crm/crm-call-analytics-page'));
 const CrmDesktopTrackingPage = lazy(() => import('@/features/crm/crm-desktop-tracking-page'));
+const CrmChatPage = lazy(() => import('@/features/crm/pages/crm-chat-page'));
+const HrDashboard = lazy(() => import('@/features/crm/dashboards/hr-dashboard'));
+const MarketingDashboard = lazy(() => import('@/features/crm/dashboards/marketing-dashboard'));
+const ItCommandDashboard = lazy(() => import('@/features/crm/dashboards/it-command-dashboard'));
 
 export default function App() {
   return (
@@ -158,6 +162,15 @@ export default function App() {
               </CrmProtectedRoute>
             }
           />
+
+          {/* Staff Chat — Enterprise Socket.IO messaging */}
+          <Route path="chat" element={<CrmChatPage />} />
+
+          {/* Department Hubs: HR Desk, Marketing Suite & IT Command Center */}
+          <Route path="hr" element={<HrDashboard />} />
+          <Route path="marketing" element={<MarketingDashboard />} />
+          <Route path="it-command" element={<ItCommandDashboard />} />
+          <Route path="it" element={<Navigate to="/crm/it-command" replace />} />
 
           {/* Placeholder routes */}
           <Route path="franchise" element={<CrmMainDashboard />} />
