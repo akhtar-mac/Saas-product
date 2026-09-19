@@ -253,8 +253,8 @@ export default function CrmLoginPage() {
   // Quick-login card: fills the email field and auto-submits with active staff password
   const handleQuickLogin = (card: RoleCard) => {
     setEmail(card.email);
-    setPassword('Password@123');
-    doLogin(card.email, 'Password@123');
+    setPassword('etaxwala@2024');
+    doLogin(card.email, 'etaxwala@2024');
   };
 
   const handleFormLogin = (e: React.FormEvent) => {
