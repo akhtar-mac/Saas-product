@@ -1,3 +1,4 @@
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -13,8 +14,18 @@ import usersRoutes from './routes/users.routes.js';
 import ordersRoutes from './routes/orders.routes.js';
 import callAnalyticsRoutes from './routes/call-analytics.routes.js';
 import integrationsRoutes from './routes/integrations.routes.js';
+import chatRoutes from './routes/chat.routes.js';
+import hrRoutes from './routes/hr.routes.js';
+import marketingRoutes from './routes/marketing.routes.js';
+import itDeskRoutes from './routes/it-desk.routes.js';
+import infrastructureRoutes from './routes/infrastructure.routes.js';
+import aiAutomationRoutes from './routes/ai-automation.routes.js';
+import { initChatSocket } from './socket/chat.socket.js';
+import path from 'path';
 
 const app = express();
+const httpServer = http.createServer(app);
+initChatSocket(httpServer);
 
 
 // ─── Security & Middleware ────────────────────────────────────────────────────
@@ -54,6 +65,9 @@ app.use('/v1/auth', authRoutes);
 // ─── Staff Admin: User management (JWT + Admin role required inside router) ───
 app.use('/v1/admin/users', usersRoutes);
 
+// ─── Staff Internal Chat & Messaging (JWT Protected) ──────────────────────────
+app.use('/v1/chat', chatRoutes);
+
 // ─── CRM Business Logic: Won form, lead lifecycle, orders, coupons ────────────
 app.use('/v1/crm', ordersRoutes);
 
@@ -74,6 +88,25 @@ app.use('/v1/staff', crmRoutes);
 
 // 4. External Integrations (Telephony, Direct Bank Remittances / UPI, Brevo Email/SMS/WhatsApp, R2 Storage)
 app.use('/v1', integrationsRoutes);
+
+// 5. HR, Careers ATS & Accounts Desk
+app.use('/v1/careers', hrRoutes);
+app.use('/v1/hr', hrRoutes);
+
+// 6. Marketing, Social Media Planner & Paid Ads Desk
+app.use('/v1/marketing', marketingRoutes);
+
+// 7. IT Engineering & Client Solutions Command Center
+app.use('/v1/it', itDeskRoutes);
+
+// 8. Isolated Infrastructure Telemetry & Health Monitoring
+app.use('/v1/infrastructure', infrastructureRoutes);
+
+// 9. AI Automation Extension Points (ATS Match, IT Scoping, Copywriting)
+app.use('/v1/ai', aiAutomationRoutes);
+
+// Static uploads are blocked from public access for confidentiality.
+// All document downloads require authenticated streaming routes (e.g. /v1/hr/applications/:id/documents/:docId/download).
 
 // ─── Public inquiry & appointment endpoints ───────────────────────────────────
 app.post('/v1/inquiry', async (req, res) => {
@@ -114,14 +147,15 @@ app.use(notFoundHandler);
 // ─── Global error handler (must be last) ─────────────────────────────────────
 app.use(errorHandler);
 
-// ─── Start Server ─────────────────────────────────────────────────────────────
-app.listen(env.PORT, () => {
-  logger.info('✅ ETaxwala 2.0 API Server running', {
+// ─── Start Server with WebSocket Support ──────────────────────────────────────
+httpServer.listen(env.PORT, () => {
+  logger.info('✅ ETaxwala 2.0 API Server running with WebSockets', {
     port: env.PORT,
     env: env.NODE_ENV,
     endpoints: {
       auth: `/v1/auth/staff/login`,
       admin: `/v1/admin/users`,
+      chat: `/v1/chat`,
       crm: `/v1/crm`,
       callAnalytics: `/v1/call-logs`,
       flutter: `/api`,

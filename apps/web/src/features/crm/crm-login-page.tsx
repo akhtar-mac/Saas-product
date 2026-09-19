@@ -215,14 +215,21 @@ export default function CrmLoginPage() {
         marketing_employee: RoleType.MARKETING_EMPLOYEE, franchise_partner: RoleType.FRANCHISE_EMPLOYEE,
         consultation: RoleType.CONSULTATION, operations_assistant: RoleType.OPERATIONS_ASSISTANT,
         sales_assistant: RoleType.SALES_ASSISTANT, hr: RoleType.HR,
-        website_manager: RoleType.WEBSITE_MANAGER,
+        website_manager: RoleType.WEBSITE_MANAGER, staff: RoleType.STAFF,
       };
+
+      const mappedRoles: RoleType[] = Array.isArray(user.roles)
+        ? user.roles.map((r: string) => roleMap[r] || RoleType.STAFF)
+        : [roleMap[user.role_name] || RoleType.STAFF];
+
       loginStaff(
         {
           id: user.id,
           username: user.name,
           email: user.email,
           role: roleMap[user.role_name] || RoleType.SALES_EMPLOYEE,
+          roles: mappedRoles,
+          roleIds: Array.isArray(user.role_ids) ? user.role_ids : [user.role_id || 7],
           companyId: 'etaxwala',
           status: 1,
           isOnline: true,
@@ -243,10 +250,11 @@ export default function CrmLoginPage() {
     }
   };
 
-  // Quick-login card: fills the email field and auto-submits with demo password
+  // Quick-login card: fills the email field and auto-submits with active staff password
   const handleQuickLogin = (card: RoleCard) => {
     setEmail(card.email);
-    doLogin(card.email, 'etaxwala@2024');
+    setPassword('Password@123');
+    doLogin(card.email, 'Password@123');
   };
 
   const handleFormLogin = (e: React.FormEvent) => {

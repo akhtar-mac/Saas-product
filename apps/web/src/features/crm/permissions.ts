@@ -4,7 +4,7 @@ export interface PermissionDefinition {
   key: string;
   label: string;
   description: string;
-  category: 'Dashboard' | 'Operations' | 'Sales' | 'Franchise' | 'Admin & System';
+  category: 'Dashboard' | 'Operations' | 'Sales' | 'Franchise' | 'HR' | 'Marketing' | 'IT & Solutions' | 'Admin & System';
 }
 
 export const PERMISSIONS_CATALOG: PermissionDefinition[] = [
@@ -118,6 +118,84 @@ export const PERMISSIONS_CATALOG: PermissionDefinition[] = [
     category: 'Franchise',
   },
 
+  // HR & ATS
+  {
+    key: 'hr:view',
+    label: 'HR Desk View',
+    description: 'Access HR and workforce console',
+    category: 'HR',
+  },
+  {
+    key: 'hr:ats',
+    label: 'Manage ATS & Candidates',
+    description: 'Review applications, schedule interviews, update hiring stages',
+    category: 'HR',
+  },
+  {
+    key: 'hr:payroll',
+    label: 'View Payroll & Accounts',
+    description: 'View salary records and commission disbursements',
+    category: 'HR',
+  },
+
+  // Marketing & Growth
+  {
+    key: 'marketing:view',
+    label: 'Marketing Hub View',
+    description: 'Access marketing console',
+    category: 'Marketing',
+  },
+  {
+    key: 'marketing:social',
+    label: 'Manage Social Planner',
+    description: 'Schedule and manage social media posts',
+    category: 'Marketing',
+  },
+  {
+    key: 'marketing:ads',
+    label: 'Paid Ads Telemetry',
+    description: 'Track Meta and Google Ads performance and spend',
+    category: 'Marketing',
+  },
+  {
+    key: 'marketing:attribution',
+    label: 'Lead Attribution Analytics',
+    description: 'View UTM source and touchpoint attribution',
+    category: 'Marketing',
+  },
+
+  // IT & Solutions Command Center
+  {
+    key: 'it:view',
+    label: 'IT Command View',
+    description: 'Access IT engineering console',
+    category: 'IT & Solutions',
+  },
+  {
+    key: 'it:leads',
+    label: 'Tech Inquiries & Meetings',
+    description: 'Manage custom software leads and discovery calls',
+    category: 'IT & Solutions',
+  },
+  {
+    key: 'it:quotations',
+    label: 'Proposal & Quotations Studio',
+    description: 'Generate versioned milestone proposals',
+    category: 'IT & Solutions',
+  },
+  {
+    key: 'it:projects',
+    label: 'Active Projects Delivery',
+    description: 'Track software sprint milestones and repositories',
+    category: 'IT & Solutions',
+  },
+  {
+    key: 'infrastructure:view',
+    label: 'System Health Telemetry',
+    description: 'View server health, database latency and connection pools',
+    category: 'IT & Solutions',
+  },
+
   // Admin & System
   {
     key: 'admin:view',
@@ -185,6 +263,26 @@ export const PERMISSIONS_CATALOG: PermissionDefinition[] = [
     description: 'Access consolidated business reports',
     category: 'Admin & System',
   },
+
+  // Enterprise Chat
+  {
+    key: 'chat:view',
+    label: 'View Staff Chat',
+    description: 'Read messages in staff chat channels',
+    category: 'Admin & System',
+  },
+  {
+    key: 'chat:send',
+    label: 'Send Staff Chat Messages',
+    description: 'Send messages in staff chat channels',
+    category: 'Admin & System',
+  },
+  {
+    key: 'chat:attachments',
+    label: 'Send Chat Attachments',
+    description: 'Upload files in staff chat channels',
+    category: 'Admin & System',
+  },
 ];
 
 // All permission keys as array
@@ -214,10 +312,14 @@ export function getDepartmentPermissions(creatorRoleId: number): PermissionDefin
     );
   }
 
-  // Marketing Manager (5) / Sub-brands Manager (15) -> Dashboard + Sales domain
+  // Marketing Manager (5) / Sub-brands Manager (15) -> Dashboard + Sales + Marketing + IT
   if (creatorRoleId === 5 || creatorRoleId === 15) {
     return PERMISSIONS_CATALOG.filter(
-      (p) => p.category === 'Dashboard' || p.category === 'Sales'
+      (p) =>
+        p.category === 'Dashboard' ||
+        p.category === 'Sales' ||
+        p.category === 'Marketing' ||
+        p.category === 'IT & Solutions'
     );
   }
 
@@ -232,7 +334,7 @@ export function getDepartmentPermissions(creatorRoleId: number): PermissionDefin
   return PERMISSIONS_CATALOG.filter((p) => p.category === 'Dashboard');
 }
 
-// Default permissions pre-configured for each of the 15 Role IDs
+// Default permissions pre-configured for each of the 16 Role IDs
 export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
   // 1: Super Admin
   1: ['*'],
@@ -249,6 +351,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'operations:customers',
     'operations:tasks',
     'accounts:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 4: Sales Manager
@@ -261,15 +366,25 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'tasks:view',
     'workforce:view',
     'accounts:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 5: Marketing Manager
   5: [
     'dashboard:view',
+    'marketing:view',
+    'marketing:social',
+    'marketing:ads',
+    'marketing:attribution',
     'sales:view',
     'leads:view',
     'leads:subbrands',
     'call_analytics:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 6: Franchise Manager
@@ -280,6 +395,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'franchise:inquiries',
     'franchise:training',
     'leads:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 7: Sales Employee
@@ -289,6 +407,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'leads:view',
     'quotations:view',
     'tasks:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 8: Operations Employee
@@ -297,34 +418,97 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'operations:view',
     'operations:tasks',
     'operations:customers',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 9: Marketing Employee
-  9: ['dashboard:view', 'sales:view', 'leads:view'],
+  9: [
+    'dashboard:view',
+    'marketing:view',
+    'marketing:social',
+    'sales:view',
+    'leads:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
 
   // 10: Franchise Partner
-  10: ['dashboard:view', 'franchise:view', 'franchise:training'],
+  10: [
+    'dashboard:view',
+    'franchise:view',
+    'franchise:training',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
 
   // 11: Consultation
-  11: ['dashboard:view', 'sales:view', 'leads:view', 'tasks:view'],
+  11: [
+    'dashboard:view',
+    'sales:view',
+    'leads:view',
+    'tasks:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
 
   // 12: Operations Assistant
-  12: ['dashboard:view', 'operations:view', 'operations:tasks'],
+  12: [
+    'dashboard:view',
+    'operations:view',
+    'operations:tasks',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
 
   // 13: Sales Assistant
-  13: ['dashboard:view', 'sales:view', 'leads:view', 'tasks:view'],
+  13: [
+    'dashboard:view',
+    'sales:view',
+    'leads:view',
+    'tasks:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
 
   // 14: HR
   14: [
     'dashboard:view',
+    'hr:view',
+    'hr:ats',
+    'hr:payroll',
     'admin:view',
     'workforce:view',
     'operations:employees',
     'users:manage',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
-  // 15: Website Manager
-  15: ['dashboard:view', 'admin:view'],
+  // 15: Website Manager / IT Lead
+  15: [
+    'dashboard:view',
+    'it:view',
+    'it:leads',
+    'it:quotations',
+    'it:projects',
+    'infrastructure:view',
+    'admin:view',
+    'blogs:manage',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
+
+  // 16: Staff / Support
+  16: ['dashboard:view', 'chat:view', 'chat:send', 'chat:attachments'],
 };
 
 // Also map by RoleType enum string name for convenience
@@ -345,41 +529,61 @@ export const ROLE_NAME_DEFAULT_PERMISSIONS: Record<string, string[]> = {
   SALES_ASSISTANT: ROLE_DEFAULT_PERMISSIONS[13],
   HR: ROLE_DEFAULT_PERMISSIONS[14],
   WEBSITE_MANAGER: ROLE_DEFAULT_PERMISSIONS[15],
+  STAFF: ROLE_DEFAULT_PERMISSIONS[16],
 };
 
 /**
- * Check if a user has a specific permission
+ * Check if a user has a specific permission.
+ * Resolves union of permissions across ALL assigned roles if multi-role.
  */
 export function hasUserPermission(
   userPermissions: string[] | undefined,
   roleIdOrName: number | string | undefined,
-  requiredPermission: string
+  requiredPermission: string,
+  userRoles?: (number | string)[]
 ): boolean {
-  // 1. If explicit custom user permissions array is provided, evaluate it first
-  if (userPermissions && Array.isArray(userPermissions) && userPermissions.length > 0) {
-    if (userPermissions.includes('*')) return true;
-    return userPermissions.includes(requiredPermission);
-  }
+  // Check if any assigned role has Super Admin bypass
+  const allRoles =
+    userRoles && userRoles.length > 0 ? userRoles : roleIdOrName !== undefined ? [roleIdOrName] : [];
 
-  // 2. If Super Admin or Admin role without custom perms override, grant full access
-  if (
-    roleIdOrName === 1 ||
-    roleIdOrName === 2 ||
-    roleIdOrName === 'SUPER_ADMIN' ||
-    roleIdOrName === 'ADMIN' ||
-    roleIdOrName === 'Super Admin' ||
-    roleIdOrName === 'Admin'
-  ) {
+  const isSuperOrAdmin = allRoles.some(
+    (r) =>
+      r === 1 ||
+      r === 2 ||
+      r === 'SUPER_ADMIN' ||
+      r === 'ADMIN' ||
+      r === 'Super Admin' ||
+      r === 'Admin'
+  );
+  if (isSuperOrAdmin) {
     return true;
   }
 
-  // 3. Fallback to standard role default permissions catalog
-  let activePerms: string[] = [];
-  if (typeof roleIdOrName === 'number' && ROLE_DEFAULT_PERMISSIONS[roleIdOrName]) {
-    activePerms = ROLE_DEFAULT_PERMISSIONS[roleIdOrName];
-  } else if (typeof roleIdOrName === 'string' && ROLE_NAME_DEFAULT_PERMISSIONS[roleIdOrName]) {
-    activePerms = ROLE_NAME_DEFAULT_PERMISSIONS[roleIdOrName];
+  // Union of explicit permissions and all role-based permissions
+  const activePermsSet = new Set<string>();
+
+  if (userPermissions && userPermissions.length > 0) {
+    userPermissions.forEach((p) => activePermsSet.add(p));
   }
 
-  return activePerms.includes('*') || activePerms.includes(requiredPermission);
+  for (const r of allRoles) {
+    let perms: string[] = [];
+    if (typeof r === 'number' && ROLE_DEFAULT_PERMISSIONS[r]) {
+      perms = ROLE_DEFAULT_PERMISSIONS[r];
+    } else if (typeof r === 'string' && ROLE_NAME_DEFAULT_PERMISSIONS[r]) {
+      perms = ROLE_NAME_DEFAULT_PERMISSIONS[r];
+    }
+    perms.forEach((p) => activePermsSet.add(p));
+  }
+
+  // If no roles specified, fallback to single roleIdOrName
+  if (allRoles.length === 0) {
+    if (typeof roleIdOrName === 'number' && ROLE_DEFAULT_PERMISSIONS[roleIdOrName]) {
+      ROLE_DEFAULT_PERMISSIONS[roleIdOrName].forEach((p) => activePermsSet.add(p));
+    } else if (typeof roleIdOrName === 'string' && ROLE_NAME_DEFAULT_PERMISSIONS[roleIdOrName]) {
+      ROLE_NAME_DEFAULT_PERMISSIONS[roleIdOrName].forEach((p) => activePermsSet.add(p));
+    }
+  }
+
+  return activePermsSet.has('*') || activePermsSet.has(requiredPermission);
 }

@@ -41,6 +41,8 @@ export interface User {
   username: string;
   email: string;
   role: RoleType;
+  roles?: RoleType[];
+  roleIds?: number[];
   companyId: string;
   status: number;
   isOnline: boolean;
@@ -59,6 +61,55 @@ export interface Profile {
   dob: string | null;
   position: string | null;
   about: string | null;
+}
+
+// ============ STAFF CHAT ============
+
+export interface ChatUser {
+  id: number;
+  name: string;
+  email: string;
+  avatar?: string | null;
+  roleName: string;
+  roles: string[];
+  department?: string | null;
+  isOnline: boolean;
+  lastSeenAt?: string | null;
+  unreadCount?: number;
+  isSelf?: boolean;
+}
+
+export interface ChatAttachment {
+  id: number | string;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+}
+
+export interface ChatMessage {
+  id: number | string;
+  conversationId: number | string;
+  senderId: number;
+  senderName: string;
+  senderAvatar?: string | null;
+  content: string;
+  messageType: 'text' | 'file' | 'system';
+  attachments?: ChatAttachment[];
+  createdAt: string;
+  isRead?: boolean;
+}
+
+export interface ChatConversation {
+  id: number | string;
+  type: 'direct' | 'group';
+  name?: string;
+  title?: string;
+  participant?: ChatUser;
+  participants?: ChatUser[];
+  lastMessage?: ChatMessage | null;
+  unreadCount: number;
+  updatedAt: string;
 }
 
 // ============ CLIENTS ============
@@ -302,9 +353,9 @@ export interface TaskTimeline {
   date: string;
 }
 
-// ============ CHAT ============
+// ============ CLIENT CHAT ============
 
-export interface ChatMessage {
+export interface ClientChatMessage {
   id: number;
   customerId: number | null;
   staffId: number | null;

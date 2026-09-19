@@ -30,6 +30,8 @@ const DEFAULT_STAFF: User = {
   username: 'admin',
   email: 'admin@etaxwala.com',
   role: RoleType.SUPER_ADMIN,
+  roles: [RoleType.SUPER_ADMIN, RoleType.ADMIN, RoleType.OPERATIONS_MANAGER, RoleType.SALES_MANAGER, RoleType.HR],
+  roleIds: [1, 2, 3, 4, 14],
   companyId: 'comp-1',
   status: 1,
   isOnline: true,

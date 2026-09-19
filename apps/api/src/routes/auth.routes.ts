@@ -24,6 +24,7 @@ const ROLE_MAP: Record<number, string> = {
   13: 'sales_assistant',
   14: 'hr',
   15: 'website_manager',
+  16: 'staff',
 };
 
 // ─── Builtin System Accounts for Instant 1-Click Access ────────────────────────
@@ -32,24 +33,26 @@ const BUILTIN_ACCOUNTS: Array<{
   email: string;
   name: string;
   role_id: number;
+  roles?: number[];
   position: string;
 }> = [
-  { id: 1,  email: 'admin@etaxwala.com',            name: 'Super Admin',                role_id: 1,  position: 'Chief Executive Officer' },
-  { id: 2,  email: 'general.admin@etaxwala.com',    name: 'General Administrator',       role_id: 2,  position: 'Systems Administrator' },
-  { id: 3,  email: 'ops.manager@etaxwala.com',      name: 'Operations Manager',          role_id: 3,  position: 'Head of Operations' },
-  { id: 4,  email: 'sales.manager@etaxwala.com',    name: 'Sales Manager',              role_id: 4,  position: 'Head of Sales' },
-  { id: 5,  email: 'marketing@etaxwala.com',        name: 'Marketing Manager',          role_id: 5,  position: 'Growth Lead' },
-  { id: 6,  email: 'franchise@etaxwala.com',        name: 'Franchise Manager',          role_id: 6,  position: 'Partnership Director' },
-  { id: 7,  email: 'priya.sales@etaxwala.com',      name: 'Priya Sharma (Sales Exec)',  role_id: 7,  position: 'Senior Sales Executive' },
-  { id: 8,  email: 'rahul.ops@etaxwala.com',        name: 'Rahul Verma (Operations)',   role_id: 8,  position: 'Operations Specialist' },
-  { id: 9,  email: 'seo.content@etaxwala.com',      name: 'Marketing Content & SEO',    role_id: 9,  position: 'Content Lead' },
-  { id: 10, email: 'field.partner@etaxwala.com',    name: 'Franchise Field Agent',      role_id: 10, position: 'Field Partner' },
-  { id: 11, email: 'ca.expert@etaxwala.com',        name: 'CA Tax Expert',              role_id: 11, position: 'Chartered Accountant' },
-  { id: 12, email: 'qc.reviewer@etaxwala.com',      name: 'QC & Document Reviewer',     role_id: 12, position: 'Quality Control Lead' },
-  { id: 13, email: 'assistant.sales@etaxwala.com',  name: 'Sales Assistant',            role_id: 13, position: 'Lead Qualifier' },
-  { id: 14, email: 'hr@etaxwala.com',               name: 'HR Manager',                 role_id: 14, position: 'People Operations' },
-  { id: 15, email: 'subbrands@etaxwala.com',        name: 'Sub-Brands Manager',         role_id: 15, position: 'Agri & Rural Lead' },
-  { id: 16, email: 'support@etaxwala.com',          name: 'Support Executive',          role_id: 2,  position: 'Client Helpdesk' },
+  { id: 1,  email: 'admin@etaxwala.com',            name: 'Super Admin',                role_id: 1,  roles: [1, 2, 3, 4, 14], position: 'Chief Executive Officer' },
+  { id: 2,  email: 'general.admin@etaxwala.com',    name: 'General Administrator',       role_id: 2,  roles: [2], position: 'Systems Administrator' },
+  { id: 3,  email: 'ops.manager@etaxwala.com',      name: 'Operations Manager',          role_id: 3,  roles: [3, 8], position: 'Head of Operations' },
+  { id: 4,  email: 'sales.manager@etaxwala.com',    name: 'Sales Manager',              role_id: 4,  roles: [4, 7], position: 'Head of Sales' },
+  { id: 5,  email: 'marketing@etaxwala.com',        name: 'Marketing Manager',          role_id: 5,  roles: [5], position: 'Growth Lead' },
+  { id: 6,  email: 'franchise@etaxwala.com',        name: 'Franchise Manager',          role_id: 6,  roles: [6], position: 'Partnership Director' },
+  { id: 7,  email: 'priya.sales@etaxwala.com',      name: 'Priya Sharma (Sales Exec)',  role_id: 7,  roles: [7], position: 'Senior Sales Executive' },
+  { id: 8,  email: 'rahul.ops@etaxwala.com',        name: 'Rahul Verma (Operations)',   role_id: 8,  roles: [8], position: 'Operations Specialist' },
+  { id: 9,  email: 'seo.content@etaxwala.com',      name: 'Marketing Content & SEO',    role_id: 9,  roles: [9], position: 'Content Lead' },
+  { id: 10, email: 'field.partner@etaxwala.com',    name: 'Franchise Field Agent',      role_id: 10, roles: [10], position: 'Field Partner' },
+  { id: 11, email: 'ca.expert@etaxwala.com',        name: 'CA Tax Expert',              role_id: 11, roles: [11], position: 'Chartered Accountant' },
+  { id: 12, email: 'qc.reviewer@etaxwala.com',      name: 'QC & Document Reviewer',     role_id: 12, roles: [12], position: 'Quality Control Lead' },
+  { id: 13, email: 'assistant.sales@etaxwala.com',  name: 'Sales Assistant',            role_id: 13, roles: [13], position: 'Lead Qualifier' },
+  { id: 14, email: 'hr@etaxwala.com',               name: 'HR Manager',                 role_id: 14, roles: [14], position: 'People Operations' },
+  { id: 15, email: 'subbrands@etaxwala.com',        name: 'Sub-Brands Manager',         role_id: 15, roles: [15], position: 'Agri & Rural Lead' },
+  { id: 16, email: 'support@etaxwala.com',          name: 'Support Executive',          role_id: 16, roles: [16], position: 'Client Helpdesk' },
+  { id: 17, email: 'ahmed@etaxwala.com',            name: 'Ahmed Shaikh',               role_id: 4,  roles: [4, 14, 16], position: 'Regional Business Lead' },
 ];
 
 function signTokens(payload: JwtPayload) {
@@ -84,113 +87,83 @@ router.post('/staff/login', async (req: Request, res: Response) => {
       staffUser = null;
     }
 
-    if (staffUser) {
-      if (!staffUser.is_active) {
-        return res.status(401).json({ success: false, error: 'Account is deactivated.' });
-      }
-      const isValid = await bcrypt.compare(password, staffUser.password_hash);
-      if (!isValid && password !== 'etaxwala@2024') {
-        return res.status(401).json({ success: false, error: 'Invalid credentials.' });
-      }
-
-      try {
-        await (prisma as any).staff_users.update({
-          where: { id: staffUser.id },
-          data: { last_login_at: new Date() },
-        });
-      } catch {}
-
-      const payload: JwtPayload = {
-        user_id: staffUser.id,
-        role_id: staffUser.role_id,
-        role_name: ROLE_MAP[staffUser.role_id] || 'staff',
-        username: staffUser.name,
-        email: staffUser.email,
-      };
-
-      let userPermissions: string[] = [];
-      if (staffUser.permissions) {
-        try { userPermissions = JSON.parse(staffUser.permissions); } catch {}
-      }
-
-      const tokens = signTokens(payload);
-      return res.json({
-        success: true,
-        data: {
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-          user: {
-            id: staffUser.id,
-            name: staffUser.name,
-            email: staffUser.email,
-            role_id: staffUser.role_id,
-            role_name: ROLE_MAP[staffUser.role_id] || 'staff',
-            permissions: userPermissions,
-            profile_photo: staffUser.profile_photo,
-            position: staffUser.position,
-          },
-        },
-      });
+    if (!staffUser) {
+      return res.status(401).json({ success: false, error: 'Invalid email or password.' });
     }
 
-    // 2. Builtin System Accounts fallback
-    const builtin = BUILTIN_ACCOUNTS.find(
-      (a) => a.email.toLowerCase() === cleanEmail || cleanEmail.startsWith(a.email.split('@')[0])
-    );
-
-    if (builtin) {
-      const payload: JwtPayload = {
-        user_id: builtin.id,
-        role_id: builtin.role_id,
-        role_name: ROLE_MAP[builtin.role_id] || 'staff',
-        username: builtin.name,
-        email: builtin.email,
-      };
-
-      const tokens = signTokens(payload);
-      return res.json({
-        success: true,
-        data: {
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-          user: {
-            id: builtin.id,
-            name: builtin.name,
-            email: builtin.email,
-            role_id: builtin.role_id,
-            role_name: ROLE_MAP[builtin.role_id] || 'staff',
-            permissions: [],
-            profile_photo: null,
-            position: builtin.position,
-          },
-        },
-      });
+    if (!staffUser.is_active) {
+      return res.status(401).json({ success: false, error: 'Account is deactivated.' });
     }
 
-    // 3. Generic staff fallback if valid email format
-    const namePart = cleanEmail.split('@')[0].replace('.', ' ');
-    const fallbackUser: JwtPayload = {
-      user_id: Math.floor(Math.random() * 1000) + 100,
-      role_id: 1, // default Super Admin access for any @etaxwala.com email
-      role_name: 'super_admin',
-      username: namePart.charAt(0).toUpperCase() + namePart.slice(1),
-      email: cleanEmail,
+    const isValid = await bcrypt.compare(password, staffUser.password_hash);
+    if (!isValid) {
+      return res.status(401).json({ success: false, error: 'Invalid email or password.' });
+    }
+
+    // Fetch all assigned roles
+    let assignedRoleIds: number[] = [];
+    try {
+      const userRoles = await (prisma as any).staff_user_roles.findMany({
+        where: { user_id: staffUser.id },
+      });
+      if (userRoles && userRoles.length > 0) {
+        assignedRoleIds = userRoles.map((r: any) => r.role_id);
+      }
+    } catch {}
+
+    if (assignedRoleIds.length === 0 && staffUser.roles) {
+      try { assignedRoleIds = JSON.parse(staffUser.roles); } catch {}
+    }
+    if (assignedRoleIds.length === 0) {
+      assignedRoleIds = [staffUser.role_id];
+    }
+
+    try {
+      await (prisma as any).staff_users.update({
+        where: { id: staffUser.id },
+        data: { last_login_at: new Date(), is_online: true },
+      });
+    } catch {}
+
+    const roleNames = assignedRoleIds.map((id) => ROLE_MAP[id] || 'staff');
+
+    let userPermissions: string[] = [];
+    if (staffUser.permissions) {
+      try { userPermissions = JSON.parse(staffUser.permissions); } catch {}
+    }
+    if (assignedRoleIds.includes(1)) {
+      userPermissions = ['*'];
+    }
+
+    const payload: JwtPayload = {
+      user_id: staffUser.id,
+      role_id: staffUser.role_id,
+      role_ids: assignedRoleIds,
+      role_name: ROLE_MAP[staffUser.role_id] || 'staff',
+      roles: roleNames,
+      permissions: userPermissions,
+      username: staffUser.name,
+      email: staffUser.email,
     };
 
-    const tokens = signTokens(fallbackUser);
+    const tokens = signTokens(payload);
     return res.json({
       success: true,
       data: {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         user: {
-          id: fallbackUser.user_id,
-          name: fallbackUser.username,
-          email: fallbackUser.email,
-          role_id: fallbackUser.role_id,
-          role_name: fallbackUser.role_name,
-          profile_photo: null,
-          position: 'Staff Executive',
+          id: staffUser.id,
+          name: staffUser.name,
+          email: staffUser.email,
+          role_id: staffUser.role_id,
+          role_ids: assignedRoleIds,
+          role_name: ROLE_MAP[staffUser.role_id] || 'staff',
+          roles: roleNames,
+          permissions: userPermissions,
+          profile_photo: staffUser.profile_photo,
+          position: staffUser.position,
+          department: staffUser.department,
         },
       },
     });
@@ -215,13 +188,48 @@ router.post('/staff/refresh', async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Invalid or expired refresh token.' });
     }
 
-    const builtin = BUILTIN_ACCOUNTS.find((a) => a.id === decoded.user_id) || BUILTIN_ACCOUNTS[0];
+    const staffUser = await (prisma as any).staff_users.findUnique({
+      where: { id: decoded.user_id },
+    });
+    if (!staffUser || !staffUser.is_active) {
+      return res.status(401).json({ success: false, error: 'Account not found or deactivated.' });
+    }
+
+    let assignedRoleIds: number[] = [];
+    try {
+      const userRoles = await (prisma as any).staff_user_roles.findMany({
+        where: { user_id: staffUser.id },
+      });
+      if (userRoles && userRoles.length > 0) {
+        assignedRoleIds = userRoles.map((r: any) => r.role_id);
+      }
+    } catch {}
+
+    if (assignedRoleIds.length === 0 && staffUser.roles) {
+      try { assignedRoleIds = JSON.parse(staffUser.roles); } catch {}
+    }
+    if (assignedRoleIds.length === 0) {
+      assignedRoleIds = [staffUser.role_id];
+    }
+
+    const roleNames = assignedRoleIds.map((id) => ROLE_MAP[id] || 'staff');
+    let userPermissions: string[] = [];
+    if (staffUser.permissions) {
+      try { userPermissions = JSON.parse(staffUser.permissions); } catch {}
+    }
+    if (assignedRoleIds.includes(1)) {
+      userPermissions = ['*'];
+    }
+
     const payload: JwtPayload = {
-      user_id: builtin.id,
-      role_id: builtin.role_id,
-      role_name: ROLE_MAP[builtin.role_id] || 'staff',
-      username: builtin.name,
-      email: builtin.email,
+      user_id: staffUser.id,
+      role_id: staffUser.role_id,
+      role_ids: assignedRoleIds,
+      role_name: ROLE_MAP[staffUser.role_id] || 'staff',
+      roles: roleNames,
+      permissions: userPermissions,
+      username: staffUser.name,
+      email: staffUser.email,
     };
 
     const tokens = signTokens(payload);
@@ -230,6 +238,7 @@ router.post('/staff/refresh', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Token refresh failed.' });
   }
 });
+
 
 // ─── GET /v1/auth/staff/me ────────────────────────────────────────────────────
 router.get('/staff/me', verifyJWT, async (req: Request, res: Response) => {

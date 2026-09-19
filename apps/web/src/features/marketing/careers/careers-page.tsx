@@ -38,13 +38,14 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const CUSTOMER_API = 'https://customer-api.etaxwala.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 export default function CareersPage() {
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [fileName, setFileName] = useState<string>('');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
 
   const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -59,19 +60,21 @@ export default function CareersPage() {
   const onSubmit = async (data: FormData) => {
     setStatus('loading');
     try {
-      const res = await fetch(`${CUSTOMER_API}/add-inquiry-lead`, {
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('email', data.email);
+      formData.append('phone', data.phone);
+      formData.append('role', data.role);
+      formData.append('experience', data.experience);
+      if (data.linkedin) formData.append('linkedin', data.linkedin);
+      if (data.message) formData.append('message', data.message);
+      if (resumeFile) {
+        formData.append('resume', resumeFile);
+      }
+
+      const res = await fetch(`${API_BASE}/v1/careers/apply`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          contact: data.phone,
-          city: 'Career Applicant',
-          state: 'Maharashtra',
-          service: 'Career Application',
-          message: `Position Applied: ${data.role} | Exp: ${data.experience} | LinkedIn: ${data.linkedin || 'N/A'} | Resume File: ${fileName || 'Emailed separately'} | Note: ${data.message || ''}`,
-          consent: true,
-        }),
+        body: formData,
       });
 
       if (res.ok) {
@@ -81,7 +84,8 @@ export default function CareersPage() {
           setStatus('idle');
           setIsModalOpen(false);
           setFileName('');
-        }, 2500);
+          setResumeFile(null);
+        }, 2200);
       } else {
         setStatus('error');
       }
@@ -310,8 +314,10 @@ export default function CareersPage() {
                         type="file"
                         accept=".pdf,.doc,.docx"
                         onChange={(e) => {
-                          if (e.target.files?.[0]) {
-                            setFileName(e.target.files[0].name);
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setFileName(file.name);
+                            setResumeFile(file);
                           }
                         }}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"

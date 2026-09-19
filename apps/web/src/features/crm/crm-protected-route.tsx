@@ -26,10 +26,30 @@ export default function CrmProtectedRoute({ children, allowedRoleIds }: CrmProte
       marketing_manager: 5, franchise_manager: 6, sales_employee: 7,
       operations_employee: 8, marketing_employee: 9, franchise_partner: 10,
       consultation: 11, operations_assistant: 12, sales_assistant: 13,
-      hr: 14, website_manager: 15,
+      hr: 14, website_manager: 15, staff: 16,
     };
-    const userRoleId = ROLE_ID_MAP[staffUser.role] ?? 0;
-    if (!allowedRoleIds.includes(userRoleId)) {
+
+    // Extract all role IDs the user holds
+    const userRoleIds: number[] = [];
+    if (staffUser.roleIds && Array.isArray(staffUser.roleIds)) {
+      userRoleIds.push(...staffUser.roleIds);
+    }
+    if (staffUser.role) {
+      const primaryId = typeof staffUser.role === 'number' ? staffUser.role : ROLE_ID_MAP[String(staffUser.role).toLowerCase()] ?? 0;
+      if (primaryId && !userRoleIds.includes(primaryId)) userRoleIds.push(primaryId);
+    }
+    if (staffUser.roles && Array.isArray(staffUser.roles)) {
+      for (const r of staffUser.roles) {
+        const rId = typeof r === 'number' ? r : ROLE_ID_MAP[String(r).toLowerCase()] ?? 0;
+        if (rId && !userRoleIds.includes(rId)) userRoleIds.push(rId);
+      }
+    }
+
+    // Super Admin bypass
+    const isSuperAdmin = userRoleIds.includes(1);
+    const hasAccess = isSuperAdmin || userRoleIds.some((id) => allowedRoleIds.includes(id));
+
+    if (!hasAccess) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
           <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
@@ -39,7 +59,7 @@ export default function CrmProtectedRoute({ children, allowedRoleIds }: CrmProte
           </div>
           <h2 className="text-xl font-bold text-slate-900 mb-2">Access Denied</h2>
           <p className="text-slate-500 text-sm max-w-sm">
-            Your role (<strong>{staffUser.role}</strong>) doesn't have permission to view this page.
+            Your assigned role doesn't have permission to view this department workspace.
           </p>
         </div>
       );

@@ -42,6 +42,9 @@ import {
   Globe,
   DollarSign,
   UserCheck,
+  MessageSquare,
+  Target,
+  Terminal,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
@@ -83,17 +86,35 @@ export default function CrmLayout() {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const roleOptions: { role: RoleType; label: string; staffName: string }[] = [
+  const ALL_ROLE_OPTIONS: { role: RoleType; label: string; staffName: string }[] = [
     { role: RoleType.SUPER_ADMIN, label: 'Super Admin (All Access)', staffName: 'ETaxwala HQ Admin' },
-    { role: RoleType.SALES_MANAGER, label: 'Sales Manager', staffName: 'Netra Divekar' },
-    { role: RoleType.SALES_EMPLOYEE, label: 'Sales Employee (Telecaller)', staffName: 'Shreya Joshi' },
-    { role: RoleType.OPERATIONS_MANAGER, label: 'Operations Manager', staffName: 'Vaijnath Sir' },
-    { role: RoleType.OPERATIONS_EMPLOYEE, label: 'Operations Specialist', staffName: 'Sachin Mohan Vyavahare' },
-    { role: RoleType.FRANCHISE_MANAGER, label: 'Franchise Manager', staffName: 'Kunal Patil' },
     { role: RoleType.ADMIN, label: 'General Administrator', staffName: 'System Manager' },
+    { role: RoleType.OPERATIONS_MANAGER, label: 'Operations Manager', staffName: 'Vaijnath Sir' },
+    { role: RoleType.SALES_MANAGER, label: 'Sales Manager', staffName: 'Netra Divekar' },
+    { role: RoleType.MARKETING_MANAGER, label: 'Marketing Manager', staffName: 'Growth Lead' },
+    { role: RoleType.FRANCHISE_MANAGER, label: 'Franchise Manager', staffName: 'Kunal Patil' },
+    { role: RoleType.SALES_EMPLOYEE, label: 'Sales Employee (Telecaller)', staffName: 'Priya Sharma' },
+    { role: RoleType.OPERATIONS_EMPLOYEE, label: 'Operations Specialist', staffName: 'Sachin Mohan Vyavahare' },
+    { role: RoleType.MARKETING_EMPLOYEE, label: 'Marketing Content & SEO', staffName: 'Content Specialist' },
+    { role: RoleType.FRANCHISE_EMPLOYEE, label: 'Franchise Partner Desk', staffName: 'Field Partner' },
+    { role: RoleType.CONSULTATION, label: 'CA / Tax Expert Workbench', staffName: 'CA Tax Expert' },
+    { role: RoleType.OPERATIONS_ASSISTANT, label: 'QC & Document Reviewer', staffName: 'QC Lead' },
+    { role: RoleType.SALES_ASSISTANT, label: 'Sales Assistant / Qualifier', staffName: 'Shreya Joshi' },
+    { role: RoleType.HR, label: 'HR Manager (Workforce & Tracking)', staffName: 'HR Manager' },
+    { role: RoleType.WEBSITE_MANAGER, label: 'Website & Sub-Brands Manager', staffName: 'Sub-Brands Lead' },
+    { role: RoleType.STAFF, label: 'Staff / Client Support Desk', staffName: 'Support Executive' },
   ];
 
-  const currentRoleInfo = roleOptions.find((r) => r.role === activeRole) || roleOptions[0];
+  const isSuperAdmin =
+    staffUser?.role === RoleType.SUPER_ADMIN ||
+    (Array.isArray(staffUser?.roles) && staffUser.roles.includes(RoleType.SUPER_ADMIN));
+
+  const roleOptions =
+    isSuperAdmin || !staffUser?.roles || staffUser.roles.length === 0
+      ? ALL_ROLE_OPTIONS
+      : ALL_ROLE_OPTIONS.filter((opt) => staffUser.roles!.includes(opt.role));
+
+  const currentRoleInfo = ALL_ROLE_OPTIONS.find((r) => r.role === activeRole) || ALL_ROLE_OPTIONS[0];
 
   const handleLogout = () => {
     logoutStaff();
@@ -134,7 +155,11 @@ export default function CrmLayout() {
   }, [staffUser, isSuperAdmin, activeRole]);
 
   const can = (permKey: string) => {
+<<<<<<< HEAD
     return hasUserPermission(staffUser?.permissions, staffUser?.role_id || activeRole, permKey);
+=======
+    return hasUserPermission(staffUser?.permissions, activeRole, permKey, staffUser?.roles);
+>>>>>>> origin/AKhtar's
   };
 
   const handleNavClick = () => {
@@ -271,6 +296,81 @@ export default function CrmLayout() {
                 <span>Dashboard</span>
               </Link>
             )}
+
+            {/* Staff Internal Chat */}
+            {can('chat:view') && (
+              <Link
+                to="/crm/chat"
+                onClick={handleNavClick}
+                className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                  location.pathname === '/crm/chat'
+                    ? 'bg-[#1B365D] text-white shadow-sm'
+                    : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <MessageSquare className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/chat' ? 'text-white' : 'text-[#7C3AED]'}`} />
+                  <span>Staff Chat</span>
+                </div>
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#E11D48] text-white">Live</span>
+                </span>
+              </Link>
+            )}
+
+            {/* Department Hubs: HR Desk, Marketing Suite, IT Command Center */}
+            <div className="pt-2 pb-1 px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              Department Hubs
+            </div>
+
+            <Link
+              to="/crm/hr"
+              onClick={handleNavClick}
+              className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                location.pathname === '/crm/hr'
+                  ? 'bg-[#1B365D] text-white shadow-sm'
+                  : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Users className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/hr' ? 'text-white' : 'text-[#D97706]'}`} />
+                <span>HR & Accounts</span>
+              </div>
+              <span className="badge badge-gold text-[9px] px-1.5 py-0.2">Careers ATS</span>
+            </Link>
+
+            <Link
+              to="/crm/marketing"
+              onClick={handleNavClick}
+              className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                location.pathname === '/crm/marketing'
+                  ? 'bg-[#1B365D] text-white shadow-sm'
+                  : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Target className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/marketing' ? 'text-white' : 'text-pink-600'}`} />
+                <span>Marketing Hub</span>
+              </div>
+              <span className="badge badge-navy text-[9px] px-1.5 py-0.2">Social & Ads</span>
+            </Link>
+
+            <Link
+              to="/crm/it-command"
+              onClick={handleNavClick}
+              className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                location.pathname === '/crm/it-command'
+                  ? 'bg-[#1B365D] text-white shadow-sm'
+                  : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Terminal className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/it-command' ? 'text-white' : 'text-[#0084D1]'}`} />
+                <span>IT Command Center</span>
+              </div>
+              <span className="badge badge-green text-[9px] px-1.5 py-0.2">Super Tech</span>
+            </Link>
 
             {/* 2. OPERATION MANAGER ACCORDION */}
             {showOpsSection && (
@@ -831,18 +931,47 @@ export default function CrmLayout() {
             </button>
           </div>
 
-          {/* Right quick stats & notification */}
+          {/* Right quick stats, role switcher & notification */}
           <div className="flex items-center gap-3">
-            <span className="badge badge-green text-xs flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live System
-            </span>
+            {/* Header Role Switcher for Multi-Role Users */}
+            <div className="flex items-center gap-2 bg-[#FAF9F5] border border-[#EAE6DD] px-2.5 py-1 rounded-xl">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider hidden lg:inline">Active Role:</span>
+              <select
+                value={activeRole}
+                onChange={(e) => setStaffRole(e.target.value as RoleType)}
+                className="text-xs font-bold bg-transparent text-[#1B365D] focus:outline-none cursor-pointer"
+                id="header-role-switcher"
+              >
+                {roleOptions.map((opt) => (
+                  <option key={opt.role} value={opt.role}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Quick Chat Shortcut */}
+            <Link
+              to="/crm/chat"
+              className={`p-2 rounded-xl transition-colors relative flex items-center gap-1.5 text-xs font-bold ${
+                location.pathname === '/crm/chat'
+                  ? 'bg-[#1B365D] text-white shadow-xs'
+                  : 'bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 hover:text-[#1B365D]'
+              }`}
+              title="Staff Internal Chat"
+              id="header-chat-btn"
+            >
+              <MessageSquare className="w-4 h-4 text-[#7C3AED]" />
+              <span className="hidden sm:inline">Staff Chat</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </Link>
 
             {/* Notification Bell */}
             <div className="relative">
               <button
                 ref={bellRef}
                 onClick={() => setNotifOpen((prev) => !prev)}
-                className="relative p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                className="relative p-2 rounded-xl bg-[#FAF9F5] border border-[#EAE6DD] text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                 id="notification-bell"
               >
                 <Bell className="w-4 h-4" />
@@ -856,7 +985,7 @@ export default function CrmLayout() {
             </div>
 
             {/* Profile Avatar */}
-            <div className="w-8 h-8 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-xs">
+            <div className="w-8 h-8 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-xs shadow-xs">
               {currentRoleInfo.staffName.charAt(0)}
             </div>
           </div>
