@@ -256,12 +256,12 @@ export async function processIncomingWebhook(
     });
 
     // Notify sales and marketing teams
-    broadcastRoleNotification(
-      [1, 2, 4, 5],
-      `New Inbound Lead from ${provider.toUpperCase()}`,
-      `Captured via webhook ${webhookCode}: ${leadData.name || leadData.email || 'Anonymous Inquirer'}`,
-      `/crm/marketing?tab=attribution`
-    );
+    await broadcastRoleNotification([1, 2, 4, 5], {
+      type: 'lead',
+      title: `New Inbound Lead from ${provider.toUpperCase()}`,
+      message: `Captured via webhook ${webhookCode}: ${leadData.name || leadData.email || 'Anonymous Inquirer'}`,
+      redirectUrl: `/crm/marketing?tab=attribution`,
+    });
 
     await (prisma as any).integration_webhooks.update({
       where: { id: webhook.id },
