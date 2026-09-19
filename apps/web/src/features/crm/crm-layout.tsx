@@ -100,8 +100,41 @@ export default function CrmLayout() {
     navigate('/crm/login');
   };
 
+  const ROLE_ID_TO_ROLE_TYPE: Record<number, RoleType> = {
+    1: RoleType.SUPER_ADMIN,
+    2: RoleType.ADMIN,
+    3: RoleType.OPERATIONS_MANAGER,
+    4: RoleType.SALES_MANAGER,
+    5: RoleType.MARKETING_MANAGER,
+    6: RoleType.FRANCHISE_MANAGER,
+    7: RoleType.SALES_EMPLOYEE,
+    8: RoleType.OPERATIONS_EMPLOYEE,
+    9: RoleType.MARKETING_EMPLOYEE,
+    10: RoleType.FRANCHISE_EMPLOYEE,
+    11: RoleType.CONSULTATION,
+    12: RoleType.OPERATIONS_ASSISTANT,
+    13: RoleType.SALES_ASSISTANT,
+    14: RoleType.HR,
+    15: RoleType.WEBSITE_MANAGER,
+  };
+
+  const isSuperAdmin =
+    staffUser?.role_id === 1 ||
+    staffUser?.role_id === 2 ||
+    (staffUser?.permissions && staffUser.permissions.includes('*'));
+
+  // Lock activeRole to actual assigned role for non-SuperAdmin staff
+  useEffect(() => {
+    if (staffUser && staffUser.role_id) {
+      const mappedRole = ROLE_ID_TO_ROLE_TYPE[staffUser.role_id];
+      if (mappedRole && !isSuperAdmin && activeRole !== mappedRole) {
+        setStaffRole(mappedRole);
+      }
+    }
+  }, [staffUser, isSuperAdmin, activeRole]);
+
   const can = (permKey: string) => {
-    return hasUserPermission(staffUser?.permissions, activeRole, permKey);
+    return hasUserPermission(staffUser?.permissions, staffUser?.role_id || activeRole, permKey);
   };
 
   const handleNavClick = () => {
@@ -180,37 +213,44 @@ export default function CrmLayout() {
           <div className="p-3 m-3 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DD]">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#1B365D] via-[#0084D1] to-[#00A896] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
-                {currentRoleInfo.staffName.charAt(0).toUpperCase()}
+                {(staffUser?.username || currentRoleInfo.staffName).charAt(0).toUpperCase()}
               </div>
               <div className="overflow-hidden min-w-0">
                 <p className="text-xs font-bold text-slate-900 truncate">
-                  {currentRoleInfo.staffName}
+                  {staffUser?.username || currentRoleInfo.staffName}
                 </p>
                 <p className="text-[10px] text-slate-500 truncate font-medium">
-                  {currentRoleInfo.label}
+                  {staffUser?.email || currentRoleInfo.label}
                 </p>
               </div>
             </div>
 
-            {/* Quick Role Switcher */}
+            {/* Role Indicator / Quick Switcher */}
             <div className="mt-2.5 pt-2 border-t border-slate-200">
               <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1 font-bold">
-                <span>Staff View:</span>
+                <span>{isSuperAdmin ? 'Staff View (Super Admin Preview):' : 'Assigned Role:'}</span>
                 <span className="text-emerald-600 flex items-center gap-1 font-bold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active
                 </span>
               </div>
-              <select
-                value={activeRole}
-                onChange={(e) => setStaffRole(e.target.value as RoleType)}
-                className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-[#1B365D] focus:outline-none focus:ring-1 focus:ring-brand-purple"
-              >
-                {roleOptions.map((opt) => (
-                  <option key={opt.role} value={opt.role}>
-                    {opt.label} ({opt.staffName})
-                  </option>
-                ))}
-              </select>
+              {isSuperAdmin ? (
+                <select
+                  value={activeRole}
+                  onChange={(e) => setStaffRole(e.target.value as RoleType)}
+                  className="w-full text-xs font-semibold bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-[#1B365D] focus:outline-none focus:ring-1 focus:ring-brand-purple"
+                >
+                  {roleOptions.map((opt) => (
+                    <option key={opt.role} value={opt.role}>
+                      {opt.label} ({opt.staffName})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="w-full text-xs font-bold text-[#1B365D] bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 flex items-center justify-between shadow-xs">
+                  <span className="truncate">{staffUser?.position || currentRoleInfo.label}</span>
+                  <Shield className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                </div>
+              )}
             </div>
           </div>
 
@@ -614,6 +654,72 @@ export default function CrmLayout() {
                       </Link>
                     )}
 
+                    {can('categories:manage') && (
+                      <Link
+                        to="/crm/manage-categories"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/manage-categories'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Category</span>
+                      </Link>
+                    )}
+
+                    {can('services:manage') && (
+                      <Link
+                        to="/crm/manage-services"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/manage-services'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Services</span>
+                      </Link>
+                    )}
+
+                    {can('packages:manage') && (
+                      <Link
+                        to="/crm/manage-packages"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/manage-packages'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Packages</span>
+                      </Link>
+                    )}
+
+                    {can('blogs:manage') && (
+                      <Link
+                        to="/crm/manage-blogs"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/manage-blogs'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Blogs</span>
+                      </Link>
+                    )}
+
+                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
+                      Blog Comments
+                    </span>
+                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
+                      All Blogs
+                    </span>
+                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
+                      Manage Ads
+                    </span>
+
                     {can('call_analytics:view') && (
                       <Link
                         to="/crm/call-analytics"
@@ -624,12 +730,20 @@ export default function CrmLayout() {
                       </Link>
                     )}
 
-                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                      Manage Blogs
-                    </span>
-                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                      Appointments
-                    </span>
+                    {can('appointments:manage') && (
+                      <Link
+                        to="/crm/appointments"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/appointments'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Appointments</span>
+                      </Link>
+                    )}
+
                     <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
                       Webinar
                     </span>

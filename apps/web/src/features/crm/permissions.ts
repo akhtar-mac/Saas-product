@@ -137,10 +137,100 @@ export const PERMISSIONS_CATALOG: PermissionDefinition[] = [
     description: 'Track Android mobile call logs, session activities and audit logs',
     category: 'Admin & System',
   },
+  {
+    key: 'categories:manage',
+    label: 'Manage Categories',
+    description: 'Create, edit and delete service categories',
+    category: 'Admin & System',
+  },
+  {
+    key: 'services:manage',
+    label: 'Manage Services',
+    description: 'Create, edit and delete services and pricing',
+    category: 'Admin & System',
+  },
+  {
+    key: 'packages:manage',
+    label: 'Manage Packages',
+    description: 'Create, edit and delete combo packages',
+    category: 'Admin & System',
+  },
+  {
+    key: 'blogs:manage',
+    label: 'Manage Blogs',
+    description: 'Create, edit and delete blog posts and comments',
+    category: 'Admin & System',
+  },
+  {
+    key: 'ads:manage',
+    label: 'Manage Ads',
+    description: 'Create, edit and delete advertisements and banners',
+    category: 'Admin & System',
+  },
+  {
+    key: 'webinars:manage',
+    label: 'Manage Webinars',
+    description: 'Create webinars and view registrations',
+    category: 'Admin & System',
+  },
+  {
+    key: 'appointments:manage',
+    label: 'Manage Appointments',
+    description: 'View and manage all customer appointments',
+    category: 'Admin & System',
+  },
+  {
+    key: 'reports:view',
+    label: 'View Reports',
+    description: 'Access consolidated business reports',
+    category: 'Admin & System',
+  },
 ];
 
 // All permission keys as array
 export const ALL_PERMISSIONS = PERMISSIONS_CATALOG.map((p) => p.key);
+
+/**
+ * Returns allowed permission catalog definitions for a specific manager role.
+ * Restricts department managers to only their domain permissions.
+ */
+export function getDepartmentPermissions(creatorRoleId: number): PermissionDefinition[] {
+  // Super Admin (1), Admin (2), HR (14) -> Full Catalog
+  if (creatorRoleId === 1 || creatorRoleId === 2 || creatorRoleId === 14) {
+    return PERMISSIONS_CATALOG;
+  }
+
+  // Operations Manager (3) -> Dashboard + Operations domain only
+  if (creatorRoleId === 3) {
+    return PERMISSIONS_CATALOG.filter(
+      (p) => p.category === 'Dashboard' || p.category === 'Operations'
+    );
+  }
+
+  // Sales Manager (4) -> Dashboard + Sales domain only
+  if (creatorRoleId === 4) {
+    return PERMISSIONS_CATALOG.filter(
+      (p) => p.category === 'Dashboard' || p.category === 'Sales'
+    );
+  }
+
+  // Marketing Manager (5) / Sub-brands Manager (15) -> Dashboard + Sales domain
+  if (creatorRoleId === 5 || creatorRoleId === 15) {
+    return PERMISSIONS_CATALOG.filter(
+      (p) => p.category === 'Dashboard' || p.category === 'Sales'
+    );
+  }
+
+  // Franchise Manager (6) -> Dashboard + Franchise domain only
+  if (creatorRoleId === 6) {
+    return PERMISSIONS_CATALOG.filter(
+      (p) => p.category === 'Dashboard' || p.category === 'Franchise'
+    );
+  }
+
+  // Fallback -> Dashboard only
+  return PERMISSIONS_CATALOG.filter((p) => p.category === 'Dashboard');
+}
 
 // Default permissions pre-configured for each of the 15 Role IDs
 export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
@@ -265,7 +355,13 @@ export function hasUserPermission(
   roleIdOrName: number | string | undefined,
   requiredPermission: string
 ): boolean {
-  // If Super Admin role, always allow
+  // 1. If explicit custom user permissions array is provided, evaluate it first
+  if (userPermissions && Array.isArray(userPermissions) && userPermissions.length > 0) {
+    if (userPermissions.includes('*')) return true;
+    return userPermissions.includes(requiredPermission);
+  }
+
+  // 2. If Super Admin or Admin role without custom perms override, grant full access
   if (
     roleIdOrName === 1 ||
     roleIdOrName === 2 ||
@@ -277,16 +373,13 @@ export function hasUserPermission(
     return true;
   }
 
-  // Determine active permissions array (explicit array or fallback to role default)
+  // 3. Fallback to standard role default permissions catalog
   let activePerms: string[] = [];
-  if (userPermissions && userPermissions.length > 0) {
-    activePerms = userPermissions;
-  } else if (typeof roleIdOrName === 'number' && ROLE_DEFAULT_PERMISSIONS[roleIdOrName]) {
+  if (typeof roleIdOrName === 'number' && ROLE_DEFAULT_PERMISSIONS[roleIdOrName]) {
     activePerms = ROLE_DEFAULT_PERMISSIONS[roleIdOrName];
   } else if (typeof roleIdOrName === 'string' && ROLE_NAME_DEFAULT_PERMISSIONS[roleIdOrName]) {
     activePerms = ROLE_NAME_DEFAULT_PERMISSIONS[roleIdOrName];
   }
 
-  // Check wildcard or exact permission match
   return activePerms.includes('*') || activePerms.includes(requiredPermission);
 }
