@@ -139,15 +139,11 @@ export default function CrmLayout() {
     15: RoleType.WEBSITE_MANAGER,
   };
 
-  const isSuperAdmin =
-    staffUser?.role_id === 1 ||
-    staffUser?.role_id === 2 ||
-    (staffUser?.permissions && staffUser.permissions.includes('*'));
-
   // Lock activeRole to actual assigned role for non-SuperAdmin staff
   useEffect(() => {
-    if (staffUser && staffUser.role_id) {
-      const mappedRole = ROLE_ID_TO_ROLE_TYPE[staffUser.role_id];
+    if (staffUser && staffUser.roleIds && staffUser.roleIds.length > 0) {
+      const primaryRoleId = staffUser.roleIds[0];
+      const mappedRole = ROLE_ID_TO_ROLE_TYPE[primaryRoleId];
       if (mappedRole && !isSuperAdmin && activeRole !== mappedRole) {
         setStaffRole(mappedRole);
       }
@@ -155,11 +151,7 @@ export default function CrmLayout() {
   }, [staffUser, isSuperAdmin, activeRole]);
 
   const can = (permKey: string) => {
-<<<<<<< HEAD
-    return hasUserPermission(staffUser?.permissions, staffUser?.role_id || activeRole, permKey);
-=======
     return hasUserPermission(staffUser?.permissions, activeRole, permKey, staffUser?.roles);
->>>>>>> origin/AKhtar's
   };
 
   const handleNavClick = () => {
@@ -272,7 +264,7 @@ export default function CrmLayout() {
                 </select>
               ) : (
                 <div className="w-full text-xs font-bold text-[#1B365D] bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 flex items-center justify-between shadow-xs">
-                  <span className="truncate">{staffUser?.position || currentRoleInfo.label}</span>
+                  <span className="truncate">{staffUser?.profile?.position || currentRoleInfo.label}</span>
                   <Shield className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                 </div>
               )}
