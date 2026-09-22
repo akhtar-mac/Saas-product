@@ -349,11 +349,7 @@ export default function CrmChatPage() {
                 setActiveTab(activeTab === 'audit' ? 'conversations' : 'audit');
                 if (activeTab !== 'audit') loadAuditConversations();
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activeTab === 'audit'
-                  ? 'bg-[#1B365D] text-white shadow-xs'
-                  : 'bg-[#FAF9F5] border border-[#EAE6DD] text-[#1B365D] hover:bg-slate-100'
-              }`}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 btn-multicolor"
               id="admin-audit-toggle"
             >
               <Shield className="w-3.5 h-3.5 text-purple-400" />
@@ -366,7 +362,7 @@ export default function CrmChatPage() {
               loadConversations();
               loadStaffDirectory();
             }}
-            className="p-2 rounded-xl bg-[#FAF9F5] border border-[#EAE6DD] text-slate-600 hover:text-slate-900 transition-colors"
+            className="p-2 rounded-xl btn-multicolor transition-colors"
             title="Refresh Conversations"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -404,21 +400,13 @@ export default function CrmChatPage() {
               <div className="flex bg-[#FAF9F5] p-0.5 rounded-xl border border-[#EAE6DD]">
                 <button
                   onClick={() => setActiveTab('conversations')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all ${
-                    activeTab === 'conversations'
-                      ? 'bg-[#1B365D] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-[#1B365D]'
-                  }`}
+                  className="px-3 py-1 rounded-lg font-bold transition-all btn-multicolor"
                 >
                   Chats ({conversations.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('directory')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all ${
-                    activeTab === 'directory'
-                      ? 'bg-[#1B365D] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-[#1B365D]'
-                  }`}
+                  className="px-3 py-1 rounded-lg font-bold transition-all btn-multicolor"
                 >
                   All Staff ({staffDirectory.length})
                 </button>

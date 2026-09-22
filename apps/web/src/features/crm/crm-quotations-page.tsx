@@ -410,7 +410,7 @@ export default function CrmQuotationsPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleCreateNew}
-                className="btn btn-sm bg-[#00A896] hover:bg-[#008f80] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="btn btn-sm btn-multicolor text-xs font-bold flex items-center gap-1.5 shadow-sm"
               >
                 <Plus className="w-4 h-4" /> Create Quotation
               </button>
@@ -439,31 +439,31 @@ export default function CrmQuotationsPage() {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => showToast('Quotation list copied to clipboard!')}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    className="px-2.5 py-1 rounded-lg btn-multicolor text-xs font-semibold flex items-center gap-1 transition-colors"
                   >
                     <Copy className="w-3 h-3" /> Copy
                   </button>
                   <button
                     onClick={() => showToast('Exporting to Excel (XLSX)...')}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    className="px-2.5 py-1 rounded-lg btn-multicolor text-xs font-semibold flex items-center gap-1 transition-colors"
                   >
                     <FileSpreadsheet className="w-3 h-3 text-emerald-600" /> Excel
                   </button>
                   <button
                     onClick={() => showToast('Exporting CSV...')}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    className="px-2.5 py-1 rounded-lg btn-multicolor text-xs font-semibold flex items-center gap-1 transition-colors"
                   >
                     CSV
                   </button>
                   <button
                     onClick={() => showToast('Generating Quotations PDF Summary...')}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    className="px-2.5 py-1 rounded-lg btn-multicolor text-xs font-semibold flex items-center gap-1 transition-colors"
                   >
                     <FileText className="w-3 h-3 text-rose-600" /> PDF
                   </button>
                   <button
                     onClick={() => window.print()}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors"
+                    className="px-2.5 py-1 rounded-lg btn-multicolor text-xs font-semibold flex items-center gap-1 transition-colors"
                   >
                     <Printer className="w-3 h-3 text-blue-600" /> Print
                   </button>
@@ -650,13 +650,13 @@ export default function CrmQuotationsPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleViewLetterhead(activeQuote)}
-                className="btn btn-outline btn-sm text-xs font-bold flex items-center gap-1.5"
+                className="btn btn-outline btn-sm text-xs font-bold flex items-center gap-1.5 btn-multicolor"
               >
                 <Eye className="w-4 h-4" /> Preview Letterhead
               </button>
               <button
                 onClick={handleSaveQuote}
-                className="btn btn-sm bg-[#00A896] hover:bg-[#008f80] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="btn btn-sm btn-multicolor text-xs font-bold flex items-center gap-1.5 shadow-sm"
               >
                 <CheckCircle2 className="w-4 h-4" /> Save Quotation
               </button>
@@ -762,7 +762,7 @@ export default function CrmQuotationsPage() {
                 <button
                   type="button"
                   onClick={handleAddItem}
-                              className="btn btn-sm bg-[#00A896] hover:bg-[#008f80] text-white text-xs font-bold flex items-center gap-1"
+                              className="btn btn-sm btn-multicolor text-xs font-bold flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" /> + Add Row
                 </button>
@@ -910,7 +910,7 @@ export default function CrmQuotationsPage() {
                   <button
                     type="button"
                     onClick={handleAddItem}
-                    className="btn btn-outline btn-sm text-xs font-bold"
+                    className="btn btn-outline btn-sm text-xs font-bold btn-multicolor"
                   >
                     + Add Row
                   </button>
@@ -935,7 +935,7 @@ export default function CrmQuotationsPage() {
                       }));
                       showToast('Added manual service line item.');
                     }}
-                    className="btn btn-outline btn-sm text-xs font-bold"
+                    className="btn btn-outline btn-sm text-xs font-bold btn-multicolor"
                   >
                     + Manual Service
                   </button>
@@ -1008,7 +1008,7 @@ export default function CrmQuotationsPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleEdit(activeQuote)}
-                className="btn btn-outline btn-sm text-xs font-bold flex items-center gap-1.5"
+                className="btn btn-outline btn-sm text-xs font-bold flex items-center gap-1.5 btn-multicolor"
               >
                 <Edit3 className="w-4 h-4" /> Edit Values
               </button>

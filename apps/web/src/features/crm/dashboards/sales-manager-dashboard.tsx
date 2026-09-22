@@ -179,7 +179,7 @@ export default function SalesManagerDashboard() {
           <button
             onClick={fetchDashboardData}
             disabled={loading}
-            className="btn btn-outline btn-sm flex items-center gap-1.5"
+            className="btn btn-outline btn-sm flex items-center gap-1.5 btn-multicolor"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -187,7 +187,7 @@ export default function SalesManagerDashboard() {
           <Link to="/crm/leads" className="btn btn-primary btn-sm">
             <Users className="w-3.5 h-3.5" /> Manage Leads
           </Link>
-          <Link to="/crm/quotations" className="btn btn-outline btn-sm">
+          <Link to="/crm/quotations" className="btn btn-outline btn-sm btn-multicolor">
             <Send className="w-3.5 h-3.5" /> Quotations
           </Link>
         </div>
@@ -287,7 +287,7 @@ export default function SalesManagerDashboard() {
                 Most recent 10 leads from the database
               </p>
             </div>
-            <Link to="/crm/leads" className="btn btn-outline btn-sm text-xs">
+            <Link to="/crm/leads" className="btn btn-outline btn-sm text-xs btn-multicolor">
               View All <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
             </Link>
           </div>
@@ -353,7 +353,7 @@ export default function SalesManagerDashboard() {
                 Active sales agents from the DB
               </p>
             </div>
-            <Link to="/crm/users" className="btn btn-outline btn-sm text-xs">
+            <Link to="/crm/users" className="btn btn-outline btn-sm text-xs btn-multicolor">
               Manage <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
             </Link>
           </div>

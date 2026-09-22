@@ -273,7 +273,7 @@ export default function SalesAgentDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsCallModalOpen(false)}
-                  className="btn btn-outline btn-sm"
+                  className="btn btn-outline btn-sm btn-multicolor"
                 >
                   Cancel
                 </button>

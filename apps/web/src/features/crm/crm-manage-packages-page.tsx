@@ -450,7 +450,7 @@ export default function CrmManagePackagesPage() {
             <div className="px-5 py-4 border-t border-slate-100 flex justify-end gap-2 sticky bottom-0 bg-white">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                className="px-4 py-2 rounded-lg btn-multicolor text-xs font-semibold"
               >
                 Cancel
               </button>
@@ -479,7 +479,7 @@ export default function CrmManagePackagesPage() {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setDeleteId(null)}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                className="px-4 py-2 rounded-lg btn-multicolor text-xs font-semibold"
               >
                 Cancel
               </button>

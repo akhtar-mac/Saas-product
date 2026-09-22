@@ -26,6 +26,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
+import { RoleType } from '@etaxwala/types';
 import {
   PERMISSIONS_CATALOG,
   ROLE_DEFAULT_PERMISSIONS,
@@ -67,6 +68,7 @@ interface StaffMember {
   status: StaffStatus;
   joiningDate: string;
   permissions?: string[];
+  password?: string;
 }
 
 const INITIAL_STAFF_DATA: StaffMember[] = [
@@ -100,9 +102,33 @@ const STATUS_CONFIG: Record<StaffStatus, { bg: string; dot: string; label: strin
   Offline: { bg: 'bg-red-50 text-red-700 border border-red-200', dot: 'bg-red-500', label: 'Offline' },
 };
 
+const PASSWORD_STORE_KEY = 'etax_employee_passwords';
+
+function getStoredPassword(userId: number): string | undefined {
+  try {
+    const map = JSON.parse(localStorage.getItem(PASSWORD_STORE_KEY) || '{}');
+    return map[String(userId)] || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function setStoredPassword(userId: number, password: string) {
+  try {
+    const map = JSON.parse(localStorage.getItem(PASSWORD_STORE_KEY) || '{}');
+    map[String(userId)] = password;
+    localStorage.setItem(PASSWORD_STORE_KEY, JSON.stringify(map));
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export default function HrWorkforcePage() {
-  const { staffToken } = useAuthStore();
-  const [staffList, setStaffList] = useState<StaffMember[]>(INITIAL_STAFF_DATA);
+  const { staffToken, staffUser } = useAuthStore();
+  const currentUserId = staffUser?.id;
+  const currentRole = staffUser?.role;
+  const isExecutive = currentRole === RoleType.SUPER_ADMIN || currentRole === RoleType.ADMIN; // Super Admin / Admin see all
+  const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<StaffStatus | 'ALL'>('ALL');
@@ -113,6 +139,8 @@ export default function HrWorkforcePage() {
   const [submitting, setSubmitting] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -128,7 +156,7 @@ export default function HrWorkforcePage() {
     Authorization: `Bearer ${staffToken}`,
   };
 
-  // Open Modal
+  // Open Modal for Add
   const openAddModal = () => {
     const defaultRoleId = 8;
     setForm({
@@ -139,6 +167,25 @@ export default function HrWorkforcePage() {
       role_id: defaultRoleId,
       permissions: ROLE_DEFAULT_PERMISSIONS[defaultRoleId] || [],
     });
+    setEditingStaff(null);
+    setShowPassword(false);
+    setActionError(null);
+    setShowAddModal(true);
+  };
+
+  // Open Modal for Edit
+  const openEditModal = (staff: StaffMember) => {
+    const storedPassword = staff.password || getStoredPassword(staff.id) || '';
+    setForm({
+      name: staff.name,
+      email: staff.email,
+      contact: staff.contact,
+      password: storedPassword,
+      role_id: staff.roleId,
+      permissions: staff.permissions || ROLE_DEFAULT_PERMISSIONS[staff.roleId] || [],
+    });
+    setEditingStaff(staff);
+    setShowPassword(true);
     setActionError(null);
     setShowAddModal(true);
   };
@@ -179,9 +226,12 @@ export default function HrWorkforcePage() {
     setForm((prev) => ({ ...prev, permissions: ['*'] }));
   };
 
-  // Fetch staff users from DB on page load
+  // Fetch staff users from DB on page load (filter by creator for non-executives)
   useEffect(() => {
-    fetch(`${API_BASE}/v1/crm/users`)
+    const url = currentUserId && !isExecutive
+      ? `${API_BASE}/v1/crm/users?created_by=${currentUserId}`
+      : `${API_BASE}/v1/crm/users`;
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
         if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
@@ -200,15 +250,16 @@ export default function HrWorkforcePage() {
               status: u.is_active ? 'Online' : 'Offline',
               joiningDate: u.created_at ? u.created_at.split('T')[0] : '2026-09-01',
               permissions: typeof u.permissions === 'string' ? JSON.parse(u.permissions || '[]') : u.permissions || [],
+              password: u.password || getStoredPassword(u.id) || undefined,
             };
           });
           setStaffList(mapped);
         }
       })
       .catch(() => {});
-  }, []);
+  }, [currentUserId, isExecutive]);
 
-  // Add Employee Form Submit
+  // Add or Update Employee Form Submit
   const handleCreateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -219,42 +270,92 @@ export default function HrWorkforcePage() {
     const deptKey = selectedRole?.group.toLowerCase() || 'operations';
 
     try {
-      // Save directly to CRM users DB endpoint
-      const res = await fetch(`${API_BASE}/v1/crm/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      if (editingStaff) {
+        // Update existing employee
+        const payload: any = {
           name: form.name,
           email: form.email,
           phone: form.contact,
-          password: form.password || 'Password@123',
           role_id: form.role_id,
           position: roleName,
           permissions: form.permissions,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success && data.data) {
-        const newStaff: StaffMember = {
-          id: data.data.id || Date.now(),
-          name: data.data.name || form.name,
-          role: data.data.role_name || roleName,
-          roleId: data.data.role_id || form.role_id,
-          dept: selectedRole?.group || 'Operations',
-          deptKey,
-          contact: data.data.phone || form.contact || '9876543210',
-          email: data.data.email || form.email,
-          activeCases: 'Active',
-          status: 'Online',
-          joiningDate: new Date().toISOString().split('T')[0],
-          permissions: form.permissions,
         };
-        setStaffList((prev) => [newStaff, ...prev]);
-        setActionSuccess(`Employee "${form.name}" saved to database successfully as ${roleName}.`);
-        setShowAddModal(false);
+        if (form.password && form.password.trim().length > 0) {
+          payload.password = form.password;
+        }
+
+        const res = await fetch(`${API_BASE}/v1/crm/users/${editingStaff.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (data.success && data.data) {
+          const updated: StaffMember = {
+            id: editingStaff.id,
+            name: data.data.name || form.name,
+            role: data.data.role_name || roleName,
+            roleId: data.data.role_id || form.role_id,
+            dept: selectedRole?.group || editingStaff.dept || 'Operations',
+            deptKey: selectedRole?.group.toLowerCase() || editingStaff.deptKey || 'operations',
+            contact: data.data.phone || form.contact || editingStaff.contact,
+            email: data.data.email || form.email,
+            activeCases: editingStaff.activeCases,
+            status: editingStaff.status,
+            joiningDate: editingStaff.joiningDate,
+            permissions: form.permissions,
+            password: data.data.password || (form.password && form.password.trim().length > 0 ? form.password : editingStaff.password) || 'Password@123',
+          };
+          setStoredPassword(updated.id, updated.password || 'Password@123');
+          setStaffList((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+          setActionSuccess(`Employee "${form.name}" updated successfully as ${roleName}.`);
+          setShowAddModal(false);
+          setEditingStaff(null);
+        } else {
+          setActionError(data.error || 'Failed to update employee in database.');
+        }
       } else {
-        setActionError(data.error || 'Failed to save employee to database.');
+        // Save new employee
+        const res = await fetch(`${API_BASE}/v1/crm/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            phone: form.contact,
+            password: form.password || 'Password@123',
+            role_id: form.role_id,
+            position: roleName,
+            permissions: form.permissions,
+            created_by: currentUserId,
+          }),
+        });
+
+        const data = await res.json();
+        if (data.success && data.data) {
+          const newStaff: StaffMember = {
+            id: data.data.id || Date.now(),
+            name: data.data.name || form.name,
+            role: data.data.role_name || roleName,
+            roleId: data.data.role_id || form.role_id,
+            dept: selectedRole?.group || 'Operations',
+            deptKey,
+            contact: data.data.phone || form.contact || '9876543210',
+            email: data.data.email || form.email,
+            activeCases: 'Active',
+            status: 'Online',
+            joiningDate: new Date().toISOString().split('T')[0],
+            permissions: form.permissions,
+            password: data.data.password || form.password || 'Password@123',
+          };
+          setStoredPassword(newStaff.id, newStaff.password || 'Password@123');
+          setStaffList((prev) => [newStaff, ...prev]);
+          setActionSuccess(`Employee "${form.name}" saved to database successfully as ${roleName}.`);
+          setShowAddModal(false);
+        } else {
+          setActionError(data.error || 'Failed to save employee to database.');
+        }
       }
     } catch {
       setActionError('Network error: Failed to save employee to database.');
@@ -433,7 +534,7 @@ export default function HrWorkforcePage() {
                       </td>
                       <td className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button onClick={openAddModal} className="btn-multicolor inline-flex items-center justify-center p-1.5 rounded-xl" title="Edit Employee">
+                          <button onClick={() => openEditModal(staff)} className="btn-multicolor inline-flex items-center justify-center p-1.5 rounded-xl" title="Edit Employee">
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
@@ -470,7 +571,7 @@ export default function HrWorkforcePage() {
           <div className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in">
             {/* ETaxwala standard modal header */}
             <div className="bg-white text-[#1B365D] px-6 py-4 flex items-center justify-between border-b border-[#EAE6DD]">
-              <h2 className="text-base font-extrabold tracking-tight">Add New Employeer</h2>
+              <h2 className="text-base font-extrabold tracking-tight">{editingStaff ? 'Edit Employeer' : 'Add New Employeer'}</h2>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="text-slate-400 hover:text-slate-700 transition-colors"
@@ -533,8 +634,8 @@ export default function HrWorkforcePage() {
                 <div className="relative flex-1">
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    required
-                    placeholder="Password"
+                    required={!editingStaff}
+                    placeholder={editingStaff ? 'Password (current value shown)' : 'Password'}
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     className="input text-xs w-full bg-[#FAF9F5] border-[#EAE6DD] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 pr-9"
@@ -649,7 +750,7 @@ export default function HrWorkforcePage() {
                   disabled={submitting}
                   className="btn-multicolor py-2.5 px-6"
                 >
-                  {submitting ? 'Adding...' : 'Add'}
+                  {submitting ? (editingStaff ? 'Updating...' : 'Adding...') : (editingStaff ? 'Update' : 'Add')}
                 </button>
               </div>
             </form>

@@ -378,16 +378,9 @@ export default function CrmTasksPage() {
           <button
             key={kpi.label}
             onClick={() => setSearchTerm(kpi.label === 'OVER DUES' ? '' : kpi.label)}
-            className="kpi-single-moving group flex items-center gap-2 px-3.5 py-1.5 rounded-full text-slate-800 text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer"
-            style={
-              {
-                '--c-base': kpi.cBase,
-                '--c-light': kpi.cLight,
-                '--c-dark': kpi.cDark,
-              } as React.CSSProperties
-            }
+            className="btn-multicolor group flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer"
           >
-            <span className="tracking-tight text-[11px] uppercase font-bold text-slate-700 group-hover:text-slate-900">
+            <span className="tracking-tight text-[11px] uppercase font-bold">
               {kpi.label}
             </span>
             <span
@@ -455,14 +448,7 @@ export default function CrmTasksPage() {
 
           <button
             onClick={() => alert('Filtered tasks.')}
-            className="btn-single-moving btn-single-moving-solid px-4 py-2 rounded-full text-xs font-bold text-white shadow-2xs cursor-pointer"
-            style={
-              {
-                '--c-base': '#06B6D4',
-                '--c-light': '#67E8F9',
-                '--c-dark': '#0891B2',
-              } as React.CSSProperties
-            }
+            className="btn-multicolor px-4 py-2 rounded-full text-xs font-bold shadow-2xs cursor-pointer"
           >
             <span>Filter</span>
           </button>
@@ -476,14 +462,7 @@ export default function CrmTasksPage() {
               setAssignTargetTask(null);
               setAssignModalOpen(true);
             }}
-            className="btn-single-moving btn-single-moving-solid px-4 py-2 rounded-full text-xs font-bold text-white shadow-2xs cursor-pointer"
-            style={
-              {
-                '--c-base': '#1E3A8A',
-                '--c-light': '#3B82F6',
-                '--c-dark': '#172554',
-              } as React.CSSProperties
-            }
+            className="btn-multicolor px-4 py-2 rounded-full text-xs font-bold shadow-2xs cursor-pointer"
           >
             <span>Bulk Assign</span>
           </button>
@@ -500,28 +479,14 @@ export default function CrmTasksPage() {
                 alert(`Due date updated for ${selectedIds.size} tasks.`);
               }
             }}
-            className="btn-single-moving btn-single-moving-solid px-5 py-2 rounded-full text-xs font-bold text-white shadow-2xs cursor-pointer"
-            style={
-              {
-                '--c-base': '#7C3AED',
-                '--c-light': '#A78BFA',
-                '--c-dark': '#5B21B6',
-              } as React.CSSProperties
-            }
+            className="btn-multicolor px-5 py-2 rounded-full text-xs font-bold shadow-2xs cursor-pointer"
           >
             <span>Change Due Date</span>
           </button>
 
           <button
             onClick={handleResetFilters}
-            className="flex-1 btn-single-moving btn-single-moving-solid px-5 py-2 rounded-full text-xs font-bold text-white shadow-2xs text-center cursor-pointer"
-            style={
-              {
-                '--c-base': '#1F2937',
-                '--c-light': '#4B5563',
-                '--c-dark': '#111827',
-              } as React.CSSProperties
-            }
+            className="flex-1 btn-multicolor px-5 py-2 rounded-full text-xs font-bold shadow-2xs text-center cursor-pointer"
           >
             <span>Reset All</span>
           </button>
@@ -551,7 +516,7 @@ export default function CrmTasksPage() {
                 <button
                   key={btn}
                   onClick={() => alert(`${btn} export executed`)}
-                  className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded shadow-2xs"
+                  className="px-2.5 py-1 text-[11px] font-semibold btn-multicolor rounded shadow-2xs"
                 >
                   {btn}
                 </button>
@@ -770,7 +735,7 @@ export default function CrmTasksPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => alert(`Opening live WhatsApp chat with ${effortModalTask.phone}`)}
-                  className="btn-single-moving btn-single-moving-solid px-3.5 py-1.5 rounded-full text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  className="btn-multicolor px-3.5 py-1.5 rounded-full font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   style={
                     {
                       '--c-base': '#F59E0B',
@@ -787,14 +752,7 @@ export default function CrmTasksPage() {
                     const n = prompt('Add operational note:');
                     if (n) alert('Note saved!');
                   }}
-                  className="btn-single-moving btn-single-moving-solid px-3.5 py-1.5 rounded-full text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                  style={
-                    {
-                      '--c-base': '#06B6D4',
-                      '--c-light': '#67E8F9',
-                      '--c-dark': '#0891B2',
-                    } as React.CSSProperties
-                  }
+                  className="btn-multicolor px-3.5 py-1.5 rounded-full font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Note</span>
@@ -901,14 +859,7 @@ export default function CrmTasksPage() {
                       <button
                         onClick={startEffortTimer}
                         disabled={isTimerRunning}
-                        className="btn-single-moving btn-single-moving-solid w-full px-3 py-2.5 rounded-full text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer"
-                        style={
-                          {
-                            '--c-base': '#16A34A',
-                            '--c-light': '#86EFAC',
-                            '--c-dark': '#15803D',
-                          } as React.CSSProperties
-                        }
+                        className="btn-multicolor w-full px-3 py-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer"
                       >
                         <Play className="w-3.5 h-3.5 fill-current" />
                         <span>Start Time</span>
@@ -920,14 +871,7 @@ export default function CrmTasksPage() {
                       <button
                         onClick={stopEffortTimer}
                         disabled={!isTimerRunning}
-                        className="btn-single-moving btn-single-moving-solid w-full px-3 py-2.5 rounded-full text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer"
-                        style={
-                          {
-                            '--c-base': '#EF4444',
-                            '--c-light': '#FCA5A5',
-                            '--c-dark': '#B91C1C',
-                          } as React.CSSProperties
-                        }
+                        className="btn-multicolor w-full px-3 py-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer"
                       >
                         <Square className="w-3.5 h-3.5 fill-current" />
                         <span>End Time</span>
@@ -956,14 +900,7 @@ export default function CrmTasksPage() {
 
                   <button
                     onClick={handleSaveEffort}
-                    className="btn-single-moving btn-single-moving-solid w-full py-2.5 rounded-full text-xs font-extrabold text-white shadow-xs cursor-pointer"
-                    style={
-                      {
-                        '--c-base': '#1E3A8A',
-                        '--c-light': '#3B82F6',
-                        '--c-dark': '#172554',
-                      } as React.CSSProperties
-                    }
+                    className="btn-multicolor w-full py-2.5 rounded-full text-xs font-extrabold shadow-xs cursor-pointer"
                   >
                     <span>Update</span>
                   </button>
@@ -1015,14 +952,7 @@ export default function CrmTasksPage() {
                             alert('Document uploaded successfully.');
                           }
                         }}
-                        className="btn-single-moving btn-single-moving-solid w-full py-2 rounded-full text-xs font-bold text-white cursor-pointer"
-                        style={
-                          {
-                            '--c-base': '#1F2937',
-                            '--c-light': '#4B5563',
-                            '--c-dark': '#111827',
-                          } as React.CSSProperties
-                        }
+                        className="btn-multicolor w-full py-2 rounded-full text-xs font-bold cursor-pointer"
                       >
                         <span>Upload</span>
                       </button>
@@ -1086,14 +1016,7 @@ export default function CrmTasksPage() {
               <div className="pt-2">
                 <button
                   onClick={handleAssignSave}
-                  className="btn-single-moving btn-single-moving-solid w-full py-2.5 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
-                  style={
-                    {
-                      '--c-base': '#EF4444',
-                      '--c-light': '#FCA5A5',
-                      '--c-dark': '#B91C1C',
-                    } as React.CSSProperties
-                  }
+                  className="btn-multicolor w-full py-2.5 rounded-full text-xs font-bold shadow-xs cursor-pointer"
                 >
                   <span>Assign</span>
                 </button>

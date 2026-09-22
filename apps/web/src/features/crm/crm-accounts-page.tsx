@@ -347,7 +347,7 @@ export default function CrmAccountsPage() {
                 <button
                   key={btn}
                   onClick={() => alert(`${btn} export executed`)}
-                  className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded shadow-2xs"
+                  className="px-2.5 py-1 text-[11px] font-semibold btn-multicolor rounded shadow-2xs"
                 >
                   {btn}
                 </button>
@@ -423,7 +423,7 @@ export default function CrmAccountsPage() {
                   <td className="py-2.5 px-3 text-center relative">
                     <button
                       onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
-                      className="p-1 hover:bg-slate-200 rounded text-slate-600"
+                      className="p-1 btn-multicolor rounded-xl inline-flex items-center justify-center"
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
@@ -437,7 +437,7 @@ export default function CrmAccountsPage() {
                             setIsAddOrderOpen(true);
                             setActiveMenuId(null);
                           }}
-                          className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
+                          className="w-full px-3 py-1.5 btn-multicolor text-xs font-medium text-left block"
                         >
                           Add New Order
                         </button>
@@ -447,7 +447,7 @@ export default function CrmAccountsPage() {
                             setIsUpdateCustomerOpen(true);
                             setActiveMenuId(null);
                           }}
-                          className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
+                          className="w-full px-3 py-1.5 btn-multicolor text-xs font-medium text-left block"
                         >
                           Update Customer
                         </button>
@@ -458,7 +458,7 @@ export default function CrmAccountsPage() {
                             setIsEditSubCustomerOpen(true);
                             setActiveMenuId(null);
                           }}
-                          className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
+                          className="w-full px-3 py-1.5 btn-multicolor text-xs font-medium text-left block"
                         >
                           Edit Sub Customer
                         </button>
@@ -468,7 +468,7 @@ export default function CrmAccountsPage() {
                             setIsAddAppointmentOpen(true);
                             setActiveMenuId(null);
                           }}
-                          className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
+                          className="w-full px-3 py-1.5 btn-multicolor text-xs font-medium text-left block"
                         >
                           Add Appointment
                         </button>
@@ -478,7 +478,7 @@ export default function CrmAccountsPage() {
                             setIsTasksDrawerOpen(true);
                             setActiveMenuId(null);
                           }}
-                          className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
+                          className="w-full px-3 py-1.5 btn-multicolor text-xs font-medium text-left block"
                         >
                           Add Tasks Drawer
                         </button>
@@ -705,7 +705,7 @@ export default function CrmAccountsPage() {
                     alert('Order added successfully!');
                     setIsAddOrderOpen(false);
                   }}
-                  className="btn-single-moving btn-single-moving-solid px-6 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer"
+                  className="btn-multicolor px-6 py-2.5 rounded-full font-bold text-xs shadow-xs cursor-pointer"
                   style={
                     {
                       '--c-base': '#06B6D4',
@@ -718,7 +718,7 @@ export default function CrmAccountsPage() {
                 </button>
                 <button
                   onClick={() => setIsAddOrderOpen(false)}
-                  className="btn-single-moving btn-single-moving-solid px-6 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer"
+                  className="btn-multicolor px-6 py-2.5 rounded-full font-bold text-xs shadow-xs cursor-pointer"
                   style={
                     {
                       '--c-base': '#EF4444',
@@ -847,7 +847,7 @@ export default function CrmAccountsPage() {
                     alert('Customer info updated successfully!');
                     setIsUpdateCustomerOpen(false);
                   }}
-                  className="btn-single-moving btn-single-moving-solid px-6 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer"
+                  className="btn-multicolor px-6 py-2.5 rounded-full font-bold text-xs shadow-xs cursor-pointer"
                   style={
                     {
                       '--c-base': '#06B6D4',
@@ -895,7 +895,7 @@ export default function CrmAccountsPage() {
               <div className="flex justify-end pt-1">
                 <button
                   onClick={handleUpdateSubCustomer}
-                  className="btn-single-moving btn-single-moving-solid px-5 py-2 rounded-full text-white font-bold text-xs shadow-xs cursor-pointer"
+                  className="btn-multicolor px-5 py-2 rounded-full font-bold text-xs shadow-xs cursor-pointer"
                   style={
                     {
                       '--c-base': '#1E3A8A',
@@ -1032,7 +1032,7 @@ export default function CrmAccountsPage() {
                 <button
                   type="button"
                   onClick={() => setIsAddAppointmentOpen(false)}
-                  className="btn-single-moving btn-single-moving-solid flex-1 py-2.5 rounded-full font-bold text-xs text-white cursor-pointer"
+                  className="btn-multicolor flex-1 py-2.5 rounded-full font-bold text-xs cursor-pointer"
                   style={
                     {
                       '--c-base': '#1F2937',
@@ -1045,7 +1045,7 @@ export default function CrmAccountsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="btn-single-moving btn-single-moving-solid flex-1 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer"
+                  className="btn-multicolor flex-1 py-2.5 rounded-full font-bold text-xs shadow-xs cursor-pointer"
                   style={
                     {
                       '--c-base': '#1E3A8A',
@@ -1096,7 +1096,7 @@ export default function CrmAccountsPage() {
                 />
                 <button
                   onClick={handleCreateNewTask}
-                  className="btn-single-moving btn-single-moving-solid px-4 py-2 rounded-full text-white font-bold text-xs shadow-xs cursor-pointer"
+                  className="btn-multicolor px-4 py-2 rounded-full font-bold text-xs shadow-xs cursor-pointer"
                   style={
                     {
                       '--c-base': '#1E3A8A',
@@ -1112,7 +1112,7 @@ export default function CrmAccountsPage() {
               <div className="space-y-2 pt-2">
                 {tasksList.map((t, i) => (
                   <div key={i} className="flex items-center justify-between gap-2 p-1.5 bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl">
-                    <button className="flex-1 bg-white hover:bg-slate-50 text-slate-800 font-semibold py-2 px-3 rounded-xl border border-[#EAE6DD] flex items-center justify-between shadow-2xs">
+                    <button className="flex-1 btn-multicolor font-semibold py-2 px-3 rounded-xl flex items-center justify-between shadow-2xs">
                       <span>{t}</span>
                       <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                     </button>

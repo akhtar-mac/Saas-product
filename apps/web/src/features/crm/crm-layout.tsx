@@ -945,15 +945,11 @@ export default function CrmLayout() {
             {/* Quick Chat Shortcut */}
             <Link
               to="/crm/chat"
-              className={`p-2 rounded-xl transition-colors relative flex items-center gap-1.5 text-xs font-bold ${
-                location.pathname === '/crm/chat'
-                  ? 'bg-[#1B365D] text-white shadow-xs'
-                  : 'bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 hover:text-[#1B365D]'
-              }`}
+              className="p-2 rounded-xl transition-colors relative flex items-center gap-1.5 text-xs font-bold btn-multicolor"
               title="Staff Internal Chat"
               id="header-chat-btn"
             >
-              <MessageSquare className="w-4 h-4 text-[#7C3AED]" />
+              <MessageSquare className="w-4 h-4" />
               <span className="hidden sm:inline">Staff Chat</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </Link>
@@ -963,7 +959,7 @@ export default function CrmLayout() {
               <button
                 ref={bellRef}
                 onClick={() => setNotifOpen((prev) => !prev)}
-                className="relative p-2 rounded-xl bg-[#FAF9F5] border border-[#EAE6DD] text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                className="relative p-2 rounded-xl btn-multicolor transition-colors"
                 id="notification-bell"
               >
                 <Bell className="w-4 h-4" />

@@ -183,7 +183,7 @@ export default function QcReviewerDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="btn btn-outline btn-sm"
+                  className="btn btn-outline btn-sm btn-multicolor"
                 >
                   Cancel
                 </button>

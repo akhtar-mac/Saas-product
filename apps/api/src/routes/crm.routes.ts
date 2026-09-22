@@ -1,7 +1,9 @@
 import { Router } from 'express';
+import bcrypt from 'bcrypt';
 import { prisma } from '../config/db.js';
 
 const router = Router();
+const DEFAULT_PASSWORD = 'Password@123';
 
 // Helper to serialize BigInt fields to JSON
 function serializeBigInt(obj: any): any {
@@ -767,9 +769,15 @@ const USER_ROLE_MAP: Record<number, string> = {
   13: 'Sales Assistant', 14: 'HR', 15: 'Website Manager',
 };
 
-router.get('/users', async (_req, res) => {
+router.get('/users', async (req, res) => {
   try {
+    const createdBy = req.query.created_by ? Number(req.query.created_by) : undefined;
+    const where: any = {};
+    if (createdBy && !isNaN(createdBy)) {
+      where.created_by = createdBy;
+    }
     const users = await (prisma as any).staff_users.findMany({
+      where,
       orderBy: { id: 'desc' },
     });
     if (users && users.length > 0) {
@@ -796,20 +804,22 @@ router.get('/users', async (_req, res) => {
 
 router.post('/users', async (req, res) => {
   try {
-    const { name, email, password = 'Password@123', phone, role_id = 8, position, permissions } = req.body;
+    const { name, email, password = DEFAULT_PASSWORD, phone, role_id = 8, position, permissions, created_by } = req.body;
     if (!name || !email) {
       return res.status(400).json({ success: false, error: 'Name and email are required' });
     }
     const permsJson = permissions && Array.isArray(permissions) ? JSON.stringify(permissions) : null;
+    const password_hash = await bcrypt.hash(password, 12);
     const user = await (prisma as any).staff_users.create({
       data: {
         name: name.trim(),
         email: email.toLowerCase().trim(),
-        password_hash: '$2b$12$dummyHashForDevModeUserOnboarding2026',
+        password_hash,
         phone: phone || null,
         role_id: Number(role_id),
         permissions: permsJson,
         position: position || USER_ROLE_MAP[Number(role_id)] || 'Staff Specialist',
+        created_by: created_by ? Number(created_by) : null,
         is_active: true,
         created_at: new Date(),
         updated_at: new Date(),
@@ -821,6 +831,7 @@ router.post('/users', async (req, res) => {
       data: {
         ...user,
         role_name: USER_ROLE_MAP[user.role_id] || 'Staff Employee',
+        password,
       },
     });
   } catch (err: any) {
@@ -832,12 +843,19 @@ router.post('/users', async (req, res) => {
 router.put('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, role_id, position } = req.body;
+    const { name, email, phone, role_id, position, password, permissions } = req.body;
+    const updateData: any = { name, email, phone, role_id: role_id ? Number(role_id) : undefined, position, updated_at: new Date() };
+    if (password && password.trim().length > 0) {
+      updateData.password_hash = await bcrypt.hash(password, 12);
+    }
+    if (permissions && Array.isArray(permissions)) {
+      updateData.permissions = JSON.stringify(permissions);
+    }
     const updated = await (prisma as any).staff_users.update({
       where: { id: Number(id) },
-      data: { name, email, phone, role_id: role_id ? Number(role_id) : undefined, position, updated_at: new Date() },
+      data: updateData,
     });
-    res.json({ success: true, message: 'User updated in database', data: updated });
+    res.json({ success: true, message: 'User updated in database', data: { ...updated, password: password && password.trim().length > 0 ? password : undefined } });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to update user in DB' });
   }

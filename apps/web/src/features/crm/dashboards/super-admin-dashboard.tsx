@@ -348,7 +348,7 @@ export default function SuperAdminDashboard() {
           </div>
           <div className="flex items-center gap-2">
             <span className="badge badge-navy">200+ Members</span>
-            <Link to="/crm/workforce" className="btn btn-outline btn-sm text-xs">
+            <Link to="/crm/workforce" className="btn btn-outline btn-sm text-xs btn-multicolor">
               Full HR Page <ArrowRight className="w-3 h-3" />
             </Link>
           </div>

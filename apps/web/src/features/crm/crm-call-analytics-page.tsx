@@ -149,9 +149,7 @@ export default function CrmCallAnalyticsPage() {
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                view === v ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-500 hover:text-slate-700'
-              }`}
+              className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all btn-multicolor"
             >
               {v === 'me' ? 'My Analytics' : v === 'team' ? 'My Team' : 'All Staff'}
             </button>

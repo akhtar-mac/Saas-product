@@ -197,9 +197,7 @@ export default function HrDashboard() {
         <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
           <button
             onClick={() => setActiveTab('ats')}
-            className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-              activeTab === 'ats' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 btn-multicolor"
           >
             <Briefcase className="w-3.5 h-3.5" />
             Careers ATS Funnel
@@ -211,18 +209,14 @@ export default function HrDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('workforce')}
-            className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-              activeTab === 'workforce' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 btn-multicolor"
           >
             <Users className="w-3.5 h-3.5" />
             Workforce (218)
           </button>
           <button
             onClick={() => setActiveTab('accounts')}
-            className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-              activeTab === 'accounts' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 btn-multicolor"
           >
             <Receipt className="w-3.5 h-3.5" />
             Accounts & Payroll

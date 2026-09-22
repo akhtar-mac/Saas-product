@@ -107,7 +107,7 @@ export default function AccountsDashboard() {
                     </span>
                   </td>
                   <td className="text-right">
-                    <button className="btn btn-outline btn-sm text-xs">
+                    <button className="btn btn-outline btn-sm text-xs btn-multicolor">
                       <Download className="w-3 h-3" /> Invoice PDF
                     </button>
                   </td>

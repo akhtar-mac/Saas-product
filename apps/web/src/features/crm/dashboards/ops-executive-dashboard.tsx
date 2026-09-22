@@ -243,7 +243,7 @@ export default function OpsExecutiveDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsAdvanceModalOpen(false)}
-                  className="btn btn-outline btn-sm"
+                  className="btn btn-outline btn-sm btn-multicolor"
                 >
                   Cancel
                 </button>

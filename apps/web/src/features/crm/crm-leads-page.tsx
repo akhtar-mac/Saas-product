@@ -556,31 +556,19 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate('/crm/sales-manage-leads')}
-            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors ${
-              !isDetailsView && !isInquiryView
-                ? 'bg-[#003A66] text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors btn-multicolor"
           >
             Lead List View
           </button>
           <button
             onClick={() => navigate('/crm/sales-manage-leads-details')}
-            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors ${
-              isDetailsView
-                ? 'bg-[#003A66] text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors btn-multicolor"
           >
             Leads Details View
           </button>
           <button
             onClick={() => navigate('/crm/sales-manage-customer-inquiry')}
-            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors ${
-              isInquiryView
-                ? 'bg-[#003A66] text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-colors btn-multicolor"
           >
             Customer Inquiries
           </button>
@@ -597,18 +585,13 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                 key={kpi.id}
                 type="button"
                 onClick={() => setActiveStatusKpi(activeStatusKpi === kpi.id ? null : kpi.id)}
-                className={`kpi-single-moving py-1 px-3 transition-all ${
-                  activeStatusKpi === kpi.id ? 'active ring-2 ring-slate-800 scale-105 shadow-md' : 'shadow-2xs'
+                className={`btn-multicolor py-1 px-3 transition-all ${
+                  activeStatusKpi === kpi.id ? 'ring-2 ring-slate-800 scale-105 shadow-md' : 'shadow-2xs'
                 }`}
-                style={{
-                  '--c-base': kpi.cBase,
-                  '--c-light': kpi.cLight,
-                  '--c-dark': kpi.cDark,
-                } as React.CSSProperties}
                 title={`Filter leads by ${kpi.label}`}
               >
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-tight text-slate-800">
+                  <span className="text-[10px] font-extrabold uppercase tracking-tight">
                     {kpi.label}
                   </span>
                   <span
@@ -629,18 +612,13 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                 key={kpi.id}
                 type="button"
                 onClick={() => setActiveStatusKpi(activeStatusKpi === kpi.id ? null : kpi.id)}
-                className={`kpi-single-moving py-1 px-3 transition-all ${
-                  activeStatusKpi === kpi.id ? 'active ring-2 ring-slate-800 scale-105 shadow-md' : 'shadow-2xs'
+                className={`btn-multicolor py-1 px-3 transition-all ${
+                  activeStatusKpi === kpi.id ? 'ring-2 ring-slate-800 scale-105 shadow-md' : 'shadow-2xs'
                 }`}
-                style={{
-                  '--c-base': kpi.cBase,
-                  '--c-light': kpi.cLight,
-                  '--c-dark': kpi.cDark,
-                } as React.CSSProperties}
                 title={`Filter leads by ${kpi.label}`}
               >
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-tight text-slate-800">
+                  <span className="text-[10px] font-extrabold uppercase tracking-tight">
                     {kpi.label}
                   </span>
                   <span
@@ -664,7 +642,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
             {/* (+) Button */}
             <button
               onClick={() => setAddLeadModalOpen(true)}
-              className="btn-single-moving w-9 h-9 text-slate-700 shadow-2xs"
+              className="btn-multicolor w-9 h-9 shadow-2xs"
               style={{
                 '--c-base': '#64748B',
                 '--c-light': '#94A3B8',
@@ -675,15 +653,8 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
               <Plus className="w-4 h-4" />
             </button>
 
-            {/* Assign Leads To (Teal moving outline) */}
-            <div
-              className="btn-single-moving relative shadow-2xs"
-              style={{
-                '--c-base': '#00A896',
-                '--c-light': '#2DD4BF',
-                '--c-dark': '#0F766E',
-              } as React.CSSProperties}
-            >
+            {/* Assign Leads To */}
+            <div className="btn-multicolor relative shadow-2xs rounded-xl">
               <select
                 value={assignStaff}
                 onChange={(e) => setAssignStaff(e.target.value)}
@@ -698,15 +669,8 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
               <ChevronDown className="w-3.5 h-3.5 text-slate-600 absolute right-2 top-2.5 pointer-events-none z-2" />
             </div>
 
-            {/* Status Dropdown (Slate moving outline) */}
-            <div
-              className="btn-single-moving relative shadow-2xs"
-              style={{
-                '--c-base': '#94A3B8',
-                '--c-light': '#CBD5E1',
-                '--c-dark': '#64748B',
-              } as React.CSSProperties}
-            >
+            {/* Status Dropdown */}
+            <div className="btn-multicolor relative shadow-2xs rounded-xl">
               <select
                 value={statusDropdown}
                 onChange={(e) => setStatusDropdown(e.target.value)}
@@ -722,23 +686,18 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2.5 pointer-events-none z-2" />
             </div>
 
-            {/* Bulk Add (Red single-color moving outline) */}
+            {/* Bulk Add */}
             <button
               onClick={handleBulkAssign}
-              className="btn-single-moving py-2 px-4 shadow-2xs"
-              style={{
-                '--c-base': '#EF4444',
-                '--c-light': '#FCA5A5',
-                '--c-dark': '#DC2626',
-              } as React.CSSProperties}
+              className="btn-multicolor py-2 px-4 shadow-2xs"
             >
-              <span className="text-xs font-bold text-slate-800">Bulk Add</span>
+              <span className="text-xs font-bold">Bulk Add</span>
             </button>
 
             {/* Sample Excel (Blue single-color moving outline) */}
             <button
               onClick={() => alert('Sample Excel download template initiated.')}
-              className="btn-single-moving py-2 px-4 shadow-2xs"
+              className="btn-multicolor py-2 px-4 shadow-2xs"
               style={{
                 '--c-base': '#2563EB',
                 '--c-light': '#93C5FD',
@@ -751,7 +710,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
             {/* Import FB (Navy single-color moving outline) */}
             <button
               onClick={() => alert('Facebook Leads Sync API triggered.')}
-              className="btn-single-moving py-2 px-4 shadow-2xs"
+              className="btn-multicolor py-2 px-4 shadow-2xs"
               style={{
                 '--c-base': '#1E3A8A',
                 '--c-light': '#60A5FA',
@@ -767,7 +726,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
               <span className="text-xs font-bold text-[#003A66] uppercase">MANAGE LEAD'S</span>
               <button
                 onClick={() => setAddLeadModalOpen(true)}
-                className="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
+                className="w-6 h-6 rounded-full btn-multicolor inline-flex items-center justify-center"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -797,7 +756,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                 <button
                   key={b}
                   onClick={() => alert(`${b} action executed`)}
-                  className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded shadow-2xs transition-colors"
+                  className="px-2.5 py-1 text-[11px] font-semibold btn-multicolor rounded shadow-2xs transition-colors"
                 >
                   {b}
                 </button>
@@ -1053,7 +1012,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setRemarksModalLead(detailsModalLead)}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition-colors"
+                  className="px-2.5 py-1 rounded-lg btn-multicolor text-xs font-bold flex items-center gap-1 transition-colors"
                   title="View Remarks Audit"
                 >
                   <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
@@ -1074,41 +1033,25 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl">
                 <button
                   onClick={() => setDetailsActiveTab('client')}
-                  className={`py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all ${
-                    detailsActiveTab === 'client'
-                      ? 'bg-white text-[#1B365D] shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
+                  className="py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all btn-multicolor"
                 >
                   Client Info
                 </button>
                 <button
                   onClick={() => setDetailsActiveTab('status')}
-                  className={`py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all ${
-                    detailsActiveTab === 'status'
-                      ? 'bg-white text-[#1B365D] shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
+                  className="py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all btn-multicolor"
                 >
                   Update Status
                 </button>
                 <button
                   onClick={() => setDetailsActiveTab('followup')}
-                  className={`py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all ${
-                    detailsActiveTab === 'followup'
-                      ? 'bg-white text-[#1B365D] shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
+                  className="py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all btn-multicolor"
                 >
                   Followup
                 </button>
                 <button
                   onClick={() => setDetailsActiveTab('services')}
-                  className={`py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all ${
-                    detailsActiveTab === 'services'
-                      ? 'bg-white text-[#1B365D] shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
+                  className="py-1.5 px-2.5 text-xs font-bold rounded-xl transition-all btn-multicolor"
                 >
                   Other Services
                 </button>
@@ -1182,7 +1125,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <button
                       onClick={() => setDetailsModalLead(null)}
-                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      className="btn-multicolor py-1.5 px-4 rounded-full text-xs font-bold shadow-xs cursor-pointer"
                       style={
                         {
                           '--c-base': '#1E293B',
@@ -1195,7 +1138,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                     </button>
                     <button
                       onClick={() => alert('Lead details updated.')}
-                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      className="btn-multicolor py-1.5 px-4 rounded-full text-xs font-bold shadow-xs cursor-pointer"
                       style={
                         {
                           '--c-base': '#1B365D',
@@ -1211,7 +1154,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                         setDetailsModalLead(null);
                         navigate('/crm/quotations');
                       }}
-                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      className="btn-multicolor py-1.5 px-4 rounded-full text-xs font-bold shadow-xs cursor-pointer"
                       style={
                         {
                           '--c-base': '#10B981',
@@ -1224,7 +1167,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                     </button>
                     <button
                       onClick={() => setRemarksModalLead(detailsModalLead)}
-                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      className="btn-multicolor py-1.5 px-4 rounded-full text-xs font-bold shadow-xs cursor-pointer"
                       style={
                         {
                           '--c-base': '#06B6D4',
@@ -1287,7 +1230,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                   <div className="flex items-center gap-2 pt-2 border-t border-[#EAE6DD]">
                     <button
                       onClick={() => setDetailsModalLead(null)}
-                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      className="btn-multicolor py-1.5 px-4 rounded-full text-xs font-bold shadow-xs cursor-pointer"
                       style={
                         {
                           '--c-base': '#1E293B',
@@ -1300,7 +1243,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                     </button>
                     <button
                       onClick={handleAddRemark}
-                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      className="btn-multicolor py-1.5 px-4 rounded-full text-xs font-bold shadow-xs cursor-pointer"
                       style={
                         {
                           '--c-base': '#1B365D',
@@ -1357,7 +1300,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                   <div className="flex items-center gap-2 pt-2 border-t border-[#EAE6DD]">
                     <button
                       onClick={() => setDetailsModalLead(null)}
-                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      className="btn-multicolor py-1.5 px-4 rounded-full text-xs font-bold shadow-xs cursor-pointer"
                       style={
                         {
                           '--c-base': '#1E293B',
@@ -1370,7 +1313,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                     </button>
                     <button
                       onClick={handleAddFollowup}
-                      className="btn-single-moving btn-single-moving-solid py-1.5 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
+                      className="btn-multicolor py-1.5 px-4 rounded-full text-xs font-bold shadow-xs cursor-pointer"
                       style={
                         {
                           '--c-base': '#1B365D',
@@ -1404,14 +1347,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                       </select>
                       <button
                         onClick={handleAddService}
-                        className="btn-single-moving btn-single-moving-solid py-2 px-4 rounded-full text-xs font-bold text-white shadow-xs cursor-pointer"
-                        style={
-                          {
-                            '--c-base': '#EF4444',
-                            '--c-light': '#FCA5A5',
-                            '--c-dark': '#DC2626',
-                          } as React.CSSProperties
-                        }
+                        className="btn-multicolor py-2 px-4 rounded-full text-xs font-bold shadow-xs cursor-pointer"
                       >
                         <span>Add</span>
                       </button>
@@ -1487,16 +1423,9 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                       });
                     }
                   }}
-                  className="btn-single-moving btn-single-moving-solid py-1 px-3 rounded-full text-white shadow-xs ml-1 cursor-pointer"
-                  style={
-                    {
-                      '--c-base': '#1B365D',
-                      '--c-light': '#3B82F6',
-                      '--c-dark': '#0F172A',
-                    } as React.CSSProperties
-                  }
+                  className="btn-multicolor py-1 px-3 rounded-full shadow-xs ml-1 cursor-pointer"
                 >
-                  <span className="text-[11px] font-bold text-white">+ Remark</span>
+                  <span className="text-[11px] font-bold">+ Remark</span>
                 </button>
                 <button
                   onClick={() => setRemarksModalLead(null)}
@@ -1558,7 +1487,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
             <div className="p-4 bg-[#FAF9F5] border-t border-[#EAE6DD] flex justify-end">
               <button
                 onClick={() => setRemarksModalLead(null)}
-                className="btn btn-outline btn-sm rounded-xl text-xs font-bold"
+                className="btn btn-outline btn-sm rounded-xl text-xs font-bold btn-multicolor"
               >
                 Close
               </button>
@@ -1656,20 +1585,15 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                 <button
                   type="button"
                   onClick={() => setAddLeadModalOpen(false)}
-                  className="btn btn-outline btn-sm rounded-xl text-xs font-bold"
+                  className="btn btn-outline btn-sm rounded-xl text-xs font-bold btn-multicolor"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn-single-moving py-2 px-5 shadow-xs"
-                  style={{
-                    '--c-base': '#10B981',
-                    '--c-light': '#6EE7B7',
-                    '--c-dark': '#047857',
-                  } as React.CSSProperties}
+                  className="btn-multicolor py-2 px-5 shadow-xs"
                 >
-                  <span className="text-xs font-bold text-slate-800">Save Lead</span>
+                  <span className="text-xs font-bold">Save Lead</span>
                 </button>
               </div>
             </form>

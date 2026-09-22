@@ -5,6 +5,7 @@ import {
   AlertTriangle, Briefcase, Phone, Mail, Clock, CheckSquare, Square, RotateCcw,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
+import { RoleType } from '@etaxwala/types';
 import {
   PERMISSIONS_CATALOG,
   ROLE_DEFAULT_PERMISSIONS,
@@ -77,8 +78,13 @@ function RoleBadge({ roleId }: { roleId: number }) {
   );
 }
 
+const MANAGER_ROLE_IDS = [1, 2, 3, 4, 5, 6, 14, 15];
+
 export default function CrmUserManagementPage() {
-  const { staffToken } = useAuthStore();
+  const { staffToken, staffUser } = useAuthStore();
+  const currentUserId = staffUser?.id;
+  const currentRole = staffUser?.role;
+  const isExecutive = currentRole === RoleType.SUPER_ADMIN || currentRole === RoleType.ADMIN; // Super Admin / Admin see all
   const [users, setUsers] = useState<StaffUser[]>([]);
   const [filtered, setFiltered] = useState<StaffUser[]>([]);
   const [search, setSearch] = useState('');
@@ -120,23 +126,40 @@ export default function CrmUserManagementPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      const crmUrl = currentUserId && !isExecutive
+        ? `${API_BASE}/v1/crm/users?created_by=${currentUserId}`
+        : `${API_BASE}/v1/crm/users`;
       let res = await fetch(`${API_BASE}/v1/admin/users`, { headers: authHeaders });
       let data = await res.json();
       if (!data.success) {
-        res = await fetch(`${API_BASE}/v1/crm/users`);
+        res = await fetch(crmUrl);
         data = await res.json();
       }
       if (data.success && Array.isArray(data.data)) {
-        setUsers(data.data);
-        setFiltered(data.data);
+        // Only manager-level users should appear on Manage Manager page
+        const managersOnly = data.data.filter(
+          (u: StaffUser) =>
+            MANAGER_ROLE_IDS.includes(u.role_id) ||
+            (u.role_ids && u.role_ids.some((id) => MANAGER_ROLE_IDS.includes(id)))
+        );
+        setUsers(managersOnly);
+        setFiltered(managersOnly);
       }
     } catch {
       try {
-        const res = await fetch(`${API_BASE}/v1/crm/users`);
+        const crmUrl = currentUserId && !isExecutive
+          ? `${API_BASE}/v1/crm/users?created_by=${currentUserId}`
+          : `${API_BASE}/v1/crm/users`;
+        const res = await fetch(crmUrl);
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
-          setUsers(data.data);
-          setFiltered(data.data);
+          const managersOnly = data.data.filter(
+            (u: StaffUser) =>
+              MANAGER_ROLE_IDS.includes(u.role_id) ||
+              (u.role_ids && u.role_ids.some((id) => MANAGER_ROLE_IDS.includes(id)))
+          );
+          setUsers(managersOnly);
+          setFiltered(managersOnly);
         }
       } catch {}
     } finally {
@@ -352,10 +375,11 @@ export default function CrmUserManagementPage() {
         // Fallback to unauthenticated CRM users route
         const crmUrl = isEditMode ? `${API_BASE}/v1/crm/users/${editingUserId}` : `${API_BASE}/v1/crm/users`;
         const crmMethod = isEditMode ? 'PUT' : 'POST';
+        const crmPayload = { ...payload, created_by: currentUserId };
         res = await fetch(crmUrl, {
           method: crmMethod,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(crmPayload),
         });
         data = await res.json();
       }
@@ -584,7 +608,7 @@ export default function CrmUserManagementPage() {
                           )}
                           <button
                             onClick={() => openRoleAssignModal(user)}
-                            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF9F5] hover:bg-slate-200 text-[#1B365D] border border-[#EAE6DD] transition-colors"
+                            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold btn-multicolor transition-colors"
                             title="Add an additional role to this user"
                           >
                             <Plus className="w-2.5 h-2.5" /> Role
@@ -816,7 +840,7 @@ export default function CrmUserManagementPage() {
                     <button
                       type="button"
                       onClick={resetToRoleDefaults}
-                      className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-lg border border-blue-200"
+                      className="text-xs font-semibold flex items-center gap-1 btn-multicolor px-2 py-1 rounded-lg"
                       title="Reset permissions to selected role defaults"
                     >
                       <RotateCcw className="w-3 h-3" /> Reset Defaults
@@ -824,7 +848,7 @@ export default function CrmUserManagementPage() {
                     <button
                       type="button"
                       onClick={selectAllPermissions}
-                      className="text-xs text-purple-600 hover:text-purple-800 font-semibold flex items-center gap-1 bg-purple-50 px-2 py-1 rounded-lg border border-purple-200"
+                      className="text-xs font-semibold flex items-center gap-1 btn-multicolor px-2 py-1 rounded-lg"
                       title="Grant all system permissions"
                     >
                       <CheckSquare className="w-3 h-3" /> Grant All (*)

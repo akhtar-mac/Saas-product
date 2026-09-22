@@ -378,47 +378,37 @@ export default function MarketingDashboard() {
         <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold overflow-x-auto">
           <button
             onClick={() => setActiveTab('social')}
-            className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'social' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap btn-multicolor"
           >
             <Share2 className="w-3.5 h-3.5" />
             Social Media ({posts.length})
           </button>
           <button
             onClick={() => setActiveTab('ads')}
-            className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'ads' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap btn-multicolor"
           >
             <Target className="w-3.5 h-3.5" />
             Paid Ads ({campaigns.length})
           </button>
           <button
             onClick={() => setActiveTab('seo')}
-            className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'seo' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap btn-multicolor"
           >
             <Search className="w-3.5 h-3.5" />
             SEO & Keywords
           </button>
           <button
             onClick={() => setActiveTab('attribution')}
-            className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'attribution' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap btn-multicolor"
           >
             <Layers className="w-3.5 h-3.5" />
             Attribution & ROI
           </button>
           <button
             onClick={() => setActiveTab('integrations')}
-            className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'integrations' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap btn-multicolor"
           >
-            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            <Zap className="w-3.5 h-3.5" />
             Integrations & Sync ({integrations.length})
           </button>
         </div>

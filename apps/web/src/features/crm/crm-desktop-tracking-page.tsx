@@ -100,22 +100,14 @@ export default function CrmDesktopTrackingPage({ defaultTab = 'tracking' }: { de
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
         <button
           onClick={() => setActiveTab('tracking')}
-          className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-2 ${
-            activeTab === 'tracking'
-              ? 'bg-[#003A66] text-white shadow-sm'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-          }`}
+          className="px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-2 btn-multicolor"
         >
-          <Radio className="w-3.5 h-3.5 text-emerald-400" />
+          <Radio className="w-3.5 h-3.5" />
           <span>Tracking Report</span>
         </button>
         <button
           onClick={() => setActiveTab('session')}
-          className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-2 ${
-            activeTab === 'session'
-              ? 'bg-[#003A66] text-white shadow-sm'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-          }`}
+          className="px-4 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-2 btn-multicolor"
         >
           <Clock className="w-3.5 h-3.5 text-amber-400" />
           <span>Session Report</span>
@@ -202,7 +194,7 @@ export default function CrmDesktopTrackingPage({ defaultTab = 'tracking' }: { de
                 <button
                   key={btn}
                   onClick={() => alert(`${btn} export triggered`)}
-                  className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded shadow-2xs transition-colors"
+                  className="px-2.5 py-1 text-[11px] font-semibold btn-multicolor rounded shadow-2xs transition-colors"
                 >
                   {btn}
                 </button>

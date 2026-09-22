@@ -64,7 +64,7 @@ export default function AdminDashboard() {
           <Link to="/crm/leads" className="btn btn-primary btn-sm">
             <Users className="w-3.5 h-3.5" /> All Leads ({stats.totalLeads.toLocaleString()})
           </Link>
-          <Link to="/crm/tasks" className="btn btn-outline btn-sm">
+          <Link to="/crm/tasks" className="btn btn-outline btn-sm btn-multicolor">
             <FileCheck2 className="w-3.5 h-3.5" /> Tasks ({stats.totalTasks.toLocaleString()})
           </Link>
         </div>
