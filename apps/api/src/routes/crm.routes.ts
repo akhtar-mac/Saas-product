@@ -769,12 +769,39 @@ const USER_ROLE_MAP: Record<number, string> = {
   13: 'Sales Assistant', 14: 'HR', 15: 'Website Manager',
 };
 
+// Roles a manager is allowed to create/view under their department
+function getAllowedSubordinateRoles(creatorRoleId: number): number[] | null {
+  // Super Admin / Admin / HR -> full access
+  if ([1, 2, 14].includes(creatorRoleId)) return null;
+  // Operations Manager
+  if (creatorRoleId === 3) return [8, 12];
+  // Sales Manager
+  if (creatorRoleId === 4) return [7, 13];
+  // Marketing Manager
+  if (creatorRoleId === 5) return [9];
+  // Franchise Manager
+  if (creatorRoleId === 6) return [10];
+  // Fallback: no subordinate employee management
+  return [];
+}
+
 router.get('/users', async (req, res) => {
   try {
     const createdBy = req.query.created_by ? Number(req.query.created_by) : undefined;
+    let allowedRoleIds: number[] | null = null;
+    if (createdBy && !isNaN(createdBy)) {
+      const creator = await (prisma as any).staff_users.findUnique({ where: { id: createdBy } });
+      allowedRoleIds = getAllowedSubordinateRoles(creator?.role_id);
+    }
     const where: any = {};
     if (createdBy && !isNaN(createdBy)) {
       where.created_by = createdBy;
+    }
+    if (allowedRoleIds !== null && allowedRoleIds.length > 0) {
+      where.role_id = { in: allowedRoleIds };
+    } else if (allowedRoleIds !== null) {
+      // Manager has no allowed subordinate roles; return empty
+      return res.json({ success: true, data: [] });
     }
     const users = await (prisma as any).staff_users.findMany({
       where,
@@ -807,6 +834,18 @@ router.post('/users', async (req, res) => {
     const { name, email, password = DEFAULT_PASSWORD, phone, role_id = 8, position, permissions, created_by } = req.body;
     if (!name || !email) {
       return res.status(400).json({ success: false, error: 'Name and email are required' });
+    }
+    const requestedRoleId = Number(role_id);
+    // Enforce manager-scope role restrictions
+    if (created_by) {
+      const creator = await (prisma as any).staff_users.findUnique({ where: { id: Number(created_by) } });
+      const allowedRoles = getAllowedSubordinateRoles(creator?.role_id);
+      if (allowedRoles !== null && !allowedRoles.includes(requestedRoleId)) {
+        return res.status(403).json({
+          success: false,
+          error: `You can only create ${allowedRoles.map((id) => USER_ROLE_MAP[id]).join(', ')} users.`,
+        });
+      }
     }
     const permsJson = permissions && Array.isArray(permissions) ? JSON.stringify(permissions) : null;
     const password_hash = await bcrypt.hash(password, 12);
@@ -843,8 +882,20 @@ router.post('/users', async (req, res) => {
 router.put('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, role_id, position, password, permissions } = req.body;
-    const updateData: any = { name, email, phone, role_id: role_id ? Number(role_id) : undefined, position, updated_at: new Date() };
+    const { name, email, phone, role_id, position, password, permissions, created_by } = req.body;
+    const requestedRoleId = role_id ? Number(role_id) : undefined;
+    // Enforce manager-scope role restrictions on role change
+    if (requestedRoleId !== undefined && created_by) {
+      const creator = await (prisma as any).staff_users.findUnique({ where: { id: Number(created_by) } });
+      const allowedRoles = getAllowedSubordinateRoles(creator?.role_id);
+      if (allowedRoles !== null && !allowedRoles.includes(requestedRoleId)) {
+        return res.status(403).json({
+          success: false,
+          error: `You can only assign ${allowedRoles.map((id) => USER_ROLE_MAP[id]).join(', ')} roles.`,
+        });
+      }
+    }
+    const updateData: any = { name, email, phone, role_id: requestedRoleId, position, updated_at: new Date() };
     if (password && password.trim().length > 0) {
       updateData.password_hash = await bcrypt.hash(password, 12);
     }

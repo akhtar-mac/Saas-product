@@ -126,8 +126,21 @@ function setStoredPassword(userId: number, password: string) {
 export default function HrWorkforcePage() {
   const { staffToken, staffUser } = useAuthStore();
   const currentUserId = staffUser?.id;
-  const currentRole = staffUser?.role;
-  const isExecutive = currentRole === RoleType.SUPER_ADMIN || currentRole === RoleType.ADMIN; // Super Admin / Admin see all
+  const currentRoleId = staffUser?.roleIds?.[0] ?? 8;
+  const isExecutive = currentRoleId === 1 || currentRoleId === 2; // Super Admin / Admin see all
+
+  // Department-scoped employee roles a manager can create/view
+  const getAllowedEmployeeRoles = (roleId: number): number[] => {
+    if ([1, 2, 14].includes(roleId)) return ROLES.map((r) => r.id); // Super Admin / Admin / HR see all
+    if (roleId === 3) return [8, 12]; // Operations Manager -> Operations Employee, Operations Assistant
+    if (roleId === 4) return [7, 13]; // Sales Manager -> Sales Employee, Sales Assistant
+    if (roleId === 5) return [9]; // Marketing Manager -> Marketing Employee
+    if (roleId === 6) return [10]; // Franchise Manager -> Franchise Partner
+    return [];
+  };
+  const allowedRoleIds = getAllowedEmployeeRoles(currentRoleId);
+  const canManageEmployees = isExecutive || allowedRoleIds.length > 0;
+
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
@@ -142,13 +155,15 @@ export default function HrWorkforcePage() {
 
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
 
+  const defaultAllowedRoleId = allowedRoleIds[0] ?? 8;
+
   const [form, setForm] = useState({
     name: '',
     email: '',
     contact: '',
     password: '',
-    role_id: 8, // Operations Employee default
-    permissions: ROLE_DEFAULT_PERMISSIONS[8] || [],
+    role_id: defaultAllowedRoleId,
+    permissions: ROLE_DEFAULT_PERMISSIONS[defaultAllowedRoleId] || [],
   });
 
   const authHeaders = {
@@ -158,7 +173,7 @@ export default function HrWorkforcePage() {
 
   // Open Modal for Add
   const openAddModal = () => {
-    const defaultRoleId = 8;
+    const defaultRoleId = allowedRoleIds[0] ?? 8;
     setForm({
       name: '',
       email: '',
@@ -176,13 +191,14 @@ export default function HrWorkforcePage() {
   // Open Modal for Edit
   const openEditModal = (staff: StaffMember) => {
     const storedPassword = staff.password || getStoredPassword(staff.id) || '';
+    const safeRoleId = allowedRoleIds.includes(staff.roleId) ? staff.roleId : (allowedRoleIds[0] ?? staff.roleId);
     setForm({
       name: staff.name,
       email: staff.email,
       contact: staff.contact,
       password: storedPassword,
-      role_id: staff.roleId,
-      permissions: staff.permissions || ROLE_DEFAULT_PERMISSIONS[staff.roleId] || [],
+      role_id: safeRoleId,
+      permissions: staff.permissions || ROLE_DEFAULT_PERMISSIONS[safeRoleId] || [],
     });
     setEditingStaff(staff);
     setShowPassword(true);
@@ -235,24 +251,26 @@ export default function HrWorkforcePage() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
-          const mapped: StaffMember[] = data.data.map((u: any) => {
-            const roleObj = ROLES.find((r) => r.id === u.role_id);
-            return {
-              id: u.id,
-              name: u.name || u.username || 'Staff User',
-              role: u.role_name || u.position || roleObj?.name || 'Staff Employee',
-              roleId: u.role_id || 8,
-              dept: roleObj?.group || 'Operations',
-              deptKey: roleObj?.group.toLowerCase() || 'operations',
-              contact: u.phone || '9876543210',
-              email: u.email || 'staff@etaxwala.com',
-              activeCases: u.is_active ? 'Active' : 'Inactive',
-              status: u.is_active ? 'Online' : 'Offline',
-              joiningDate: u.created_at ? u.created_at.split('T')[0] : '2026-09-01',
-              permissions: typeof u.permissions === 'string' ? JSON.parse(u.permissions || '[]') : u.permissions || [],
-              password: u.password || getStoredPassword(u.id) || undefined,
-            };
-          });
+          const mapped: StaffMember[] = data.data
+            .filter((u: any) => isExecutive || allowedRoleIds.includes(u.role_id))
+            .map((u: any) => {
+              const roleObj = ROLES.find((r) => r.id === u.role_id);
+              return {
+                id: u.id,
+                name: u.name || u.username || 'Staff User',
+                role: u.role_name || u.position || roleObj?.name || 'Staff Employee',
+                roleId: u.role_id || 8,
+                dept: roleObj?.group || 'Operations',
+                deptKey: roleObj?.group.toLowerCase() || 'operations',
+                contact: u.phone || '9876543210',
+                email: u.email || 'staff@etaxwala.com',
+                activeCases: u.is_active ? 'Active' : 'Inactive',
+                status: u.is_active ? 'Online' : 'Offline',
+                joiningDate: u.created_at ? u.created_at.split('T')[0] : '2026-09-01',
+                permissions: typeof u.permissions === 'string' ? JSON.parse(u.permissions || '[]') : u.permissions || [],
+                password: u.password || getStoredPassword(u.id) || undefined,
+              };
+            });
           setStaffList(mapped);
         }
       })
@@ -381,6 +399,16 @@ export default function HrWorkforcePage() {
 
   const categories = Array.from(new Set(PERMISSIONS_CATALOG.map((p) => p.category)));
 
+  const managerRoleName = ROLES.find((r) => r.id === currentRoleId)?.name || 'Manager';
+  const employeeLabel = isExecutive
+    ? 'All Employees'
+    : allowedRoleIds.length === 1
+      ? ROLES.find((r) => r.id === allowedRoleIds[0])?.name + 's'
+      : allowedRoleIds.length > 1
+        ? `${ROLES.find((r) => r.id === allowedRoleIds[0])?.group || 'Department'} Employees`
+        : 'Employees';
+  const pageTitle = isExecutive ? 'Manage Employees' : `Manage ${employeeLabel}`;
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto font-sans">
       {/* Header Banner matching ETaxwala Operations UI */}
@@ -388,12 +416,14 @@ export default function HrWorkforcePage() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-display font-bold text-[#1B365D]">
-              Manage Operation Employees
+              {pageTitle}
             </h1>
             <span className="badge badge-navy font-mono">{staffList.length} Active Staff</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Real-time operational staff management, live attendance status, and role-based permissions assignment.
+            {isExecutive
+              ? 'Real-time staff management, live attendance status, and role-based permissions assignment across all departments.'
+              : `${managerRoleName} view: create and manage only ${employeeLabel.toLowerCase()} under your department.`}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -402,12 +432,14 @@ export default function HrWorkforcePage() {
             <span className="text-xs font-bold text-emerald-700">{onlineCount} Online</span>
           </div>
 
-          <button
-            onClick={openAddModal}
-            className="btn-multicolor flex items-center gap-2 py-2.5 px-4"
-          >
-            <UserPlus className="w-4 h-4" /> Add New Employeer
-          </button>
+          {canManageEmployees && (
+            <button
+              onClick={openAddModal}
+              className="btn-multicolor flex items-center gap-2 py-2.5 px-4"
+            >
+              <UserPlus className="w-4 h-4" /> Add New Employeer
+            </button>
+          )}
         </div>
       </div>
 
@@ -661,7 +693,7 @@ export default function HrWorkforcePage() {
                   onChange={(e) => handleRoleChange(Number(e.target.value))}
                   className="input text-xs w-full bg-[#FAF9F5] border-[#EAE6DD] font-bold text-[#1B365D] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20"
                 >
-                  {ROLES.map((r) => (
+                  {ROLES.filter((r) => allowedRoleIds.includes(r.id)).map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name} ({r.group})
                     </option>
