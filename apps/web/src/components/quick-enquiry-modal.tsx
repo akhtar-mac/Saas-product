@@ -73,9 +73,10 @@ export default function QuickEnquiryModal({
         // ignore local storage errors
       }
 
-      // Try external API
+      // Post to local API
       try {
-        await fetch('https://customer-api.etaxwala.com/api/add-inquiry-lead', {
+        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+        await fetch(`${API_BASE}/api/add-inquiry-lead`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -120,11 +121,10 @@ export default function QuickEnquiryModal({
               </div>
 
               <div className="space-y-1.5">
-                <h3 className="text-xl font-extrabold text-slate-900">
-                  Enquiry Received!
-                </h3>
+                <h3 className="text-xl font-extrabold text-slate-900">Enquiry Received!</h3>
                 <p className="text-xs text-slate-600 max-w-xs mx-auto">
-                  Thank you <strong className="text-slate-800">{name}</strong>! We have received your request for{' '}
+                  Thank you <strong className="text-slate-800">{name}</strong>! We have received
+                  your request for{' '}
                   <span className="font-semibold text-[#0084D1]">{serviceTitle}</span>.
                 </p>
               </div>
@@ -159,7 +159,8 @@ export default function QuickEnquiryModal({
                 </h3>
 
                 <p className="text-xs text-slate-500">
-                  Enter your name and number. Our CA will contact you with exact quotation &amp; deliverables.
+                  Enter your name and number. Our CA will contact you with exact quotation &amp;
+                  deliverables.
                 </p>
               </div>
 
@@ -186,9 +187,7 @@ export default function QuickEnquiryModal({
                     className="itchy-input"
                     autoFocus
                   />
-                  <p className="input__description">
-                    Senior CA will address you by this name
-                  </p>
+                  <p className="input__description">Senior CA will address you by this name</p>
                 </div>
 
                 <div className="input__container">

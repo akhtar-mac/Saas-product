@@ -5,7 +5,13 @@ import { recordAuditLog } from './audit.service.js';
 import { broadcastRoleNotification } from './notification.service.js';
 
 export interface CreateIntegrationInput {
-  provider: 'META_ADS' | 'GOOGLE_ADS' | 'GOOGLE_SEARCH_CONSOLE' | 'INSTAGRAM' | 'LINKEDIN' | 'WHATSAPP_BUSINESS';
+  provider:
+    | 'META_ADS'
+    | 'GOOGLE_ADS'
+    | 'GOOGLE_SEARCH_CONSOLE'
+    | 'INSTAGRAM'
+    | 'LINKEDIN'
+    | 'WHATSAPP_BUSINESS';
   accountId: string;
   accountName: string;
   accessToken: string;
@@ -16,7 +22,10 @@ export interface CreateIntegrationInput {
 /**
  * Encrypts and saves external platform integration credentials into the AES-256 Vault
  */
-export async function saveIntegrationCredentials(input: CreateIntegrationInput, actor?: { id?: number; email?: string }) {
+export async function saveIntegrationCredentials(
+  input: CreateIntegrationInput,
+  actor?: { id?: number; email?: string }
+) {
   const encAccess = encryptSecret(input.accessToken);
   const encRefresh = input.refreshToken ? encryptSecret(input.refreshToken) : null;
   const encSecret = input.webhookSecret ? encryptSecret(input.webhookSecret) : null;
@@ -43,7 +52,11 @@ export async function saveIntegrationCredentials(input: CreateIntegrationInput, 
     action: 'INTEGRATION_CREDENTIAL_CREATED',
     resource: 'integration_credentials',
     resourceId: String(credential.id),
-    payload: { provider: input.provider, accountId: input.accountId, accountName: input.accountName },
+    payload: {
+      provider: input.provider,
+      accountId: input.accountId,
+      accountName: input.accountName,
+    },
   });
 
   return {
@@ -61,7 +74,11 @@ export async function saveIntegrationCredentials(input: CreateIntegrationInput, 
  */
 export async function executeIntegrationSync(
   integrationId: number,
-  jobType: 'HOURLY_SPEND_SYNC' | 'DAILY_METRICS_SYNC' | 'MANUAL_PULL' | 'KEYWORD_RANK_PULL' = 'MANUAL_PULL',
+  jobType:
+    | 'HOURLY_SPEND_SYNC'
+    | 'DAILY_METRICS_SYNC'
+    | 'MANUAL_PULL'
+    | 'KEYWORD_RANK_PULL' = 'MANUAL_PULL',
   actor?: { id?: number; email?: string }
 ) {
   const integration = await (prisma as any).integration_credentials.findUnique({
@@ -99,7 +116,8 @@ export async function executeIntegrationSync(
       // Synchronize campaign performance metrics
       const campaigns = await (prisma as any).ad_campaigns.findMany({
         where: {
-          platform: integration.provider === 'META_ADS' ? { contains: 'Meta' } : { contains: 'Google' },
+          platform:
+            integration.provider === 'META_ADS' ? { contains: 'Meta' } : { contains: 'Google' },
         },
       });
 
@@ -213,7 +231,10 @@ export async function processIncomingWebhook(
         integration.webhook_secret_iv,
         integration.webhook_secret_tag
       );
-      const expectedSig = crypto.createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
+      const expectedSig = crypto
+        .createHmac('sha256', secret)
+        .update(JSON.stringify(payload))
+        .digest('hex');
       if (signatureHeader.includes(expectedSig)) {
         isVerified = true;
       }
@@ -255,13 +276,12 @@ export async function processIncomingWebhook(
       },
     });
 
-    // Notify sales and marketing teams
-    broadcastRoleNotification(
-      [1, 2, 4, 5],
-      `New Inbound Lead from ${provider.toUpperCase()}`,
-      `Captured via webhook ${webhookCode}: ${leadData.name || leadData.email || 'Anonymous Inquirer'}`,
-      `/crm/marketing?tab=attribution`
-    );
+    broadcastRoleNotification([1, 2, 4, 5], {
+      type: 'marketing_lead',
+      title: `New Inbound Lead from ${provider.toUpperCase()}`,
+      message: `Captured via webhook ${webhookCode}: ${leadData.name || leadData.email || 'Anonymous Inquirer'}`,
+      redirectUrl: `/crm/marketing?tab=attribution`,
+    });
 
     await (prisma as any).integration_webhooks.update({
       where: { id: webhook.id },

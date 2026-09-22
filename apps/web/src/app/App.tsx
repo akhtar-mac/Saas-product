@@ -17,7 +17,9 @@ const AppointmentPage = lazy(() => import('@/features/marketing/appointment/appo
 const ITRFilingPage = lazy(() => import('@/features/marketing/funnels/itr-filing-page'));
 const FPCTrainingPage = lazy(() => import('@/features/marketing/funnels/fpc-training-page'));
 const LegalPage = lazy(() => import('@/features/marketing/legal/legal-page'));
-const SoftwareSolutionsPage = lazy(() => import('@/features/marketing/software/software-solutions-page'));
+const SoftwareSolutionsPage = lazy(
+  () => import('@/features/marketing/software/software-solutions-page')
+);
 const NotFoundPage = lazy(() => import('@/features/marketing/not-found/not-found-page'));
 const LoadingDemoPage = lazy(() => import('@/features/marketing/loading-demo-page'));
 const DirectPayPage = lazy(() => import('@/features/marketing/payment/direct-pay-page'));
@@ -32,7 +34,9 @@ const ClientPaymentsPage = lazy(() => import('@/features/portal/client-payments-
 const ClientSupportPage = lazy(() => import('@/features/portal/client-support-page'));
 const ClientLoginPage = lazy(() => import('@/features/portal/client-login-page'));
 const ClientSignupPage = lazy(() => import('@/features/portal/client-signup-page'));
-const ClientForgotPasswordPage = lazy(() => import('@/features/portal/client-forgot-password-page'));
+const ClientForgotPasswordPage = lazy(
+  () => import('@/features/portal/client-forgot-password-page')
+);
 const ClientVideosPage = lazy(() => import('@/features/portal/client-videos-page'));
 const ClientProfilePage = lazy(() => import('@/features/portal/client-profile-page'));
 const ClientProtectedRoute = lazy(() => import('@/features/portal/client-protected-route'));
@@ -55,6 +59,8 @@ const CrmChatPage = lazy(() => import('@/features/crm/pages/crm-chat-page'));
 const HrDashboard = lazy(() => import('@/features/crm/dashboards/hr-dashboard'));
 const MarketingDashboard = lazy(() => import('@/features/crm/dashboards/marketing-dashboard'));
 const ItCommandDashboard = lazy(() => import('@/features/crm/dashboards/it-command-dashboard'));
+const FranchiseDashboard = lazy(() => import('@/features/crm/dashboards/franchise-dashboard'));
+const SubBrandsDashboard = lazy(() => import('@/features/crm/dashboards/sub-brands-dashboard'));
 
 export default function App() {
   return (
@@ -93,7 +99,6 @@ export default function App() {
           <Route path="/services-hub" element={<Navigate to="/services" replace />} />
         </Route>
 
-
         {/* ── 2. Client Self-Service Portal ───────────────────────── */}
         <Route path="/portal/login" element={<ClientLoginPage />} />
         <Route path="/portal/signup" element={<ClientSignupPage />} />
@@ -115,7 +120,6 @@ export default function App() {
           <Route path="support" element={<ClientSupportPage />} />
           <Route path="profile" element={<ClientProfilePage />} />
         </Route>
-
 
         {/* ── 3. Staff CRM — JWT Protected ────────────────────────── */}
         <Route path="/crm/login" element={<CrmLoginPage />} />
@@ -153,11 +157,11 @@ export default function App() {
           {/* Call Analytics — Sales team + Admin */}
           <Route path="call-analytics" element={<CrmCallAnalyticsPage />} />
 
-          {/* User Management — Admin & Super Admin only */}
+          {/* User Management — Admin, Super Admin, Ops Manager, HR */}
           <Route
             path="users"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2]}>
+              <CrmProtectedRoute allowedRoleIds={[1, 2, 3, 14]}>
                 <CrmUserManagementPage />
               </CrmProtectedRoute>
             }
@@ -172,9 +176,9 @@ export default function App() {
           <Route path="it-command" element={<ItCommandDashboard />} />
           <Route path="it" element={<Navigate to="/crm/it-command" replace />} />
 
-          {/* Placeholder routes */}
-          <Route path="franchise" element={<CrmMainDashboard />} />
-          <Route path="sub-brands" element={<CrmMainDashboard />} />
+          {/* Specialized Verticals: Franchise Network & Sub-Brands */}
+          <Route path="franchise" element={<FranchiseDashboard />} />
+          <Route path="sub-brands" element={<SubBrandsDashboard />} />
         </Route>
 
         {/* ── 4. 404 ──────────────────────────────────────────────── */}

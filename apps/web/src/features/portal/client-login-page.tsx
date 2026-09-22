@@ -10,39 +10,32 @@ export default function ClientLoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { loginCustomer } = useAuthStore();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      loginCustomer(
-        {
-          id: 101,
-          leadId: 540,
-          name: 'Rajesh Sharma',
-          business: 'Sharma Agri Exports Pvt Ltd',
-          email: identifier.includes('@') ? identifier : 'rajesh.sharma@example.com',
-          contact: identifier.includes('@') ? '+91 98765 43210' : identifier,
-          service: 'Private Limited Company Registration',
-          servicePrice: 16499,
-          state: 'Maharashtra',
-          city: 'Pune',
-          addedBy: 1,
-          companyId: 'etaxwala',
-          isPayment: true,
-          isActive: true,
-          isApprove: true,
-          isPartner: 0,
-          customerToken: 'cust_token_demo',
-          date: '2026-08-10',
-        },
-        'jwt_token_demo_123'
-      );
+    setError(null);
+    try {
+      const res = await fetch('/v1/customer/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = await res.json();
+      if (data?.success && data.customer && data.token) {
+        loginCustomer(data.customer, data.token);
+        navigate('/portal');
+      } else {
+        setError(data?.error || data?.message || 'Login failed. Please check your credentials.');
+      }
+    } catch {
+      setError('Connection error. Please try again.');
+    } finally {
       setIsLoading(false);
-      navigate('/portal');
-    }, 500);
+    }
   };
 
   const features = [
@@ -109,9 +102,7 @@ export default function ClientLoginPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Client Self-Service Portal
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              Welcome back
-            </h1>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome back</h1>
             <p className="text-sm text-slate-500">
               Sign in to access your documents, CA chat, and compliance tracker.
             </p>
@@ -119,6 +110,12 @@ export default function ClientLoginPage() {
 
           {/* Form Card */}
           <div className="bg-white rounded-3xl border border-[#EAE6DD] shadow-xl p-7 sm:p-8 space-y-5">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
             <form onSubmit={handleLogin} className="space-y-4">
               {/* Email / Mobile */}
               <div>
@@ -141,7 +138,9 @@ export default function ClientLoginPage() {
               {/* Password / OTP */}
               {!useOtp ? (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Password
+                  </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
@@ -190,13 +189,19 @@ export default function ClientLoginPage() {
               <div className="flex items-center justify-between text-xs">
                 <button
                   type="button"
-                  onClick={() => { setUseOtp(!useOtp); setOtpSent(false); }}
+                  onClick={() => {
+                    setUseOtp(!useOtp);
+                    setOtpSent(false);
+                  }}
                   className="flex items-center gap-1 text-[#7C3AED] font-semibold hover:underline"
                 >
                   <KeyRound className="w-3.5 h-3.5" />
                   {useOtp ? 'Use Password' : 'Login via OTP'}
                 </button>
-                <Link to="/portal/forgot-password" className="text-slate-400 hover:text-slate-600 transition-colors">
+                <Link
+                  to="/portal/forgot-password"
+                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -220,7 +225,8 @@ export default function ClientLoginPage() {
 
             {/* Divider */}
             <div className="border-t border-[#EAE6DD] pt-4 flex items-center justify-between text-xs text-slate-500">
-              <span>Are you staff?{' '}
+              <span>
+                Are you staff?{' '}
                 <Link to="/crm/login" className="text-[#003A66] font-bold hover:underline">
                   Staff Login →
                 </Link>

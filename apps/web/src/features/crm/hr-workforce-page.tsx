@@ -24,11 +24,7 @@ import {
   CheckSquare,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
-import {
-  PERMISSIONS_CATALOG,
-  ROLE_DEFAULT_PERMISSIONS,
-  ALL_PERMISSIONS,
-} from './permissions';
+import { PERMISSIONS_CATALOG, ROLE_DEFAULT_PERMISSIONS, ALL_PERMISSIONS } from './permissions';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
@@ -67,40 +63,68 @@ interface StaffMember {
   permissions?: string[];
 }
 
-const INITIAL_STAFF_DATA: StaffMember[] = [
-  { id: 1, name: 'Ganesh Nikam', role: 'Operations Employee', roleId: 8, dept: 'Operations', deptKey: 'operations', contact: '7020408012', email: 'ganesh.etaxwala@gmail.com', activeCases: 'Active', status: 'Online', joiningDate: '2025-09-02' },
-  { id: 2, name: 'Shaikh Akhtar', role: 'Operations Manager', roleId: 3, dept: 'Operations', deptKey: 'operations', contact: '9876543210', email: 'akhtarshaikh0299@gmail.com', activeCases: 'Active', status: 'Online', joiningDate: '2025-07-20' },
-  { id: 3, name: 'Pritam Amcure', role: 'Sales Employee', roleId: 7, dept: 'Sales', deptKey: 'sales', contact: '9822011223', email: 'pritam.etaxwala@gmail.com', activeCases: 'Active', status: 'Offline', joiningDate: '2025-06-06' },
-  { id: 4, name: 'Shreya Joshi', role: 'Sales Employee', roleId: 7, dept: 'Sales', deptKey: 'sales', contact: '9822011224', email: 'shreya@gmail.com', activeCases: 'Active', status: 'Online', joiningDate: '2025-04-07' },
-  { id: 5, name: 'Sneha Muley', role: 'Operations Assistant', roleId: 12, dept: 'Operations', deptKey: 'operations', contact: '9833000102', email: 'sneha.etaxwala@gmail.com', activeCases: 'Active', status: 'Offline', joiningDate: '2025-10-31' },
-  { id: 6, name: 'Vardhaman Gandhi', role: 'Sales Assistant', roleId: 13, dept: 'Sales', deptKey: 'sales', contact: '9822011226', email: 'vardhaman.etaxwala@gmail.com', activeCases: 'Active', status: 'Offline', joiningDate: '2025-10-30' },
-  { id: 7, name: 'Madhur Choudhari', role: 'Super Admin', roleId: 1, dept: 'Executive', deptKey: 'executive', contact: '9800000001', email: 'madhur.etaxwala@gmail.com', activeCases: 'All Access', status: 'Online', joiningDate: '2025-09-09' },
-  { id: 8, name: 'Rutuja Gawande', role: 'Operations Employee', roleId: 8, dept: 'Operations', deptKey: 'operations', contact: '9833000104', email: 'rutuja.etaxwala@gmail.com', activeCases: 'Active', status: 'Online', joiningDate: '2025-05-13' },
-  { id: 9, name: 'Shubhangi Gaikwad', role: 'Operations Employee', roleId: 8, dept: 'Operations', deptKey: 'operations', contact: '9833000105', email: 'shubhangi.etaxwala@gmail.com', activeCases: 'Active', status: 'Offline', joiningDate: '2025-05-13' },
-  { id: 10, name: 'Kailas Gadekar', role: 'Operations Manager', roleId: 3, dept: 'Operations', deptKey: 'operations', contact: '1234567890', email: 'kailas@gmail.com', activeCases: 'Active', status: 'Offline', joiningDate: '2025-03-03' },
-];
-
 const DEPARTMENTS = [
-  { key: 'all', label: 'All Departments', icon: Users, count: 200, color: '#003A66', bg: 'bg-blue-50' },
-  { key: 'sales', label: 'Sales & Telecalling', icon: PhoneCall, count: 52, color: '#059669', bg: 'bg-emerald-50' },
-  { key: 'operations', label: 'Operations', icon: CheckCircle2, count: 84, color: '#7C3AED', bg: 'bg-purple-50' },
-  { key: 'finance', label: 'Finance & Accounts', icon: Building, count: 12, color: '#D97706', bg: 'bg-amber-50' },
-  { key: 'franchise', label: 'Franchise', icon: Briefcase, count: 15, color: '#D97706', bg: 'bg-amber-50' },
-  { key: 'ca', label: 'CA / Legal', icon: Shield, count: 14, color: '#003A66', bg: 'bg-blue-50' },
-  { key: 'hr', label: 'HR & Admin', icon: UserCheck, count: 8, color: '#059669', bg: 'bg-emerald-50' },
-  { key: 'support', label: 'Support & Help', icon: Headphones, count: 15, color: '#64748b', bg: 'bg-slate-50' },
+  { key: 'all', label: 'All Departments', icon: Users, color: '#003A66', bg: 'bg-blue-50' },
+  {
+    key: 'sales',
+    label: 'Sales & Telecalling',
+    icon: PhoneCall,
+    color: '#059669',
+    bg: 'bg-emerald-50',
+  },
+  {
+    key: 'operations',
+    label: 'Operations',
+    icon: CheckCircle2,
+    color: '#7C3AED',
+    bg: 'bg-purple-50',
+  },
+  {
+    key: 'finance',
+    label: 'Finance & Accounts',
+    icon: Building,
+    color: '#D97706',
+    bg: 'bg-amber-50',
+  },
+  { key: 'franchise', label: 'Franchise', icon: Briefcase, color: '#D97706', bg: 'bg-amber-50' },
+  { key: 'ca', label: 'CA / Legal', icon: Shield, color: '#003A66', bg: 'bg-blue-50' },
+  { key: 'hr', label: 'HR & Admin', icon: UserCheck, color: '#059669', bg: 'bg-emerald-50' },
+  {
+    key: 'support',
+    label: 'Support & Help',
+    icon: Headphones,
+    color: '#64748b',
+    bg: 'bg-slate-50',
+  },
 ];
 
 const STATUS_CONFIG: Record<StaffStatus, { bg: string; dot: string; label: string }> = {
-  Online: { bg: 'bg-emerald-50 text-emerald-700 border border-emerald-200', dot: 'bg-emerald-500', label: 'Online' },
-  'On Call': { bg: 'bg-amber-50 text-amber-700 border border-amber-200', dot: 'bg-amber-500', label: 'On Call' },
-  'In Review': { bg: 'bg-blue-50 text-blue-700 border border-blue-200', dot: 'bg-blue-500', label: 'In Review' },
-  Offline: { bg: 'bg-red-50 text-red-700 border border-red-200', dot: 'bg-red-500', label: 'Offline' },
+  Online: {
+    bg: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    dot: 'bg-emerald-500',
+    label: 'Online',
+  },
+  'On Call': {
+    bg: 'bg-amber-50 text-amber-700 border border-amber-200',
+    dot: 'bg-amber-500',
+    label: 'On Call',
+  },
+  'In Review': {
+    bg: 'bg-blue-50 text-blue-700 border border-blue-200',
+    dot: 'bg-blue-500',
+    label: 'In Review',
+  },
+  Offline: {
+    bg: 'bg-red-50 text-red-700 border border-red-200',
+    dot: 'bg-red-500',
+    label: 'Offline',
+  },
 };
 
 export default function HrWorkforcePage() {
   const { staffToken } = useAuthStore();
-  const [staffList, setStaffList] = useState<StaffMember[]>(INITIAL_STAFF_DATA);
+  const [staffList, setStaffList] = useState<StaffMember[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<StaffStatus | 'ALL'>('ALL');
@@ -179,31 +203,51 @@ export default function HrWorkforcePage() {
 
   // Fetch staff users from DB on page load
   useEffect(() => {
+    setLoading(true);
     fetch(`${API_BASE}/v1/crm/users`)
       .then((res) => res.json())
       .then((data) => {
-        if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+        if (data?.success && Array.isArray(data?.data)) {
           const mapped: StaffMember[] = data.data.map((u: any) => {
             const roleObj = ROLES.find((r) => r.id === u.role_id);
+            const rawDept = (u.department || roleObj?.group || 'operations').toLowerCase();
+            let deptKey = 'operations';
+            if (rawDept.includes('sales')) deptKey = 'sales';
+            else if (rawDept.includes('finance') || rawDept.includes('account'))
+              deptKey = 'finance';
+            else if (rawDept.includes('franchise')) deptKey = 'franchise';
+            else if (rawDept.includes('legal') || rawDept.includes('ca')) deptKey = 'ca';
+            else if (
+              rawDept.includes('hr') ||
+              rawDept.includes('admin') ||
+              rawDept.includes('exec')
+            )
+              deptKey = 'hr';
+            else if (rawDept.includes('support')) deptKey = 'support';
+
             return {
               id: u.id,
               name: u.name || u.username || 'Staff User',
-              role: u.role_name || u.position || roleObj?.name || 'Staff Employee',
+              role: u.position || u.role_name || roleObj?.name || 'Staff Employee',
               roleId: u.role_id || 8,
-              dept: roleObj?.group || 'Operations',
-              deptKey: roleObj?.group.toLowerCase() || 'operations',
+              dept: u.department || roleObj?.group || 'Operations',
+              deptKey,
               contact: u.phone || '9876543210',
               email: u.email || 'staff@etaxwala.com',
               activeCases: u.is_active ? 'Active' : 'Inactive',
               status: u.is_active ? 'Online' : 'Offline',
               joiningDate: u.created_at ? u.created_at.split('T')[0] : '2026-09-01',
-              permissions: typeof u.permissions === 'string' ? JSON.parse(u.permissions || '[]') : u.permissions || [],
+              permissions:
+                typeof u.permissions === 'string'
+                  ? JSON.parse(u.permissions || '[]')
+                  : u.permissions || [],
             };
           });
           setStaffList(mapped);
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error('Failed to load SQL staff users', err))
+      .finally(() => setLoading(false));
   }, []);
 
   // Add Employee Form Submit
@@ -290,7 +334,8 @@ export default function HrWorkforcePage() {
             <span className="badge badge-navy font-mono">{staffList.length} Active Staff</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Real-time operational staff management, live attendance status, and role-based permissions assignment.
+            Real-time operational staff management, live attendance status, and role-based
+            permissions assignment.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -324,14 +369,21 @@ export default function HrWorkforcePage() {
         {DEPARTMENTS.map((dept) => {
           const Icon = dept.icon;
           const isActive = deptFilter === dept.key;
+          const count =
+            dept.key === 'all'
+              ? staffList.length
+              : staffList.filter(
+                  (s) => s.deptKey === dept.key || s.dept.toLowerCase().includes(dept.key)
+                ).length;
           return (
             <button
               key={dept.key}
               onClick={() => setDeptFilter(dept.key)}
-              className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all text-center ${isActive
+              className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border transition-all text-center ${
+                isActive
                   ? 'bg-[#1B365D] text-white border-[#1B365D] shadow-md'
                   : 'bg-white border-slate-200 hover:border-[#1B365D] hover:shadow-xs'
-                }`}
+              }`}
             >
               <div
                 className={`w-8 h-8 rounded-xl flex items-center justify-center ${isActive ? 'bg-white/20' : dept.bg}`}
@@ -339,10 +391,14 @@ export default function HrWorkforcePage() {
                 <Icon className="w-4 h-4" style={{ color: isActive ? 'white' : dept.color }} />
               </div>
               <div>
-                <p className={`text-[10px] font-bold leading-tight ${isActive ? 'text-white' : 'text-slate-700'}`}>
+                <p
+                  className={`text-[10px] font-bold leading-tight ${isActive ? 'text-white' : 'text-slate-700'}`}
+                >
                   {dept.label}
                 </p>
-                <p className={`text-xs font-bold ${isActive ? 'text-white/80' : 'text-[#1B365D]'}`}>{dept.count}+</p>
+                <p className={`text-xs font-bold ${isActive ? 'text-white/80' : 'text-[#1B365D]'}`}>
+                  {count}
+                </p>
               </div>
             </button>
           );
@@ -401,7 +457,16 @@ export default function HrWorkforcePage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-12 text-xs text-slate-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-[#1B365D] border-t-transparent rounded-full animate-spin" />
+                      Loading SQL staff records from database...
+                    </div>
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-8 text-xs text-slate-400">
                     No employee found matching your filters.
@@ -421,21 +486,29 @@ export default function HrWorkforcePage() {
                         </span>
                       </td>
                       <td>
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusCfg.bg}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} ${staff.status === 'Online' ? 'animate-pulse' : ''}`} />
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusCfg.bg}`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} ${staff.status === 'Online' ? 'animate-pulse' : ''}`}
+                          />
                           {statusCfg.label}
                         </span>
                       </td>
-                      <td className="text-xs text-slate-500">
-                        {staff.joiningDate}
-                      </td>
+                      <td className="text-xs text-slate-500">{staff.joiningDate}</td>
                       <td className="text-right">
                         <div className="flex items-center justify-end gap-2 text-slate-500">
-                          <button onClick={openAddModal} className="hover:text-blue-600" title="Edit Employee">
+                          <button
+                            onClick={openAddModal}
+                            className="hover:text-blue-600"
+                            title="Edit Employee"
+                          >
                             ✏️
                           </button>
                           <button
-                            onClick={() => setStaffList((prev) => prev.filter((s) => s.id !== staff.id))}
+                            onClick={() =>
+                              setStaffList((prev) => prev.filter((s) => s.id !== staff.id))
+                            }
                             className="hover:text-red-600"
                             title="Delete Employee"
                           >
@@ -453,7 +526,9 @@ export default function HrWorkforcePage() {
 
         {/* Footer info */}
         <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-          <span>Showing 1 to {filtered.length} of {staffList.length} entries</span>
+          <span>
+            Showing 1 to {filtered.length} of {staffList.length} entries
+          </span>
           <div className="flex items-center gap-1">
             <button className="px-2 py-1 bg-slate-100 text-slate-600 rounded">Previous</button>
             <button className="px-2.5 py-1 bg-[#1B365D] text-white font-bold rounded">1</button>
@@ -478,7 +553,10 @@ export default function HrWorkforcePage() {
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleCreateEmployee} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F5F3EF]">
+            <form
+              onSubmit={handleCreateEmployee}
+              className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F5F3EF]"
+            >
               {/* Name */}
               <div className="flex items-center gap-3">
                 <label className="w-24 shrink-0 text-xs font-bold text-white bg-[#A80038] px-3 py-2 rounded-lg text-center">
@@ -605,10 +683,11 @@ export default function HrWorkforcePage() {
                             return (
                               <label
                                 key={item.key}
-                                className={`flex items-center gap-2 p-1.5 rounded-lg border text-[11px] cursor-pointer transition-all ${isChecked
+                                className={`flex items-center gap-2 p-1.5 rounded-lg border text-[11px] cursor-pointer transition-all ${
+                                  isChecked
                                     ? 'bg-red-50/70 border-red-200 text-slate-900 font-bold'
                                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                  }`}
+                                }`}
                               >
                                 <input
                                   type="checkbox"

@@ -3,12 +3,37 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '@/components/seo';
 import {
-  Building2, Receipt, ClipboardCheck, FileBadge, ArrowRight,
-  Star, CheckCircle2, Phone, MapPin, Globe, Clock,
-  Zap, Lock, AlertCircle, Scale, ShieldCheck, Search,
-  MessageSquare, Sparkles, User, Mail, Calculator, Award,
-  ChevronRight, Check, Users, ArrowUpRight, HelpCircle,
-  Plus, Minus, ChevronDown
+  Building2,
+  Receipt,
+  ClipboardCheck,
+  FileBadge,
+  ArrowRight,
+  Star,
+  CheckCircle2,
+  Phone,
+  MapPin,
+  Globe,
+  Clock,
+  Zap,
+  Lock,
+  AlertCircle,
+  Scale,
+  ShieldCheck,
+  Search,
+  MessageSquare,
+  Sparkles,
+  User,
+  Mail,
+  Calculator,
+  Award,
+  ChevronRight,
+  Check,
+  Users,
+  ArrowUpRight,
+  HelpCircle,
+  Plus,
+  Minus,
+  ChevronDown,
 } from 'lucide-react';
 import { services } from '@/lib/constants/services';
 import CtaBanner from '@/components/cta-banner';
@@ -118,11 +143,36 @@ const HERO_SEGMENTS = [
 
 /* ─── Real-Time Client Activity Ticker ─── */
 const LIVE_ACTIVITIES = [
-  { name: 'Amit Kulkarni', city: 'Pune', action: 'Incorporate Pvt Ltd Company', time: '3 mins ago' },
-  { name: 'Suresh Patil', city: 'Nashik', action: 'Applied for FPC Registration & SFAC Grant', time: '5 mins ago' },
-  { name: 'Pooja Agarwal', city: 'Mumbai', action: 'Filed GST Monthly Return (GSTR-3B)', time: '8 mins ago' },
-  { name: 'Dr. Ramesh Rao', city: 'Bengaluru', action: 'Registered Trademark in Class 5', time: '12 mins ago' },
-  { name: 'Vikas Sharma', city: 'Ahmedabad', action: 'Completed Director KYC (DIR-3)', time: '15 mins ago' },
+  {
+    name: 'Amit Kulkarni',
+    city: 'Pune',
+    action: 'Incorporate Pvt Ltd Company',
+    time: '3 mins ago',
+  },
+  {
+    name: 'Suresh Patil',
+    city: 'Nashik',
+    action: 'Applied for FPC Registration & SFAC Grant',
+    time: '5 mins ago',
+  },
+  {
+    name: 'Pooja Agarwal',
+    city: 'Mumbai',
+    action: 'Filed GST Monthly Return (GSTR-3B)',
+    time: '8 mins ago',
+  },
+  {
+    name: 'Dr. Ramesh Rao',
+    city: 'Bengaluru',
+    action: 'Registered Trademark in Class 5',
+    time: '12 mins ago',
+  },
+  {
+    name: 'Vikas Sharma',
+    city: 'Ahmedabad',
+    action: 'Completed Director KYC (DIR-3)',
+    time: '15 mins ago',
+  },
 ];
 
 /* ─── How It Works Steps ─── */
@@ -169,7 +219,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How long does Private Limited Company registration take?',
-    a: 'With ETaxwala\'s MCA V3 SPICe+ integrated workflow, Private Limited Company registration takes 7-10 working days. This includes DSC procurement, name approval, SPICe+ Part A & B filing, and corporate PAN/TAN.',
+    a: "With ETaxwala's MCA V3 SPICe+ integrated workflow, Private Limited Company registration takes 7-10 working days. This includes DSC procurement, name approval, SPICe+ Part A & B filing, and corporate PAN/TAN.",
   },
   {
     q: 'What is the difference between Old vs New Tax Regime?',
@@ -196,7 +246,7 @@ const FAQ_ITEMS = [
     a: 'Yes. ETaxwala provides full notice management — GSTN notices, Section 143(1) intimations, 245 adjustment notices, and scrutiny assessment responses. Our CA desk responds within 24 hours and represents you before the tax authority.',
   },
   {
-    q: 'Is my data safe on ETaxwala\'s platform?',
+    q: "Is my data safe on ETaxwala's platform?",
     a: 'Absolutely. All documents are stored in a 256-bit SSL encrypted vault accessible only to you and your assigned CA. We are ISO 9001:2015 certified and do not sell or share your data with any third party.',
   },
   {
@@ -209,18 +259,18 @@ const FAQ_ITEMS = [
 const NEW_REGIME_SLABS_2526 = [
   { min: 0, max: 400000, rate: 0 },
   { min: 400000, max: 800000, rate: 0.05 },
-  { min: 800000, max: 1200000, rate: 0.10 },
+  { min: 800000, max: 1200000, rate: 0.1 },
   { min: 1200000, max: 1600000, rate: 0.15 },
-  { min: 1600000, max: 2000000, rate: 0.20 },
+  { min: 1600000, max: 2000000, rate: 0.2 },
   { min: 2000000, max: 2400000, rate: 0.25 },
-  { min: 2400000, max: Infinity, rate: 0.30 },
+  { min: 2400000, max: Infinity, rate: 0.3 },
 ];
 
 const OLD_REGIME_SLABS = [
   { min: 0, max: 250000, rate: 0 },
   { min: 250000, max: 500000, rate: 0.05 },
-  { min: 500000, max: 1000000, rate: 0.20 },
-  { min: 1000000, max: Infinity, rate: 0.30 },
+  { min: 500000, max: 1000000, rate: 0.2 },
+  { min: 1000000, max: Infinity, rate: 0.3 },
 ];
 
 function calcTax(income: number, slabs: typeof NEW_REGIME_SLABS_2526) {
@@ -348,7 +398,9 @@ function DeadlineBanner() {
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.hash === '#itr-deadline-banner') {
       setTimeout(() => {
-        document.getElementById('itr-deadline-banner')?.scrollIntoView({ behavior: 'instant', block: 'center' });
+        document
+          .getElementById('itr-deadline-banner')
+          ?.scrollIntoView({ behavior: 'instant', block: 'center' });
       }, 300);
     }
   }, []);
@@ -370,7 +422,8 @@ function DeadlineBanner() {
         sub: '— Portal Closes Soon • Avoid Section 234F Penalty of ₹5,000',
         cardBg: 'bg-rose-950/70 border border-rose-500/40 text-rose-100 shadow-inner',
         cardLabel: 'text-rose-400 font-bold',
-        buttonClass: 'bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_20px_rgba(225,29,72,0.8)] border border-rose-400/60 animate-pulse',
+        buttonClass:
+          'bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_20px_rgba(225,29,72,0.8)] border border-rose-400/60 animate-pulse',
         pingColor: 'bg-rose-400',
         pingGlow: 'shadow-[0_0_8px_#F43F5E]',
         borderBottom: 'border-b-2 border-rose-700/60',
@@ -478,8 +531,12 @@ function DeadlineBanner() {
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 relative z-10">
         <div className="flex items-center gap-3">
           <span className="flex h-2.5 w-2.5 shrink-0 relative">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${theme.pingColor} opacity-75`} />
-            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${theme.pingColor} ${theme.pingGlow}`} />
+            <span
+              className={`animate-ping absolute inline-flex h-full w-full rounded-full ${theme.pingColor} opacity-75`}
+            />
+            <span
+              className={`relative inline-flex rounded-full h-2.5 w-2.5 ${theme.pingColor} ${theme.pingGlow}`}
+            />
           </span>
           <div className="flex flex-wrap items-center">
             <button
@@ -489,9 +546,7 @@ function DeadlineBanner() {
             >
               <span>{theme.tag}</span>
             </button>
-            <span className="hidden sm:inline text-white/80 text-xs ml-2">
-              {theme.sub}
-            </span>
+            <span className="hidden sm:inline text-white/80 text-xs ml-2">{theme.sub}</span>
 
             {testDaysOverride !== null && (
               <span className="ml-2 px-2 py-0.5 rounded-full bg-black/40 text-[10px] font-mono text-rose-200 border border-white/20">
@@ -561,7 +616,9 @@ function CertifiedByBar() {
             >
               <span className="text-base">{c.icon}</span>
               <div>
-                <p className="text-[11px] font-bold text-slate-800 leading-tight whitespace-nowrap">{c.label}</p>
+                <p className="text-[11px] font-bold text-slate-800 leading-tight whitespace-nowrap">
+                  {c.label}
+                </p>
                 <p className="text-[9px] text-slate-400 font-medium">{c.sub}</p>
               </div>
             </div>
@@ -583,9 +640,8 @@ function TaxRegimeCalculator() {
   const betterRegime = newTax <= oldTax ? 'New Regime' : 'Old Regime';
   const betterColor = newTax <= oldTax ? '#059669' : '#7C3AED';
 
-  const fmt = (n: number) => n >= 100000
-    ? `₹${(n / 100000).toFixed(2)}L`
-    : `₹${n.toLocaleString('en-IN')}`;
+  const fmt = (n: number) =>
+    n >= 100000 ? `₹${(n / 100000).toFixed(2)}L` : `₹${n.toLocaleString('en-IN')}`;
 
   return (
     <section className="py-16 bg-[#FAF9F5] border-t border-[#EAE6DD]">
@@ -607,7 +663,9 @@ function TaxRegimeCalculator() {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-xs font-bold text-slate-700">Annual Gross Income</label>
-              <span className="text-sm font-extrabold text-slate-900 font-mono">{fmt(grossIncome)}</span>
+              <span className="text-sm font-extrabold text-slate-900 font-mono">
+                {fmt(grossIncome)}
+              </span>
             </div>
             <input
               type="range"
@@ -615,20 +673,26 @@ function TaxRegimeCalculator() {
               max="5000000"
               step="50000"
               value={grossIncome}
-              onChange={e => setGrossIncome(Number(e.target.value))}
+              onChange={(e) => setGrossIncome(Number(e.target.value))}
               className="tax-range-slider"
               style={{ '--slider-thumb-color': '#7C3AED' } as React.CSSProperties}
             />
             <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-              <span>₹2L</span><span>₹25L</span><span>₹50L</span>
+              <span>₹2L</span>
+              <span>₹25L</span>
+              <span>₹50L</span>
             </div>
           </div>
 
           {/* Deductions Slider */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-slate-700">Total Deductions (80C, HRA, LTA, etc.) — Old Regime Only</label>
-              <span className="text-sm font-extrabold text-slate-900 font-mono">{fmt(deductions)}</span>
+              <label className="text-xs font-bold text-slate-700">
+                Total Deductions (80C, HRA, LTA, etc.) — Old Regime Only
+              </label>
+              <span className="text-sm font-extrabold text-slate-900 font-mono">
+                {fmt(deductions)}
+              </span>
             </div>
             <input
               type="range"
@@ -636,31 +700,51 @@ function TaxRegimeCalculator() {
               max="400000"
               step="10000"
               value={deductions}
-              onChange={e => setDeductions(Number(e.target.value))}
+              onChange={(e) => setDeductions(Number(e.target.value))}
               className="tax-range-slider"
               style={{ '--slider-thumb-color': '#0084D1' } as React.CSSProperties}
             />
             <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-              <span>₹0</span><span>₹2L</span><span>₹4L</span>
+              <span>₹0</span>
+              <span>₹2L</span>
+              <span>₹4L</span>
             </div>
           </div>
 
           {/* Results */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-[#EAE6DD]">
             <div className="p-4 bg-[#F5F0FF] rounded-xl border border-purple-100 text-center">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-purple-600 mb-1">New Regime Tax</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-purple-600 mb-1">
+                New Regime Tax
+              </p>
               <p className="text-xl font-extrabold text-slate-900 font-mono">{fmt(newTax)}</p>
               <p className="text-[10px] text-slate-500 mt-1">Rate: As per new slabs</p>
             </div>
             <div className="p-4 bg-[#F0F8FF] rounded-xl border border-blue-100 text-center">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Old Regime Tax</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">
+                Old Regime Tax
+              </p>
               <p className="text-xl font-extrabold text-slate-900 font-mono">{fmt(oldTax)}</p>
-              <p className="text-[10px] text-slate-500 mt-1">After deductions: {fmt(Math.max(0, grossIncome - deductions))}</p>
+              <p className="text-[10px] text-slate-500 mt-1">
+                After deductions: {fmt(Math.max(0, grossIncome - deductions))}
+              </p>
             </div>
-            <div className="p-4 rounded-xl border text-center" style={{ background: betterColor + '12', borderColor: betterColor + '30' }}>
-              <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: betterColor }}>You Save</p>
-              <p className="text-xl font-extrabold font-mono" style={{ color: betterColor }}>{fmt(savings)}</p>
-              <p className="text-[10px] font-bold mt-1" style={{ color: betterColor }}>with {betterRegime}</p>
+            <div
+              className="p-4 rounded-xl border text-center"
+              style={{ background: betterColor + '12', borderColor: betterColor + '30' }}
+            >
+              <p
+                className="text-[10px] font-bold uppercase tracking-wider mb-1"
+                style={{ color: betterColor }}
+              >
+                You Save
+              </p>
+              <p className="text-xl font-extrabold font-mono" style={{ color: betterColor }}>
+                {fmt(savings)}
+              </p>
+              <p className="text-[10px] font-bold mt-1" style={{ color: betterColor }}>
+                with {betterRegime}
+              </p>
             </div>
           </div>
 
@@ -715,8 +799,12 @@ function FaqSection() {
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
                 className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer"
               >
-                <span className="text-sm font-semibold text-slate-900 pr-4 leading-snug">{item.q}</span>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors ${openIndex === i ? 'bg-[#7C3AED] text-white' : 'bg-[#FAF9F5] border border-[#EAE6DD] text-slate-400'}`}>
+                <span className="text-sm font-semibold text-slate-900 pr-4 leading-snug">
+                  {item.q}
+                </span>
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors ${openIndex === i ? 'bg-[#7C3AED] text-white' : 'bg-[#FAF9F5] border border-[#EAE6DD] text-slate-400'}`}
+                >
                   {openIndex === i ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
                 </div>
               </button>
@@ -740,7 +828,9 @@ function FaqSection() {
         </div>
 
         <div className="text-center pt-2">
-          <p className="text-xs text-slate-500 mb-3">Have more questions? Our CA team answers within 5 minutes.</p>
+          <p className="text-xs text-slate-500 mb-3">
+            Have more questions? Our CA team answers within 5 minutes.
+          </p>
           <Link
             to="/contact"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs bg-[#FAF9F5] border border-[#EAE6DD] text-slate-800 hover:border-slate-300 hover:shadow-sm transition-all"
@@ -754,13 +844,12 @@ function FaqSection() {
 }
 
 export default function HomePage() {
-
   const [selectedEnquiryService, setSelectedEnquiryService] = useState<string | null>(null);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState(0);
   const [tickerIndex, setTickerIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [whatsappConsent, setWhatsappConsent] = useState(true);
-  
+
   // Interactive Calculator State
   const [calcEntityType, setCalcEntityType] = useState('pvt_ltd');
   const [calcCapital, setCalcCapital] = useState('100000');
@@ -811,15 +900,9 @@ export default function HomePage() {
     };
 
     try {
-      // 1. Submit to Customer API
-      await fetch('https://customer-api.etaxwala.com/api/add-inquiry-lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }).catch(() => {});
-
-      // 2. Submit to Internal API
-      await fetch('/v1/inquiry', {
+      // Submit to local backend API
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      await fetch(`${API_BASE}/api/add-inquiry-lead`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -834,7 +917,13 @@ export default function HomePage() {
   };
 
   const searchResults = searchQuery.trim()
-    ? services.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.category.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 6)
+    ? services
+        .filter(
+          (s) =>
+            s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            s.category.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .slice(0, 6)
     : [];
 
   return (
@@ -862,13 +951,18 @@ export default function HomePage() {
                 exit={{ opacity: 0, y: -4 }}
                 className="text-slate-700 font-medium truncate"
               >
-                {LIVE_ACTIVITIES[tickerIndex].name} ({LIVE_ACTIVITIES[tickerIndex].city}) — <strong className="text-slate-900">{LIVE_ACTIVITIES[tickerIndex].action}</strong> • <span className="text-slate-500">{LIVE_ACTIVITIES[tickerIndex].time}</span>
+                {LIVE_ACTIVITIES[tickerIndex].name} ({LIVE_ACTIVITIES[tickerIndex].city}) —{' '}
+                <strong className="text-slate-900">{LIVE_ACTIVITIES[tickerIndex].action}</strong> •{' '}
+                <span className="text-slate-500">{LIVE_ACTIVITIES[tickerIndex].time}</span>
               </motion.span>
             </AnimatePresence>
           </div>
 
           <div className="hidden md:flex items-center gap-4 text-[11px] text-slate-600">
-            <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-[#0084D1]" /> MCA &amp; GST Certified Practice</span>
+            <span className="flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#0084D1]" /> MCA &amp; GST Certified
+              Practice
+            </span>
             <span>•</span>
             <span className="text-slate-900 font-bold">Helpline: 080-6902-9999</span>
           </div>
@@ -880,20 +974,21 @@ export default function HomePage() {
           ═════════════════════════════════════════════════════════════════ */}
       <section className="relative pt-10 pb-16 lg:pt-14 lg:pb-20 bg-etax-puma-soft border-b border-[#EAE6DD]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
           {/* Main Headline with Signature Multicolour Highlight */}
           <div className="max-w-3xl mb-10 space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#EAE6DD] text-slate-800 text-xs font-bold shadow-xs">
               <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" />
               <span>Chartered Accountant Rigor • 100% Digital Execution</span>
             </div>
-            
+
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
-              The modern operating system for <span className="text-multicolor">Indian legal, tax &amp; compliance</span>
+              The modern operating system for{' '}
+              <span className="text-multicolor">Indian legal, tax &amp; compliance</span>
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl">
-              Incorporate your company in 7 days, file penalty-proof GST/ITR returns, and manage annual secretarial compliance with dedicated senior Chartered Accountants.
+              Incorporate your company in 7 days, file penalty-proof GST/ITR returns, and manage
+              annual secretarial compliance with dedicated senior Chartered Accountants.
             </p>
           </div>
 
@@ -923,220 +1018,236 @@ export default function HomePage() {
           {/* Split Content Grid (Details Left, Focused Lead Card Right) inside Folder Panel */}
           <div className="etax-folder-panel p-4 sm:p-8 lg:p-10 mb-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-            
-            {/* Left Column: Selected Service Inclusions & Guarantees */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FAF9F5] text-slate-900 border border-[#EAE6DD]">
-                    {activeSegment.badge}
-                  </span>
-                  <span className="text-xs text-slate-600 flex items-center gap-1 font-medium">
-                    <Clock className="w-3.5 h-3.5 text-[#E11D48]" /> {activeSegment.turnaround}
-                  </span>
+              {/* Left Column: Selected Service Inclusions & Guarantees */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FAF9F5] text-slate-900 border border-[#EAE6DD]">
+                      {activeSegment.badge}
+                    </span>
+                    <span className="text-xs text-slate-600 flex items-center gap-1 font-medium">
+                      <Clock className="w-3.5 h-3.5 text-[#E11D48]" /> {activeSegment.turnaround}
+                    </span>
+                  </div>
+
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                    {activeSegment.title}
+                  </h2>
+
+                  <p className="text-sm text-slate-600 leading-relaxed">{activeSegment.desc}</p>
+
+                  {/* Price — hidden, contact for quote */}
+                  <div className="flex items-center gap-3 pt-2">
+                    <span className="price-masked text-2xl font-mono tracking-widest font-extrabold text-slate-900">
+                      ₹ * * * *
+                    </span>
+                    <span className="text-xs font-bold text-[#7C3AED] bg-[#FAF9F5] border border-[#EAE6DD] px-2.5 py-1 rounded-md flex items-center gap-1">
+                      Unlocked upon CA consultation
+                    </span>
+                  </div>
                 </div>
 
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                  {activeSegment.title}
-                </h2>
-
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  {activeSegment.desc}
-                </p>
-
-                {/* Price — hidden, contact for quote */}
-                <div className="flex items-center gap-3 pt-2">
-                  <span className="price-masked text-2xl font-mono tracking-widest font-extrabold text-slate-900">₹ * * * *</span>
-                  <span className="text-xs font-bold text-[#7C3AED] bg-[#FAF9F5] border border-[#EAE6DD] px-2.5 py-1 rounded-md flex items-center gap-1">
-                    Unlocked upon CA consultation
-                  </span>
-                </div>
-              </div>
-
-              {/* What is Included Checklist */}
-              <div className="pt-4 border-t border-[#EAE6DD] space-y-3">
-                <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                  Package Inclusions &amp; Deliverables:
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {activeSegment.inclusions.map((item, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs text-slate-700 font-medium">
-                      <div className="w-4 h-4 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-[#7C3AED] flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="w-3 h-3 stroke-[3]" />
+                {/* What is Included Checklist */}
+                <div className="pt-4 border-t border-[#EAE6DD] space-y-3">
+                  <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                    Package Inclusions &amp; Deliverables:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {activeSegment.inclusions.map((item, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-2 text-xs text-slate-700 font-medium"
+                      >
+                        <div className="w-4 h-4 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-[#7C3AED] flex items-center justify-center shrink-0 mt-0.5">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                        <span>{item}</span>
                       </div>
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Trust Indicators (Light Cream Cards) */}
-              <div className="grid grid-cols-3 gap-3 pt-4 border-t border-[#EAE6DD] text-xs">
-                <div className="p-3.5 bg-[#FAF9F5] rounded-xl border border-[#EAE6DD] text-center">
-                  <p className="font-extrabold text-slate-900 text-sm">1,00,000+</p>
-                  <p className="text-[11px] text-slate-600 mt-0.5">Filings Cleared</p>
-                </div>
-                <div className="p-3.5 bg-[#FAF9F5] rounded-xl border border-[#EAE6DD] text-center">
-                  <p className="font-extrabold text-slate-900 text-sm">4.9 / 5.0</p>
-                  <p className="text-[11px] text-slate-600 mt-0.5">Google Rating</p>
-                </div>
-                <div className="p-3.5 bg-[#FAF9F5] rounded-xl border border-[#EAE6DD] text-center">
-                  <p className="font-extrabold text-slate-900 text-sm">120+ Hubs</p>
-                  <p className="text-[11px] text-slate-600 mt-0.5">Pan-India Reach</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: High-Converting Minimalist Lead Card */}
-            <div className="lg:col-span-5 bg-white rounded-2xl border border-[#EAE6DD] shadow-card p-6 sm:p-7">
-              <div className="border-b border-[#EAE6DD] pb-3 mb-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-base text-slate-900">
-                    Get Free CA Consultation &amp; Quote
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Guaranteed callback from Senior CA within 5 minutes
-                  </p>
-                </div>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#E11D48] shrink-0 animate-pulse" title="Active CA Desk" />
-              </div>
-
-              {submitSuccess ? (
-                <div className="py-6 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-[#7C3AED] flex items-center justify-center mx-auto">
-                    <CheckCircle2 className="w-6 h-6" />
+                    ))}
                   </div>
-                  <h4 className="text-base font-bold text-slate-900">Inquiry Received</h4>
-                  <p className="text-xs text-slate-600 max-w-xs mx-auto">
-                    A Senior Chartered Accountant from our Pune/Mumbai legal desk is reviewing your details and will call you shortly.
-                  </p>
-                  <div className="p-2.5 bg-[#FAF9F5] rounded-lg text-xs text-slate-800 font-bold border border-[#EAE6DD]">
-                    Direct Helpline: 080-6902-9999
-                  </div>
-                  <button
-                    onClick={() => {
-                      setSubmitSuccess(false);
-                      setLeadForm({ name: '', mobile: '', email: '', city: 'Pune', state: 'Maharashtra' });
-                    }}
-                    className="text-xs text-[#0084D1] font-bold hover:underline"
-                  >
-                    Submit another query
-                  </button>
                 </div>
-              ) : (
-                <form onSubmit={handleHeroFormSubmit} className="space-y-3">
+
+                {/* Trust Indicators (Light Cream Cards) */}
+                <div className="grid grid-cols-3 gap-3 pt-4 border-t border-[#EAE6DD] text-xs">
+                  <div className="p-3.5 bg-[#FAF9F5] rounded-xl border border-[#EAE6DD] text-center">
+                    <p className="font-extrabold text-slate-900 text-sm">1,00,000+</p>
+                    <p className="text-[11px] text-slate-600 mt-0.5">Filings Cleared</p>
+                  </div>
+                  <div className="p-3.5 bg-[#FAF9F5] rounded-xl border border-[#EAE6DD] text-center">
+                    <p className="font-extrabold text-slate-900 text-sm">4.9 / 5.0</p>
+                    <p className="text-[11px] text-slate-600 mt-0.5">Google Rating</p>
+                  </div>
+                  <div className="p-3.5 bg-[#FAF9F5] rounded-xl border border-[#EAE6DD] text-center">
+                    <p className="font-extrabold text-slate-900 text-sm">120+ Hubs</p>
+                    <p className="text-[11px] text-slate-600 mt-0.5">Pan-India Reach</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: High-Converting Minimalist Lead Card */}
+              <div className="lg:col-span-5 bg-white rounded-2xl border border-[#EAE6DD] shadow-card p-6 sm:p-7">
+                <div className="border-b border-[#EAE6DD] pb-3 mb-4 flex items-center justify-between">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Full Name <span className="text-[#E11D48]">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Vikramaditya Rao"
-                      value={leadForm.name}
-                      onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
-                    />
+                    <h3 className="font-bold text-base text-slate-900">
+                      Get Free CA Consultation &amp; Quote
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Guaranteed callback from Senior CA within 5 minutes
+                    </p>
                   </div>
+                  <span
+                    className="w-2.5 h-2.5 rounded-full bg-[#E11D48] shrink-0 animate-pulse"
+                    title="Active CA Desk"
+                  />
+                </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {submitSuccess ? (
+                  <div className="py-6 text-center space-y-3">
+                    <div className="w-12 h-12 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-[#7C3AED] flex items-center justify-center mx-auto">
+                      <CheckCircle2 className="w-6 h-6" />
+                    </div>
+                    <h4 className="text-base font-bold text-slate-900">Inquiry Received</h4>
+                    <p className="text-xs text-slate-600 max-w-xs mx-auto">
+                      A Senior Chartered Accountant from our Pune/Mumbai legal desk is reviewing
+                      your details and will call you shortly.
+                    </p>
+                    <div className="p-2.5 bg-[#FAF9F5] rounded-lg text-xs text-slate-800 font-bold border border-[#EAE6DD]">
+                      Direct Helpline: 080-6902-9999
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSubmitSuccess(false);
+                        setLeadForm({
+                          name: '',
+                          mobile: '',
+                          email: '',
+                          city: 'Pune',
+                          state: 'Maharashtra',
+                        });
+                      }}
+                      className="text-xs text-[#0084D1] font-bold hover:underline"
+                    >
+                      Submit another query
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleHeroFormSubmit} className="space-y-3">
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Mobile Number <span className="text-[#E11D48]">*</span>
+                        Full Name <span className="text-[#E11D48]">*</span>
                       </label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 border-r border-[#EAE6DD] pr-1.5">
-                          +91
-                        </span>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Vikramaditya Rao"
+                        value={leadForm.name}
+                        onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Mobile Number <span className="text-[#E11D48]">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 border-r border-[#EAE6DD] pr-1.5">
+                            +91
+                          </span>
+                          <input
+                            type="tel"
+                            required
+                            pattern="[0-9]{10}"
+                            placeholder="98765 43210"
+                            value={leadForm.mobile}
+                            onChange={(e) =>
+                              setLeadForm({
+                                ...leadForm,
+                                mobile: e.target.value.replace(/\D/g, '').slice(0, 10),
+                              })
+                            }
+                            className="w-full pl-12 pr-3 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Email Address
+                        </label>
                         <input
-                          type="tel"
-                          required
-                          pattern="[0-9]{10}"
-                          placeholder="98765 43210"
-                          value={leadForm.mobile}
-                          onChange={(e) => setLeadForm({ ...leadForm, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                          className="w-full pl-12 pr-3 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
+                          type="email"
+                          placeholder="you@company.com"
+                          value={leadForm.email}
+                          onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
                         />
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        placeholder="you@company.com"
-                        value={leadForm.email}
-                        onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          City / District
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Pune, Mumbai"
+                          value={leadForm.city}
+                          onChange={(e) => setLeadForm({ ...leadForm, city: e.target.value })}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        City / District
-                      </label>
+                    <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
                       <input
-                        type="text"
-                        placeholder="e.g. Pune, Mumbai"
-                        value={leadForm.city}
-                        onChange={(e) => setLeadForm({ ...leadForm, city: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE6DD] text-xs font-medium text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED] transition-all bg-white"
+                        type="checkbox"
+                        checked={whatsappConsent}
+                        onChange={(e) => setWhatsappConsent(e.target.checked)}
+                        className="w-3.5 h-3.5 rounded text-[#059669] focus:ring-[#059669] border-slate-300"
                       />
+                      <span className="text-[11px] text-slate-600">
+                        Receive quote &amp; filing updates on{' '}
+                        <strong className="text-slate-900">WhatsApp</strong>
+                      </span>
+                    </label>
+
+                    {submitError && (
+                      <p className="text-xs text-[#E11D48] font-semibold">{submitError}</p>
+                    )}
+
+                    {/* Multicolour Action Button */}
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full py-3 px-4 rounded-xl cursor-pointer disabled:opacity-60 mt-2 btn-multicolor"
+                    >
+                      <span className="btn-galaxy__stars" aria-hidden="true" />
+                      <span className="relative z-[2] inline-flex items-center justify-center gap-2 font-bold text-xs">
+                        {isSubmitting ? (
+                          <span>Connecting to Senior CA...</span>
+                        ) : (
+                          <>
+                            <span>Request Free Callback &amp; Quote</span>
+                            <ArrowRight className="btn-galaxy__icon w-3.5 h-3.5" />
+                          </>
+                        )}
+                      </span>
+                    </button>
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2">
+                      <span className="flex items-center gap-1">
+                        <Lock className="w-3 h-3 text-slate-400" /> 256-Bit SSL Encrypted
+                      </span>
+                      <span>Zero Spam Guarantee</span>
                     </div>
-                  </div>
-
-                  <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={whatsappConsent}
-                      onChange={(e) => setWhatsappConsent(e.target.checked)}
-                      className="w-3.5 h-3.5 rounded text-[#059669] focus:ring-[#059669] border-slate-300"
-                    />
-                    <span className="text-[11px] text-slate-600">
-                      Receive quote &amp; filing updates on <strong className="text-slate-900">WhatsApp</strong>
-                    </span>
-                  </label>
-
-                  {submitError && (
-                    <p className="text-xs text-[#E11D48] font-semibold">{submitError}</p>
-                  )}
-
-                  {/* Multicolour Action Button */}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3 px-4 rounded-xl cursor-pointer disabled:opacity-60 mt-2 btn-multicolor"
-                  >
-                    <span className="btn-galaxy__stars" aria-hidden="true" />
-                    <span className="relative z-[2] inline-flex items-center justify-center gap-2 font-bold text-xs">
-                      {isSubmitting ? (
-                        <span>Connecting to Senior CA...</span>
-                      ) : (
-                        <>
-                          <span>Request Free Callback &amp; Quote</span>
-                          <ArrowRight className="btn-galaxy__icon w-3.5 h-3.5" />
-                        </>
-                      )}
-                    </span>
-                  </button>
-
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-2">
-                    <span className="flex items-center gap-1">
-                      <Lock className="w-3 h-3 text-slate-400" /> 256-Bit SSL Encrypted
-                    </span>
-                    <span>Zero Spam Guarantee</span>
-                  </div>
-                </form>
-              )}
-            </div>
-
+                  </form>
+                )}
+              </div>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -1146,7 +1257,6 @@ export default function HomePage() {
       <section className="py-8 bg-[#FAF9F5] border-b border-[#EAE6DD]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            
             <div>
               <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                 Statutory &amp; Regulatory Integrations
@@ -1173,7 +1283,6 @@ export default function HomePage() {
                 <ShieldCheck className="w-4 h-4 text-slate-800" /> ISO 9001:2015
               </span>
             </div>
-
           </div>
         </div>
       </section>
@@ -1192,7 +1301,8 @@ export default function HomePage() {
             Looking for a specific service?
           </h2>
           <p className="text-xs text-slate-500">
-            Search our comprehensive directory of 250+ corporate, tax, compliance, and license services.
+            Search our comprehensive directory of 250+ corporate, tax, compliance, and license
+            services.
           </p>
         </div>
 
@@ -1215,7 +1325,9 @@ export default function HomePage() {
                   className="p-3.5 hover:bg-[#FAF9F5] flex items-center justify-between group transition-colors"
                 >
                   <div>
-                    <p className="font-semibold text-xs text-slate-900 group-hover:text-[#0084D1]">{s.name}</p>
+                    <p className="font-semibold text-xs text-slate-900 group-hover:text-[#0084D1]">
+                      {s.name}
+                    </p>
                     <p className="text-[10px] text-slate-400 uppercase font-bold">{s.category}</p>
                   </div>
                   <span className="text-xs font-bold text-[#0084D1] flex items-center gap-1">
@@ -1230,15 +1342,28 @@ export default function HomePage() {
         {/* Quick Tag Pills */}
         <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-[11px] text-slate-500">
           <span className="font-semibold text-slate-700">Popular Searches:</span>
-          <Link to="/services/registration/private-limited" className="hover:text-[#0084D1] underline">Pvt Ltd Company</Link>
+          <Link
+            to="/services/registration/private-limited"
+            className="hover:text-[#0084D1] underline"
+          >
+            Pvt Ltd Company
+          </Link>
           <span>•</span>
-          <Link to="/itr-filing" className="hover:text-[#0084D1] underline">ITR Return Filing</Link>
+          <Link to="/itr-filing" className="hover:text-[#0084D1] underline">
+            ITR Return Filing
+          </Link>
           <span>•</span>
-          <Link to="/services/ip/trademark" className="hover:text-[#0084D1] underline">Trademark (TM)</Link>
+          <Link to="/services/ip/trademark" className="hover:text-[#0084D1] underline">
+            Trademark (TM)
+          </Link>
           <span>•</span>
-          <Link to="/fpc-training" className="hover:text-[#0084D1] underline">Farmer Producer Co.</Link>
+          <Link to="/fpc-training" className="hover:text-[#0084D1] underline">
+            Farmer Producer Co.
+          </Link>
           <span>•</span>
-          <Link to="/services/compliance/pvt-ltd" className="hover:text-[#0084D1] underline">Annual ROC Compliance</Link>
+          <Link to="/services/compliance/pvt-ltd" className="hover:text-[#0084D1] underline">
+            Annual ROC Compliance
+          </Link>
         </div>
       </section>
 
@@ -1247,7 +1372,6 @@ export default function HomePage() {
           ═════════════════════════════════════════════════════════════════ */}
       <section className="py-16 bg-[#FAF9F5] border-t border-[#EAE6DD]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          
           <div className="max-w-2xl space-y-2">
             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider bg-white px-2.5 py-1 rounded-md border border-[#EAE6DD]">
               Core Practice Verticals
@@ -1256,7 +1380,8 @@ export default function HomePage() {
               Comprehensive Corporate Lifecycle Management
             </h2>
             <p className="text-xs sm:text-sm text-slate-600">
-              Handled directly by in-house Chartered Accountants, Company Secretaries, and Legal Advocates.
+              Handled directly by in-house Chartered Accountants, Company Secretaries, and Legal
+              Advocates.
             </p>
           </div>
 
@@ -1287,15 +1412,17 @@ export default function HomePage() {
                       </h3>
                     </div>
 
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      {card.desc}
-                    </p>
+                    <p className="text-xs text-slate-600 leading-relaxed">{card.desc}</p>
                   </div>
 
                   <div className="pt-4 mt-4 border-t border-[#EAE6DD] flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Fee</span>
-                      <span className="price-masked text-base font-mono tracking-widest font-extrabold text-slate-900">₹ * * * *</span>
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">
+                        Fee
+                      </span>
+                      <span className="price-masked text-base font-mono tracking-widest font-extrabold text-slate-900">
+                        ₹ * * * *
+                      </span>
                     </div>
 
                     <button
@@ -1311,7 +1438,6 @@ export default function HomePage() {
               );
             })}
           </div>
-
         </div>
       </section>
 
@@ -1328,7 +1454,8 @@ export default function HomePage() {
               How ETaxwala Works
             </h2>
             <p className="text-xs text-slate-500 max-w-xl mx-auto">
-              From first consultation to final certificate — fully managed by practicing Chartered Accountants.
+              From first consultation to final certificate — fully managed by practicing Chartered
+              Accountants.
             </p>
           </div>
 
@@ -1388,7 +1515,6 @@ export default function HomePage() {
           ═════════════════════════════════════════════════════════════════ */}
       <section className="py-16 bg-white border-t border-[#EAE6DD]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          
           <div className="text-center space-y-2">
             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider bg-[#FAF9F5] px-2.5 py-1 rounded-md border border-[#EAE6DD]">
               Transparency First
@@ -1403,9 +1529,10 @@ export default function HomePage() {
 
           <div className="bg-[#FAF9F5] rounded-2xl border border-[#EAE6DD] p-6 sm:p-8">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Entity Type</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Entity Type
+                </label>
                 <select
                   value={calcEntityType}
                   onChange={(e) => setCalcEntityType(e.target.value)}
@@ -1419,7 +1546,9 @@ export default function HomePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Authorized Capital</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Authorized Capital
+                </label>
                 <select
                   value={calcCapital}
                   onChange={(e) => setCalcCapital(e.target.value)}
@@ -1432,7 +1561,9 @@ export default function HomePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Number of Directors</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Number of Directors
+                </label>
                 <select
                   value={calcDirectors}
                   onChange={(e) => setCalcDirectors(e.target.value)}
@@ -1443,27 +1574,36 @@ export default function HomePage() {
                   <option value="4">4 Directors</option>
                 </select>
               </div>
-
             </div>
 
             {/* Calculated Breakdown Card */}
             <div className="bg-white rounded-xl border border-[#EAE6DD] p-5 space-y-3">
               <div className="flex justify-between text-xs text-slate-600">
                 <span>MCA Government Stamp Duty &amp; Name Approval:</span>
-                <span className="font-mono tracking-wider font-bold text-slate-900">₹ * * * * (Included)</span>
+                <span className="font-mono tracking-wider font-bold text-slate-900">
+                  ₹ * * * * (Included)
+                </span>
               </div>
               <div className="flex justify-between text-xs text-slate-600">
                 <span>Digital Signature Certificates ({calcDirectors} Class-3 DSCs):</span>
-                <span className="font-mono tracking-wider font-bold text-slate-900">₹ * * * * (Included)</span>
+                <span className="font-mono tracking-wider font-bold text-slate-900">
+                  ₹ * * * * (Included)
+                </span>
               </div>
               <div className="flex justify-between text-xs text-slate-600">
                 <span>CA Drafting (MoA, AoA, SPICe+ Filing &amp; PAN/TAN):</span>
-                <span className="font-mono tracking-wider font-bold text-slate-900">₹ * * * * (Included)</span>
+                <span className="font-mono tracking-wider font-bold text-slate-900">
+                  ₹ * * * * (Included)
+                </span>
               </div>
               <div className="pt-3 border-t border-[#EAE6DD] flex justify-between items-baseline">
                 <div>
-                  <span className="text-xs font-bold text-slate-900 uppercase">Total All-Inclusive Fee:</span>
-                  <p className="text-[11px] text-slate-500 font-medium">All statutory filings &amp; post-incorporation kit included</p>
+                  <span className="text-xs font-bold text-slate-900 uppercase">
+                    Total All-Inclusive Fee:
+                  </span>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    All statutory filings &amp; post-incorporation kit included
+                  </p>
                 </div>
                 <span className="text-2xl font-extrabold tracking-widest font-mono text-slate-900">
                   ₹ * * * *
@@ -1471,7 +1611,6 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -1500,13 +1639,13 @@ export default function HomePage() {
           ═════════════════════════════════════════════════════════════════ */}
       <section className="py-16 bg-[#FAF9F5] border-t border-[#EAE6DD]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          
           <div className="text-center space-y-2">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Why Indian Founders Choose ETaxwala
             </h2>
             <p className="text-xs text-slate-500">
-              Clear, transparent comparison against traditional offline consultancies and generic web portals.
+              Clear, transparent comparison against traditional offline consultancies and generic
+              web portals.
             </p>
           </div>
 
@@ -1515,20 +1654,57 @@ export default function HomePage() {
               <thead>
                 <tr className="border-b border-[#EAE6DD] text-slate-700 font-bold uppercase text-[10px] bg-[#FAF9F5]">
                   <th className="py-3.5 px-5">Deliverable</th>
-                  <th className="py-3.5 px-5 text-[#059669] font-extrabold text-xs">✅ ETaxwala 2.0</th>
+                  <th className="py-3.5 px-5 text-[#059669] font-extrabold text-xs">
+                    ✅ ETaxwala 2.0
+                  </th>
                   <th className="py-3.5 px-5 text-slate-500">❌ Traditional Offline CA</th>
                   <th className="py-3.5 px-5 text-slate-500">❌ Generic Portals</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAE6DD] text-slate-700 font-medium">
                 {[
-                  ['Pricing Transparency', '✅ 100% Fixed & All-Inclusive', '❌ Variable with hidden extra fees', '❌ Govt fees excluded on checkout'],
-                  ['Milestone Visibility', '✅ 10-Stage Real-Time Portal & SMS', '❌ Manual phone follow-ups required', '❌ Static email notifications'],
-                  ['Professional Handling', '✅ In-House Practicing CAs & CSs', '❌ Delegated to article trainees', '❌ Automated bots / Non-CA teams'],
-                  ['Document Security', '✅ 256-Bit SSL Encrypted Vault', '❌ Physical paper folders in office', '❌ Basic shared storage'],
-                  ['Turnaround Commitment', '✅ Guaranteed On-Time or Refund SLA', '❌ No committed timeline', '❌ Frequent portal delays'],
-                  ['Notice Management', '✅ Free GST & IT Notice Reply', '❌ Charged separately per notice', '❌ Not included'],
-                  ['WhatsApp Updates', '✅ Real-time WhatsApp milestone SMS', '❌ Manual calls only', '❌ Email only'],
+                  [
+                    'Pricing Transparency',
+                    '✅ 100% Fixed & All-Inclusive',
+                    '❌ Variable with hidden extra fees',
+                    '❌ Govt fees excluded on checkout',
+                  ],
+                  [
+                    'Milestone Visibility',
+                    '✅ 10-Stage Real-Time Portal & SMS',
+                    '❌ Manual phone follow-ups required',
+                    '❌ Static email notifications',
+                  ],
+                  [
+                    'Professional Handling',
+                    '✅ In-House Practicing CAs & CSs',
+                    '❌ Delegated to article trainees',
+                    '❌ Automated bots / Non-CA teams',
+                  ],
+                  [
+                    'Document Security',
+                    '✅ 256-Bit SSL Encrypted Vault',
+                    '❌ Physical paper folders in office',
+                    '❌ Basic shared storage',
+                  ],
+                  [
+                    'Turnaround Commitment',
+                    '✅ Guaranteed On-Time or Refund SLA',
+                    '❌ No committed timeline',
+                    '❌ Frequent portal delays',
+                  ],
+                  [
+                    'Notice Management',
+                    '✅ Free GST & IT Notice Reply',
+                    '❌ Charged separately per notice',
+                    '❌ Not included',
+                  ],
+                  [
+                    'WhatsApp Updates',
+                    '✅ Real-time WhatsApp milestone SMS',
+                    '❌ Manual calls only',
+                    '❌ Email only',
+                  ],
                 ].map(([label, etax, trad, generic], i) => (
                   <tr key={i}>
                     <td className="py-3.5 px-5 font-bold text-slate-900">{label}</td>
@@ -1540,7 +1716,6 @@ export default function HomePage() {
               </tbody>
             </table>
           </div>
-
         </div>
       </section>
 
@@ -1566,7 +1741,6 @@ export default function HomePage() {
         onClose={() => setSelectedEnquiryService(null)}
         serviceTitle={selectedEnquiryService || ''}
       />
-
     </div>
   );
 }

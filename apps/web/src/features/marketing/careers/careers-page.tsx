@@ -1,29 +1,99 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Briefcase, MapPin, Clock, ArrowRight, TrendingUp, Users,
-  GraduationCap, Heart, CheckCircle2, UploadCloud, X, Loader2, Sparkles, Building2
+  Briefcase,
+  MapPin,
+  Clock,
+  ArrowRight,
+  TrendingUp,
+  Users,
+  GraduationCap,
+  Heart,
+  CheckCircle2,
+  UploadCloud,
+  X,
+  Loader2,
+  Sparkles,
+  Building2,
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
 
-const jobOpenings = [
-  { id: 'ca-audit', title: 'Chartered Accountant (Audit & Direct Tax)', type: 'Full-Time', location: 'Aurangabad, MH / Hybrid', dept: 'Audit & Tax', exp: '2-5 Years' },
-  { id: 'sales-exec', title: 'Senior Corporate Sales Executive', type: 'Full-Time', location: 'Multiple Cities (Pan-India)', dept: 'Sales', exp: '1-3 Years' },
-  { id: 'cs-legal', title: 'Company Secretary & Legal Compliance Officer', type: 'Full-Time', location: 'Aurangabad, MH', dept: 'Legal & ROC', exp: '2-4 Years' },
-  { id: 'react-dev', title: 'Full Stack React & Node.js Developer', type: 'Full-Time', location: 'Remote / Hybrid', dept: 'Technology', exp: '2-4 Years' },
-  { id: 'mkt-growth', title: 'Digital Growth & Performance Marketer', type: 'Full-Time', location: 'Aurangabad, MH / Remote', dept: 'Marketing', exp: '1-3 Years' },
-  { id: 'ops-exec', title: 'Operations & Workflow Coordinator', type: 'Full-Time', location: 'Aurangabad, MH', dept: 'Operations', exp: '1-2 Years' },
+const defaultJobOpenings = [
+  {
+    id: 'ca-audit',
+    title: 'Chartered Accountant (Audit & Direct Tax)',
+    type: 'Full-Time',
+    location: 'Aurangabad, MH / Hybrid',
+    dept: 'Audit & Tax',
+    exp: '2-5 Years',
+  },
+  {
+    id: 'sales-exec',
+    title: 'Senior Corporate Sales Executive',
+    type: 'Full-Time',
+    location: 'Multiple Cities (Pan-India)',
+    dept: 'Sales',
+    exp: '1-3 Years',
+  },
+  {
+    id: 'cs-legal',
+    title: 'Company Secretary & Legal Compliance Officer',
+    type: 'Full-Time',
+    location: 'Aurangabad, MH',
+    dept: 'Legal & ROC',
+    exp: '2-4 Years',
+  },
+  {
+    id: 'react-dev',
+    title: 'Full Stack React & Node.js Developer',
+    type: 'Full-Time',
+    location: 'Remote / Hybrid',
+    dept: 'Technology',
+    exp: '2-4 Years',
+  },
+  {
+    id: 'mkt-growth',
+    title: 'Digital Growth & Performance Marketer',
+    type: 'Full-Time',
+    location: 'Aurangabad, MH / Remote',
+    dept: 'Marketing',
+    exp: '1-3 Years',
+  },
+  {
+    id: 'ops-exec',
+    title: 'Operations & Workflow Coordinator',
+    type: 'Full-Time',
+    location: 'Aurangabad, MH',
+    dept: 'Operations',
+    exp: '1-2 Years',
+  },
 ];
 
 const whyJoin = [
-  { icon: TrendingUp, title: 'High-Impact Work', desc: 'Shape the corporate compliance backbone for 1,00,000+ Indian businesses and startups.' },
-  { icon: Users, title: '200+ Expert Network', desc: 'Collaborate daily with top Chartered Accountants, CSs, and corporate advocates.' },
-  { icon: GraduationCap, title: 'Continuous Upskilling', desc: 'Regular masterclasses on changes in GST, MCA V3, and modern tech tooling.' },
-  { icon: Heart, title: 'Growth & Meritocracy', desc: 'Transparent incentives, fast promotions, and a healthy work-life balance.' },
+  {
+    icon: TrendingUp,
+    title: 'High-Impact Work',
+    desc: 'Shape the corporate compliance backbone for 1,00,000+ Indian businesses and startups.',
+  },
+  {
+    icon: Users,
+    title: '200+ Expert Network',
+    desc: 'Collaborate daily with top Chartered Accountants, CSs, and corporate advocates.',
+  },
+  {
+    icon: GraduationCap,
+    title: 'Continuous Upskilling',
+    desc: 'Regular masterclasses on changes in GST, MCA V3, and modern tech tooling.',
+  },
+  {
+    icon: Heart,
+    title: 'Growth & Meritocracy',
+    desc: 'Transparent incentives, fast promotions, and a healthy work-life balance.',
+  },
 ];
 
 const schema = z.object({
@@ -41,13 +111,39 @@ type FormData = z.infer<typeof schema>;
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 export default function CareersPage() {
+  const [jobs, setJobs] = useState<any[]>(defaultJobOpenings);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [fileName, setFileName] = useState<string>('');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
 
-  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<FormData>({
+  useEffect(() => {
+    let isMounted = true;
+    async function loadJobs() {
+      try {
+        const res = await fetch(`${API_BASE}/v1/careers/jobs`);
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          if (isMounted) setJobs(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to load live jobs:', err);
+      }
+    }
+    loadJobs();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
@@ -106,8 +202,13 @@ export default function CareersPage() {
       <section className="relative overflow-hidden bg-[#FFFDF9] py-20 border-b border-[#EAE6DD]">
         {/* Multicolour accent strip */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-multicolor" />
-        <div className="absolute inset-0 opacity-[0.025] pointer-events-none"
-             style={{ backgroundImage: 'radial-gradient(#7C3AED 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+        <div
+          className="absolute inset-0 opacity-[0.025] pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(#7C3AED 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+          }}
+        />
         <div className="container-etaxwala relative z-10">
           <div className="mb-4">
             <Breadcrumbs items={[{ label: 'Careers' }]} className="text-slate-500" />
@@ -119,7 +220,8 @@ export default function CareersPage() {
             Build the Future of Indian Corporate Advisory
           </h1>
           <p className="mt-4 max-w-2xl text-base sm:text-lg text-slate-600">
-            Join 200+ verified Chartered Accountants, Legal Counselors, Engineers, and Growth Strategists delivering institutional excellence across India.
+            Join 200+ verified Chartered Accountants, Legal Counselors, Engineers, and Growth
+            Strategists delivering institutional excellence across India.
           </p>
         </div>
       </section>
@@ -128,19 +230,28 @@ export default function CareersPage() {
       <section className="border-b border-[#EAE6DD] bg-white py-16">
         <div className="container-etaxwala">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#7C3AED]">Culture &amp; Benefits</span>
-            <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Why Build Your Career at ETaxwala?</h2>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#7C3AED]">
+              Culture &amp; Benefits
+            </span>
+            <h2 className="text-2xl font-extrabold text-slate-900 mt-1">
+              Why Build Your Career at ETaxwala?
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {whyJoin.map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className="p-6 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DD] text-center">
+                <div
+                  key={item.title}
+                  className="p-6 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DD] text-center"
+                >
                   <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-[#EAE6DD] text-[#7C3AED]">
                     <Icon className="h-6 w-6" />
                   </div>
                   <h3 className="text-base font-bold text-slate-900">{item.title}</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">{item.desc}</p>
+                  <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    {item.desc}
+                  </p>
                 </div>
               );
             })}
@@ -153,18 +264,21 @@ export default function CareersPage() {
         <div className="container-etaxwala max-w-5xl">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">Current Open Positions</h2>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+                Current Open Positions
+              </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                We review applications on a rolling basis. Shortlisted candidates are contacted within 3–5 business days.
+                We review applications on a rolling basis. Shortlisted candidates are contacted
+                within 3–5 business days.
               </p>
             </div>
             <span className="px-3.5 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold whitespace-nowrap">
-              {jobOpenings.length} Active Roles
+              {jobs.length} Active Roles
             </span>
           </div>
 
           <div className="space-y-4">
-            {jobOpenings.map((job) => (
+            {jobs.map((job) => (
               <div
                 key={job.id}
                 className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-[#EAE6DD] bg-white p-6 shadow-xs hover:border-[#7C3AED]/30 hover:shadow-md transition-all"
@@ -178,8 +292,12 @@ export default function CareersPage() {
                   </div>
                   <h3 className="font-bold text-base sm:text-lg text-slate-900">{job.title}</h3>
                   <div className="flex flex-wrap gap-4 text-xs text-slate-500">
-                    <span className="flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5 text-[#0084D1]" /> {job.type}</span>
-                    <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-[#0084D1]" /> {job.location}</span>
+                    <span className="flex items-center gap-1.5">
+                      <Briefcase className="h-3.5 w-3.5 text-[#0084D1]" /> {job.type}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 text-[#0084D1]" /> {job.location}
+                    </span>
                   </div>
                 </div>
 
@@ -224,10 +342,10 @@ export default function CareersPage() {
                 <span className="text-[11px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                   Job Application
                 </span>
-                <h3 className="text-xl font-bold text-slate-900 mt-2">
-                  Apply for {selectedJob}
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">Fill out your profile details and attach your resume.</p>
+                <h3 className="text-xl font-bold text-slate-900 mt-2">Apply for {selectedJob}</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Fill out your profile details and attach your resume.
+                </p>
               </div>
 
               {status === 'success' ? (
@@ -237,19 +355,24 @@ export default function CareersPage() {
                   </div>
                   <h4 className="text-lg font-bold text-slate-900">Application Submitted!</h4>
                   <p className="text-xs text-slate-600 max-w-xs mx-auto">
-                    Thank you for applying. Our talent acquisition team will review your profile and contact you shortly.
+                    Thank you for applying. Our talent acquisition team will review your profile and
+                    contact you shortly.
                   </p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Full Name *
+                    </label>
                     <input
                       {...register('name')}
                       placeholder="e.g. Rahul Sharma"
                       className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                     />
-                    {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
+                    {errors.name && (
+                      <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>
+                    )}
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -261,22 +384,30 @@ export default function CareersPage() {
                         placeholder="you@domain.com"
                         className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                       />
-                      {errors.email && <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>}
+                      {errors.email && (
+                        <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Phone Number *
+                      </label>
                       <input
                         {...register('phone')}
                         placeholder="10-digit mobile"
                         className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                       />
-                      {errors.phone && <p className="mt-1 text-xs text-rose-500">{errors.phone.message}</p>}
+                      {errors.phone && (
+                        <p className="mt-1 text-xs text-rose-500">{errors.phone.message}</p>
+                      )}
                     </div>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Position *</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Position *
+                      </label>
                       <input
                         {...register('role')}
                         readOnly
@@ -284,7 +415,9 @@ export default function CareersPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Experience *</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Experience *
+                      </label>
                       <select
                         {...register('experience')}
                         className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
@@ -298,7 +431,9 @@ export default function CareersPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">LinkedIn / Portfolio URL</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      LinkedIn / Portfolio URL
+                    </label>
                     <input
                       {...register('linkedin')}
                       placeholder="https://linkedin.com/in/..."
@@ -308,7 +443,9 @@ export default function CareersPage() {
 
                   {/* Resume Upload Box */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Upload Resume (PDF / DOCX)</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Upload Resume (PDF / DOCX)
+                    </label>
                     <div className="relative border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-[#0084D1] transition-colors bg-[#FAF9F5]">
                       <input
                         type="file"
@@ -327,7 +464,9 @@ export default function CareersPage() {
                         <p className="text-xs font-bold text-[#0084D1] truncate">{fileName}</p>
                       ) : (
                         <>
-                          <p className="text-xs font-semibold text-slate-700">Click to upload or drag &amp; drop</p>
+                          <p className="text-xs font-semibold text-slate-700">
+                            Click to upload or drag &amp; drop
+                          </p>
                           <p className="text-[10px] text-slate-400">PDF, DOC, DOCX up to 10MB</p>
                         </>
                       )}
@@ -352,7 +491,8 @@ export default function CareersPage() {
 
                   {status === 'error' && (
                     <p className="text-center text-xs text-rose-500">
-                      Failed to submit application. Please email your CV directly to support@etaxwala.com
+                      Failed to submit application. Please email your CV directly to
+                      support@etaxwala.com
                     </p>
                   )}
                 </form>

@@ -54,113 +54,27 @@ interface QuotationRecord {
   notes: string;
 }
 
-const INITIAL_QUOTATIONS: QuotationRecord[] = [
-  {
-    id: '1',
-    quotationNo: 'ETW-QUO-2026-089',
-    customerName: 'Rajesh Sharma',
-    companyName: 'Apex Infotech Solutions LLP',
-    mobile: '+91 98765 43210',
-    email: 'rajesh@apexinfotech.in',
-    address: '401 Pride Silicon Plaza, Senapati Bapat Road, Pune 411016',
-    gstin: '27AABCA1234M1Z2',
-    date: '04 Sep 2026',
-    validUntil: '11 Sep 2026',
-    createdBy: 'Netra Divekar',
-    status: 'Sent',
-    notes: 'Includes expedited DSC & DIN processing within 24 hours.',
-    items: [
-      {
-        id: 'item-1',
-        serviceName: 'Private Limited Company Registration (All-Inclusive)',
-        description: 'Includes 2 DSC Class 3, 2 DIN, SPICe+ MCA filing, MOA/AOA drafting, PAN, TAN & Bank AC assistance.',
-        sacCode: '998311',
-        qty: 1,
-        unitPrice: 16499,
-        discountPercent: 5,
-        gstPercent: 18,
-      },
-      {
-        id: 'item-2',
-        serviceName: 'Trademark Registration (Class 42 - IT Services)',
-        description: 'Comprehensive trademark search, class classification, drafting Form TM-A & govt portal filing.',
-        sacCode: '998312',
-        qty: 1,
-        unitPrice: 6999,
-        discountPercent: 0,
-        gstPercent: 18,
-      },
-    ],
-  },
-  {
-    id: '2',
-    quotationNo: 'ETW-QUO-2026-088',
-    customerName: 'Siddharth Roy',
-    companyName: 'Roy AgriTech Food Products',
-    mobile: '+91 98220 11223',
-    email: 'siddharth@royfoods.com',
-    address: 'Plot 45, MIDC Baramati, Pune 413133',
-    gstin: '27BBCDE5678K1Z9',
-    date: '03 Sep 2026',
-    validUntil: '10 Sep 2026',
-    createdBy: 'Sachin Mohan Vyavahare',
-    status: 'Accepted',
-    notes: 'State license application submitted with manufacturing layout inspection clearance.',
-    items: [
-      {
-        id: 'item-1',
-        serviceName: 'FSSAI State Food Business Operator License (1 Year)',
-        description: 'FoSCoS portal application, declaration drafting, food safety audit checklist.',
-        sacCode: '998311',
-        qty: 1,
-        unitPrice: 6499,
-        discountPercent: 0,
-        gstPercent: 18,
-      },
-      {
-        id: 'item-2',
-        serviceName: 'GST Registration & Verification Assistance',
-        description: 'Principal place of business verification and REG-01 filing.',
-        sacCode: '998311',
-        qty: 1,
-        unitPrice: 1999,
-        discountPercent: 0,
-        gstPercent: 18,
-      },
-    ],
-  },
-  {
-    id: '3',
-    quotationNo: 'ETW-QUO-2026-087',
-    customerName: 'Kavita Sundaram',
-    companyName: 'Sundaram Organics Pvt Ltd',
-    mobile: '+91 98450 99887',
-    email: 'kavita@sundaramorganics.com',
-    address: 'Indiranagar 100ft Road, Bengaluru 560038',
-    date: '02 Sep 2026',
-    validUntil: '09 Sep 2026',
-    createdBy: 'Shreya Joshi',
-    status: 'Draft',
-    notes: 'Pending final confirmation of brand logo trademark class.',
-    items: [
-      {
-        id: 'item-1',
-        serviceName: 'Farmer Producer Company (FPC) Registration',
-        description: '10 Producer Member DSCs, ROC compliance, special MOA clauses under Section 378A.',
-        sacCode: '998311',
-        qty: 1,
-        unitPrice: 24999,
-        discountPercent: 10,
-        gstPercent: 18,
-      },
-    ],
-  },
-];
+const EMPTY_QUOTE: QuotationRecord = {
+  id: '',
+  quotationNo: 'ETW-QUO-2026-001',
+  customerName: '',
+  companyName: '',
+  mobile: '',
+  email: '',
+  address: '',
+  date: '2026-09-04',
+  validUntil: '2026-09-11',
+  createdBy: 'Staff Executive',
+  status: 'Draft',
+  notes: 'Standard 7-day validity for commercial and legal filing fees.',
+  items: [],
+};
 
 export default function CrmQuotationsPage() {
-  const [quotations, setQuotations] = useState<QuotationRecord[]>(INITIAL_QUOTATIONS);
+  const [quotations, setQuotations] = useState<QuotationRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'list' | 'edit' | 'letterhead'>('list');
-  const [activeQuote, setActiveQuote] = useState<QuotationRecord>(INITIAL_QUOTATIONS[0]);
+  const [activeQuote, setActiveQuote] = useState<QuotationRecord>(EMPTY_QUOTE);
   const [searchTerm, setSearchTerm] = useState('');
   const [entriesCount, setEntriesCount] = useState(10);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -169,28 +83,30 @@ export default function CrmQuotationsPage() {
 
   // Fetch real quotations from DB
   React.useEffect(() => {
+    setLoading(true);
     fetch(`${API_BASE}/v1/crm/quotations`)
       .then((res) => res.json())
       .then((data) => {
-        if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+        if (data?.success && Array.isArray(data?.data)) {
           const mapped: QuotationRecord[] = data.data.map((q: any, i: number) => ({
             id: String(q.id || i + 1),
             quotationNo: `ETW-QUO-2026-${String(q.id || i + 100).padStart(3, '0')}`,
-            customerName: `Lead #${q.lead_id}`,
-            companyName: 'Client Enterprise',
-            mobile: '+91 98765 43210',
-            email: 'client@etaxwala.in',
-            address: 'Maharashtra, India',
-            date: q.created_at ? q.created_at.split('T')[0] : '04 Sep 2026',
-            validUntil: '11 Sep 2026',
+            customerName: q.client_name || `Lead #${q.lead_id}`,
+            companyName: q.client_name ? `${q.client_name} Ventures` : 'Client Enterprise',
+            mobile: q.contact || '+91 98765 43210',
+            email: `${q.contact || 'client'}@etaxwala.in`,
+            address: q.city ? `${q.city}, Maharashtra, India` : 'Maharashtra, India',
+            date: q.created_at ? q.created_at.split('T')[0] : '2026-09-04',
+            validUntil: '2026-09-11',
             createdBy: q.created_by || 'Staff Admin',
             status: 'Sent',
-            notes: q.note || 'Standard 7-day validity.',
+            notes: q.note || 'Standard 7-day validity for legal and filing compliance fees.',
             items: [
               {
                 id: `item-${q.id}`,
-                serviceName: 'Taxation & Advisory Service',
-                description: q.note || 'Includes full compliance and advisory services',
+                serviceName: q.service_name || 'Taxation & Advisory Service',
+                description:
+                  q.note || 'Includes full corporate compliance, legal drafting and portal filing.',
                 sacCode: '998311',
                 qty: 1,
                 unitPrice: 1499,
@@ -200,9 +116,13 @@ export default function CrmQuotationsPage() {
             ],
           }));
           setQuotations(mapped);
+          if (mapped.length > 0) {
+            setActiveQuote(mapped[0]);
+          }
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error('Failed to fetch quotations', err))
+      .finally(() => setLoading(false));
   }, []);
 
   const showToast = (msg: string) => {
@@ -263,11 +183,20 @@ export default function CrmQuotationsPage() {
       mobile: '',
       email: '',
       address: '',
-      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-      validUntil: new Date(Date.now() + 7 * 86400000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      date: new Date().toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }),
+      validUntil: new Date(Date.now() + 7 * 86400000).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }),
       createdBy: 'Netra Divekar',
       status: 'Draft',
-      notes: 'Standard 7-day validity. Prices inclusive of consultation and dedicated account manager.',
+      notes:
+        'Standard 7-day validity. Prices inclusive of consultation and dedicated account manager.',
       items: [
         {
           id: `item-${Date.now()}`,
@@ -363,7 +292,10 @@ export default function CrmQuotationsPage() {
   const handleSendWhatsApp = (q: QuotationRecord) => {
     const totals = calculateTotals(q.items);
     const text = `*ETAXWALA OFFICIAL QUOTATION (${q.quotationNo})*\n\nDear ${q.customerName},\nThank you for choosing ETaxwala Business Solution Pvt Ltd.\n\n*Services:*\n${q.items.map((it, i) => `${i + 1}. ${it.serviceName} - ₹${it.unitPrice.toLocaleString()}`).join('\n')}\n\n*Total Taxable:* ₹${totals.subtotalTaxable.toLocaleString()}\n*GST (18%):* ₹${totals.totalGst.toFixed(2)}\n*Net Payable:* ₹${totals.grandTotal.toLocaleString()}\n\n*View & Accept Quote:* https://etaxwala.com/quote/${q.quotationNo.toLowerCase()}\n\nFor questions, reach your account manager at 080-6902-9999.`;
-    window.open(`https://wa.me/${q.mobile.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(
+      `https://wa.me/${q.mobile.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`,
+      '_blank'
+    );
     showToast('Redirected to WhatsApp with formatted quotation!');
   };
 
@@ -397,13 +329,14 @@ export default function CrmQuotationsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-xl font-bold text-[#1B365D]">
-                  Quotations
-                </h1>
-                <span className="badge badge-gold font-mono text-xs">{quotations.length} Active Records</span>
+                <h1 className="text-xl font-bold text-[#1B365D]">Quotations</h1>
+                <span className="badge badge-gold font-mono text-xs">
+                  {quotations.length} Active Records
+                </span>
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                Manage commercial proposals, generate official letterheads & dispatch directly to customer WhatsApp.
+                Manage commercial proposals, generate official letterheads & dispatch directly to
+                customer WhatsApp.
               </p>
             </div>
 
@@ -501,101 +434,110 @@ export default function CrmQuotationsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                  {filteredQuotes.slice(0, entriesCount).map((q, idx) => {
-                    const totals = calculateTotals(q.items);
-                    return (
-                      <tr key={q.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-3 px-4 text-center text-slate-400 font-mono text-[11px]">
-                          {idx + 1}
-                        </td>
-                        <td className="py-3 px-4 font-mono font-bold text-[#1B365D]">
-                          {q.quotationNo}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="font-bold text-slate-800">{q.customerName}</div>
-                          {q.companyName && (
-                            <div className="text-[10px] text-slate-400 truncate max-w-[160px]">{q.companyName}</div>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 font-mono text-slate-600">
-                          {q.mobile}
-                        </td>
-                        <td className="py-3 px-4 text-slate-500 max-w-[160px] truncate">
-                          {q.email}
-                        </td>
-                        <td className="py-3 px-4 font-mono font-bold text-slate-900">
-                          ₹{totals.grandTotal.toLocaleString()}
-                        </td>
-                        <td className="py-3 px-4 text-slate-600">
-                          {q.createdBy}
-                        </td>
-                        <td className="py-3 px-4 text-slate-500 text-[11px] whitespace-nowrap">
-                          {q.date}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span
-                            className={`badge text-[10px] ${
-                              q.status === 'Accepted'
-                                ? 'badge-green'
-                                : q.status === 'Sent'
-                                ? 'badge-navy'
-                                : 'badge-gold'
-                            }`}
-                          >
-                            {q.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            {/* View Letterhead */}
-                            <button
-                              onClick={() => handleViewLetterhead(q)}
-                              title="View Official Letterhead"
-                              className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
-                            {/* Edit Quote */}
-                            <button
-                              onClick={() => handleEdit(q)}
-                              title="Edit Quotation"
-                              className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            {/* WhatsApp Dispatch */}
-                            <button
-                              onClick={() => handleSendWhatsApp(q)}
-                              title="Send WhatsApp Quote"
-                              className="p-1.5 rounded-lg bg-emerald-50 text-[#25D366] hover:bg-emerald-100 transition-colors"
-                            >
-                              <Send className="w-3.5 h-3.5" />
-                            </button>
-                            {/* Delete */}
-                            <button
-                              onClick={() => {
-                                if (confirm(`Delete quotation ${q.quotationNo}?`)) {
-                                  setQuotations((prev) => prev.filter((item) => item.id !== q.id));
-                                  showToast('Quotation deleted.');
-                                }
-                              }}
-                              title="Delete"
-                              className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                  {filteredQuotes.length === 0 && (
+                  {loading ? (
                     <tr>
-                      <td colSpan={10} className="py-8 text-center text-slate-400">
-                        No quotations found matching your search.
+                      <td colSpan={10} className="py-12 text-center text-xs text-slate-500">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-[#1E3A8A] border-t-transparent rounded-full animate-spin" />
+                          Loading live SQL quotations from database...
+                        </div>
                       </td>
                     </tr>
+                  ) : filteredQuotes.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="py-10 text-center text-xs text-slate-400">
+                        No quotations found matching your filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredQuotes.slice(0, entriesCount).map((q, idx) => {
+                      const totals = calculateTotals(q.items);
+                      return (
+                        <tr key={q.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-4 text-center text-slate-400 font-mono text-[11px]">
+                            {idx + 1}
+                          </td>
+                          <td className="py-3 px-4 font-mono font-bold text-[#1B365D]">
+                            {q.quotationNo}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-bold text-slate-800">{q.customerName}</div>
+                            {q.companyName && (
+                              <div className="text-[10px] text-slate-400 truncate max-w-[160px]">
+                                {q.companyName}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 font-mono text-slate-600">{q.mobile}</td>
+                          <td className="py-3 px-4 text-slate-500 max-w-[160px] truncate">
+                            {q.email}
+                          </td>
+                          <td className="py-3 px-4 font-mono font-bold text-slate-900">
+                            ₹{totals.grandTotal.toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4 text-slate-600">{q.createdBy}</td>
+                          <td className="py-3 px-4 text-slate-500 text-[11px] whitespace-nowrap">
+                            {q.date}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span
+                              className={`badge text-[10px] ${
+                                q.status === 'Accepted'
+                                  ? 'badge-green'
+                                  : q.status === 'Sent'
+                                    ? 'badge-navy'
+                                    : 'badge-gold'
+                              }`}
+                            >
+                              {q.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              {/* View Letterhead */}
+                              <button
+                                onClick={() => handleViewLetterhead(q)}
+                                title="View Official Letterhead"
+                                className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                              {/* Edit Quote */}
+                              <button
+                                onClick={() => handleEdit(q)}
+                                title="Edit Quotation"
+                                className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              {/* WhatsApp Dispatch */}
+                              <button
+                                onClick={() => handleSendWhatsApp(q)}
+                                title="Send WhatsApp Quote"
+                                className="p-1.5 rounded-lg bg-emerald-50 text-[#25D366] hover:bg-emerald-100 transition-colors"
+                              >
+                                <Send className="w-3.5 h-3.5" />
+                              </button>
+                              {/* Delete */}
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Delete quotation ${q.quotationNo}?`)) {
+                                    setQuotations((prev) =>
+                                      prev.filter((item) => item.id !== q.id)
+                                    );
+                                    showToast('Quotation deleted.');
+                                  }
+                                }}
+                                title="Delete"
+                                className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -604,7 +546,8 @@ export default function CrmQuotationsPage() {
             {/* Bottom Pagination Info */}
             <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
               <div>
-                Showing 1 to {Math.min(entriesCount, filteredQuotes.length)} of {filteredQuotes.length} entries
+                Showing 1 to {Math.min(entriesCount, filteredQuotes.length)} of{' '}
+                {filteredQuotes.length} entries
               </div>
               <div className="flex items-center gap-1 font-semibold">
                 <button className="px-3 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">
@@ -671,7 +614,9 @@ export default function CrmQuotationsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">Customer Full Name *</label>
+                <label className="block text-slate-600 font-semibold mb-1">
+                  Customer Full Name *
+                </label>
                 <input
                   type="text"
                   value={activeQuote.customerName}
@@ -682,7 +627,9 @@ export default function CrmQuotationsPage() {
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">Company / Entity Name</label>
+                <label className="block text-slate-600 font-semibold mb-1">
+                  Company / Entity Name
+                </label>
                 <input
                   type="text"
                   value={activeQuote.companyName}
@@ -693,7 +640,9 @@ export default function CrmQuotationsPage() {
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">Mobile / WhatsApp *</label>
+                <label className="block text-slate-600 font-semibold mb-1">
+                  Mobile / WhatsApp *
+                </label>
                 <input
                   type="text"
                   value={activeQuote.mobile}
@@ -726,7 +675,9 @@ export default function CrmQuotationsPage() {
               </div>
 
               <div>
-                <label className="block text-slate-600 font-semibold mb-1">Client GSTIN (Optional)</label>
+                <label className="block text-slate-600 font-semibold mb-1">
+                  Client GSTIN (Optional)
+                </label>
                 <input
                   type="text"
                   value={activeQuote.gstin || ''}
@@ -740,7 +691,9 @@ export default function CrmQuotationsPage() {
                 <label className="block text-slate-600 font-semibold mb-1">Quotation Status</label>
                 <select
                   value={activeQuote.status}
-                  onChange={(e) => setActiveQuote({ ...activeQuote, status: e.target.value as any })}
+                  onChange={(e) =>
+                    setActiveQuote({ ...activeQuote, status: e.target.value as any })
+                  }
                   className="input text-xs font-bold"
                 >
                   <option value="Draft">Draft</option>
@@ -762,7 +715,7 @@ export default function CrmQuotationsPage() {
                 <button
                   type="button"
                   onClick={handleAddItem}
-                              className="btn btn-sm bg-[#00A896] hover:bg-[#008f80] text-white text-xs font-bold flex items-center gap-1"
+                  className="btn btn-sm bg-[#00A896] hover:bg-[#008f80] text-white text-xs font-bold flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" /> + Add Row
                 </button>
@@ -773,14 +726,30 @@ export default function CrmQuotationsPage() {
               <table className="w-full text-left text-xs border-separate border-spacing-0">
                 <thead className="sticky top-0 z-10">
                   <tr>
-                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-8 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">#</th>
-                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 min-w-[280px] text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">PRODUCT / SERVICE NAME & DESCRIPTION</th>
-                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-20 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">QTY</th>
-                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-28 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">PRICE (₹)</th>
-                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-24 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">DISC (%)</th>
-                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-24 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">GST (%)</th>
-                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-28 text-right text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">AMOUNT (₹)</th>
-                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-12 text-center text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">ACTION</th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-8 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                      #
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 min-w-[280px] text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                      PRODUCT / SERVICE NAME & DESCRIPTION
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-20 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                      QTY
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-28 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                      PRICE (₹)
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-24 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                      DISC (%)
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-24 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                      GST (%)
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-28 text-right text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                      AMOUNT (₹)
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-12 text-center text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
+                      ACTION
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
@@ -924,7 +893,8 @@ export default function CrmQuotationsPage() {
                           {
                             id: `manual-${Date.now()}`,
                             serviceName: 'Custom Legal Advisory / Drafting',
-                            description: 'Bespoke drafting, shareholder agreement or ROC search report.',
+                            description:
+                              'Bespoke drafting, shareholder agreement or ROC search report.',
                             sacCode: '998311',
                             qty: 1,
                             unitPrice: 8500,
@@ -949,12 +919,16 @@ export default function CrmQuotationsPage() {
                   <div className="bg-[#F8FAFC] p-4 rounded-xl border border-slate-200/80 space-y-2.5 text-xs">
                     <div className="flex justify-between text-slate-600">
                       <span>Total Taxable Amount:</span>
-                      <span className="font-mono font-semibold">₹{totals.subtotalTaxable.toLocaleString()}</span>
+                      <span className="font-mono font-semibold">
+                        ₹{totals.subtotalTaxable.toLocaleString()}
+                      </span>
                     </div>
                     {totals.totalDiscount > 0 && (
                       <div className="flex justify-between text-emerald-700">
                         <span>Total Discounts:</span>
-                        <span className="font-mono font-semibold">-₹{totals.totalDiscount.toLocaleString()}</span>
+                        <span className="font-mono font-semibold">
+                          -₹{totals.totalDiscount.toLocaleString()}
+                        </span>
                       </div>
                     )}
                     <div className="flex justify-between text-slate-600">
@@ -1037,7 +1011,8 @@ export default function CrmQuotationsPage() {
                   ETAXWALA BUSINESS SOLUTION PVT. LTD.
                 </h2>
                 <p className="text-[10px] text-slate-500 max-w-md leading-relaxed mt-1">
-                  Office No. 402, 4th Floor, Fortune Business Center, Near Wakad Bridge, Hinjawadi Pune 411057, Maharashtra, India.
+                  Office No. 402, 4th Floor, Fortune Business Center, Near Wakad Bridge, Hinjawadi
+                  Pune 411057, Maharashtra, India.
                 </p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-600 font-mono mt-2">
                   <span>CIN: U74999PN2021PTC202931</span>
@@ -1050,9 +1025,16 @@ export default function CrmQuotationsPage() {
                 <span className="badge badge-gold font-bold text-xs uppercase px-3 py-1">
                   QUOTATION / PROPOSAL
                 </span>
-                <p className="font-mono font-bold text-[#1B365D] text-sm mt-1">{activeQuote.quotationNo}</p>
-                <p className="text-[11px] text-slate-500">Date: <span className="font-medium text-slate-800">{activeQuote.date}</span></p>
-                <p className="text-[11px] text-slate-500">Valid Until: <span className="font-medium text-slate-800">{activeQuote.validUntil}</span></p>
+                <p className="font-mono font-bold text-[#1B365D] text-sm mt-1">
+                  {activeQuote.quotationNo}
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  Date: <span className="font-medium text-slate-800">{activeQuote.date}</span>
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  Valid Until:{' '}
+                  <span className="font-medium text-slate-800">{activeQuote.validUntil}</span>
+                </p>
               </div>
             </div>
 
@@ -1067,14 +1049,18 @@ export default function CrmQuotationsPage() {
                   <p className="font-bold text-slate-700">{activeQuote.companyName}</p>
                 )}
                 {activeQuote.address && (
-                  <p className="text-slate-500 text-[11px] leading-relaxed">{activeQuote.address}</p>
+                  <p className="text-slate-500 text-[11px] leading-relaxed">
+                    {activeQuote.address}
+                  </p>
                 )}
                 <div className="flex flex-wrap gap-3 pt-1 text-[11px] font-mono text-slate-600">
                   <span>Tel: {activeQuote.mobile}</span>
                   {activeQuote.email && <span>Email: {activeQuote.email}</span>}
                 </div>
                 {activeQuote.gstin && (
-                  <p className="text-[11px] font-mono font-bold text-slate-700 pt-0.5">GSTIN: {activeQuote.gstin}</p>
+                  <p className="text-[11px] font-mono font-bold text-slate-700 pt-0.5">
+                    GSTIN: {activeQuote.gstin}
+                  </p>
                 )}
               </div>
 
@@ -1084,8 +1070,12 @@ export default function CrmQuotationsPage() {
                 </span>
                 <p className="font-extrabold text-sm text-slate-800">{activeQuote.createdBy}</p>
                 <p className="text-slate-500 text-[11px]">Senior Legal & Corporate Advisory Team</p>
-                <p className="text-[11px] font-mono text-slate-600">Direct Helpline: 080-6902-9999</p>
-                <p className="text-[11px] font-mono text-slate-600">Email: proposals@etaxwala.com</p>
+                <p className="text-[11px] font-mono text-slate-600">
+                  Direct Helpline: 080-6902-9999
+                </p>
+                <p className="text-[11px] font-mono text-slate-600">
+                  Email: proposals@etaxwala.com
+                </p>
               </div>
             </div>
 
@@ -1094,14 +1084,30 @@ export default function CrmQuotationsPage() {
               <table className="w-full text-left text-xs border border-slate-200 border-separate border-spacing-0">
                 <thead className="sticky top-0 z-10">
                   <tr>
-                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-8 text-center font-bold uppercase tracking-wider text-[11px]">#</th>
-                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 font-bold uppercase tracking-wider text-[11px]">Description of Services</th>
-                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-16 text-center font-bold uppercase tracking-wider text-[11px]">SAC</th>
-                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-12 text-center font-bold uppercase tracking-wider text-[11px]">Qty</th>
-                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-24 text-right font-bold uppercase tracking-wider text-[11px]">Rate (₹)</th>
-                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-20 text-center font-bold uppercase tracking-wider text-[11px]">Disc (%)</th>
-                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-28 text-right font-bold uppercase tracking-wider text-[11px]">Taxable (₹)</th>
-                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-28 text-right font-bold uppercase tracking-wider text-[11px]">Total (₹)</th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-8 text-center font-bold uppercase tracking-wider text-[11px]">
+                      #
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 font-bold uppercase tracking-wider text-[11px]">
+                      Description of Services
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-16 text-center font-bold uppercase tracking-wider text-[11px]">
+                      SAC
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-12 text-center font-bold uppercase tracking-wider text-[11px]">
+                      Qty
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-24 text-right font-bold uppercase tracking-wider text-[11px]">
+                      Rate (₹)
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-20 text-center font-bold uppercase tracking-wider text-[11px]">
+                      Disc (%)
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-28 text-right font-bold uppercase tracking-wider text-[11px]">
+                      Taxable (₹)
+                    </th>
+                    <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-28 text-right font-bold uppercase tracking-wider text-[11px]">
+                      Total (₹)
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-slate-700">
@@ -1109,18 +1115,28 @@ export default function CrmQuotationsPage() {
                     const { taxable, total } = getItemAmounts(item);
                     return (
                       <tr key={item.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
-                        <td className="py-3 px-3 text-center font-mono text-slate-400">{idx + 1}</td>
+                        <td className="py-3 px-3 text-center font-mono text-slate-400">
+                          {idx + 1}
+                        </td>
                         <td className="py-3 px-3 space-y-0.5">
                           <p className="font-bold text-slate-800">{item.serviceName}</p>
-                          <p className="text-[10px] text-slate-500 leading-normal">{item.description}</p>
+                          <p className="text-[10px] text-slate-500 leading-normal">
+                            {item.description}
+                          </p>
                         </td>
-                        <td className="py-3 px-3 text-center font-mono text-slate-500">{item.sacCode}</td>
+                        <td className="py-3 px-3 text-center font-mono text-slate-500">
+                          {item.sacCode}
+                        </td>
                         <td className="py-3 px-3 text-center font-mono font-bold">{item.qty}</td>
-                        <td className="py-3 px-3 text-right font-mono">₹{item.unitPrice.toLocaleString()}</td>
+                        <td className="py-3 px-3 text-right font-mono">
+                          ₹{item.unitPrice.toLocaleString()}
+                        </td>
                         <td className="py-3 px-3 text-center font-mono text-emerald-700">
                           {item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}
                         </td>
-                        <td className="py-3 px-3 text-right font-mono">₹{taxable.toLocaleString()}</td>
+                        <td className="py-3 px-3 text-right font-mono">
+                          ₹{taxable.toLocaleString()}
+                        </td>
                         <td className="py-3 px-3 text-right font-mono font-bold text-slate-900">
                           ₹{total.toFixed(2)}
                         </td>
@@ -1139,11 +1155,14 @@ export default function CrmQuotationsPage() {
                   {/* Bank Account Details */}
                   <div className="p-4 rounded-xl border border-slate-200 space-y-2 text-[11px] bg-slate-50/60">
                     <div className="flex items-center gap-1.5 font-bold text-[#1B365D]">
-                      <CreditCard className="w-4 h-4 text-[#00A896]" /> Direct Bank Remittance Details
+                      <CreditCard className="w-4 h-4 text-[#00A896]" /> Direct Bank Remittance
+                      Details
                     </div>
                     <div className="grid grid-cols-2 gap-1 text-slate-600 font-mono text-[10px]">
                       <span>Beneficiary:</span>
-                      <span className="font-bold text-slate-800">ETaxwala Business Solution Pvt Ltd</span>
+                      <span className="font-bold text-slate-800">
+                        ETaxwala Business Solution Pvt Ltd
+                      </span>
                       <span>Bank Name:</span>
                       <span className="font-bold text-slate-800">HDFC Bank Ltd</span>
                       <span>Current A/C No:</span>
@@ -1159,7 +1178,9 @@ export default function CrmQuotationsPage() {
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between text-slate-600">
                       <span>Subtotal Taxable Value:</span>
-                      <span className="font-mono font-semibold">₹{totals.subtotalTaxable.toLocaleString()}</span>
+                      <span className="font-mono font-semibold">
+                        ₹{totals.subtotalTaxable.toLocaleString()}
+                      </span>
                     </div>
                     {totals.totalDiscount > 0 && (
                       <div className="flex justify-between text-emerald-700 font-semibold">
@@ -1189,12 +1210,26 @@ export default function CrmQuotationsPage() {
 
             {/* Terms & Conditions */}
             <div className="border-t border-slate-200 pt-4 space-y-2 text-[10px] text-slate-500 leading-relaxed">
-              <span className="font-bold text-slate-700 uppercase tracking-wider">Terms & Conditions:</span>
+              <span className="font-bold text-slate-700 uppercase tracking-wider">
+                Terms & Conditions:
+              </span>
               <ol className="list-decimal pl-4 space-y-1">
-                <li>This quotation is valid for 7 calendar days from issuance. Prices may be revised thereafter.</li>
-                <li>Government portal statutory fees are based on MCA / Trademark / GST rules current as of quote date. Any subsequent statutory revision will be borne by the client at actuals.</li>
-                <li>Processing begins upon realization of 100% advance or approved milestone advance.</li>
-                <li>Documentation and KYC must be provided by the client within 7 days of order booking.</li>
+                <li>
+                  This quotation is valid for 7 calendar days from issuance. Prices may be revised
+                  thereafter.
+                </li>
+                <li>
+                  Government portal statutory fees are based on MCA / Trademark / GST rules current
+                  as of quote date. Any subsequent statutory revision will be borne by the client at
+                  actuals.
+                </li>
+                <li>
+                  Processing begins upon realization of 100% advance or approved milestone advance.
+                </li>
+                <li>
+                  Documentation and KYC must be provided by the client within 7 days of order
+                  booking.
+                </li>
               </ol>
             </div>
 
@@ -1212,7 +1247,9 @@ export default function CrmQuotationsPage() {
 
               <div className="space-y-12 text-right">
                 <div className="space-y-1">
-                  <p className="font-bold text-[#1B365D]">For ETaxwala Business Solution Pvt. Ltd.</p>
+                  <p className="font-bold text-[#1B365D]">
+                    For ETaxwala Business Solution Pvt. Ltd.
+                  </p>
                   <p className="text-[10px] text-emerald-700 font-bold flex items-center justify-end gap-1">
                     <ShieldCheck className="w-3.5 h-3.5" /> Digitally Certified Signatory
                   </p>

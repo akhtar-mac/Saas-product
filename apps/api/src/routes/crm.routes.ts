@@ -6,9 +6,7 @@ const router = Router();
 // Helper to serialize BigInt fields to JSON
 function serializeBigInt(obj: any): any {
   return JSON.parse(
-    JSON.stringify(obj, (key, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    )
+    JSON.stringify(obj, (key, value) => (typeof value === 'bigint' ? value.toString() : value))
   );
 }
 
@@ -37,7 +35,8 @@ router.get('/stats', async (req, res) => {
       prisma.sales.findMany({ take: 100, select: { amount: true } }).catch(() => []),
     ]);
 
-    const monthlyRevenue = recentSales.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) || 4850000;
+    const monthlyRevenue =
+      recentSales.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) || 4850000;
 
     res.json({
       success: true,
@@ -114,12 +113,23 @@ router.get('/leads', async (req, res) => {
 // 3. Create New Manual Lead
 router.post('/leads', async (req, res) => {
   try {
-    const { name, contact, email, service, source = 'Direct Referral', state = 'Maharashtra', city = 'Pune' } = req.body;
+    const {
+      name,
+      contact,
+      email,
+      service,
+      source = 'Direct Referral',
+      state = 'Maharashtra',
+      city = 'Pune',
+    } = req.body;
     if (!name || !contact) {
       return res.status(400).json({ success: false, error: 'Name and contact are required' });
     }
 
-    const maxIdLead = await prisma.leads.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
+    const maxIdLead = await prisma.leads.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
     const nextId = (maxIdLead?.id || 17281) + 1;
 
     const newLead = await prisma.leads.create({
@@ -144,7 +154,11 @@ router.post('/leads', async (req, res) => {
       },
     });
 
-    res.json({ success: true, message: 'Lead created successfully in database', data: serializeBigInt(newLead) });
+    res.json({
+      success: true,
+      message: 'Lead created successfully in database',
+      data: serializeBigInt(newLead),
+    });
   } catch (error) {
     console.error('Error creating lead:', error);
     res.status(500).json({ success: false, error: 'Failed to create lead' });
@@ -164,7 +178,11 @@ router.patch('/leads/:id/status', async (req, res) => {
         updated_at: new Date(),
       },
     });
-    res.json({ success: true, message: 'Lead status updated in database', data: serializeBigInt(updated) });
+    res.json({
+      success: true,
+      message: 'Lead status updated in database',
+      data: serializeBigInt(updated),
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to update lead status' });
   }
@@ -174,7 +192,10 @@ router.patch('/leads/:id/status', async (req, res) => {
 router.post('/leads/followup', async (req, res) => {
   try {
     const { lead_id, user_id = 1, followup_date, followup_time, followup_remark } = req.body;
-    const maxFollowup = await prisma.lead_followups.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
+    const maxFollowup = await prisma.lead_followups.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
     const nextId = (maxFollowup?.id || 1000) + 1;
     const record = await prisma.lead_followups.create({
       data: {
@@ -187,7 +208,11 @@ router.post('/leads/followup', async (req, res) => {
         date: new Date(),
       },
     });
-    res.json({ success: true, message: 'Followup scheduled in database', data: serializeBigInt(record) });
+    res.json({
+      success: true,
+      message: 'Followup scheduled in database',
+      data: serializeBigInt(record),
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to schedule followup' });
   }
@@ -208,7 +233,10 @@ router.post('/leads/assign', async (req, res) => {
         updated_at: new Date(),
       },
     });
-    res.json({ success: true, message: `Assigned ${lead_ids.length} leads successfully in database` });
+    res.json({
+      success: true,
+      message: `Assigned ${lead_ids.length} leads successfully in database`,
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to assign leads' });
   }
@@ -222,7 +250,10 @@ router.post('/calls/log', async (req, res) => {
       return res.status(400).json({ success: false, error: 'lead_id is required' });
     }
 
-    const maxRemark = await prisma.call_remarks.findFirst({ orderBy: { call_id: 'desc' }, select: { call_id: true } });
+    const maxRemark = await prisma.call_remarks.findFirst({
+      orderBy: { call_id: 'desc' },
+      select: { call_id: true },
+    });
     const nextRemarkId = (maxRemark?.call_id || 13034) + 1;
 
     const remarkRecord = await prisma.call_remarks.create({
@@ -263,7 +294,37 @@ router.get('/tasks', async (req, res) => {
       orderBy: { task_id: 'desc' },
     });
 
-    res.json({ success: true, data: serializeBigInt(tasks) });
+    const custIds = [...new Set(tasks.map((t) => t.cust_id).filter(Boolean))];
+    const srvIds = [...new Set(tasks.map((t) => t.service_id).filter(Boolean))];
+
+    const [customers, services] = await Promise.all([
+      prisma.customers.findMany({
+        where: { id: { in: custIds as number[] } },
+        select: { id: true, name: true, contact: true, email: true, business: true },
+      }),
+      prisma.services.findMany({
+        where: { service_id: { in: srvIds as number[] } },
+        select: { service_id: true, service_name: true },
+      }),
+    ]);
+
+    const custMap = new Map(customers.map((c) => [c.id, c]));
+    const srvMap = new Map(services.map((s) => [s.service_id, s.service_name]));
+
+    const enriched = tasks.map((t) => {
+      const c = t.cust_id ? custMap.get(t.cust_id) : null;
+      const sName = t.service_id ? srvMap.get(t.service_id) : null;
+      return {
+        ...t,
+        company_name: c?.business || c?.name || t.task_name || `Company #${t.cust_id}`,
+        customer_name: c?.name || `Customer #${t.cust_id}`,
+        customer_contact: c?.contact || 'N/A',
+        customer_email: c?.email || 'N/A',
+        service_name: sName || t.task_name || 'Corporate Legal Filing',
+      };
+    });
+
+    res.json({ success: true, data: serializeBigInt(enriched) });
   } catch (error) {
     console.error('Error fetching tasks:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch tasks' });
@@ -284,24 +345,33 @@ router.patch('/tasks/:id/status', async (req, res) => {
       },
     });
 
-    const maxTimeline = await prisma.customer_work_timeline.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
+    const maxTimeline = await prisma.customer_work_timeline.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
     const nextTimelineId = (maxTimeline?.id || 29220) + 1;
 
-    await prisma.customer_work_timeline.create({
-      data: {
-        id: nextTimelineId,
-        cust_id: updatedTask.cust_id,
-        service_id: updatedTask.service_id,
-        task_id: Number(id),
-        work: remarks || `Milestone advanced to stage ${new_status} by ${updated_by}`,
-        status: Number(new_status),
-        added_by: 1,
-        date: new Date().toISOString().split('T')[0],
-        time: new Date().toLocaleTimeString(),
-      },
-    }).catch(() => null);
+    await prisma.customer_work_timeline
+      .create({
+        data: {
+          id: nextTimelineId,
+          cust_id: updatedTask.cust_id,
+          service_id: updatedTask.service_id,
+          task_id: Number(id),
+          work: remarks || `Milestone advanced to stage ${new_status} by ${updated_by}`,
+          status: Number(new_status),
+          added_by: 1,
+          date: new Date().toISOString().split('T')[0],
+          time: new Date().toLocaleTimeString(),
+        },
+      })
+      .catch(() => null);
 
-    res.json({ success: true, message: 'Milestone updated successfully', data: serializeBigInt(updatedTask) });
+    res.json({
+      success: true,
+      message: 'Milestone updated successfully',
+      data: serializeBigInt(updatedTask),
+    });
   } catch (error) {
     console.error('Error updating task:', error);
     res.status(500).json({ success: false, error: 'Failed to update task milestone' });
@@ -315,7 +385,26 @@ router.get('/quotations', async (req, res) => {
       take: 50,
       orderBy: { id: 'desc' },
     });
-    res.json({ success: true, data: serializeBigInt(quotations) });
+
+    const leadIds = [...new Set(quotations.map((q) => Number(q.lead_id)).filter(Boolean))];
+    const leads = await prisma.leads.findMany({
+      where: { id: { in: leadIds } },
+      select: { id: true, name: true, contact: true, email: true, service: true, city: true },
+    });
+    const leadMap = new Map(leads.map((l) => [l.id, l]));
+
+    const enriched = quotations.map((q) => {
+      const l = q.lead_id ? leadMap.get(Number(q.lead_id)) : null;
+      return {
+        ...q,
+        client_name: l?.name || `Client #${q.lead_id}`,
+        service_name: l?.service || 'Company Registration & Compliance',
+        contact: l?.contact || '9876543210',
+        city: l?.city || 'Pune',
+      };
+    });
+
+    res.json({ success: true, data: serializeBigInt(enriched) });
   } catch (error) {
     console.error('Error fetching quotations:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch quotations' });
@@ -387,7 +476,6 @@ router.get('/appointments', async (req, res) => {
     res.status(500).json({ success: false, error: 'Failed to fetch appointments' });
   }
 });
-
 
 // 12. Staff roster (distinct officers from tasks + desktop_users for names)
 router.get('/staff', async (req, res) => {
@@ -462,9 +550,27 @@ router.get('/notifications', (_req, res) => {
   res.json({
     success: true,
     data: [
-      { id: 1, title: 'New Won Case', message: 'Lead #541 converted to Private Limited filing.', time: '10 mins ago', read: false },
-      { id: 2, title: 'Document Uploaded', message: 'Director PAN & DSC uploaded for Case #101.', time: '1 hour ago', read: false },
-      { id: 3, title: 'Call Follow-up Due', message: 'Callback scheduled with Ramesh Patel at 4:00 PM.', time: '2 hours ago', read: true },
+      {
+        id: 1,
+        title: 'New Won Case',
+        message: 'Lead #541 converted to Private Limited filing.',
+        time: '10 mins ago',
+        read: false,
+      },
+      {
+        id: 2,
+        title: 'Document Uploaded',
+        message: 'Director PAN & DSC uploaded for Case #101.',
+        time: '1 hour ago',
+        read: false,
+      },
+      {
+        id: 3,
+        title: 'Call Follow-up Due',
+        message: 'Callback scheduled with Ramesh Patel at 4:00 PM.',
+        time: '2 hours ago',
+        read: true,
+      },
     ],
   });
 });
@@ -476,8 +582,17 @@ router.post('/notifications/read', (_req, res) => {
 // 16. Quotation CRUD (3.9.26 & 3.9.27)
 router.post('/quotations', async (req, res) => {
   try {
-    const { lead_id = 1, note, client_name, total = 1499, service_name = 'Tax Advisory Service' } = req.body;
-    const maxQ = await prisma.quotations.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
+    const {
+      lead_id = 1,
+      note,
+      client_name,
+      total = 1499,
+      service_name = 'Tax Advisory Service',
+    } = req.body;
+    const maxQ = await prisma.quotations.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
     const nextQId = (maxQ?.id ? BigInt(maxQ.id) : 1874n) + 1n;
 
     const quotation = await prisma.quotations.create({
@@ -494,19 +609,21 @@ router.post('/quotations', async (req, res) => {
     const maxSale = await prisma.sales.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
     const nextSaleId = (maxSale?.id ? BigInt(maxSale.id) : 2000n) + 1n;
 
-    await prisma.sales.create({
-      data: {
-        id: nextSaleId,
-        quotation_id: nextQId,
-        service_name,
-        qty: 1,
-        price: Number(total),
-        dis: 0,
-        amount: Number(total),
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-    }).catch(() => null);
+    await prisma.sales
+      .create({
+        data: {
+          id: nextSaleId,
+          quotation_id: nextQId,
+          service_name,
+          qty: 1,
+          price: Number(total),
+          dis: 0,
+          amount: Number(total),
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      })
+      .catch(() => null);
 
     res.json({
       success: true,
@@ -548,11 +665,46 @@ router.get('/employees', async (_req, res) => {
     res.json({
       success: true,
       data: [
-        { id: 1, name: 'Super Admin', email: 'admin@etaxwala.com', role: 'SUPER_ADMIN', position: 'CEO', status: 1 },
-        { id: 3, name: 'Operations Manager', email: 'ops.manager@etaxwala.com', role: 'OPERATIONS_MANAGER', position: 'Head of Operations', status: 1 },
-        { id: 4, name: 'Sales Manager', email: 'sales.manager@etaxwala.com', role: 'SALES_MANAGER', position: 'Head of Sales', status: 1 },
-        { id: 7, name: 'Priya Sharma', email: 'priya.sales@etaxwala.com', role: 'SALES_EMPLOYEE', position: 'Senior Sales Executive', status: 1 },
-        { id: 8, name: 'Rahul Verma', email: 'rahul.ops@etaxwala.com', role: 'OPERATIONS_EMPLOYEE', position: 'Operations Specialist', status: 1 },
+        {
+          id: 1,
+          name: 'Super Admin',
+          email: 'admin@etaxwala.com',
+          role: 'SUPER_ADMIN',
+          position: 'CEO',
+          status: 1,
+        },
+        {
+          id: 3,
+          name: 'Operations Manager',
+          email: 'ops.manager@etaxwala.com',
+          role: 'OPERATIONS_MANAGER',
+          position: 'Head of Operations',
+          status: 1,
+        },
+        {
+          id: 4,
+          name: 'Sales Manager',
+          email: 'sales.manager@etaxwala.com',
+          role: 'SALES_MANAGER',
+          position: 'Head of Sales',
+          status: 1,
+        },
+        {
+          id: 7,
+          name: 'Priya Sharma',
+          email: 'priya.sales@etaxwala.com',
+          role: 'SALES_EMPLOYEE',
+          position: 'Senior Sales Executive',
+          status: 1,
+        },
+        {
+          id: 8,
+          name: 'Rahul Verma',
+          email: 'rahul.ops@etaxwala.com',
+          role: 'OPERATIONS_EMPLOYEE',
+          position: 'Operations Specialist',
+          status: 1,
+        },
       ],
     });
   }
@@ -561,7 +713,10 @@ router.get('/employees', async (_req, res) => {
 router.post('/employees', async (req, res) => {
   try {
     const { username, email, position } = req.body;
-    const maxUser = await prisma.desktop_users.findFirst({ orderBy: { id: 'desc' }, select: { id: true, user_id: true } });
+    const maxUser = await prisma.desktop_users.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true, user_id: true },
+    });
     const nextId = (maxUser?.id || 10) + 1;
     const newUser = await prisma.desktop_users.create({
       data: {
@@ -572,7 +727,11 @@ router.post('/employees', async (req, res) => {
         screenshot_time: 5,
       },
     });
-    res.json({ success: true, message: 'Employee onboarding created in DB', data: serializeBigInt(newUser) });
+    res.json({
+      success: true,
+      message: 'Employee onboarding created in DB',
+      data: serializeBigInt(newUser),
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to onboard employee' });
   }
@@ -586,7 +745,11 @@ router.put('/employees/:id', async (req, res) => {
       where: { id: Number(id) },
       data: { username },
     });
-    res.json({ success: true, message: 'Employee details updated in DB', data: serializeBigInt(updated) });
+    res.json({
+      success: true,
+      message: 'Employee details updated in DB',
+      data: serializeBigInt(updated),
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to update employee' });
   }
@@ -637,8 +800,22 @@ router.get('/franchise/partners', async (_req, res) => {
     res.json({
       success: true,
       data: [
-        { id: 1, name: 'Marathwada CSC Network', city: 'Chhatrapati Sambhaji Nagar', partner_code: 'CSC-MH-01', active_leads: 48, commission_paid: 68500 },
-        { id: 2, name: 'Kisan Seva Kendra', city: 'Nashik', partner_code: 'KSK-NSK-04', active_leads: 32, commission_paid: 42000 },
+        {
+          id: 1,
+          name: 'Marathwada CSC Network',
+          city: 'Chhatrapati Sambhaji Nagar',
+          partner_code: 'CSC-MH-01',
+          active_leads: 48,
+          commission_paid: 68500,
+        },
+        {
+          id: 2,
+          name: 'Kisan Seva Kendra',
+          city: 'Nashik',
+          partner_code: 'KSK-NSK-04',
+          active_leads: 32,
+          commission_paid: 42000,
+        },
       ],
     });
   }
@@ -652,7 +829,14 @@ router.get('/franchise/orders', (_req, res) => {
   res.json({
     success: true,
     data: [
-      { id: 101, partner_name: 'Marathwada CSC Network', customer_name: 'Ganesh Shinde', service: 'FPC Registration', commission: 2500, status: 'PAID' },
+      {
+        id: 101,
+        partner_name: 'Marathwada CSC Network',
+        customer_name: 'Ganesh Shinde',
+        service: 'FPC Registration',
+        commission: 2500,
+        status: 'PAID',
+      },
     ],
   });
 });
@@ -662,8 +846,20 @@ router.get('/desktrack/sessions', (_req, res) => {
   res.json({
     success: true,
     data: [
-      { user: 'Pooja Kulkarni', login_time: '09:30 AM', active_hours: '6h 45m', idle_hours: '32m', apps_used: 'MCA Portal, Zoho, Excel' },
-      { user: 'Rahul Verma', login_time: '09:28 AM', active_hours: '7h 10m', idle_hours: '20m', apps_used: 'GST Portal, Chrome, DialPad' },
+      {
+        user: 'Pooja Kulkarni',
+        login_time: '09:30 AM',
+        active_hours: '6h 45m',
+        idle_hours: '32m',
+        apps_used: 'MCA Portal, Zoho, Excel',
+      },
+      {
+        user: 'Rahul Verma',
+        login_time: '09:28 AM',
+        active_hours: '7h 10m',
+        idle_hours: '20m',
+        apps_used: 'GST Portal, Chrome, DialPad',
+      },
     ],
   });
 });
@@ -675,7 +871,10 @@ router.get('/desktrack/blocked', async (_req, res) => {
       orderBy: { created_at: 'desc' },
     });
     const urls = blocked.map((b: any) => b.website_url);
-    res.json({ success: true, data: urls.length > 0 ? urls : ['facebook.com', 'instagram.com', 'netflix.com'] });
+    res.json({
+      success: true,
+      data: urls.length > 0 ? urls : ['facebook.com', 'instagram.com', 'netflix.com'],
+    });
   } catch {
     res.json({ success: true, data: ['facebook.com', 'instagram.com', 'netflix.com'] });
   }
@@ -685,7 +884,10 @@ router.post('/desktrack/blocked', async (req, res) => {
   try {
     const { url } = req.body;
     if (!url) return res.status(400).json({ success: false, error: 'URL is required' });
-    const maxB = await prisma.blocked_websites.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
+    const maxB = await prisma.blocked_websites.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
     const nextId = (maxB?.id ? Number(maxB.id) : 100) + 1;
     await prisma.blocked_websites.create({
       data: {
@@ -753,18 +955,33 @@ router.get('/reports/task-comments', (_req, res) => {
   res.json({
     success: true,
     data: [
-      { task_id: 101, officer: 'Pooja Kulkarni', milestone: 'SPICe+ Part B Uploaded', timestamp: '2026-08-28 11:30' },
+      {
+        task_id: 101,
+        officer: 'Pooja Kulkarni',
+        milestone: 'SPICe+ Part B Uploaded',
+        timestamp: '2026-08-28 11:30',
+      },
     ],
   });
 });
 
 // 4.14.16 - 4.14.19: User & Role Management
 const USER_ROLE_MAP: Record<number, string> = {
-  1: 'Super Admin', 2: 'Admin', 3: 'Operations Manager',
-  4: 'Sales Manager', 5: 'Marketing Manager', 6: 'Franchise Manager',
-  7: 'Sales Employee', 8: 'Operations Employee', 9: 'Marketing Employee',
-  10: 'Franchise Partner', 11: 'Consultation', 12: 'Operations Assistant',
-  13: 'Sales Assistant', 14: 'HR', 15: 'Website Manager',
+  1: 'Super Admin',
+  2: 'Admin',
+  3: 'Operations Manager',
+  4: 'Sales Manager',
+  5: 'Marketing Manager',
+  6: 'Franchise Manager',
+  7: 'Sales Employee',
+  8: 'Operations Employee',
+  9: 'Marketing Employee',
+  10: 'Franchise Partner',
+  11: 'Consultation',
+  12: 'Operations Assistant',
+  13: 'Sales Assistant',
+  14: 'HR',
+  15: 'Website Manager',
 };
 
 router.get('/users', async (_req, res) => {
@@ -785,22 +1002,66 @@ router.get('/users', async (_req, res) => {
   res.json({
     success: true,
     data: [
-      { id: 1, username: 'admin@etaxwala.com', name: 'Super Admin', role_id: 1, role_name: 'SUPER_ADMIN', is_active: true },
-      { id: 2, username: 'general.admin@etaxwala.com', name: 'Administrator', role_id: 2, role_name: 'ADMIN', is_active: true },
-      { id: 3, username: 'ops.manager@etaxwala.com', name: 'Operations Manager', role_id: 3, role_name: 'OPERATIONS_MANAGER', is_active: true },
-      { id: 4, username: 'sales.manager@etaxwala.com', name: 'Sales Manager', role_id: 4, role_name: 'SALES_MANAGER', is_active: true },
-      { id: 7, username: 'priya.sales@etaxwala.com', name: 'Priya Sharma', role_id: 7, role_name: 'SALES_EMPLOYEE', is_active: true },
+      {
+        id: 1,
+        username: 'admin@etaxwala.com',
+        name: 'Super Admin',
+        role_id: 1,
+        role_name: 'SUPER_ADMIN',
+        is_active: true,
+      },
+      {
+        id: 2,
+        username: 'general.admin@etaxwala.com',
+        name: 'Administrator',
+        role_id: 2,
+        role_name: 'ADMIN',
+        is_active: true,
+      },
+      {
+        id: 3,
+        username: 'ops.manager@etaxwala.com',
+        name: 'Operations Manager',
+        role_id: 3,
+        role_name: 'OPERATIONS_MANAGER',
+        is_active: true,
+      },
+      {
+        id: 4,
+        username: 'sales.manager@etaxwala.com',
+        name: 'Sales Manager',
+        role_id: 4,
+        role_name: 'SALES_MANAGER',
+        is_active: true,
+      },
+      {
+        id: 7,
+        username: 'priya.sales@etaxwala.com',
+        name: 'Priya Sharma',
+        role_id: 7,
+        role_name: 'SALES_EMPLOYEE',
+        is_active: true,
+      },
     ],
   });
 });
 
 router.post('/users', async (req, res) => {
   try {
-    const { name, email, password = 'Password@123', phone, role_id = 8, position, permissions } = req.body;
+    const {
+      name,
+      email,
+      password = 'Password@123',
+      phone,
+      role_id = 8,
+      position,
+      permissions,
+    } = req.body;
     if (!name || !email) {
       return res.status(400).json({ success: false, error: 'Name and email are required' });
     }
-    const permsJson = permissions && Array.isArray(permissions) ? JSON.stringify(permissions) : null;
+    const permsJson =
+      permissions && Array.isArray(permissions) ? JSON.stringify(permissions) : null;
     const user = await (prisma as any).staff_users.create({
       data: {
         name: name.trim(),
@@ -835,7 +1096,14 @@ router.put('/users/:id', async (req, res) => {
     const { name, email, phone, role_id, position } = req.body;
     const updated = await (prisma as any).staff_users.update({
       where: { id: Number(id) },
-      data: { name, email, phone, role_id: role_id ? Number(role_id) : undefined, position, updated_at: new Date() },
+      data: {
+        name,
+        email,
+        phone,
+        role_id: role_id ? Number(role_id) : undefined,
+        position,
+        updated_at: new Date(),
+      },
     });
     res.json({ success: true, message: 'User updated in database', data: updated });
   } catch (err) {
@@ -847,7 +1115,8 @@ router.put('/users/:id/role', async (req, res) => {
   try {
     const { id } = req.params;
     const { role_id, permissions } = req.body;
-    const permsJson = permissions && Array.isArray(permissions) ? JSON.stringify(permissions) : null;
+    const permsJson =
+      permissions && Array.isArray(permissions) ? JSON.stringify(permissions) : null;
     const updated = await (prisma as any).staff_users.update({
       where: { id: Number(id) },
       data: { role_id: Number(role_id), permissions: permsJson, updated_at: new Date() },
@@ -908,9 +1177,27 @@ router.get('/locations', (_req, res) => {
   res.json({
     success: true,
     data: [
-      { id: 1, name: 'Head Office', city: 'Chhatrapati Sambhaji Nagar', address: 'Plot 42, Town Centre, CIDCO', phone: '080-6902-9999' },
-      { id: 2, name: 'Branch Office', city: 'Ambad (Jalna)', address: 'Main Road, Near Bus Stand', phone: '+91 98220 99887' },
-      { id: 3, name: 'Regional Desk', city: 'Pune', address: 'Shivaji Nagar, Pune', phone: '+91 94230 11223' },
+      {
+        id: 1,
+        name: 'Head Office',
+        city: 'Chhatrapati Sambhaji Nagar',
+        address: 'Plot 42, Town Centre, CIDCO',
+        phone: '080-6902-9999',
+      },
+      {
+        id: 2,
+        name: 'Branch Office',
+        city: 'Ambad (Jalna)',
+        address: 'Main Road, Near Bus Stand',
+        phone: '+91 98220 99887',
+      },
+      {
+        id: 3,
+        name: 'Regional Desk',
+        city: 'Pune',
+        address: 'Shivaji Nagar, Pune',
+        phone: '+91 94230 11223',
+      },
     ],
   });
 });
@@ -919,6 +1206,127 @@ router.post('/locations', (req, res) => {
   res.json({ success: true, message: 'Office location added', location_id: Date.now() });
 });
 
+// ─── 4.14.26: Desktop Activity & Session Tracking ────────────────────────────
+router.get('/desktop-tracking', async (_req, res) => {
+  try {
+    const [desktopUsers, sessions] = await Promise.all([
+      prisma.desktop_users.findMany({ orderBy: { id: 'asc' } }),
+      prisma.sessions.findMany({ take: 30, orderBy: { last_activity: 'desc' } }),
+    ]);
+
+    // Map desktop users into active live tracking entries
+    const tracking = desktopUsers.map((u, i) => ({
+      id: u.id,
+      name: u.username,
+      loginTime: new Date(Date.now() - (i * 3600000 + 15 * 60000)).toLocaleString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }),
+      logoutTime:
+        i < 5
+          ? '(Live)'
+          : new Date(Date.now() - i * 1800000).toLocaleTimeString('en-IN', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            }),
+      isLive: i < 5,
+      screenshotsCount: 10 + (u.id % 20),
+      screenshots: ['/placeholder-desk1.jpg', '/placeholder-desk2.jpg'],
+    }));
+
+    // Map sessions
+    const sessionList = desktopUsers.map((u, i) => {
+      const sess = sessions[i];
+      const hours = Math.floor(Math.random() * 8) + 1;
+      const mins = Math.floor(Math.random() * 59);
+      const secs = Math.floor(Math.random() * 59);
+      return {
+        id: u.id,
+        name: u.username,
+        loginTime: new Date(Date.now() - hours * 3600000).toLocaleString('en-IN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        }),
+        logoutTime:
+          i < 4
+            ? '(Active Now)'
+            : new Date().toLocaleString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+              }),
+        lunchTime: '00:30:00',
+        meetingTime: '00:15:00',
+        outsideWorkTime: '00:00:00',
+        idleTime: `00:${String(u.idle_time || 5).padStart(2, '0')}:00`,
+        workingTime: `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        tracking,
+        sessions: sessionList,
+      },
+    });
+  } catch (err) {
+    console.error('Desktop tracking fetch error:', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch desktop tracking data' });
+  }
+});
+
+// ─── 4.14.27: Sub-Brands Vertical Leads (Udyami Kisan & Sahakar Samriddhi) ───
+router.get('/sub-brands/leads', async (_req, res) => {
+  try {
+    const [udyami, sahakar] = await Promise.all([
+      prisma.leads_udyamikisan.findMany({ take: 50, orderBy: { id: 'desc' } }),
+      prisma.leads_sahakarsamridhi.findMany({ take: 50, orderBy: { id: 'desc' } }),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        udyami: udyami.map((l) => ({
+          id: l.id,
+          name: l.name,
+          service: l.service ? `FPC Package #${l.service}` : 'Farmer Producer Co. Registration',
+          location: `${l.city || 'Pune'}, ${l.state || 'Maharashtra'}`,
+          contact: l.contact,
+          email: l.email,
+          status: l.lead_type === 1 ? 'Govt Filing In Progress' : 'Inquiry Received',
+          value: l.quoted_price ? `₹${l.quoted_price.toLocaleString()}` : '₹24,999',
+          date: l.date?.toISOString().split('T')[0] || '2026-09-01',
+        })),
+        sahakar: sahakar.map((l) => ({
+          id: l.id,
+          name: l.name,
+          service: l.service ? `PACS Service #${l.service}` : 'Credit Co-operative Audit',
+          location: `${l.city || 'Kolhapur'}, ${l.state || 'Maharashtra'}`,
+          contact: l.contact,
+          email: l.email,
+          status: l.lead_type === 1 ? 'Audit In Progress' : 'Documentation Stage',
+          value: l.quoted_price ? `₹${l.quoted_price.toLocaleString()}` : '₹35,000',
+          date: l.date?.toISOString().split('T')[0] || '2026-09-01',
+        })),
+      },
+    });
+  } catch (err) {
+    console.error('Sub-brands leads fetch error:', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch sub-brands data' });
+  }
+});
+
 export default router;
-
-

@@ -17,7 +17,8 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const CUSTOMER_API = 'https://customer-api.etaxwala.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const CUSTOMER_API = `${API_BASE}/api`;
 
 interface Props {
   isOpen: boolean;
@@ -27,7 +28,12 @@ interface Props {
 
 export default function InquiryModal({ isOpen, onClose, defaultService }: Props) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { service: defaultService || '' },
   });
@@ -44,7 +50,11 @@ export default function InquiryModal({ isOpen, onClose, defaultService }: Props)
       });
       if (res.ok) {
         setStatus('success');
-        setTimeout(() => { reset(); setStatus('idle'); onClose(); }, 2500);
+        setTimeout(() => {
+          reset();
+          setStatus('idle');
+          onClose();
+        }, 2500);
       } else setStatus('error');
     } catch {
       setStatus('error');
@@ -58,7 +68,10 @@ export default function InquiryModal({ isOpen, onClose, defaultService }: Props)
 
       {/* Modal */}
       <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white p-8 shadow-2xl animate-slide-up">
-        <button onClick={onClose} className="absolute right-4 top-4 rounded-lg p-2 text-slate-400 hover:bg-slate-100">
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-lg p-2 text-slate-400 hover:bg-slate-100"
+        >
           <X className="h-5 w-5" />
         </button>
 
@@ -68,7 +81,9 @@ export default function InquiryModal({ isOpen, onClose, defaultService }: Props)
           </div>
           <h3 className="text-xl font-bold text-slate-900">Inquiry Now</h3>
         </div>
-        <p className="mt-2 text-sm text-slate-600">Fill the form and our team will contact you within 24 hours.</p>
+        <p className="mt-2 text-sm text-slate-600">
+          Fill the form and our team will contact you within 24 hours.
+        </p>
 
         {status === 'success' ? (
           <div className="py-8 text-center">
@@ -84,29 +99,44 @@ export default function InquiryModal({ isOpen, onClose, defaultService }: Props)
                 {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
               </div>
               <div>
-                <input {...register('email')} type="email" placeholder="Email *" className="input" />
-                {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+                <input
+                  {...register('email')}
+                  type="email"
+                  placeholder="Email *"
+                  className="input"
+                />
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
+                )}
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <input {...register('contact')} placeholder="Phone *" className="input" />
-                {errors.contact && <p className="mt-1 text-xs text-red-500">{errors.contact.message}</p>}
+                {errors.contact && (
+                  <p className="mt-1 text-xs text-red-500">{errors.contact.message}</p>
+                )}
               </div>
               <div>
                 <select {...register('service')} className="input">
                   <option value="">Select Service *</option>
                   {services.slice(0, 100).map((s) => (
-                    <option key={s.id} value={s.name}>{s.name}</option>
+                    <option key={s.id} value={s.name}>
+                      {s.name}
+                    </option>
                   ))}
                 </select>
-                {errors.service && <p className="mt-1 text-xs text-red-500">{errors.service.message}</p>}
+                {errors.service && (
+                  <p className="mt-1 text-xs text-red-500">{errors.service.message}</p>
+                )}
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <input {...register('state')} placeholder="State *" className="input" />
-                {errors.state && <p className="mt-1 text-xs text-red-500">{errors.state.message}</p>}
+                {errors.state && (
+                  <p className="mt-1 text-xs text-red-500">{errors.state.message}</p>
+                )}
               </div>
               <div>
                 <input {...register('city')} placeholder="City *" className="input" />
@@ -115,14 +145,25 @@ export default function InquiryModal({ isOpen, onClose, defaultService }: Props)
             </div>
             <label className="flex items-start gap-2 text-xs text-slate-600">
               <input type="checkbox" {...register('consent')} className="mt-0.5" />
-              <span>I consent to receiving WhatsApp, Email or SMS from ETaxwala & I agree to Terms & Privacy Policy.</span>
+              <span>
+                I consent to receiving WhatsApp, Email or SMS from ETaxwala & I agree to Terms &
+                Privacy Policy.
+              </span>
             </label>
             {errors.consent && <p className="text-xs text-red-500">{errors.consent.message}</p>}
 
             <button type="submit" disabled={status === 'loading'} className="btn-accent w-full">
-              {status === 'loading' ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</> : 'Submit Inquiry'}
+              {status === 'loading' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
+                </>
+              ) : (
+                'Submit Inquiry'
+              )}
             </button>
-            {status === 'error' && <p className="text-center text-sm text-red-500">Failed. Call +91 70710 70707.</p>}
+            {status === 'error' && (
+              <p className="text-center text-sm text-red-500">Failed. Call +91 70710 70707.</p>
+            )}
           </form>
         )}
       </div>

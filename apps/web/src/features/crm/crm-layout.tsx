@@ -87,21 +87,49 @@ export default function CrmLayout() {
   }, []);
 
   const ALL_ROLE_OPTIONS: { role: RoleType; label: string; staffName: string }[] = [
-    { role: RoleType.SUPER_ADMIN, label: 'Super Admin (All Access)', staffName: 'ETaxwala HQ Admin' },
+    {
+      role: RoleType.SUPER_ADMIN,
+      label: 'Super Admin (All Access)',
+      staffName: 'ETaxwala HQ Admin',
+    },
     { role: RoleType.ADMIN, label: 'General Administrator', staffName: 'System Manager' },
     { role: RoleType.OPERATIONS_MANAGER, label: 'Operations Manager', staffName: 'Vaijnath Sir' },
     { role: RoleType.SALES_MANAGER, label: 'Sales Manager', staffName: 'Netra Divekar' },
     { role: RoleType.MARKETING_MANAGER, label: 'Marketing Manager', staffName: 'Growth Lead' },
     { role: RoleType.FRANCHISE_MANAGER, label: 'Franchise Manager', staffName: 'Kunal Patil' },
-    { role: RoleType.SALES_EMPLOYEE, label: 'Sales Employee (Telecaller)', staffName: 'Priya Sharma' },
-    { role: RoleType.OPERATIONS_EMPLOYEE, label: 'Operations Specialist', staffName: 'Sachin Mohan Vyavahare' },
-    { role: RoleType.MARKETING_EMPLOYEE, label: 'Marketing Content & SEO', staffName: 'Content Specialist' },
-    { role: RoleType.FRANCHISE_EMPLOYEE, label: 'Franchise Partner Desk', staffName: 'Field Partner' },
+    {
+      role: RoleType.SALES_EMPLOYEE,
+      label: 'Sales Employee (Telecaller)',
+      staffName: 'Priya Sharma',
+    },
+    {
+      role: RoleType.OPERATIONS_EMPLOYEE,
+      label: 'Operations Specialist',
+      staffName: 'Sachin Mohan Vyavahare',
+    },
+    {
+      role: RoleType.MARKETING_EMPLOYEE,
+      label: 'Marketing Content & SEO',
+      staffName: 'Content Specialist',
+    },
+    {
+      role: RoleType.FRANCHISE_EMPLOYEE,
+      label: 'Franchise Partner Desk',
+      staffName: 'Field Partner',
+    },
     { role: RoleType.CONSULTATION, label: 'CA / Tax Expert Workbench', staffName: 'CA Tax Expert' },
     { role: RoleType.OPERATIONS_ASSISTANT, label: 'QC & Document Reviewer', staffName: 'QC Lead' },
-    { role: RoleType.SALES_ASSISTANT, label: 'Sales Assistant / Qualifier', staffName: 'Shreya Joshi' },
+    {
+      role: RoleType.SALES_ASSISTANT,
+      label: 'Sales Assistant / Qualifier',
+      staffName: 'Shreya Joshi',
+    },
     { role: RoleType.HR, label: 'HR Manager (Workforce & Tracking)', staffName: 'HR Manager' },
-    { role: RoleType.WEBSITE_MANAGER, label: 'Website & Sub-Brands Manager', staffName: 'Sub-Brands Lead' },
+    {
+      role: RoleType.WEBSITE_MANAGER,
+      label: 'Website & Sub-Brands Manager',
+      staffName: 'Sub-Brands Lead',
+    },
     { role: RoleType.STAFF, label: 'Staff / Client Support Desk', staffName: 'Support Executive' },
   ];
 
@@ -114,7 +142,8 @@ export default function CrmLayout() {
       ? ALL_ROLE_OPTIONS
       : ALL_ROLE_OPTIONS.filter((opt) => staffUser.roles!.includes(opt.role));
 
-  const currentRoleInfo = ALL_ROLE_OPTIONS.find((r) => r.role === activeRole) || ALL_ROLE_OPTIONS[0];
+  const currentRoleInfo =
+    ALL_ROLE_OPTIONS.find((r) => r.role === activeRole) || ALL_ROLE_OPTIONS[0];
 
   const handleLogout = () => {
     logoutStaff();
@@ -154,8 +183,7 @@ export default function CrmLayout() {
     can('workforce:view') ||
     can('accounts:view');
 
-  const showAdminSection =
-    can('admin:view') || can('users:manage') || can('call_analytics:view');
+  const showAdminSection = can('admin:view') || can('users:manage') || can('call_analytics:view');
 
   return (
     <div className="h-screen bg-[#FAF9F5] text-slate-800 flex flex-col md:flex-row font-sans overflow-hidden">
@@ -186,7 +214,9 @@ export default function CrmLayout() {
       {/* Sidebar Navigation matching the exact hierarchy from staff screenshots */}
       <aside
         className={`fixed md:sticky inset-y-0 left-0 z-40 bg-[#FFFDF9] border-r border-[#EAE6DD] flex flex-col justify-between transition-all duration-300 shadow-xs h-screen shrink-0 ${
-          sidebarOpen ? 'w-64 translate-x-0 opacity-100' : '-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 overflow-hidden border-none'
+          sidebarOpen
+            ? 'w-64 translate-x-0 opacity-100'
+            : '-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 overflow-hidden border-none'
         }`}
       >
         <div className="flex flex-col h-full overflow-hidden">
@@ -248,7 +278,9 @@ export default function CrmLayout() {
                     : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
                 }`}
               >
-                <LayoutDashboard className={`w-4 h-4 shrink-0 ${location.pathname === '/crm' ? 'text-white' : 'text-[#1B365D]'}`} />
+                <LayoutDashboard
+                  className={`w-4 h-4 shrink-0 ${location.pathname === '/crm' ? 'text-white' : 'text-[#1B365D]'}`}
+                />
                 <span>Dashboard</span>
               </Link>
             )}
@@ -265,13 +297,40 @@ export default function CrmLayout() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <MessageSquare className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/chat' ? 'text-white' : 'text-[#7C3AED]'}`} />
+                  <MessageSquare
+                    className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/chat' ? 'text-white' : 'text-[#7C3AED]'}`}
+                  />
                   <span>Staff Chat</span>
                 </div>
                 <span className="inline-flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#E11D48] text-white">Live</span>
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#E11D48] text-white">
+                    Live
+                  </span>
                 </span>
+              </Link>
+            )}
+
+            {/* Staff Users & Roles (Live SQL DB) */}
+            {(isSuperAdmin ||
+              can('users:manage') ||
+              [1, 2, 3, 14].some((rid) => staffUser?.roleIds?.includes(rid))) && (
+              <Link
+                to="/crm/users"
+                onClick={handleNavClick}
+                className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                  location.pathname === '/crm/users'
+                    ? 'bg-[#1B365D] text-white shadow-sm'
+                    : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <UserCheck
+                    className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/users' ? 'text-white' : 'text-[#003A66]'}`}
+                  />
+                  <span>Users &amp; Roles</span>
+                </div>
+                <span className="badge badge-navy text-[9px] px-1.5 py-0.2">SQL Roster</span>
               </Link>
             )}
 
@@ -290,7 +349,9 @@ export default function CrmLayout() {
               }`}
             >
               <div className="flex items-center gap-3">
-                <Users className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/hr' ? 'text-white' : 'text-[#D97706]'}`} />
+                <Users
+                  className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/hr' ? 'text-white' : 'text-[#D97706]'}`}
+                />
                 <span>HR & Accounts</span>
               </div>
               <span className="badge badge-gold text-[9px] px-1.5 py-0.2">Careers ATS</span>
@@ -306,7 +367,9 @@ export default function CrmLayout() {
               }`}
             >
               <div className="flex items-center gap-3">
-                <Target className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/marketing' ? 'text-white' : 'text-pink-600'}`} />
+                <Target
+                  className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/marketing' ? 'text-white' : 'text-pink-600'}`}
+                />
                 <span>Marketing Hub</span>
               </div>
               <span className="badge badge-navy text-[9px] px-1.5 py-0.2">Social & Ads</span>
@@ -322,7 +385,9 @@ export default function CrmLayout() {
               }`}
             >
               <div className="flex items-center gap-3">
-                <Terminal className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/it-command' ? 'text-white' : 'text-[#0084D1]'}`} />
+                <Terminal
+                  className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/it-command' ? 'text-white' : 'text-[#0084D1]'}`}
+                />
                 <span>IT Command Center</span>
               </div>
               <span className="badge badge-green text-[9px] px-1.5 py-0.2">Super Tech</span>
@@ -359,7 +424,11 @@ export default function CrmLayout() {
                             <Monitor className="w-3.5 h-3.5 text-slate-400" />
                             <span>Manage Desktop</span>
                           </div>
-                          {openSections.desktop ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          {openSections.desktop ? (
+                            <ChevronDown className="w-3 h-3" />
+                          ) : (
+                            <ChevronRight className="w-3 h-3" />
+                          )}
                         </button>
 
                         {openSections.desktop && (
@@ -409,7 +478,8 @@ export default function CrmLayout() {
                         to="/crm/operation-manage-customer"
                         onClick={handleNavClick}
                         className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname === '/crm/operation-manage-customer' || location.pathname === '/crm/accounts'
+                          location.pathname === '/crm/operation-manage-customer' ||
+                          location.pathname === '/crm/accounts'
                             ? 'bg-blue-50 text-[#1B365D] font-bold'
                             : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
                         }`}
@@ -423,7 +493,8 @@ export default function CrmLayout() {
                         to="/crm/operation-manage-tasks"
                         onClick={handleNavClick}
                         className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname === '/crm/operation-manage-tasks' || location.pathname === '/crm/tasks'
+                          location.pathname === '/crm/operation-manage-tasks' ||
+                          location.pathname === '/crm/tasks'
                             ? 'bg-blue-50 text-[#1B365D] font-bold'
                             : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
                         }`}
@@ -563,7 +634,11 @@ export default function CrmLayout() {
                             <Users className="w-3.5 h-3.5 text-slate-400" />
                             <span>Manage Leads</span>
                           </div>
-                          {openSections.leadsSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          {openSections.leadsSub ? (
+                            <ChevronDown className="w-3 h-3" />
+                          ) : (
+                            <ChevronRight className="w-3 h-3" />
+                          )}
                         </button>
 
                         {openSections.leadsSub && (
@@ -572,7 +647,8 @@ export default function CrmLayout() {
                               to="/crm/sales-manage-leads"
                               onClick={handleNavClick}
                               className={`block py-1 px-2 rounded-md ${
-                                location.pathname === '/crm/sales-manage-leads' || location.pathname === '/crm/leads'
+                                location.pathname === '/crm/sales-manage-leads' ||
+                                location.pathname === '/crm/leads'
                                   ? 'bg-[#1B365D] text-white font-bold'
                                   : 'text-slate-600 hover:text-[#1B365D]'
                               }`}
@@ -706,7 +782,7 @@ export default function CrmLayout() {
                         onClick={handleNavClick}
                         className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
                       >
-                        <span>Manage Manager</span>
+                        <span>Staff Users &amp; Roles</span>
                       </Link>
                     )}
 
@@ -743,7 +819,9 @@ export default function CrmLayout() {
                 <span className="flex items-center gap-1.5">
                   <MonitorCheck className="w-3.5 h-3.5 text-emerald-600" /> Desktrack Status
                 </span>
-                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded">Active (Live)</span>
+                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded">
+                  Active (Live)
+                </span>
               </div>
               <p className="text-[10px] text-slate-500">
                 Staff session, idle & call logging active.
@@ -817,7 +895,9 @@ export default function CrmLayout() {
           <div className="flex items-center gap-3">
             {/* Header Role Switcher for Multi-Role Users */}
             <div className="flex items-center gap-2 bg-[#FAF9F5] border border-[#EAE6DD] px-2.5 py-1 rounded-xl">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider hidden lg:inline">Active Role:</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider hidden lg:inline">
+                Active Role:
+              </span>
               <select
                 value={activeRole}
                 onChange={(e) => setStaffRole(e.target.value as RoleType)}

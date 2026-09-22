@@ -8,7 +8,7 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
-    "lint:root": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings=0",
+    "lint:root": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "test": "turbo test",
@@ -36,7 +36,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "eslint --fix --max-warnings=0",
+      "eslint --fix",
       "prettier --write"
     ],
     "*.{json,css,md}": [

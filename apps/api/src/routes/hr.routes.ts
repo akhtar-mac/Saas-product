@@ -113,6 +113,121 @@ const jobOfferSchema = z.object({
   offer_letter_key: z.string().optional(),
 });
 
+// ─── 0. PUBLIC ENDPOINTS: Job Listings ────────────────────────────────────────
+router.get(
+  '/jobs',
+  asyncHandler(async (_req: Request, res: Response) => {
+    const jobs = await (prisma as any).jobs.findMany({
+      orderBy: { id: 'asc' },
+    });
+
+    // Provide rich fallback positions if database has only test records
+    const defaultPositions = [
+      {
+        id: 'ca-audit',
+        title: 'Chartered Accountant (Audit & Direct Tax)',
+        type: 'Full-Time',
+        location: 'Aurangabad, MH / Hybrid',
+        dept: 'Audit & Tax',
+        exp: '2-5 Years',
+        description:
+          'Conduct corporate audits, direct tax compliance, and representation before tax authorities.',
+      },
+      {
+        id: 'sales-exec',
+        title: 'Senior Corporate Sales Executive',
+        type: 'Full-Time',
+        location: 'Multiple Cities (Pan-India)',
+        dept: 'Sales',
+        exp: '1-3 Years',
+        description:
+          'Drive high-volume enterprise onboarding, startup advisory, and B2B partnerships.',
+      },
+      {
+        id: 'cs-legal',
+        title: 'Company Secretary & Legal Compliance Officer',
+        type: 'Full-Time',
+        location: 'Aurangabad, MH',
+        dept: 'Legal & ROC',
+        exp: '2-4 Years',
+        description: 'Drafting statutory resolutions, MCA V3 filings, and corporate governance.',
+      },
+      {
+        id: 'react-dev',
+        title: 'Full Stack React & Node.js Developer',
+        type: 'Full-Time',
+        location: 'Remote / Hybrid',
+        dept: 'Technology',
+        exp: '2-4 Years',
+        description:
+          'Scale ETaxwala SaaS portal, client ERPs, and high-performance financial systems.',
+      },
+      {
+        id: 'mkt-growth',
+        title: 'Digital Growth & Performance Marketer',
+        type: 'Full-Time',
+        location: 'Aurangabad, MH / Remote',
+        dept: 'Marketing',
+        exp: '1-3 Years',
+        description: 'Manage paid media campaigns, programmatic SEO, and full-funnel attribution.',
+      },
+    ];
+
+    const formattedDbJobs = jobs.map((j: any) => ({
+      id: j.id.toString(),
+      title: j.title,
+      type: j.type || 'Full-Time',
+      location: j.location || 'India',
+      dept: 'Corporate Services',
+      exp: '1-4 Years',
+      description: j.description || '',
+      responsibilities: j.responsibilities || '',
+      qualifications: j.qualifications || '',
+      postedDate: j.posted_date || '',
+    }));
+
+    // Merge database jobs with core positions ensuring uniqueness
+    const merged = [...formattedDbJobs];
+    for (const def of defaultPositions) {
+      if (
+        !merged.some((m) => m.title.toLowerCase().includes(def.title.toLowerCase().slice(0, 10)))
+      ) {
+        merged.push(def);
+      }
+    }
+
+    res.json({
+      success: true,
+      data: merged,
+    });
+  })
+);
+
+router.get(
+  '/jobs/:id',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const numId = parseInt(id, 10);
+    let job: any = null;
+
+    if (!isNaN(numId)) {
+      job = await (prisma as any).jobs.findUnique({
+        where: { id: numId },
+      });
+    }
+
+    if (!job) {
+      res.status(404).json({ success: false, error: { message: 'Job opening not found' } });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: job,
+    });
+  })
+);
+
 // ─── 1. PUBLIC ENDPOINT: Submit Job Application ─────────────────────────────
 router.post(
   '/apply',
@@ -309,27 +424,41 @@ router.get(
 // ─── 2B. COMPATIBILITY ENDPOINT: List Applicants for HR Dashboard ────────────
 function toFrontendStatus(status: string): string {
   switch (status) {
-    case 'APPLIED': return 'new';
-    case 'UNDER_REVIEW': return 'review';
-    case 'SHORTLISTED': return 'shortlisted';
-    case 'INTERVIEW': return 'interview_scheduled';
-    case 'OFFERED': return 'offered';
+    case 'APPLIED':
+      return 'new';
+    case 'UNDER_REVIEW':
+      return 'review';
+    case 'SHORTLISTED':
+      return 'shortlisted';
+    case 'INTERVIEW':
+      return 'interview_scheduled';
+    case 'OFFERED':
+      return 'offered';
     case 'HIRED':
     case 'REJECTED':
-    case 'WITHDRAWN': return 'rejected';
-    default: return 'new';
+    case 'WITHDRAWN':
+      return 'rejected';
+    default:
+      return 'new';
   }
 }
 
 function toBackendStatus(status: string): string {
   switch (status) {
-    case 'new': return 'APPLIED';
-    case 'review': return 'UNDER_REVIEW';
-    case 'shortlisted': return 'SHORTLISTED';
-    case 'interview_scheduled': return 'INTERVIEW';
-    case 'offered': return 'OFFERED';
-    case 'rejected': return 'REJECTED';
-    default: return 'APPLIED';
+    case 'new':
+      return 'APPLIED';
+    case 'review':
+      return 'UNDER_REVIEW';
+    case 'shortlisted':
+      return 'SHORTLISTED';
+    case 'interview_scheduled':
+      return 'INTERVIEW';
+    case 'offered':
+      return 'OFFERED';
+    case 'rejected':
+      return 'REJECTED';
+    default:
+      return 'APPLIED';
   }
 }
 
@@ -346,10 +475,15 @@ function mapToApplicantDto(app: any) {
     expectedCtc: app.expected_ctc || undefined,
     noticePeriod: app.notice_period_days ? `${app.notice_period_days} Days` : undefined,
     resumeFileName: app.documents?.[0]?.file_name || undefined,
-    resumeUrl: app.documents?.[0] ? `/v1/hr/applications/${app.id}/documents/${app.documents[0].id}/download` : undefined,
+    resumeUrl: app.documents?.[0]
+      ? `/v1/hr/applications/${app.id}/documents/${app.documents[0].id}/download`
+      : undefined,
     status: toFrontendStatus(app.status),
-    interviewDate: app.interviews?.[0]?.scheduled_at ? new Date(app.interviews[0].scheduled_at).toLocaleDateString() : undefined,
-    interviewType: app.interviews?.[0]?.interview_type === 'GOOGLE_MEET' ? 'Google Meet' : 'Telephonic',
+    interviewDate: app.interviews?.[0]?.scheduled_at
+      ? new Date(app.interviews[0].scheduled_at).toLocaleDateString()
+      : undefined,
+    interviewType:
+      app.interviews?.[0]?.interview_type === 'GOOGLE_MEET' ? 'Google Meet' : 'Telephonic',
     rating: app.rating || 0,
     notes: app.notes?.map((n: any) => `${n.author_name || 'HR'}: ${n.note_content}`) || [],
     appliedAt: app.created_at ? new Date(app.created_at).toISOString() : new Date().toISOString(),
@@ -379,7 +513,8 @@ router.get(
       shortlisted: items.filter((a: any) => a.status === 'SHORTLISTED').length,
       interview_scheduled: items.filter((a: any) => a.status === 'INTERVIEW').length,
       offered: items.filter((a: any) => a.status === 'OFFERED').length,
-      rejected: items.filter((a: any) => ['REJECTED', 'WITHDRAWN', 'HIRED'].includes(a.status)).length,
+      rejected: items.filter((a: any) => ['REJECTED', 'WITHDRAWN', 'HIRED'].includes(a.status))
+        .length,
     };
 
     res.json({
@@ -861,7 +996,10 @@ router.get(
     const localFilePath = path.join(process.cwd(), 'uploads', doc.file_key);
     if (fs.existsSync(localFilePath)) {
       res.setHeader('Content-Type', doc.mime_type || 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.file_name)}"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${encodeURIComponent(doc.file_name)}"`
+      );
       fs.createReadStream(localFilePath).pipe(res);
       return;
     }

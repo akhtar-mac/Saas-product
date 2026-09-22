@@ -20,13 +20,14 @@ import marketingRoutes from './routes/marketing.routes.js';
 import itDeskRoutes from './routes/it-desk.routes.js';
 import infrastructureRoutes from './routes/infrastructure.routes.js';
 import aiAutomationRoutes from './routes/ai-automation.routes.js';
+import disbursementRoutes from './routes/disbursement.routes.js';
 import { initChatSocket } from './socket/chat.socket.js';
+import { prisma } from './config/db.js';
 import path from 'path';
 
 const app = express();
 const httpServer = http.createServer(app);
 initChatSocket(httpServer);
-
 
 // ─── Security & Middleware ────────────────────────────────────────────────────
 app.use(helmet());
@@ -105,38 +106,106 @@ app.use('/v1/infrastructure', infrastructureRoutes);
 // 9. AI Automation Extension Points (ATS Match, IT Scoping, Copywriting)
 app.use('/v1/ai', aiAutomationRoutes);
 
+// 10. Staff Money Requests & Accounts Float Disbursements
+app.use('/v1/disbursements', disbursementRoutes);
+
 // Static uploads are blocked from public access for confidentiality.
 // All document downloads require authenticated streaming routes (e.g. /v1/hr/applications/:id/documents/:docId/download).
 
 // ─── Public inquiry & appointment endpoints ───────────────────────────────────
 app.post('/v1/inquiry', async (req, res) => {
   try {
-    const { name, contact } = req.body as { name?: string; contact?: string };
-    if (!name || !contact) {
-      return res.status(400).json({ success: false, error: { message: 'Name and contact required' } });
+    const { name, contact, phone, email, service, state, city, notes } = req.body as any;
+    const clientPhone = contact || phone;
+    if (!name || !clientPhone) {
+      return res
+        .status(400)
+        .json({ success: false, error: { message: 'Name and contact required' } });
     }
+
+    const maxLead = await prisma.leads.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
+    const nextId = (maxLead?.id || 17281) + 1;
+
+    const newLead = await prisma.leads.create({
+      data: {
+        id: nextId,
+        name,
+        contact: clientPhone,
+        email: email || `${clientPhone}@lead.etaxwala.in`,
+        service: service || 'Business Registration Advisory',
+        source: 'Website Quick Enquiry',
+        state: state || 'Maharashtra',
+        city: city || 'Pune',
+        lead_note: notes || 'Enquiry submitted from homepage',
+        added_by: 1,
+        is_assign: 0,
+        lead_type: 0,
+        is_customer: 0,
+        is_payment: 0,
+        company_id: 'etaxwala',
+        date: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+
     res.json({
       success: true,
-      message: 'Inquiry received and lead dispatched to sales CRM',
-      lead_id: Date.now(),
+      message: 'Inquiry received and lead dispatched to PostgreSQL sales CRM',
+      lead_id: newLead.id,
     });
-  } catch {
+  } catch (err) {
+    logger.error('Failed to save inquiry to database:', err);
     res.status(500).json({ success: false, error: { message: 'Failed to submit' } });
   }
 });
 
 app.post('/v1/appointment', async (req, res) => {
   try {
-    const { name, mobile } = req.body as { name?: string; mobile?: string };
-    if (!name || !mobile) {
-      return res.status(400).json({ success: false, error: { message: 'Name and mobile required' } });
+    const { name, mobile, phone, email, city, message, ap_date, ap_time, ap_mode, service } =
+      req.body as any;
+    const clientPhone = mobile || phone;
+    if (!name || !clientPhone) {
+      return res
+        .status(400)
+        .json({ success: false, error: { message: 'Name and mobile required' } });
     }
+
+    const maxAp = await prisma.appointments.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
+    const nextId = (maxAp?.id || 110) + 1;
+
+    const newAppointment = await prisma.appointments.create({
+      data: {
+        id: nextId,
+        name,
+        mobile: clientPhone,
+        email: email || `${clientPhone}@appointment.etaxwala.in`,
+        city: city || 'Pune',
+        message: message || service || 'CA Consultation Appointment booked via website',
+        ap_date: ap_date || new Date().toISOString().split('T')[0],
+        ap_time: ap_time || '11:00 AM',
+        ap_mode: ap_mode || 'Video Call / Google Meet',
+        is_online: 1,
+        is_complete: 0,
+        payment_status: 0,
+        amount: 499,
+        conduct_by: 'CA Senior Partner',
+        added_by: 'Website Portal',
+        is_delete: 0,
+        date: new Date(),
+      },
+    });
+
     res.json({
       success: true,
-      message: 'Appointment booked successfully',
-      appointment_id: Date.now(),
+      message: 'Appointment booked and saved to PostgreSQL database',
+      appointment_id: newAppointment.id,
     });
-  } catch {
+  } catch (err) {
+    logger.error('Failed to save appointment to database:', err);
     res.status(500).json({ success: false, error: { message: 'Failed to book' } });
   }
 });

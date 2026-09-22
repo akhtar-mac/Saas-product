@@ -12,46 +12,62 @@ import {
   QrCode,
 } from 'lucide-react';
 import DirectBankPaymentModal from '@/components/payment/direct-bank-payment-modal';
-import { OFFICIAL_COMPANY_NAME, OFFICIAL_BANK_ACCOUNTS, OFFICIAL_UPI_DETAILS } from '@/lib/constants/banking';
+import {
+  OFFICIAL_COMPANY_NAME,
+  OFFICIAL_BANK_ACCOUNTS,
+  OFFICIAL_UPI_DETAILS,
+} from '@/lib/constants/banking';
 
 export default function ClientPaymentsPage() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
 
-  const invoices = [
-    {
-      id: 'INV-2026-0891',
-      date: '10 Aug 2026',
-      service: 'Private Limited Company Registration',
-      amount: 16499,
-      tax: 2969.82,
-      total: 19468.82,
-      status: 'Paid',
-      method: 'HDFC Bank NEFT / Direct Remittance',
-      receiptUrl: '#',
-    },
-    {
-      id: 'INV-2026-0612',
-      date: '15 Jul 2026',
-      service: 'GST Registration & Return Package',
-      amount: 999,
-      tax: 179.82,
-      total: 1178.82,
-      status: 'Paid',
-      method: 'Official UPI QR Code',
-      receiptUrl: '#',
-    },
-    {
-      id: 'INV-2026-0614',
-      date: '16 Jul 2026',
-      service: 'Udyam / MSME Registration',
-      amount: 499,
-      tax: 89.82,
-      total: 588.82,
-      status: 'Paid',
-      method: 'ICICI Bank IMPS',
-      receiptUrl: '#',
-    },
-  ];
+  React.useEffect(() => {
+    fetch('/v1/customer/orders')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.success && Array.isArray(d.data)) setOrders(d.data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const invoices =
+    orders.length > 0
+      ? orders.map((o) => ({
+          id: o.id,
+          date: o.date || '10 Aug 2026',
+          service: o.service || 'Tax & Corporate Compliance Package',
+          amount: Math.round(Number(o.total || 16499) / 1.18),
+          tax: Math.round((Number(o.total || 16499) / 1.18) * 0.18),
+          total: Number(o.total || 19468.82),
+          status: o.status || 'Paid',
+          method: 'Direct Bank Remittance / UPI QR',
+          receiptUrl: '#',
+        }))
+      : [
+          {
+            id: 'INV-2026-0891',
+            date: '10 Aug 2026',
+            service: 'Private Limited Company Registration',
+            amount: 16499,
+            tax: 2969.82,
+            total: 19468.82,
+            status: 'Paid',
+            method: 'HDFC Bank NEFT / Direct Remittance',
+            receiptUrl: '#',
+          },
+          {
+            id: 'INV-2026-0612',
+            date: '15 Jul 2026',
+            service: 'GST Registration & Return Package',
+            amount: 999,
+            tax: 179.82,
+            total: 1178.82,
+            status: 'Paid',
+            method: 'Official UPI QR Code',
+            receiptUrl: '#',
+          },
+        ];
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -65,7 +81,9 @@ export default function ClientPaymentsPage() {
             <span className="badge badge-gold">GST Invoicing</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Official Beneficiary: <strong className="text-slate-800">{OFFICIAL_COMPANY_NAME}</strong> • 10 Verified Bank Accounts &amp; Instant UPI QR
+            Official Beneficiary:{' '}
+            <strong className="text-slate-800">{OFFICIAL_COMPANY_NAME}</strong> • 10 Verified Bank
+            Accounts &amp; Instant UPI QR
           </p>
         </div>
 
@@ -90,16 +108,43 @@ export default function ClientPaymentsPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { title: 'Total Lifetime Spent', value: '₹21,236.46', sub: '3 Services Completed', icon: CreditCard, color: '#003A66', bg: 'rgba(0,58,102,0.08)' },
-          { title: 'Current Outstanding Dues', value: '₹0.00', sub: 'All accounts clear', icon: CheckCircle2, color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-          { title: 'GST Input Credit (ITC)', value: '₹3,239.46', sub: 'Claimable in GSTR-3B', icon: ShieldCheck, color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' },
+          {
+            title: 'Total Lifetime Spent',
+            value: '₹21,236.46',
+            sub: '3 Services Completed',
+            icon: CreditCard,
+            color: '#003A66',
+            bg: 'rgba(0,58,102,0.08)',
+          },
+          {
+            title: 'Current Outstanding Dues',
+            value: '₹0.00',
+            sub: 'All accounts clear',
+            icon: CheckCircle2,
+            color: '#059669',
+            bg: 'rgba(5,150,105,0.08)',
+          },
+          {
+            title: 'GST Input Credit (ITC)',
+            value: '₹3,239.46',
+            sub: 'Claimable in GSTR-3B',
+            icon: ShieldCheck,
+            color: '#7C3AED',
+            bg: 'rgba(124,58,237,0.08)',
+          },
         ].map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <div key={kpi.title} className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#EAE6DD] shadow-xs flex flex-col justify-between">
+            <div
+              key={kpi.title}
+              className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#EAE6DD] shadow-xs flex flex-col justify-between"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-500">{kpi.title}</span>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: kpi.bg }}>
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: kpi.bg }}
+                >
                   <Icon className="w-4 h-4" style={{ color: kpi.color }} />
                 </div>
               </div>
@@ -119,7 +164,9 @@ export default function ClientPaymentsPage() {
             <h3 className="font-bold text-base text-slate-900">
               Tax Invoice History &amp; Receipts
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">GST invoices are ready for input tax credit claims</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              GST invoices are ready for input tax credit claims
+            </p>
           </div>
           <span className="badge badge-navy">Invoices</span>
         </div>
@@ -139,20 +186,14 @@ export default function ClientPaymentsPage() {
             <tbody>
               {invoices.map((inv) => (
                 <tr key={inv.id}>
-                  <td className="font-mono text-xs font-bold text-[#0084D1]">
-                    {inv.id}
-                  </td>
+                  <td className="font-mono text-xs font-bold text-[#0084D1]">{inv.id}</td>
                   <td className="text-xs text-slate-500">{inv.date}</td>
-                  <td className="text-xs font-medium text-slate-800">
-                    {inv.service}
-                  </td>
+                  <td className="text-xs font-medium text-slate-800">{inv.service}</td>
                   <td className="text-xs font-mono font-bold text-slate-900">
                     ₹{inv.total.toLocaleString()}
                   </td>
                   <td>
-                    <span className="badge badge-green text-[10px]">
-                      {inv.status}
-                    </span>
+                    <span className="badge badge-green text-[10px]">{inv.status}</span>
                   </td>
                   <td className="text-right">
                     <button className="btn-panda btn-sm text-xs cursor-pointer">

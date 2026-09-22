@@ -38,166 +38,9 @@ interface CustomerItem {
   dueDate: string;
 }
 
-const INITIAL_CUSTOMERS: CustomerItem[] = [
-  {
-    id: 1,
-    name: 'Balasaheb Ghadge',
-    company: 'Mauli Micro Association',
-    subCustomer: 'OPC1',
-    mobile: '7249696992',
-    email: 'growthfund8894@gmail.com',
-    state: 'Maharashtra',
-    city: 'Ratnagiri',
-    category: 'Other Registrations',
-    service: 'TAN Registration',
-    type: 'Basic',
-    addedBy: 'Krushna Shinde',
-    total: 999,
-    paid: 999,
-    unpaid: 0,
-    dueDate: '—',
-  },
-  {
-    id: 2,
-    name: 'Sri Vidya Digital Offer Nidhi Limited FY 25-26',
-    company: 'Sudhir Vyas',
-    subCustomer: '',
-    mobile: '9111503756',
-    email: 'sudhirvyas06@gmail.com',
-    state: 'Maharashtra',
-    city: 'Amravati',
-    category: 'Audit and Compliances',
-    service: 'Nidhi Company Audit and Compliances',
-    type: 'Basic',
-    addedBy: 'Kailas Gadekar',
-    total: 69999,
-    paid: 25000,
-    unpaid: 44999,
-    dueDate: '2026-09-16',
-  },
-  {
-    id: 3,
-    name: 'Datta Lahurao Rakhunde',
-    company: 'Pruthviraj Beer shopee',
-    mobile: '9881345217',
-    email: 'datta@gmail.com',
-    state: 'Maharashtra',
-    city: 'Pune',
-    category: 'Taxation and Return Filing',
-    service: 'Income Tax Return (Business and Professional Income)',
-    type: 'Basic',
-    addedBy: 'Shashikant Panchal Assistant',
-    total: 1999,
-    paid: 1999,
-    unpaid: 0,
-    dueDate: '—',
-  },
-  {
-    id: 4,
-    name: 'Lakan Ghayal',
-    company: 'Riddhi Maltiservices And Janaral Store',
-    mobile: '9325631872',
-    email: 'lakan@gmail.com',
-    state: 'Maharashtra',
-    city: 'Jalna',
-    category: 'Taxation and Return Filing',
-    service: 'Income Tax Return (Business and Professional Income)',
-    type: 'Basic',
-    addedBy: 'Kailas Gadekar',
-    total: 1500,
-    paid: 1500,
-    unpaid: 0,
-    dueDate: '—',
-  },
-  {
-    id: 5,
-    name: 'Wasim Karim Shaikh',
-    company: 'A To Z Maultiservices And General Store',
-    mobile: '9404352777',
-    email: 'wasim@gmail.com',
-    state: 'Maharashtra',
-    city: 'Aurangabad',
-    category: 'Taxation and Return Filing',
-    service: 'Income Tax Return (Business and Professional Income)',
-    type: 'Basic',
-    addedBy: 'Kailas Gadekar',
-    total: 1500,
-    paid: 1500,
-    unpaid: 0,
-    dueDate: '—',
-  },
-  {
-    id: 6,
-    name: 'Sandeep Kharat',
-    company: 'Gautam Traders',
-    mobile: '9765757643',
-    email: 'sandeep@gmail.com',
-    state: 'Maharashtra',
-    city: 'Nashik',
-    category: 'Taxation and Return Filing',
-    service: 'Income Tax Return (Business and Professional Income)',
-    type: 'Basic',
-    addedBy: 'Shashikant Panchal Assistant',
-    total: 1999,
-    paid: 1999,
-    unpaid: 0,
-    dueDate: '—',
-  },
-  {
-    id: 7,
-    name: 'Sudhir Bombale',
-    company: 'Bombale Collection',
-    mobile: '7057777555',
-    email: 'bombale@gmail.com',
-    state: 'Maharashtra',
-    city: 'Pune',
-    category: 'Taxation and Return Filing',
-    service: 'Income Tax Return (Business and Professional Income)',
-    type: 'Basic',
-    addedBy: 'Avinash Mate Assistant',
-    total: 1999,
-    paid: 1999,
-    unpaid: 0,
-    dueDate: '—',
-  },
-  {
-    id: 8,
-    name: 'Samir Momin',
-    company: 'Saverd Traders',
-    mobile: '9423459861',
-    email: 'samir@gmail.com',
-    state: 'Maharashtra',
-    city: 'Satara',
-    category: 'Taxation and Return Filing',
-    service: 'Income Tax Return (Business and Professional Income)',
-    type: 'Basic',
-    addedBy: 'Kailas Gadekar',
-    total: 1500,
-    paid: 1500,
-    unpaid: 0,
-    dueDate: '—',
-  },
-  {
-    id: 9,
-    name: 'Adity Tekale',
-    company: 'Sakshi Jends Parlar',
-    mobile: '9529685919',
-    email: 'aditya.49324@gmail.com',
-    state: 'Maharashtra',
-    city: 'Jalna',
-    category: 'Taxation and Return Filing',
-    service: 'Income Tax Return (Business and Professional Income)',
-    type: 'Basic',
-    addedBy: 'Avinash Mate Assistant',
-    total: 1500,
-    paid: 0,
-    unpaid: 1500,
-    dueDate: '2026-09-15',
-  },
-];
-
 export default function CrmAccountsPage() {
-  const [customers, setCustomers] = useState<CustomerItem[]>(INITIAL_CUSTOMERS);
+  const [customers, setCustomers] = useState<CustomerItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
@@ -206,10 +49,11 @@ export default function CrmAccountsPage() {
 
   // Fetch real customers from database
   React.useEffect(() => {
+    setLoading(true);
     fetch(`${API_BASE}/v1/crm/customers`)
       .then((res) => res.json())
       .then((data) => {
-        if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+        if (data?.success && Array.isArray(data?.data)) {
           const mapped: CustomerItem[] = data.data.map((c: any, i: number) => ({
             id: c.id || i + 1,
             name: c.name || 'Client',
@@ -224,26 +68,21 @@ export default function CrmAccountsPage() {
             type: 'Basic',
             addedBy: `Staff #${c.added_by || 1}`,
             total: c.service_price || 1499,
-            paid: c.is_payment ? (c.service_price || 1499) : 0,
-            unpaid: c.is_payment ? 0 : (c.service_price || 1499),
+            paid: c.is_payment ? c.service_price || 1499 : 0,
+            unpaid: c.is_payment ? 0 : c.service_price || 1499,
             dueDate: '—',
           }));
           setCustomers(mapped);
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error('Failed to fetch customers', err))
+      .finally(() => setLoading(false));
   }, []);
 
   const location = useLocation();
 
   // Modals state
-  const [activeCustomer, setActiveCustomer] = useState<CustomerItem | null>(
-    new URLSearchParams(location.search).get('order') === '1' ||
-    new URLSearchParams(location.search).get('update') === '1' ||
-    new URLSearchParams(location.search).get('appointment') === '1'
-      ? INITIAL_CUSTOMERS[0]
-      : null
-  );
+  const [activeCustomer, setActiveCustomer] = useState<CustomerItem | null>(null);
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
   const [isUpdateCustomerOpen, setIsUpdateCustomerOpen] = useState(
     new URLSearchParams(location.search).get('update') === '1'
@@ -385,108 +224,129 @@ export default function CrmAccountsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filtered.map((item, idx) => (
-                <tr
-                  key={item.id}
-                  className={idx % 2 === 0 ? 'bg-white hover:bg-sky-50/40' : 'bg-[#F9FAFB] hover:bg-sky-50/40'}
-                >
-                  <td className="py-2.5 px-3 font-medium text-slate-900">
-                    <button
-                      onClick={() => {
-                        setActiveCustomer(item);
-                        setIsUpdateCustomerOpen(true);
-                      }}
-                      className="hover:text-[#0284c7] hover:underline font-bold text-left"
-                    >
-                      {item.name}
-                    </button>
-                    {item.subCustomer && (
-                      <span className="ml-1.5 badge badge-navy text-[9px] py-0 px-1">
-                        {item.subCustomer}
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-2.5 px-3 text-slate-600">{item.company}</td>
-                  <td className="py-2.5 px-3 font-mono text-slate-700">{item.mobile}</td>
-                  <td className="py-2.5 px-3 text-slate-600">{item.category}</td>
-                  <td className="py-2.5 px-3">
-                    <span className="text-slate-800 font-medium">{item.service}</span>{' '}
-                    <span className="bg-[#16A34A] text-white text-[9px] font-bold px-1.5 py-0.2 rounded">
-                      {item.type}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3 text-slate-600">{item.addedBy}</td>
-                  <td className="py-2.5 px-3 font-bold text-slate-800">{item.total}</td>
-                  <td className="py-2.5 px-3 font-bold text-emerald-700">{item.paid}</td>
-                  <td className="py-2.5 px-3 font-bold text-red-600">{item.unpaid}</td>
-                  <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{item.dueDate}</td>
-                  <td className="py-2.5 px-3 text-center relative">
-                    <button
-                      onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
-                      className="p-1 hover:bg-slate-200 rounded text-slate-600"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-
-                    {/* 3-Dot Dropdown Action Menu */}
-                    {activeMenuId === item.id && (
-                      <div className="absolute right-4 top-8 z-30 w-44 bg-white rounded-lg shadow-xl border border-slate-200 py-1 text-left text-xs">
-                        <button
-                          onClick={() => {
-                            setActiveCustomer(item);
-                            setIsAddOrderOpen(true);
-                            setActiveMenuId(null);
-                          }}
-                          className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
-                        >
-                          Add New Order
-                        </button>
-                        <button
-                          onClick={() => {
-                            setActiveCustomer(item);
-                            setIsUpdateCustomerOpen(true);
-                            setActiveMenuId(null);
-                          }}
-                          className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
-                        >
-                          Update Customer
-                        </button>
-                        <button
-                          onClick={() => {
-                            setActiveCustomer(item);
-                            setSubCustomerName(item.subCustomer || '');
-                            setIsEditSubCustomerOpen(true);
-                            setActiveMenuId(null);
-                          }}
-                          className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
-                        >
-                          Edit Sub Customer
-                        </button>
-                        <button
-                          onClick={() => {
-                            setActiveCustomer(item);
-                            setIsAddAppointmentOpen(true);
-                            setActiveMenuId(null);
-                          }}
-                          className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
-                        >
-                          Add Appointment
-                        </button>
-                        <button
-                          onClick={() => {
-                            setActiveCustomer(item);
-                            setIsTasksDrawerOpen(true);
-                            setActiveMenuId(null);
-                          }}
-                          className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
-                        >
-                          Add Tasks Drawer
-                        </button>
-                      </div>
-                    )}
+              {loading ? (
+                <tr>
+                  <td colSpan={11} className="py-12 text-center text-xs text-slate-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-[#1E3A8A] border-t-transparent rounded-full animate-spin" />
+                      Loading live SQL customer records from database...
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-10 text-center text-xs text-slate-400">
+                    No customers found matching your filter.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((item, idx) => (
+                  <tr
+                    key={item.id}
+                    className={
+                      idx % 2 === 0
+                        ? 'bg-white hover:bg-sky-50/40'
+                        : 'bg-[#F9FAFB] hover:bg-sky-50/40'
+                    }
+                  >
+                    <td className="py-2.5 px-3 font-medium text-slate-900">
+                      <button
+                        onClick={() => {
+                          setActiveCustomer(item);
+                          setIsUpdateCustomerOpen(true);
+                        }}
+                        className="hover:text-[#0284c7] hover:underline font-bold text-left"
+                      >
+                        {item.name}
+                      </button>
+                      {item.subCustomer && (
+                        <span className="ml-1.5 badge badge-navy text-[9px] py-0 px-1">
+                          {item.subCustomer}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-600">{item.company}</td>
+                    <td className="py-2.5 px-3 font-mono text-slate-700">{item.mobile}</td>
+                    <td className="py-2.5 px-3 text-slate-600">{item.category}</td>
+                    <td className="py-2.5 px-3">
+                      <span className="text-slate-800 font-medium">{item.service}</span>{' '}
+                      <span className="bg-[#16A34A] text-white text-[9px] font-bold px-1.5 py-0.2 rounded">
+                        {item.type}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-600">{item.addedBy}</td>
+                    <td className="py-2.5 px-3 font-bold text-slate-800">{item.total}</td>
+                    <td className="py-2.5 px-3 font-bold text-emerald-700">{item.paid}</td>
+                    <td className="py-2.5 px-3 font-bold text-red-600">{item.unpaid}</td>
+                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{item.dueDate}</td>
+                    <td className="py-2.5 px-3 text-center relative">
+                      <button
+                        onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
+                        className="p-1 hover:bg-slate-200 rounded text-slate-600"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+
+                      {/* 3-Dot Dropdown Action Menu */}
+                      {activeMenuId === item.id && (
+                        <div className="absolute right-4 top-8 z-30 w-44 bg-white rounded-lg shadow-xl border border-slate-200 py-1 text-left text-xs">
+                          <button
+                            onClick={() => {
+                              setActiveCustomer(item);
+                              setIsAddOrderOpen(true);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
+                          >
+                            Add New Order
+                          </button>
+                          <button
+                            onClick={() => {
+                              setActiveCustomer(item);
+                              setIsUpdateCustomerOpen(true);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
+                          >
+                            Update Customer
+                          </button>
+                          <button
+                            onClick={() => {
+                              setActiveCustomer(item);
+                              setSubCustomerName(item.subCustomer || '');
+                              setIsEditSubCustomerOpen(true);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
+                          >
+                            Edit Sub Customer
+                          </button>
+                          <button
+                            onClick={() => {
+                              setActiveCustomer(item);
+                              setIsAddAppointmentOpen(true);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
+                          >
+                            Add Appointment
+                          </button>
+                          <button
+                            onClick={() => {
+                              setActiveCustomer(item);
+                              setIsTasksDrawerOpen(true);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
+                          >
+                            Add Tasks Drawer
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -499,10 +359,16 @@ export default function CrmAccountsPage() {
               Previous
             </button>
             <button className="px-2.5 py-1 rounded bg-[#1E3A8A] text-white font-bold">1</button>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">2</button>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">3</button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+              2
+            </button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+              3
+            </button>
             <span className="px-1 text-slate-400">...</span>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">207</button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+              207
+            </button>
             <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
               Next
             </button>
@@ -525,7 +391,9 @@ export default function CrmAccountsPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm text-[#1B365D]">Add New Order</h3>
-                  <p className="text-[10px] text-slate-500 font-medium">Customer: {activeCustomer.name} • {activeCustomer.company}</p>
+                  <p className="text-[10px] text-slate-500 font-medium">
+                    Customer: {activeCustomer.name} • {activeCustomer.company}
+                  </p>
                 </div>
               </div>
               <button
@@ -547,7 +415,9 @@ export default function CrmAccountsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Company/Shop Name</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Company/Shop Name
+                  </label>
                   <input
                     type="text"
                     defaultValue={activeCustomer.company}
@@ -555,7 +425,9 @@ export default function CrmAccountsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Sub Customer</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Sub Customer
+                  </label>
                   <input
                     type="text"
                     placeholder="Enter Sub Customer Name (e.g. OPC1, OPC2)"
@@ -593,7 +465,9 @@ export default function CrmAccountsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Mobile No</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Mobile No
+                  </label>
                   <input
                     type="text"
                     defaultValue={activeCustomer.mobile}
@@ -601,14 +475,18 @@ export default function CrmAccountsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Custom Package</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Custom Package
+                  </label>
                   <select className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]">
                     <option value="No">No</option>
                     <option value="Yes">Yes</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Category</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Category
+                  </label>
                   <select className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]">
                     <option value="Taxation and Return Filing">Taxation and Return Filing</option>
                     <option value="Business Registration">Business Registration</option>
@@ -626,7 +504,9 @@ export default function CrmAccountsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Apply Coupon</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Apply Coupon
+                  </label>
                   <input
                     type="text"
                     placeholder="Coupon code..."
@@ -634,7 +514,9 @@ export default function CrmAccountsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Discount Amount</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Discount Amount
+                  </label>
                   <input
                     type="number"
                     defaultValue={0}
@@ -642,14 +524,18 @@ export default function CrmAccountsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Payment Mode</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Payment Mode
+                  </label>
                   <select className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]">
                     <option value="Select EMI">Select EMI</option>
                     <option value="Full Payment">Full Payment</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Total Amount</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Total Amount
+                  </label>
                   <input
                     type="number"
                     readOnly
@@ -661,7 +547,9 @@ export default function CrmAccountsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Paid Amount</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Paid Amount
+                  </label>
                   <input
                     type="number"
                     defaultValue={1000}
@@ -677,7 +565,9 @@ export default function CrmAccountsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">1st Due Date</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    1st Due Date
+                  </label>
                   <input
                     type="date"
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
@@ -686,12 +576,16 @@ export default function CrmAccountsPage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Payment Screenshot</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Payment Screenshot
+                </label>
                 <input type="file" className="text-xs text-slate-500" />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Comment Box</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Comment Box
+                </label>
                 <textarea
                   rows={2}
                   placeholder="Order notes and comments..."
@@ -748,7 +642,9 @@ export default function CrmAccountsPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm text-[#1B365D]">Update Customer</h3>
-                  <p className="text-[10px] text-slate-500 font-medium">{activeCustomer.name} • {activeCustomer.company}</p>
+                  <p className="text-[10px] text-slate-500 font-medium">
+                    {activeCustomer.name} • {activeCustomer.company}
+                  </p>
                 </div>
               </div>
               <button
@@ -770,7 +666,9 @@ export default function CrmAccountsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Company/Shop Name</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Company/Shop Name
+                  </label>
                   <input
                     type="text"
                     defaultValue={activeCustomer.company}
@@ -789,7 +687,9 @@ export default function CrmAccountsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Mobile No</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Mobile No
+                  </label>
                   <input
                     type="text"
                     defaultValue={activeCustomer.mobile}
@@ -816,7 +716,9 @@ export default function CrmAccountsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Total Amount</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Total Amount
+                  </label>
                   <input
                     type="number"
                     defaultValue={activeCustomer.total}
@@ -824,7 +726,9 @@ export default function CrmAccountsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Paid Amount</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Paid Amount
+                  </label>
                   <input
                     type="number"
                     defaultValue={activeCustomer.paid}
@@ -832,7 +736,9 @@ export default function CrmAccountsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Unpaid Amount</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Unpaid Amount
+                  </label>
                   <input
                     type="number"
                     defaultValue={activeCustomer.unpaid}
@@ -883,7 +789,9 @@ export default function CrmAccountsPage() {
 
             <div className="p-5 space-y-4 text-xs">
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Sub Customer Name</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Sub Customer Name
+                </label>
                 <input
                   type="text"
                   value={subCustomerName}
@@ -926,7 +834,9 @@ export default function CrmAccountsPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm text-[#1B365D]">Add New Appointment</h3>
-                  <p className="text-[10px] text-slate-500 font-medium">{activeCustomer.name} • {activeCustomer.company}</p>
+                  <p className="text-[10px] text-slate-500 font-medium">
+                    {activeCustomer.name} • {activeCustomer.company}
+                  </p>
                 </div>
               </div>
               <button
@@ -937,7 +847,10 @@ export default function CrmAccountsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleBookAppointment} className="p-6 space-y-3.5 text-xs max-h-[82vh] overflow-y-auto">
+            <form
+              onSubmit={handleBookAppointment}
+              className="p-6 space-y-3.5 text-xs max-h-[82vh] overflow-y-auto"
+            >
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">Name *</label>
@@ -961,7 +874,9 @@ export default function CrmAccountsPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Contact No *</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Contact No *
+                  </label>
                   <input
                     type="text"
                     required
@@ -1004,7 +919,9 @@ export default function CrmAccountsPage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Conduct By *</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Conduct By *
+                </label>
                 <select
                   value={appointmentAdvisor}
                   onChange={(e) => setAppointmentAdvisor(e.target.value)}
@@ -1017,7 +934,9 @@ export default function CrmAccountsPage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Description *</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Description *
+                </label>
                 <textarea
                   rows={2}
                   required
@@ -1111,7 +1030,10 @@ export default function CrmAccountsPage() {
 
               <div className="space-y-2 pt-2">
                 {tasksList.map((t, i) => (
-                  <div key={i} className="flex items-center justify-between gap-2 p-1.5 bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-2 p-1.5 bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl"
+                  >
                     <button className="flex-1 bg-white hover:bg-slate-50 text-slate-800 font-semibold py-2 px-3 rounded-xl border border-[#EAE6DD] flex items-center justify-between shadow-2xs">
                       <span>{t}</span>
                       <ChevronDown className="w-3.5 h-3.5 text-slate-400" />

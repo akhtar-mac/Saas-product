@@ -1,13 +1,44 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import {
-  Search, Send, Paperclip, X, FileText, Image as ImageIcon,
-  Check, CheckCheck, Clock, Shield, Users, Phone, Mail,
-  Building, AlertCircle, Download, RefreshCw, MessageSquare,
-  Sparkles, ChevronRight, Eye,
+  Search,
+  Send,
+  Paperclip,
+  X,
+  FileText,
+  Image as ImageIcon,
+  Check,
+  CheckCheck,
+  Clock,
+  Shield,
+  Users,
+  Phone,
+  Mail,
+  Building,
+  AlertCircle,
+  Download,
+  RefreshCw,
+  MessageSquare,
+  Sparkles,
+  ChevronRight,
+  Eye,
+  CreditCard,
+  Wallet,
+  AlertTriangle,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
-import { ChatUser, ChatMessage, ChatConversation, RoleType } from '@etaxwala/types';
+import {
+  ChatUser,
+  ChatMessage,
+  ChatConversation,
+  RoleType,
+  DisbursementRequest,
+  DisbursementWallet,
+} from '@etaxwala/types';
+import { PaymentRequestCard } from '../components/payment-request-card';
+import { RequestMoneyModal } from '../components/request-money-modal';
+import { FulfillPaymentModal } from '../components/fulfill-payment-modal';
+import { AdminFloatDrawer } from '../components/admin-float-drawer';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
@@ -23,7 +54,9 @@ export default function CrmChatPage() {
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'conversations' | 'directory' | 'audit'>('conversations');
+  const [activeTab, setActiveTab] = useState<'conversations' | 'directory' | 'audit'>(
+    'conversations'
+  );
   const [onlineOnly, setOnlineOnly] = useState(false);
 
   // Message composer
@@ -37,6 +70,16 @@ export default function CrmChatPage() {
   const [auditConversations, setAuditConversations] = useState<any[]>([]);
   const [loadingAudit, setLoadingAudit] = useState(false);
 
+  // Disbursement & Accounts Float Management
+  const [showRequestMoneyModal, setShowRequestMoneyModal] = useState(false);
+  const [showFulfillModal, setShowFulfillModal] = useState(false);
+  const [selectedFulfillRequest, setSelectedFulfillRequest] = useState<DisbursementRequest | null>(
+    null
+  );
+  const [showFloatDrawer, setShowFloatDrawer] = useState(false);
+  const [designatedOfficer, setDesignatedOfficer] = useState<any | null>(null);
+  const [wallet, setWallet] = useState<DisbursementWallet | null>(null);
+
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,6 +87,28 @@ export default function CrmChatPage() {
   const isSuperAdmin =
     staffUser?.role === RoleType.SUPER_ADMIN ||
     (Array.isArray(staffUser?.roles) && staffUser.roles.includes(RoleType.SUPER_ADMIN));
+
+  const userRoleIds: any[] = Array.isArray(staffUser?.roles)
+    ? staffUser.roles
+    : (staffUser as any)?.role_id
+      ? [(staffUser as any).role_id]
+      : staffUser?.role
+        ? [staffUser.role]
+        : [];
+  const isAdminOrSuperAdmin =
+    isSuperAdmin ||
+    userRoleIds.includes(1) ||
+    userRoleIds.includes(2) ||
+    userRoleIds.includes(RoleType.ADMIN) ||
+    userRoleIds.includes(RoleType.SUPER_ADMIN) ||
+    staffUser?.role === RoleType.ADMIN ||
+    staffUser?.role === RoleType.SUPER_ADMIN;
+
+  const isAccountsOfficer =
+    wallet?.officerId === staffUser?.id || designatedOfficer?.id === staffUser?.id;
+
+  const canFulfill = isAdminOrSuperAdmin || isAccountsOfficer;
+  const canViewFloat = isAdminOrSuperAdmin || isAccountsOfficer;
 
   const authHeaders = {
     'Content-Type': 'application/json',
@@ -95,24 +160,67 @@ export default function CrmChatPage() {
     });
 
     // Real-time user presence updates
-    socket.on('user:presence', (data: { userId: number; isOnline: boolean; lastSeenAt: string }) => {
-      setStaffDirectory((prev) =>
-        prev.map((u) => (u.id === data.userId ? { ...u, isOnline: data.isOnline, lastSeenAt: data.lastSeenAt } : u))
-      );
-      setConversations((prev) =>
-        prev.map((c) => {
-          if (c.participant && c.participant.id === data.userId) {
-            return {
-              ...c,
-              participant: { ...c.participant, isOnline: data.isOnline, lastSeenAt: data.lastSeenAt },
-            };
-          }
-          return c;
-        })
-      );
-      if (activeParticipant && activeParticipant.id === data.userId) {
-        setActiveParticipant((prev) => (prev ? { ...prev, isOnline: data.isOnline, lastSeenAt: data.lastSeenAt } : null));
+    socket.on(
+      'user:presence',
+      (data: { userId: number; isOnline: boolean; lastSeenAt: string }) => {
+        setStaffDirectory((prev) =>
+          prev.map((u) =>
+            u.id === data.userId
+              ? { ...u, isOnline: data.isOnline, lastSeenAt: data.lastSeenAt }
+              : u
+          )
+        );
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.participant && c.participant.id === data.userId) {
+              return {
+                ...c,
+                participant: {
+                  ...c.participant,
+                  isOnline: data.isOnline,
+                  lastSeenAt: data.lastSeenAt,
+                },
+              };
+            }
+            return c;
+          })
+        );
+        if (activeParticipant && activeParticipant.id === data.userId) {
+          setActiveParticipant((prev) =>
+            prev ? { ...prev, isOnline: data.isOnline, lastSeenAt: data.lastSeenAt } : null
+          );
+        }
       }
+    );
+
+    // Real-time Disbursement Events
+    socket.on(
+      'disbursement:updated',
+      (data: { conversationId?: number; messageId?: number; request: any }) => {
+        setMessages((prev) =>
+          prev.map((m) => {
+            if (
+              (data.messageId && m.id === data.messageId) ||
+              (m.paymentRequest && m.paymentRequest.id === data.request.id)
+            ) {
+              return {
+                ...m,
+                paymentRequest: data.request,
+              };
+            }
+            return m;
+          })
+        );
+        loadDisbursementInfo();
+      }
+    );
+
+    socket.on('disbursement:wallet_updated', (data: { newBalance: number }) => {
+      setWallet((prev) => (prev ? { ...prev, balance: data.newBalance } : prev));
+    });
+
+    socket.on('disbursement:officer_changed', () => {
+      loadDisbursementInfo();
     });
 
     return () => {
@@ -170,9 +278,57 @@ export default function CrmChatPage() {
     }
   };
 
+  const loadDisbursementInfo = async () => {
+    try {
+      const offRes = await fetch(`${API_BASE}/v1/disbursements/officer`, { headers: authHeaders });
+      const offData = await offRes.json();
+      if (offData.success && offData.data) {
+        setDesignatedOfficer(offData.data);
+      }
+
+      if (isAdminOrSuperAdmin || staffUser?.id) {
+        const walRes = await fetch(`${API_BASE}/v1/disbursements/wallet`, { headers: authHeaders });
+        if (walRes.ok) {
+          const walData = await walRes.json();
+          if (walData.success && walData.data) {
+            setWallet(walData.data);
+          }
+        }
+      }
+    } catch {
+      // Non-admins get 403 on /wallet which is expected
+    }
+  };
+
+  const handleRejectRequest = async (requestId: number, reason: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/v1/disbursements/requests/${requestId}/reject`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ reason }),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setMessages((prev) =>
+          prev.map((m) => {
+            if (m.paymentRequest && m.paymentRequest.id === requestId) {
+              return { ...m, paymentRequest: data.data };
+            }
+            return m;
+          })
+        );
+      } else {
+        alert(data.error || 'Failed to decline request.');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error declining request.');
+    }
+  };
+
   useEffect(() => {
     loadConversations();
     loadStaffDirectory();
+    loadDisbursementInfo();
   }, []);
 
   // ─── Open or Switch to a Conversation ──────────────────────────────────────
@@ -188,7 +344,9 @@ export default function CrmChatPage() {
     socketRef.current?.emit('conversation:join', { conversationId: convId });
 
     try {
-      const res = await fetch(`${API_BASE}/v1/chat/conversations/${convId}/messages`, { headers: authHeaders });
+      const res = await fetch(`${API_BASE}/v1/chat/conversations/${convId}/messages`, {
+        headers: authHeaders,
+      });
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
         setMessages(data.data);
@@ -264,14 +422,17 @@ export default function CrmChatPage() {
         setUploadingAttachment(false);
       }
 
-      const res = await fetch(`${API_BASE}/v1/chat/conversations/${activeConversationId}/messages`, {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({
-          content: messageText.trim(),
-          attachments: uploadedAttachments,
-        }),
-      });
+      const res = await fetch(
+        `${API_BASE}/v1/chat/conversations/${activeConversationId}/messages`,
+        {
+          method: 'POST',
+          headers: authHeaders,
+          body: JSON.stringify({
+            content: messageText.trim(),
+            attachments: uploadedAttachments,
+          }),
+        }
+      );
 
       const data = await res.json();
       if (data.success && data.data) {
@@ -341,8 +502,39 @@ export default function CrmChatPage() {
           </div>
         </div>
 
-        {/* View Switcher & Super Admin Compliance Link */}
+        {/* View Switcher & Action Controls */}
         <div className="flex items-center gap-2">
+          {/* Universal Request Money button: ALL staff can use */}
+          <button
+            type="button"
+            onClick={() => setShowRequestMoneyModal(true)}
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5"
+            title="Ask / Request money from Accounts with attached QR code or UPI ID"
+            id="chat-request-money-btn"
+          >
+            <CreditCard className="w-3.5 h-3.5" />
+            <span>Request Money</span>
+          </button>
+
+          {/* Admin / Accounts Officer ONLY: Float Balance & Audit Tracker */}
+          {canViewFloat && (
+            <button
+              type="button"
+              onClick={() => setShowFloatDrawer(true)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
+                wallet?.isLowBalance
+                  ? 'bg-rose-50 text-rose-700 border-rose-300 animate-pulse'
+                  : 'bg-[#1B365D] text-white border-[#1B365D] shadow-xs hover:bg-[#152a48]'
+              }`}
+              title="Accounts Float Balance & Disbursement Audit Tracker"
+              id="admin-float-btn"
+            >
+              <Wallet className="w-3.5 h-3.5 text-amber-300" />
+              <span>Float: ₹{wallet ? Number(wallet.balance).toLocaleString('en-IN') : '0'}</span>
+              {wallet?.isLowBalance && <AlertTriangle className="w-3 h-3 text-rose-600" />}
+            </button>
+          )}
+
           {isSuperAdmin && (
             <button
               onClick={() => {
@@ -357,7 +549,7 @@ export default function CrmChatPage() {
               id="admin-audit-toggle"
             >
               <Shield className="w-3.5 h-3.5 text-purple-400" />
-              Super Admin Audit Log
+              Audit Log
             </button>
           )}
 
@@ -365,6 +557,7 @@ export default function CrmChatPage() {
             onClick={() => {
               loadConversations();
               loadStaffDirectory();
+              loadDisbursementInfo();
             }}
             className="p-2 rounded-xl bg-[#FAF9F5] border border-[#EAE6DD] text-slate-600 hover:text-slate-900 transition-colors"
             title="Refresh Conversations"
@@ -515,7 +708,9 @@ export default function CrmChatPage() {
 
                         <div className="flex items-center justify-between">
                           <p className="text-[11px] text-slate-500 truncate max-w-[190px]">
-                            {conv.lastMessage ? conv.lastMessage.content || '📎 Attachment' : 'No messages yet'}
+                            {conv.lastMessage
+                              ? conv.lastMessage.content || '📎 Attachment'
+                              : 'No messages yet'}
                           </p>
                           {conv.unreadCount > 0 && (
                             <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#E11D48] text-white">
@@ -588,15 +783,19 @@ export default function CrmChatPage() {
             <div className="flex-1 p-6 overflow-y-auto space-y-4">
               <div className="bg-[#FFFDF9] border border-[#EAE6DD] rounded-2xl p-4 shadow-xs">
                 <h2 className="text-sm font-bold text-[#1B365D] flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-[#7C3AED]" /> Super Admin Compliance & Internal Chat Audit Log
+                  <Shield className="w-4 h-4 text-[#7C3AED]" /> Super Admin Compliance & Internal
+                  Chat Audit Log
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Immutable communication logs across all personnel in accordance with company governance policies.
+                  Immutable communication logs across all personnel in accordance with company
+                  governance policies.
                 </p>
               </div>
 
               {loadingAudit ? (
-                <div className="text-center py-12 text-slate-400 text-xs">Loading audit logs...</div>
+                <div className="text-center py-12 text-slate-400 text-xs">
+                  Loading audit logs...
+                </div>
               ) : (
                 <div className="bg-white rounded-2xl border border-[#EAE6DD] overflow-hidden shadow-xs">
                   <table className="w-full text-xs text-left">
@@ -618,7 +817,10 @@ export default function CrmChatPage() {
                           <td className="p-3">
                             <div className="flex flex-wrap gap-1">
                               {ac.participants?.map((p: any) => (
-                                <span key={p.id} className="px-2 py-0.5 rounded-full bg-slate-100 font-medium">
+                                <span
+                                  key={p.id}
+                                  className="px-2 py-0.5 rounded-full bg-slate-100 font-medium"
+                                >
                                   {p.name} ({p.role})
                                 </span>
                               ))}
@@ -654,7 +856,9 @@ export default function CrmChatPage() {
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#1B365D] to-[#0084D1] text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                      {activeParticipant?.name ? activeParticipant.name.charAt(0).toUpperCase() : 'C'}
+                      {activeParticipant?.name
+                        ? activeParticipant.name.charAt(0).toUpperCase()
+                        : 'C'}
                     </div>
                     <span
                       className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
@@ -703,18 +907,67 @@ export default function CrmChatPage() {
               {/* Message Feed */}
               <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
                 {loadingMessages ? (
-                  <div className="text-center py-12 text-xs text-slate-400">Loading conversation history...</div>
+                  <div className="text-center py-12 text-xs text-slate-400">
+                    Loading conversation history...
+                  </div>
                 ) : messages.length === 0 ? (
                   <div className="text-center py-16 space-y-2">
                     <MessageSquare className="w-10 h-10 mx-auto text-slate-300" />
                     <h4 className="text-sm font-bold text-slate-700">Beginning of conversation</h4>
                     <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                      All messages in this conversation are strictly preserved in compliance with internal audit guidelines.
+                      All messages in this conversation are strictly preserved in compliance with
+                      internal audit guidelines.
                     </p>
                   </div>
                 ) : (
                   messages.map((msg, i) => {
                     const isSelf = msg.senderId === staffUser?.id;
+
+                    let parsedPaymentReq: DisbursementRequest | null = msg.paymentRequest || null;
+                    if (!parsedPaymentReq && msg.messageType === 'payment_request') {
+                      try {
+                        parsedPaymentReq = JSON.parse(msg.content);
+                      } catch {}
+                    }
+
+                    if (parsedPaymentReq) {
+                      return (
+                        <div
+                          key={msg.id || i}
+                          className={`flex gap-2.5 ${isSelf ? 'justify-end' : 'justify-start'}`}
+                        >
+                          {!isSelf && (
+                            <div className="w-7 h-7 rounded-lg bg-[#1B365D] text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-1">
+                              {msg.senderName?.charAt(0).toUpperCase() || 'S'}
+                            </div>
+                          )}
+                          <div className={`space-y-1 ${isSelf ? 'items-end' : 'items-start'}`}>
+                            {!isSelf && (
+                              <p className="text-[10px] font-bold text-slate-500 ml-1">
+                                {msg.senderName}
+                              </p>
+                            )}
+                            <PaymentRequestCard
+                              request={parsedPaymentReq}
+                              isSelf={isSelf}
+                              canFulfill={canFulfill}
+                              onFulfillClick={(r) => {
+                                setSelectedFulfillRequest(r);
+                                setShowFulfillModal(true);
+                              }}
+                              onRejectClick={(r) => {
+                                const reason = window.prompt(
+                                  'Please enter the reason for declining this request:'
+                                );
+                                if (reason && reason.trim()) {
+                                  handleRejectRequest(r.id, reason.trim());
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    }
 
                     return (
                       <div
@@ -727,10 +980,14 @@ export default function CrmChatPage() {
                           </div>
                         )}
 
-                        <div className={`max-w-[75%] space-y-1 ${isSelf ? 'items-end' : 'items-start'}`}>
+                        <div
+                          className={`max-w-[75%] space-y-1 ${isSelf ? 'items-end' : 'items-start'}`}
+                        >
                           {/* Sender name for received messages */}
                           {!isSelf && (
-                            <p className="text-[10px] font-bold text-slate-500 ml-1">{msg.senderName}</p>
+                            <p className="text-[10px] font-bold text-slate-500 ml-1">
+                              {msg.senderName}
+                            </p>
                           )}
 
                           {/* Bubble */}
@@ -774,7 +1031,9 @@ export default function CrmChatPage() {
                                         <>
                                           <FileText className="w-5 h-5 text-amber-500 shrink-0" />
                                           <div className="flex-1 min-w-0">
-                                            <p className="font-bold truncate text-[11px]">{att.fileName}</p>
+                                            <p className="font-bold truncate text-[11px]">
+                                              {att.fileName}
+                                            </p>
                                             <p className="text-[9px] opacity-75">
                                               {(att.fileSize / 1024).toFixed(1)} KB
                                             </p>
@@ -879,6 +1138,16 @@ export default function CrmChatPage() {
                   <Paperclip className="w-4 h-4" />
                 </button>
 
+                <button
+                  type="button"
+                  onClick={() => setShowRequestMoneyModal(true)}
+                  className="p-2 px-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors shrink-0 flex items-center gap-1.5 border border-amber-200"
+                  title="Request money / fees from Accounts"
+                >
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span className="font-bold text-[11px] hidden sm:inline">Ask Money</span>
+                </button>
+
                 <input
                   type="text"
                   value={messageText}
@@ -889,11 +1158,15 @@ export default function CrmChatPage() {
 
                 <button
                   type="submit"
-                  disabled={sending || uploadingAttachment || (!messageText.trim() && !selectedFile)}
+                  disabled={
+                    sending || uploadingAttachment || (!messageText.trim() && !selectedFile)
+                  }
                   className="px-4 py-2 rounded-xl bg-[#1B365D] hover:bg-[#152a48] text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 shrink-0 shadow-xs"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>{uploadingAttachment ? 'Uploading...' : sending ? 'Sending...' : 'Send'}</span>
+                  <span>
+                    {uploadingAttachment ? 'Uploading...' : sending ? 'Sending...' : 'Send'}
+                  </span>
                 </button>
               </form>
             </>
@@ -907,7 +1180,8 @@ export default function CrmChatPage() {
                 Select a staff member or conversation
               </h3>
               <p className="text-xs text-slate-500 max-w-md">
-                Communicate securely with team members, share quotation drafts, audit notes, and operations documents in real-time.
+                Communicate securely with team members, share quotation drafts, audit notes, and
+                operations documents in real-time.
               </p>
               <button
                 onClick={() => setActiveTab('directory')}
@@ -928,10 +1202,14 @@ export default function CrmChatPage() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-slate-900">{activeParticipant.name}</h4>
-                <p className="text-xs text-slate-400">{activeParticipant.department || 'ETaxwala Team'}</p>
+                <p className="text-xs text-slate-400">
+                  {activeParticipant.department || 'ETaxwala Team'}
+                </p>
               </div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <span className={`w-1.5 h-1.5 rounded-full ${activeParticipant.isOnline ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${activeParticipant.isOnline ? 'bg-emerald-500' : 'bg-slate-400'}`}
+                />
                 {activeParticipant.isOnline ? 'Active Online' : 'Currently Offline'}
               </div>
             </div>
@@ -982,6 +1260,46 @@ export default function CrmChatPage() {
           </div>
         )}
       </div>
+
+      {/* Modals & Drawers */}
+      <RequestMoneyModal
+        isOpen={showRequestMoneyModal}
+        onClose={() => setShowRequestMoneyModal(false)}
+        conversationId={activeConversationId}
+        onSuccess={(_newReq) => {
+          if (activeConversationId) {
+            openConversation(activeConversationId, activeParticipant || undefined);
+          }
+          loadConversations();
+        }}
+      />
+
+      <FulfillPaymentModal
+        isOpen={showFulfillModal}
+        onClose={() => {
+          setShowFulfillModal(false);
+          setSelectedFulfillRequest(null);
+        }}
+        request={selectedFulfillRequest}
+        onSuccess={(updated) => {
+          setMessages((prev) =>
+            prev.map((m) => {
+              if (m.paymentRequest && m.paymentRequest.id === updated.id) {
+                return { ...m, paymentRequest: updated };
+              }
+              return m;
+            })
+          );
+          loadDisbursementInfo();
+        }}
+      />
+
+      <AdminFloatDrawer
+        isOpen={showFloatDrawer}
+        onClose={() => setShowFloatDrawer(false)}
+        staffDirectory={staffDirectory}
+        isAdminUser={isAdminOrSuperAdmin}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Layers,
   Building,
@@ -9,21 +9,45 @@ import {
   FileCheck,
   ArrowRight,
   MapPin,
+  Loader2,
 } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
 export default function SubBrandsDashboard() {
-  const [selectedBrand, setSelectedBrand] = useState('udyomi');
+  const [selectedBrand, setSelectedBrand] = useState<'udyomi' | 'sahakar'>('udyomi');
+  const [udyomiLeads, setUdyomiLeads] = useState<any[]>([]);
+  const [sahakarLeads, setSahakarLeads] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const udyomiLeads = [
-    { name: 'Kisan FPO Sangamner Ltd', type: 'Farmer Producer Company (FPC) Registration', location: 'Ahmednagar, MH', status: 'Govt Filing In Progress', value: '₹24,999' },
-    { name: 'Baliraja Organic Agro Producer', type: 'FPC Annual Compliance Package', location: 'Nashik, MH', status: 'Audit Ready', value: '₹18,000' },
-    { name: 'Godavari Krishi Vikas FPC', type: 'NABARD / SFAC Project Loan Guidance', location: 'Nanded, MH', status: 'Consultation Done', value: '₹15,000' },
-  ];
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchSubBrandLeads() {
+      try {
+        const token = localStorage.getItem('etaxwala_token');
+        const res = await fetch(`${API_BASE}/v1/crm/sub-brands/leads`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+          if (isMounted) {
+            setUdyomiLeads(json.data.udyami || []);
+            setSahakarLeads(json.data.sahakar || []);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load sub-brand leads:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    fetchSubBrandLeads();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-  const sahakarLeads = [
-    { name: 'Shree Ganesh Nagari Sahakari Patsanstha', type: 'Credit Co-operative Society Audit', location: 'Pune, MH', status: 'Audit In Progress', value: '₹35,000' },
-    { name: 'Jankalyan Multi-State Co-op Society', type: 'Multi-State Co-op Registration', location: 'Kolhapur, MH', status: 'By-laws Drafting', value: '₹45,000' },
-  ];
+  const activeList = selectedBrand === 'udyomi' ? udyomiLeads : sahakarLeads;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -32,18 +56,17 @@ export default function SubBrandsDashboard() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-display font-bold text-brand-navy">
-              Sub-Brand Operations & Multi-Tenancy Hub
+              Sub-Brand Operations &amp; Multi-Tenancy Hub
             </h1>
             <span className="badge badge-gold">Special Verticals</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Dedicated vertical management for <strong>Udyami Kisan</strong> (FPC & Agriculture) and <strong>Sahakar Samriddhi</strong> (Co-operative Banking & PACS).
+            Dedicated vertical management for <strong>Udyami Kisan</strong> (FPC &amp; Agriculture)
+            and <strong>Sahakar Samriddhi</strong> (Co-operative Banking &amp; PACS).
           </p>
         </div>
 
-        <span className="badge badge-green text-xs py-1.5 px-3">
-          Multi-Tenant Engine Active
-        </span>
+        <span className="badge badge-green text-xs py-1.5 px-3">Multi-Tenant Engine Active</span>
       </div>
 
       {/* Brand Switcher Tabs */}
@@ -56,7 +79,7 @@ export default function SubBrandsDashboard() {
               : 'text-slate-600 hover:bg-slate-50'
           }`}
         >
-          🌾 Udyami Kisan (FPC & Agriculture) • 3,630 Leads
+          🌾 Udyami Kisan (FPC &amp; Agriculture) • {udyomiLeads.length || 15} Leads
         </button>
         <button
           onClick={() => setSelectedBrand('sahakar')}
@@ -66,7 +89,7 @@ export default function SubBrandsDashboard() {
               : 'text-slate-600 hover:bg-slate-50'
           }`}
         >
-          🏛️ Sahakar Samriddhi (PACS & Co-ops) • 1,901 Leads
+          🏛️ Sahakar Samriddhi (PACS &amp; Co-ops) • {sahakarLeads.length || 39} Leads
         </button>
       </div>
 
@@ -83,8 +106,11 @@ export default function SubBrandsDashboard() {
           },
           {
             title: 'Active Vertical Leads',
-            value: selectedBrand === 'udyomi' ? '3,630 Leads' : '1,901 Leads',
-            sub: 'Rural network sourcing',
+            value:
+              selectedBrand === 'udyomi'
+                ? `${udyomiLeads.length} Registered`
+                : `${sahakarLeads.length} Registered`,
+            sub: 'Direct PostgreSQL sync',
             icon: Users,
             color: '#003A66',
             bg: 'rgba(0,58,102,0.08)',
@@ -108,10 +134,16 @@ export default function SubBrandsDashboard() {
         ].map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <div key={kpi.title} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div
+              key={kpi.title}
+              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-500">{kpi.title}</span>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: kpi.bg }}>
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: kpi.bg }}
+                >
                   <Icon className="w-4 h-4" style={{ color: kpi.color }} />
                 </div>
               </div>
@@ -133,39 +165,56 @@ export default function SubBrandsDashboard() {
                 ? 'Active Udyami Kisan FPC Registrations & Governance'
                 : 'Active Sahakar Samriddhi Co-operative Society Filings'}
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Specialized compliance workflows and state registrar submissions</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Specialized compliance workflows and state registrar submissions
+            </p>
           </div>
           <span className="badge badge-navy">Vertical Pipeline</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="table-etaxwala">
-            <thead>
-              <tr>
-                <th>Organization / Society Name</th>
-                <th>Specialized Compliance</th>
-                <th>District / Location</th>
-                <th>Package Fee</th>
-                <th className="text-right">Lifecycle Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(selectedBrand === 'udyomi' ? udyomiLeads : sahakarLeads).map((item, idx) => (
-                <tr key={idx}>
-                  <td className="font-bold text-slate-800 text-xs">{item.name}</td>
-                  <td className="text-xs text-slate-700 font-medium">{item.type}</td>
-                  <td className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                    <MapPin className="w-3 h-3" /> {item.location}
-                  </td>
-                  <td className="text-xs font-mono font-bold text-emerald-700">{item.value}</td>
-                  <td className="text-right">
-                    <span className="badge badge-green">{item.status}</span>
-                  </td>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-6 h-6 animate-spin text-brand-navy" />
+            <span className="ml-2 text-xs font-semibold text-slate-500">
+              Loading vertical leads...
+            </span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="table-etaxwala">
+              <thead>
+                <tr>
+                  <th>Organization / Society Name</th>
+                  <th>Specialized Compliance</th>
+                  <th>District / Location</th>
+                  <th>Contact Info</th>
+                  <th>Package Fee</th>
+                  <th className="text-right">Lifecycle Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {activeList.map((item, idx) => (
+                  <tr key={idx}>
+                    <td className="font-bold text-slate-800 text-xs">{item.name}</td>
+                    <td className="text-xs text-slate-700 font-medium">
+                      {item.service || item.type}
+                    </td>
+                    <td className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                      <MapPin className="w-3 h-3 text-slate-400" /> {item.location}
+                    </td>
+                    <td className="text-xs text-slate-500 font-mono">
+                      {item.contact || 'Direct Field'}
+                    </td>
+                    <td className="text-xs font-mono font-bold text-emerald-700">{item.value}</td>
+                    <td className="text-right">
+                      <span className="badge badge-green">{item.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

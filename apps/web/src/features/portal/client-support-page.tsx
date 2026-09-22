@@ -15,43 +15,53 @@ import {
 export default function ClientSupportPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'CA Pooja Kulkarni (Specialist)',
-      isStaff: true,
-      time: '11 Aug 2026, 11:35 AM',
-      text: 'Hello Rajesh ji! Welcome to ETaxwala. I will be handling your Private Limited Company incorporation. Please let me know if you have any questions regarding your name search or MOA drafting.',
-    },
-    {
-      id: 2,
-      sender: 'You',
-      isStaff: false,
-      time: '12 Aug 2026, 02:10 PM',
-      text: 'Thank you Pooja ji. I have uploaded the electricity bill for the registered office. Please confirm if that format is acceptable for MCA.',
-    },
-    {
-      id: 3,
-      sender: 'CA Pooja Kulkarni (Specialist)',
-      isStaff: true,
-      time: '12 Aug 2026, 03:00 PM',
-      text: 'Yes, the office utility bill is perfectly verified. We are now awaiting the 2nd Director address proof to submit SPICe+ Part B.',
-    },
-  ]);
+  const [ticketSubject, setTicketSubject] = useState('');
+  const [ticketDesc, setTicketDesc] = useState('');
+  const [messages, setMessages] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<any[]>([]);
 
-  const tickets = [
-    {
-      id: 'TCK-902',
-      subject: 'Clarification on RUN Name Search Timeline',
-      category: 'Service Query',
-      createdAt: '11 Aug 2026',
-      status: 'Resolved',
-    },
-  ];
+  React.useEffect(() => {
+    fetch('/v1/customer/chat')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.success && Array.isArray(d.data)) {
+          setMessages(
+            d.data.map((m: any) => ({
+              id: m.id,
+              sender: m.sender,
+              isStaff: m.role === 'staff',
+              time: m.timestamp || 'Today',
+              text: m.message,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
 
-  const handleSendMessage = (e: React.FormEvent) => {
+    fetch('/v1/customer/tickets')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.success && Array.isArray(d.data)) {
+          setTickets(
+            d.data.map((t: any) => ({
+              id: t.id,
+              subject: t.subject,
+              category: 'Legal / CA Query',
+              createdAt: t.date || 'Today',
+              status: t.status === 'OPEN' ? 'In Progress' : 'Resolved',
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatMessage.trim()) return;
+
+    const userMsg = chatMessage.trim();
+    setChatMessage('');
 
     setMessages((prev) => [
       ...prev,
@@ -60,10 +70,46 @@ export default function ClientSupportPage() {
         sender: 'You',
         isStaff: false,
         time: 'Just now',
-        text: chatMessage.trim(),
+        text: userMsg,
       },
     ]);
-    setChatMessage('');
+
+    try {
+      await fetch('/v1/customer/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMsg }),
+      });
+    } catch {}
+  };
+
+  const handleCreateTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ticketSubject.trim()) return;
+
+    try {
+      const res = await fetch('/v1/customer/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: ticketSubject, description: ticketDesc }),
+      });
+      const data = await res.json();
+      if (data?.success && data.data) {
+        setTickets((prev) => [
+          {
+            id: data.data.id,
+            subject: data.data.subject,
+            category: 'Legal / CA Query',
+            createdAt: 'Today',
+            status: 'In Progress',
+          },
+          ...prev,
+        ]);
+      }
+    } catch {}
+    setIsModalOpen(false);
+    setTicketSubject('');
+    setTicketDesc('');
   };
 
   return (
@@ -78,14 +124,12 @@ export default function ClientSupportPage() {
             <span className="badge badge-gold">Direct CA Line</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Directly communicate with your assigned Chartered Accountant and track resolution tickets.
+            Directly communicate with your assigned Chartered Accountant and track resolution
+            tickets.
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="btn btn-primary btn-sm"
-        >
+        <button onClick={() => setIsModalOpen(true)} className="btn btn-primary btn-sm">
           <Plus className="w-3.5 h-3.5" /> Raise New Ticket
         </button>
       </div>
@@ -103,7 +147,8 @@ export default function ClientSupportPage() {
                   CA Pooja Kulkarni (Senior Case Specialist)
                 </h4>
                 <p className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Online • In-Charge
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Online
+                  • In-Charge
                 </p>
               </div>
             </div>
@@ -162,9 +207,7 @@ export default function ClientSupportPage() {
         {/* Tickets & Support Contact Info (1 Col) */}
         <div className="space-y-6">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-            <h4 className="font-display font-bold text-sm text-slate-800">
-              Support Tickets
-            </h4>
+            <h4 className="font-display font-bold text-sm text-slate-800">Support Tickets</h4>
 
             <div className="space-y-2.5">
               {tickets.map((tck) => (
@@ -178,9 +221,7 @@ export default function ClientSupportPage() {
                     </span>
                     <span className="badge badge-green text-[10px]">{tck.status}</span>
                   </div>
-                  <p className="text-xs font-semibold text-slate-800">
-                    {tck.subject}
-                  </p>
+                  <p className="text-xs font-semibold text-slate-800">{tck.subject}</p>
                   <span className="text-[10px] text-slate-400 block">{tck.createdAt}</span>
                 </div>
               ))}
@@ -194,8 +235,12 @@ export default function ClientSupportPage() {
               If your assigned specialist is unavailable or you require urgent escalation:
             </p>
             <div className="pt-2 border-t border-[#EAE6DD] space-y-1.5 text-xs text-slate-700">
-              <p className="font-semibold flex items-center gap-2"><span>📞</span> Toll-Free: 080-6902-9999</p>
-              <p className="font-semibold flex items-center gap-2"><span>✉️</span> support@etaxwala.com</p>
+              <p className="font-semibold flex items-center gap-2">
+                <span>📞</span> Toll-Free: 080-6902-9999
+              </p>
+              <p className="font-semibold flex items-center gap-2">
+                <span>✉️</span> support@etaxwala.com
+              </p>
             </div>
           </div>
         </div>
@@ -207,9 +252,7 @@ export default function ClientSupportPage() {
           <div className="bg-[#FFFDF9] rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-xl border border-[#EAE6DD] space-y-4">
             <div className="flex items-center justify-between border-b border-[#EAE6DD] pb-3">
               <div>
-                <h3 className="font-bold text-base text-slate-900">
-                  Create Support Ticket
-                </h3>
+                <h3 className="font-bold text-base text-slate-900">Create Support Ticket</h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Our central support &amp; compliance officers will respond within 4 hours
                 </p>
@@ -222,32 +265,19 @@ export default function ClientSupportPage() {
               </button>
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setIsModalOpen(false);
-              }}
-              className="space-y-3.5 text-xs"
-            >
+            <form onSubmit={handleCreateTicket} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Subject / Query Topic</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Subject / Query Topic
+                </label>
                 <input
                   type="text"
                   placeholder="e.g. Need clarification regarding MOA clause"
+                  value={ticketSubject}
+                  onChange={(e) => setTicketSubject(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   required
                 />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Service Related To
-                </label>
-                <select className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30">
-                  <option>Order #101 - Private Limited Company Registration</option>
-                  <option>Order #102 - GST Registration</option>
-                  <option>Billing &amp; Payment Query</option>
-                </select>
               </div>
 
               <div>
@@ -257,6 +287,8 @@ export default function ClientSupportPage() {
                 <textarea
                   rows={4}
                   placeholder="Describe your issue or question in detail..."
+                  value={ticketDesc}
+                  onChange={(e) => setTicketDesc(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   required
                 />

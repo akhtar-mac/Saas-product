@@ -4,8 +4,18 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  ShieldCheck, Lock, Mail, Phone, User, Building,
-  ArrowRight, Search, Check, Sparkles, CheckCircle2, Loader2
+  ShieldCheck,
+  Lock,
+  Mail,
+  Phone,
+  User,
+  Building,
+  ArrowRight,
+  Search,
+  Check,
+  Sparkles,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import { services } from '@/lib/constants/services';
 import { useAuthStore } from '@/store/auth-store';
@@ -21,7 +31,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const CUSTOMER_API = 'https://customer-api.etaxwala.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 export default function ClientSignupPage() {
   const [serviceSearch, setServiceSearch] = useState('');
@@ -47,55 +57,37 @@ export default function ClientSignupPage() {
 
   // Filter 250+ services via searchable type-ahead (2.1.3)
   const filteredServices = services
-    .filter((s) => s.name.toLowerCase().includes(serviceSearch.toLowerCase()) || s.category.toLowerCase().includes(serviceSearch.toLowerCase()))
+    .filter(
+      (s) =>
+        s.name.toLowerCase().includes(serviceSearch.toLowerCase()) ||
+        s.category.toLowerCase().includes(serviceSearch.toLowerCase())
+    )
     .slice(0, 20);
 
   const onSubmit = async (data: FormData) => {
     setStatus('loading');
     try {
-      // Create inquiry lead on customer backend
-      await fetch(`${CUSTOMER_API}/add-inquiry-lead`, {
+      const res = await fetch(`${API_BASE}/v1/customer/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: data.name,
           email: data.email,
-          contact: data.mobile,
+          mobile: data.mobile,
+          password: data.password,
           city: data.city,
-          state: 'Maharashtra',
           service: data.service,
-          message: `Self Registered via Client Portal. Initial Service: ${data.service}`,
-          consent: true,
         }),
       });
 
-      // Auto-authenticate customer session
-      loginCustomer(
-        {
-          id: Date.now(),
-          leadId: Date.now(),
-          name: data.name,
-          business: `${data.name}'s Enterprise`,
-          email: data.email,
-          contact: data.mobile,
-          service: data.service,
-          servicePrice: 16499,
-          state: 'Maharashtra',
-          city: data.city,
-          addedBy: 1,
-          companyId: 'etaxwala',
-          isPayment: false,
-          isActive: true,
-          isApprove: true,
-          isPartner: 0,
-          customerToken: `token_${Date.now()}`,
-          date: new Date().toISOString().split('T')[0],
-        },
-        `jwt_client_${Date.now()}`
-      );
-
-      setStatus('success');
-      setTimeout(() => navigate('/portal'), 800);
+      const json = await res.json();
+      if (json?.success && json.customer && json.token) {
+        loginCustomer(json.customer, json.token);
+        setStatus('success');
+        navigate('/portal');
+      } else {
+        setStatus('error');
+      }
     } catch {
       setStatus('error');
     }
@@ -113,11 +105,10 @@ export default function ClientSignupPage() {
             <span className="px-3 py-1 rounded-full bg-blue-50 text-[#0084D1] border border-blue-200 text-xs font-bold uppercase tracking-wider">
               Client Portal Account
             </span>
-            <h1 className="text-2xl font-bold text-slate-900 mt-2">
-              Create Your Client Account
-            </h1>
+            <h1 className="text-2xl font-bold text-slate-900 mt-2">Create Your Client Account</h1>
             <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-              Track compliance progress, upload KYC documents securely, and get dedicated Chartered Accountant support.
+              Track compliance progress, upload KYC documents securely, and get dedicated Chartered
+              Accountant support.
             </p>
           </div>
         </div>
@@ -126,9 +117,7 @@ export default function ClientSignupPage() {
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#EAE6DD] shadow-sm space-y-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Full Name *
-              </label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
               <div className="relative">
                 <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
@@ -154,7 +143,9 @@ export default function ClientSignupPage() {
                     className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   />
                 </div>
-                {errors.email && <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>}
+                {errors.email && (
+                  <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>
+                )}
               </div>
 
               <div>
@@ -169,7 +160,9 @@ export default function ClientSignupPage() {
                     className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   />
                 </div>
-                {errors.mobile && <p className="mt-1 text-xs text-rose-500">{errors.mobile.message}</p>}
+                {errors.mobile && (
+                  <p className="mt-1 text-xs text-rose-500">{errors.mobile.message}</p>
+                )}
               </div>
             </div>
 
@@ -187,7 +180,9 @@ export default function ClientSignupPage() {
                     className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   />
                 </div>
-                {errors.password && <p className="mt-1 text-xs text-rose-500">{errors.password.message}</p>}
+                {errors.password && (
+                  <p className="mt-1 text-xs text-rose-500">{errors.password.message}</p>
+                )}
               </div>
 
               <div>
@@ -243,8 +238,12 @@ export default function ClientSignupPage() {
                         }}
                         className="w-full text-left px-3 py-2 rounded-xl text-xs hover:bg-blue-50 flex items-center justify-between text-slate-700 group cursor-pointer"
                       >
-                        <span className="truncate group-hover:text-[#0084D1] font-medium">{s.name}</span>
-                        <span className="text-[10px] text-slate-400 uppercase font-bold shrink-0 ml-2">{s.category}</span>
+                        <span className="truncate group-hover:text-[#0084D1] font-medium">
+                          {s.name}
+                        </span>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold shrink-0 ml-2">
+                          {s.category}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -264,7 +263,8 @@ export default function ClientSignupPage() {
                   </>
                 ) : (
                   <>
-                    <span>Create Account &amp; Access Portal</span> <ArrowRight className="w-4 h-4" />
+                    <span>Create Account &amp; Access Portal</span>{' '}
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </span>

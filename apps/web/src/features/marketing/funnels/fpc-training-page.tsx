@@ -4,10 +4,28 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CheckCircle2, Video, FileText, Award, Users, Calendar, Clock,
-  Sparkles, ChevronDown, Loader2, BookOpen, ShieldCheck, ArrowRight,
-  TrendingUp, PhoneCall, HelpCircle, Check, Download, Layers,
-  Building2, BadgeCheck, FileSpreadsheet
+  CheckCircle2,
+  Video,
+  FileText,
+  Award,
+  Users,
+  Calendar,
+  Clock,
+  Sparkles,
+  ChevronDown,
+  Loader2,
+  BookOpen,
+  ShieldCheck,
+  ArrowRight,
+  TrendingUp,
+  PhoneCall,
+  HelpCircle,
+  Check,
+  Download,
+  Layers,
+  Building2,
+  BadgeCheck,
+  FileSpreadsheet,
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
@@ -82,7 +100,10 @@ const CURRICULUM_MODULES = [
 
 const schema = z.object({
   name: z.string().min(1, 'Full name is required'),
-  mobile: z.string().min(10, 'Valid 10-digit mobile number required').regex(/^[0-9+ ]{10,14}$/, 'Invalid phone number format'),
+  mobile: z
+    .string()
+    .min(10, 'Valid 10-digit mobile number required')
+    .regex(/^[0-9+ ]{10,14}$/, 'Invalid phone number format'),
   email: z.string().email('Valid email address required'),
   city: z.string().min(1, 'City or District is required'),
   fpc_name: z.string().optional(),
@@ -90,15 +111,21 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const CUSTOMER_API = 'https://customer-api.etaxwala.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const CUSTOMER_API = `${API_BASE}/api`;
 
 export default function FPCTrainingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-  const nextBatch = new Date(Date.now() + ((4 * 24 * 60 * 60) + (14 * 60 * 60) + (32 * 60) + 45) * 1000);
+  const nextBatch = new Date(Date.now() + (4 * 24 * 60 * 60 + 14 * 60 * 60 + 32 * 60 + 45) * 1000);
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
@@ -141,7 +168,8 @@ export default function FPCTrainingPage() {
           '@context': 'https://schema.org',
           '@type': 'Course',
           name: 'Farmer to Founder: FPC Masterclass Program',
-          description: 'Comprehensive 10-day live masterclass on operating and monetizing Farmer Producer Companies in India.',
+          description:
+            'Comprehensive 10-day live masterclass on operating and monetizing Farmer Producer Companies in India.',
           provider: {
             '@type': 'Organization',
             name: 'ETaxwala Academy',
@@ -165,13 +193,17 @@ export default function FPCTrainingPage() {
 
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 text-xs font-semibold uppercase tracking-wider mb-4">
-              <Sparkles className="w-3.5 h-3.5 text-[#0084D1]" /> 10-Day Certified Online Masterclass
+              <Sparkles className="w-3.5 h-3.5 text-[#0084D1]" /> 10-Day Certified Online
+              Masterclass
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15] text-slate-900">
-              Farmer to Founder: <span className="text-multicolor">FPC Business Training Program</span>
+              Farmer to Founder:{' '}
+              <span className="text-multicolor">FPC Business Training Program</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-              Scale your Farmer Producer Company (FPC) into a high-growth commercial enterprise. Master statutory ROC compliance, secure up to ₹15 Lakhs in government matching equity grants, and build direct buyer supply chains.
+              Scale your Farmer Producer Company (FPC) into a high-growth commercial enterprise.
+              Master statutory ROC compliance, secure up to ₹15 Lakhs in government matching equity
+              grants, and build direct buyer supply chains.
             </p>
 
             {/* Flip Clock Countdown */}
@@ -180,10 +212,7 @@ export default function FPCTrainingPage() {
             </div>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <a
-                href="#register-form"
-                className="px-6 py-3.5 rounded-xl btn-multicolor"
-              >
+              <a href="#register-form" className="px-6 py-3.5 rounded-xl btn-multicolor">
                 <span className="btn-galaxy__stars" aria-hidden="true" />
                 <span className="relative z-[2] inline-flex items-center gap-2 font-bold text-sm">
                   <span>Enroll in Next Live Batch</span>
@@ -210,25 +239,33 @@ export default function FPCTrainingPage() {
         <div className="container-etaxwala">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center md:text-left divide-y md:divide-y-0 md:divide-x divide-[#EAE6DD]">
             <div className="pt-2 md:pt-0">
-              <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Learning Format</p>
+              <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">
+                Learning Format
+              </p>
               <p className="text-sm font-bold text-slate-900 flex items-center justify-center md:justify-start gap-1.5 mt-1">
                 <Video className="w-4 h-4 text-emerald-600" /> Live Zoom + HD Recordings
               </p>
             </div>
             <div className="pt-2 md:pt-0 md:pl-6">
-              <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Language</p>
+              <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">
+                Language
+              </p>
               <p className="text-sm font-bold text-slate-900 flex items-center justify-center md:justify-start gap-1.5 mt-1">
                 <BookOpen className="w-4 h-4 text-[#F97316]" /> English &amp; Practical Business
               </p>
             </div>
             <div className="pt-2 md:pt-0 md:pl-6">
-              <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Class Timings</p>
+              <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">
+                Class Timings
+              </p>
               <p className="text-sm font-bold text-slate-900 flex items-center justify-center md:justify-start gap-1.5 mt-1">
                 <Clock className="w-4 h-4 text-[#0084D1]" /> 07:30 PM – 09:00 PM IST
               </p>
             </div>
             <div className="pt-2 md:pt-0 md:pl-6">
-              <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Program Duration</p>
+              <p className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">
+                Program Duration
+              </p>
               <p className="text-sm font-bold text-slate-900 flex items-center justify-center md:justify-start gap-1.5 mt-1">
                 <Calendar className="w-4 h-4 text-[#7C3AED]" /> 10 Days (15 Hours Live)
               </p>
@@ -241,17 +278,19 @@ export default function FPCTrainingPage() {
       <section className="section bg-[#FAF9F5] py-16">
         <div className="container-etaxwala max-w-6xl">
           <div className="grid gap-10 lg:grid-cols-12 items-start">
-            
             {/* Left: 10-Day Curriculum Breakdown */}
             <div className="lg:col-span-7 space-y-8">
               <div className="bg-white rounded-3xl p-7 sm:p-9 border border-[#EAE6DD] shadow-xs space-y-6">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-[#0084D1]">Complete Roadmap</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-[#0084D1]">
+                    Complete Roadmap
+                  </span>
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
                     What You Will Master in 10 Days
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-500 mt-1.5">
-                    Structured step-by-step curriculum taught by practicing Chartered Accountants and agribusiness advisors.
+                    Structured step-by-step curriculum taught by practicing Chartered Accountants
+                    and agribusiness advisors.
                   </p>
                 </div>
 
@@ -280,7 +319,8 @@ export default function FPCTrainingPage() {
               {/* What You Get / Course Inclusions */}
               <div className="bg-white rounded-3xl p-7 sm:p-9 border border-[#EAE6DD] shadow-xs space-y-5">
                 <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                  <BadgeCheck className="w-5 h-5 text-emerald-600" /> Everything Included With Enrollment:
+                  <BadgeCheck className="w-5 h-5 text-emerald-600" /> Everything Included With
+                  Enrollment:
                 </h3>
                 <div className="space-y-3">
                   {[
@@ -291,7 +331,10 @@ export default function FPCTrainingPage() {
                     'Official verifiable Certificate of Completion from ETaxwala Academy',
                     'Exclusive lifetime mastermind group access on WhatsApp & Telegram',
                   ].map((benefit, idx) => (
-                    <div key={idx} className="flex items-start gap-3 text-xs sm:text-sm text-slate-700">
+                    <div
+                      key={idx}
+                      className="flex items-start gap-3 text-xs sm:text-sm text-slate-700"
+                    >
                       <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
                         <Check className="w-3.5 h-3.5" />
                       </div>
@@ -313,7 +356,8 @@ export default function FPCTrainingPage() {
                     Reserve Your Seat Today
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Fill the form below to receive syllabus details and immediate enrollment confirmation.
+                    Fill the form below to receive syllabus details and immediate enrollment
+                    confirmation.
                   </p>
                 </div>
 
@@ -322,9 +366,12 @@ export default function FPCTrainingPage() {
                     <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-xs">
                       <CheckCircle2 className="w-8 h-8" />
                     </div>
-                    <h4 className="text-xl font-extrabold text-slate-900">Registration Received!</h4>
+                    <h4 className="text-xl font-extrabold text-slate-900">
+                      Registration Received!
+                    </h4>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      Thank you for enrolling! Our academy coordinator will connect with you on WhatsApp with the batch syllabus and Zoom joining link.
+                      Thank you for enrolling! Our academy coordinator will connect with you on
+                      WhatsApp with the batch syllabus and Zoom joining link.
                     </p>
                     <button
                       onClick={() => setStatus('idle')}
@@ -336,48 +383,66 @@ export default function FPCTrainingPage() {
                 ) : (
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div>
-                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">Full Name *</label>
+                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">
+                        Full Name *
+                      </label>
                       <input
                         {...register('name')}
                         placeholder="e.g. Ramesh Kulkarni"
                         className="w-full rounded-xl border border-[#EAE6DD] bg-[#FAF9F5] px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30 focus:border-[#7C3AED] transition-colors"
                       />
-                      {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
+                      {errors.name && (
+                        <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>
+                      )}
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">Mobile / WhatsApp Number *</label>
+                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">
+                        Mobile / WhatsApp Number *
+                      </label>
                       <input
                         {...register('mobile')}
                         placeholder="e.g. +91 98765 43210"
                         className="w-full rounded-xl border border-[#EAE6DD] bg-[#FAF9F5] px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30 focus:border-[#7C3AED] transition-colors"
                       />
-                      {errors.mobile && <p className="mt-1 text-xs text-rose-500">{errors.mobile.message}</p>}
+                      {errors.mobile && (
+                        <p className="mt-1 text-xs text-rose-500">{errors.mobile.message}</p>
+                      )}
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">Email Address *</label>
+                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">
+                        Email Address *
+                      </label>
                       <input
                         {...register('email')}
                         type="email"
                         placeholder="e.g. ramesh@example.com"
                         className="w-full rounded-xl border border-[#EAE6DD] bg-[#FAF9F5] px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30 focus:border-[#7C3AED] transition-colors"
                       />
-                      {errors.email && <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>}
+                      {errors.email && (
+                        <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>
+                      )}
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">City / District *</label>
+                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">
+                        City / District *
+                      </label>
                       <input
                         {...register('city')}
                         placeholder="e.g. Pune, Maharashtra"
                         className="w-full rounded-xl border border-[#EAE6DD] bg-[#FAF9F5] px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30 focus:border-[#7C3AED] transition-colors"
                       />
-                      {errors.city && <p className="mt-1 text-xs text-rose-500">{errors.city.message}</p>}
+                      {errors.city && (
+                        <p className="mt-1 text-xs text-rose-500">{errors.city.message}</p>
+                      )}
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">FPC Name (Optional)</label>
+                      <label className="text-xs font-bold text-slate-700 mb-1.5 block">
+                        FPC Name (Optional)
+                      </label>
                       <input
                         {...register('fpc_name')}
                         placeholder="e.g. Sahyadri Farmers Agro Producer Co."
@@ -412,7 +477,6 @@ export default function FPCTrainingPage() {
                 )}
               </div>
             </div>
-
           </div>
         </div>
       </section>
@@ -421,7 +485,9 @@ export default function FPCTrainingPage() {
       <section className="section bg-white py-16 border-t border-[#EAE6DD]">
         <div className="container-etaxwala max-w-3xl">
           <div className="text-center mb-10">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#0084D1]">Got Questions?</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#0084D1]">
+              Got Questions?
+            </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
               Frequently Asked Questions
             </h2>

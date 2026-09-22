@@ -18,7 +18,14 @@ const MARKETING_ALLOWED_ROLES = [1, 2, 5, 9, 4, 15];
 
 // ─── Zod Schemas ─────────────────────────────────────────────────────────────
 const createIntegrationSchema = z.object({
-  provider: z.enum(['META_ADS', 'GOOGLE_ADS', 'GOOGLE_SEARCH_CONSOLE', 'INSTAGRAM', 'LINKEDIN', 'WHATSAPP_BUSINESS']),
+  provider: z.enum([
+    'META_ADS',
+    'GOOGLE_ADS',
+    'GOOGLE_SEARCH_CONSOLE',
+    'INSTAGRAM',
+    'LINKEDIN',
+    'WHATSAPP_BUSINESS',
+  ]),
   accountId: z.string().min(1, 'Account ID is required'),
   accountName: z.string().min(1, 'Account Name is required'),
   accessToken: z.string().min(1, 'Access Token is required'),
@@ -68,6 +75,86 @@ const createAttributionSchema = z.object({
   deviceType: z.enum(['MOBILE', 'DESKTOP', 'TABLET']).optional(),
 });
 
+// ─── 0. PUBLIC BLOG ENDPOINTS (No Auth Required) ────────────────────────────
+router.get(
+  '/blogs',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { category, search, limit = '50', page = '1' } = req.query as any;
+    const take = parseInt(limit, 10) || 50;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const skip = (pageNum - 1) * take;
+
+    const where: any = {};
+    if (category && category !== 'All') {
+      where.category = { contains: category, mode: 'insensitive' };
+    }
+    if (search && search.trim()) {
+      where.OR = [
+        { title: { contains: search.trim(), mode: 'insensitive' } },
+        { meta_description: { contains: search.trim(), mode: 'insensitive' } },
+      ];
+    }
+
+    const [blogs, total] = await Promise.all([
+      (prisma as any).blogs.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        take,
+        skip,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          category: true,
+          thumbnail: true,
+          thumbnail_alt: true,
+          meta_description: true,
+          focus_keyword: true,
+          date: true,
+          created_at: true,
+        },
+      }),
+      (prisma as any).blogs.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      data: blogs,
+      pagination: {
+        page: pageNum,
+        limit: take,
+        total,
+        totalPages: Math.ceil(total / take),
+      },
+    });
+  })
+);
+
+router.get(
+  '/blogs/:slug',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { slug } = req.params;
+    let blog: any = await (prisma as any).blogs.findFirst({
+      where: { slug },
+    });
+    if (!blog && !isNaN(Number(slug))) {
+      blog = await (prisma as any).blogs.findUnique({
+        where: { id: Number(slug) },
+      });
+    }
+
+    if (!blog) {
+      res.status(404).json({ success: false, error: { message: 'Blog post not found' } });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: blog,
+    });
+  })
+);
+
 // ─── 1. MARKETING OVERVIEW & AGGREGATED METRICS ──────────────────────────────
 router.get(
   '/overview',
@@ -81,9 +168,15 @@ router.get(
       (prisma as any).social_channel_accounts.findMany(),
     ]);
 
-    const totalAdSpend = campaigns.reduce((acc: number, c: any) => acc + Number(c.total_spent || 0), 0);
+    const totalAdSpend = campaigns.reduce(
+      (acc: number, c: any) => acc + Number(c.total_spent || 0),
+      0
+    );
     const paidLeads = campaigns.reduce((acc: number, c: any) => acc + (c.leads_generated || 0), 0);
-    const totalImpressions = campaigns.reduce((acc: number, c: any) => acc + (c.impressions || 0), 0);
+    const totalImpressions = campaigns.reduce(
+      (acc: number, c: any) => acc + (c.impressions || 0),
+      0
+    );
     const totalClicks = campaigns.reduce((acc: number, c: any) => acc + (c.clicks || 0), 0);
     const blendedCpl = paidLeads > 0 ? Math.round(totalAdSpend / paidLeads) : 0;
 
@@ -128,10 +221,34 @@ router.get(
           connectedChannelsCount: channels.filter((c: any) => c.is_connected).length,
         },
         topKeywords: [
-          { keyword: 'Private Limited Company Registration', rank: 1, change: '+2', volume: '14.2K/mo', visits: '1,840' },
-          { keyword: 'GST Return Filing Online', rank: 2, change: '+1', volume: '28.5K/mo', visits: '3,210' },
-          { keyword: 'Income Tax Return CA Assisted', rank: 2, change: '+4', volume: '45.0K/mo', visits: '4,150' },
-          { keyword: 'Startup India DPIIT Recognition', rank: 3, change: '0', volume: '9.8K/mo', visits: '980' },
+          {
+            keyword: 'Private Limited Company Registration',
+            rank: 1,
+            change: '+2',
+            volume: '14.2K/mo',
+            visits: '1,840',
+          },
+          {
+            keyword: 'GST Return Filing Online',
+            rank: 2,
+            change: '+1',
+            volume: '28.5K/mo',
+            visits: '3,210',
+          },
+          {
+            keyword: 'Income Tax Return CA Assisted',
+            rank: 2,
+            change: '+4',
+            volume: '45.0K/mo',
+            visits: '4,150',
+          },
+          {
+            keyword: 'Startup India DPIIT Recognition',
+            rank: 3,
+            change: '0',
+            volume: '9.8K/mo',
+            visits: '980',
+          },
         ],
       },
     });
@@ -284,8 +401,8 @@ router.post(
     const hashtagsStr = Array.isArray(data.hashtags)
       ? JSON.stringify(data.hashtags)
       : typeof data.hashtags === 'string'
-      ? data.hashtags
-      : JSON.stringify(['#TaxFiling', '#StartupIndia', '#ETaxwala']);
+        ? data.hashtags
+        : JSON.stringify(['#TaxFiling', '#StartupIndia', '#ETaxwala']);
 
     const post = await (prisma as any).marketing_posts.create({
       data: {
@@ -696,7 +813,9 @@ router.post(
   '/webhooks/:provider',
   asyncHandler(async (req: Request, res: Response) => {
     const provider = String(req.params.provider);
-    const signature = (req.headers['x-hub-signature-256'] || req.headers['x-signature'] || '') as string;
+    const signature = (req.headers['x-hub-signature-256'] ||
+      req.headers['x-signature'] ||
+      '') as string;
     const webhook = await processIncomingWebhook(provider, req.body, signature);
 
     res.status(200).json({

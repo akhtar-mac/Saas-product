@@ -46,121 +46,11 @@ interface OperationTask {
   timeline: TaskTimelineStep[];
 }
 
-const INITIAL_TASKS: OperationTask[] = [
-  {
-    id: 1,
-    taskName: 'Niti Aayog/Darpan Registration',
-    customerName: 'Siddheshwar Sherekar',
-    companyName: 'Shubuusha Micro Service Association',
-    service: 'Microfinance Company (Section 8) Registration',
-    assignTo: 'Avinash Mate',
-    addedBy: 'Kailas Gadekar',
-    assignDate: '03-09-2026 12:30',
-    dueDate: '04-09-2026',
-    status: 'completed',
-    email: 'sidhuw840@gmail.com',
-    phone: '8237377731',
-    state: 'Maharashtra',
-    city: 'Satara',
-    timeline: [
-      { id: 1, dateTime: '2026-09-03 13:52:16', timeSpent: '00:00:00', staff: 'Avinash Mate', status: 'Completed', comment: 'ALL DONE' },
-      { id: 2, dateTime: '2026-09-03 13:52:16', timeSpent: '00:00:00', staff: 'Avinash Mate', status: 'Completed', comment: 'ALL DONE' },
-      { id: 3, dateTime: '2026-09-03 12:40:47', timeSpent: '00:00:00', staff: 'Avinash Mate', status: 'Pending From Client', comment: 'nomani docs pending' },
-    ],
-  },
-  {
-    id: 2,
-    taskName: 'Banking Stationary and Documentation',
-    customerName: 'Balasaheb Ghadge',
-    companyName: 'Mauli Micro Association',
-    service: 'MoA/AoA Alteration',
-    assignTo: 'Swarupa Patwardhan',
-    addedBy: 'Kailas Gadekar',
-    assignDate: '03-09-2026 11:59',
-    dueDate: '05-09-2026',
-    status: 'not-started',
-    email: 'growthfund8894@gmail.com',
-    phone: '7249696992',
-    state: 'Maharashtra',
-    city: 'Ratnagiri',
-    timeline: [
-      { id: 1, dateTime: '2026-09-03 11:59:00', timeSpent: '00:00:00', staff: 'Kailas Gadekar', status: 'In Progress', comment: 'Task assigned to Swarupa' },
-    ],
-  },
-  {
-    id: 3,
-    taskName: 'Banking Stationary and Documentation',
-    customerName: 'Dashrath Madhukar Waghmare',
-    companyName: 'Hopewings Micro Association',
-    service: 'Microfinance Company (Section 8) Registration',
-    assignTo: 'Swarupa Patwardhan',
-    addedBy: 'Kailas Gadekar',
-    assignDate: '02-09-2026 16:50',
-    dueDate: '04-09-2026',
-    status: 'not-started',
-    email: 'dashrath@gmail.com',
-    phone: '9822001122',
-    state: 'Maharashtra',
-    city: 'Pune',
-    timeline: [],
-  },
-  {
-    id: 4,
-    taskName: 'Members Addition in Online Form',
-    customerName: 'Santosh Eknathrao Thadke',
-    companyName: 'NA',
-    service: 'Multi State Credit Co-Operative Society Registration',
-    assignTo: 'Ganesh Nikam',
-    addedBy: 'Kailas Gadekar',
-    assignDate: '02-09-2026 14:23',
-    dueDate: '30-09-2026',
-    status: 'not-started',
-    email: 'santosh@yahoo.com',
-    phone: '9850123456',
-    state: 'Maharashtra',
-    city: 'Latur',
-    timeline: [],
-  },
-  {
-    id: 5,
-    taskName: 'Form MGT 7A FY 25-26',
-    customerName: 'Sri Vidya Digital Offer Nidhi Limited',
-    companyName: 'Sudhir Vyas',
-    service: 'Nidhi Company Audit and Compliances',
-    assignTo: 'Kailas Gadekar OS',
-    addedBy: 'Netra Divekar',
-    assignDate: '01-09-2026 18:12',
-    dueDate: '01-11-2026',
-    status: 'not-started',
-    email: 'sudhirvyas06@gmail.com',
-    phone: '9111503756',
-    state: 'Maharashtra',
-    city: 'Amravati',
-    timeline: [],
-  },
-  {
-    id: 6,
-    taskName: 'Form AOC 4 FY 25-26',
-    customerName: 'Sri Vidya Digital Offer Nidhi Limited',
-    companyName: 'Sudhir Vyas',
-    service: 'Nidhi Company Audit and Compliances',
-    assignTo: 'Kailas Gadekar OS',
-    addedBy: 'Netra Divekar',
-    assignDate: '01-09-2026 18:12',
-    dueDate: '01-11-2026',
-    status: 'not-started',
-    email: 'sudhirvyas06@gmail.com',
-    phone: '9111503756',
-    state: 'Maharashtra',
-    city: 'Amravati',
-    timeline: [],
-  },
-];
-
 export default function CrmTasksPage() {
-  const [tasks, setTasks] = useState<OperationTask[]>(INITIAL_TASKS);
+  const [tasks, setTasks] = useState<OperationTask[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [expandedId, setExpandedId] = useState<number | null>(1); // default row 1 expanded like screenshot
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10);
 
@@ -168,29 +58,43 @@ export default function CrmTasksPage() {
 
   // Fetch real tasks from backend DB
   useEffect(() => {
-    fetch(`${API_BASE}/v1/crm/tasks?limit=50`)
+    setLoading(true);
+    fetch(`${API_BASE}/v1/crm/tasks?limit=100`)
       .then((res) => res.json())
       .then((data) => {
-        if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+        if (data?.success && Array.isArray(data?.data)) {
           const mapped: OperationTask[] = data.data.map((t: any, i: number) => ({
             id: t.task_id || t.id || i + 1,
             taskName: t.task_name || `Milestone Task #${t.task_id || i + 1}`,
-            customerName: t.sub_customer_name || `Customer #${t.cust_id}`,
-            companyName: 'ETaxwala Client',
-            service: `Service #${t.service_id}`,
-            assignTo: t.added_by ? `Officer #${t.added_by}` : 'Avinash Mate',
-            addedBy: 'System Admin',
+            customerName: t.customer_name || t.sub_customer_name || `Customer #${t.cust_id}`,
+            companyName: t.company_name || 'ETaxwala Client Enterprise',
+            service: t.service_name || `Corporate Compliance #${t.service_id}`,
+            assignTo: t.added_by ? `Officer #${t.added_by}` : 'Operations Desk',
+            addedBy: 'Super Admin',
             assignDate: t.assign_date ? t.assign_date.split('T')[0] : '2026-09-03',
-            dueDate: '2026-09-10',
-            status: t.original_task_status === 10 ? 'completed' : t.original_task_status > 1 ? 'wip' : 'not-started',
-            email: 'client@etaxwala.in',
-            phone: '9876543210',
+            dueDate: t.due_date ? t.due_date.split('T')[0] : '2026-09-30',
+            status:
+              t.original_task_status === 10
+                ? 'completed'
+                : t.original_task_status > 1
+                  ? 'wip'
+                  : 'not-started',
+            email:
+              t.customer_email && t.customer_email !== 'N/A'
+                ? t.customer_email
+                : 'client@etaxwala.in',
+            phone:
+              t.customer_contact && t.customer_contact !== 'N/A'
+                ? t.customer_contact
+                : '9876543210',
             state: 'Maharashtra',
             city: 'Pune',
             timeline: [
               {
                 id: 1,
-                dateTime: t.updated_at ? new Date(t.updated_at).toLocaleString() : '2026-09-03 13:50',
+                dateTime: t.updated_at
+                  ? new Date(t.updated_at).toLocaleString()
+                  : '2026-09-03 13:50',
                 timeSpent: '00:00:00',
                 staff: `Officer #${t.added_by || 1}`,
                 status: t.original_task_status === 10 ? 'Completed' : 'In Progress',
@@ -199,9 +103,13 @@ export default function CrmTasksPage() {
             ],
           }));
           setTasks(mapped);
+          if (mapped.length > 0) {
+            setExpandedId(mapped[0].id);
+          }
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error('Failed to fetch tasks', err))
+      .finally(() => setLoading(false));
   }, []);
 
   // Filters
@@ -214,15 +122,11 @@ export default function CrmTasksPage() {
   const location = useLocation();
 
   // Modals
-  const [effortModalTask, setEffortModalTask] = useState<OperationTask | null>(
-    new URLSearchParams(location.search).get('effort') === '1' ? INITIAL_TASKS[0] : null
-  );
+  const [effortModalTask, setEffortModalTask] = useState<OperationTask | null>(null);
   const [assignModalOpen, setAssignModalOpen] = useState(
     new URLSearchParams(location.search).get('assign') === '1'
   );
-  const [assignTargetTask, setAssignTargetTask] = useState<OperationTask | null>(
-    new URLSearchParams(location.search).get('assign') === '1' ? INITIAL_TASKS[0] : null
-  );
+  const [assignTargetTask, setAssignTargetTask] = useState<OperationTask | null>(null);
   const [assignUser, setAssignUser] = useState('Avinash Mate');
   const [assignDueDate, setAssignDueDate] = useState('2026-09-06');
 
@@ -256,13 +160,17 @@ export default function CrmTasksPage() {
 
   const startEffortTimer = () => {
     const now = new Date();
-    setStartTimeCapture(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+    setStartTimeCapture(
+      `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    );
     setIsTimerRunning(true);
   };
 
   const stopEffortTimer = () => {
     const now = new Date();
-    setEndTimeCapture(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+    setEndTimeCapture(
+      `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    );
     setIsTimerRunning(false);
   };
 
@@ -292,7 +200,12 @@ export default function CrmTasksPage() {
       setTasks((prev) =>
         prev.map((t) =>
           t.id === assignTargetTask.id
-            ? { ...t, assignTo: assignUser, dueDate: assignDueDate, assignDate: new Date().toLocaleDateString() }
+            ? {
+                ...t,
+                assignTo: assignUser,
+                dueDate: assignDueDate,
+                assignDate: new Date().toLocaleDateString(),
+              }
             : t
         )
       );
@@ -300,7 +213,12 @@ export default function CrmTasksPage() {
       setTasks((prev) =>
         prev.map((t) =>
           selectedIds.has(t.id)
-            ? { ...t, assignTo: assignUser, dueDate: assignDueDate, assignDate: new Date().toLocaleDateString() }
+            ? {
+                ...t,
+                assignTo: assignUser,
+                dueDate: assignDueDate,
+                assignDate: new Date().toLocaleDateString(),
+              }
             : t
         )
       );
@@ -370,10 +288,28 @@ export default function CrmTasksPage() {
         {[
           { label: 'OVER DUES', count: 0, cBase: '#EF4444', cLight: '#FCA5A5', cDark: '#B91C1C' },
           { label: 'ON HOLD', count: 29, cBase: '#DC2626', cLight: '#F87171', cDark: '#991B1B' },
-          { label: "TODAY'S TASKS", count: 6, cBase: '#1F2937', cLight: '#64748B', cDark: '#0F172A' },
+          {
+            label: "TODAY'S TASKS",
+            count: 6,
+            cBase: '#1F2937',
+            cLight: '#64748B',
+            cDark: '#0F172A',
+          },
           { label: "TOMORROW'S", count: 22, cBase: '#16A34A', cLight: '#86EFAC', cDark: '#15803D' },
-          { label: 'NEXT 7 DAYS', count: 786, cBase: '#F97316', cLight: '#FDBA74', cDark: '#C2410C' },
-          { label: 'NEXT 15 DAYS', count: 15, cBase: '#6366F1', cLight: '#A5B4FC', cDark: '#4338CA' },
+          {
+            label: 'NEXT 7 DAYS',
+            count: 786,
+            cBase: '#F97316',
+            cLight: '#FDBA74',
+            cDark: '#C2410C',
+          },
+          {
+            label: 'NEXT 15 DAYS',
+            count: 15,
+            cBase: '#6366F1',
+            cLight: '#A5B4FC',
+            cDark: '#4338CA',
+          },
         ].map((kpi) => (
           <button
             key={kpi.label}
@@ -596,138 +532,170 @@ export default function CrmTasksPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredTasks.map((task, idx) => (
-                <React.Fragment key={task.id}>
-                  <tr
-                    className={
-                      expandedId === task.id
-                        ? 'bg-sky-50/60'
-                        : idx % 2 === 0
-                        ? 'bg-white hover:bg-sky-50/30'
-                        : 'bg-[#F9FAFB] hover:bg-sky-50/30'
-                    }
-                  >
-                    <td className="py-2.5 px-3 text-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(task.id)}
-                        onChange={() => toggleSelect(task.id)}
-                        className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
-                      />
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setExpandedId(expandedId === task.id ? null : task.id)}
-                          className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center font-bold text-[11px]"
-                          title="Expand timeline"
-                        >
-                          {expandedId === task.id ? '-' : '+'}
-                        </button>
-                        <button
-                          onClick={() => setEffortModalTask(task)}
-                          className="font-semibold text-slate-900 hover:text-[#0284c7] text-left hover:underline"
-                        >
-                          {task.taskName}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-3 text-slate-800">{task.customerName}</td>
-                    <td className="py-2.5 px-3 text-slate-600">{task.companyName}</td>
-                    <td className="py-2.5 px-3 text-slate-700 font-medium">{task.service}</td>
-                    <td className="py-2.5 px-3 text-slate-800 font-medium">{task.assignTo}</td>
-                    <td className="py-2.5 px-3 text-slate-600">{task.addedBy}</td>
-                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{task.assignDate}</td>
-                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{task.dueDate}</td>
-                    <td className="py-2.5 px-3">
-                      {task.status === 'completed' ? (
-                        <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                          completed
-                        </span>
-                      ) : (
-                        <span className="bg-[#DC2626] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                          not-started
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          onClick={() => {
-                            setAssignTargetTask(task);
-                            setAssignModalOpen(true);
-                          }}
-                          className="w-6 h-6 rounded-full bg-[#003A66] hover:bg-[#002B4D] text-white flex items-center justify-center"
-                          title="Assign"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Delete task ${task.taskName}?`)) {
-                              setTasks((prev) => prev.filter((t) => t.id !== task.id));
-                            }
-                          }}
-                          className="w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* ─── Expandable Visual Stepper Timeline ─── */}
-                  {expandedId === task.id && (
-                    <tr className="bg-[#FAF9F5]">
-                      <td colSpan={11} className="p-5">
-                        <div className="bg-white rounded-2xl p-5 border border-[#EAE6DD] shadow-xs">
-                          <h4 className="text-xs font-bold text-[#1B365D] uppercase mb-4 flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-emerald-600" />
-                            <span>Task Progress Timeline & Action Audit</span>
-                          </h4>
-
-                          {task.timeline.length === 0 ? (
-                            <p className="text-xs text-slate-500 italic py-2">No timeline steps logged yet.</p>
-                          ) : (
-                            <div className="relative flex items-start gap-12 overflow-x-auto py-4 px-2">
-                              {/* Continuous timeline connector bar centered on node */}
-                              <div className="absolute top-[68px] left-12 right-12 h-0.5 bg-blue-200 -z-0" />
-
-                              {task.timeline.map((step) => (
-                                <div key={step.id} className="relative z-10 flex flex-col items-center text-center min-w-[160px]">
-                                  <p className="text-[11px] font-mono text-slate-600 font-semibold">{step.dateTime}</p>
-                                  <p className="text-[10px] text-slate-400">Time Spent: {step.timeSpent}</p>
-                                  <p className="text-[11px] font-bold text-slate-800 mt-0.5">{step.staff}</p>
-
-                                  {/* Step Node */}
-                                  <div className="w-5 h-5 rounded-full bg-blue-600 border-2 border-white shadow-xs my-2 flex items-center justify-center text-[9px] text-white font-bold" />
-
-                                  {/* Status Pill */}
-                                  <span
-                                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-2xs ${
-                                      step.status === 'Completed'
-                                        ? 'bg-[#16A34A] text-white'
-                                        : 'bg-[#EF4444] text-white'
-                                    }`}
-                                  >
-                                    {step.status}
-                                  </span>
-
-                                  {/* Comment */}
-                                  <p className="text-xs font-bold text-slate-700 mt-2 max-w-[180px]">
-                                    {step.comment}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+              {loading ? (
+                <tr>
+                  <td colSpan={11} className="py-12 text-center text-xs text-slate-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-[#1E3A8A] border-t-transparent rounded-full animate-spin" />
+                      Loading live SQL operations tasks from database...
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredTasks.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-10 text-center text-xs text-slate-400">
+                    No tasks found in database matching your filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredTasks.map((task, idx) => (
+                  <React.Fragment key={task.id}>
+                    <tr
+                      className={
+                        expandedId === task.id
+                          ? 'bg-sky-50/60'
+                          : idx % 2 === 0
+                            ? 'bg-white hover:bg-sky-50/30'
+                            : 'bg-[#F9FAFB] hover:bg-sky-50/30'
+                      }
+                    >
+                      <td className="py-2.5 px-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(task.id)}
+                          onChange={() => toggleSelect(task.id)}
+                          className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
+                        />
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => setExpandedId(expandedId === task.id ? null : task.id)}
+                            className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center font-bold text-[11px]"
+                            title="Expand timeline"
+                          >
+                            {expandedId === task.id ? '-' : '+'}
+                          </button>
+                          <button
+                            onClick={() => setEffortModalTask(task)}
+                            className="font-semibold text-slate-900 hover:text-[#0284c7] text-left hover:underline"
+                          >
+                            {task.taskName}
+                          </button>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-800">{task.customerName}</td>
+                      <td className="py-2.5 px-3 text-slate-600">{task.companyName}</td>
+                      <td className="py-2.5 px-3 text-slate-700 font-medium">{task.service}</td>
+                      <td className="py-2.5 px-3 text-slate-800 font-medium">{task.assignTo}</td>
+                      <td className="py-2.5 px-3 text-slate-600">{task.addedBy}</td>
+                      <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                        {task.assignDate}
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                        {task.dueDate}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        {task.status === 'completed' ? (
+                          <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            completed
+                          </span>
+                        ) : (
+                          <span className="bg-[#DC2626] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            not-started
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setAssignTargetTask(task);
+                              setAssignModalOpen(true);
+                            }}
+                            className="w-6 h-6 rounded-full bg-[#003A66] hover:bg-[#002B4D] text-white flex items-center justify-center"
+                            title="Assign"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Delete task ${task.taskName}?`)) {
+                                setTasks((prev) => prev.filter((t) => t.id !== task.id));
+                              }
+                            }}
+                            className="w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
-                  )}
-                </React.Fragment>
-              ))}
+
+                    {/* ─── Expandable Visual Stepper Timeline ─── */}
+                    {expandedId === task.id && (
+                      <tr className="bg-[#FAF9F5]">
+                        <td colSpan={11} className="p-5">
+                          <div className="bg-white rounded-2xl p-5 border border-[#EAE6DD] shadow-xs">
+                            <h4 className="text-xs font-bold text-[#1B365D] uppercase mb-4 flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-emerald-600" />
+                              <span>Task Progress Timeline & Action Audit</span>
+                            </h4>
+
+                            {task.timeline.length === 0 ? (
+                              <p className="text-xs text-slate-500 italic py-2">
+                                No timeline steps logged yet.
+                              </p>
+                            ) : (
+                              <div className="relative flex items-start gap-12 overflow-x-auto py-4 px-2">
+                                {/* Continuous timeline connector bar centered on node */}
+                                <div className="absolute top-[68px] left-12 right-12 h-0.5 bg-blue-200 -z-0" />
+
+                                {task.timeline.map((step) => (
+                                  <div
+                                    key={step.id}
+                                    className="relative z-10 flex flex-col items-center text-center min-w-[160px]"
+                                  >
+                                    <p className="text-[11px] font-mono text-slate-600 font-semibold">
+                                      {step.dateTime}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400">
+                                      Time Spent: {step.timeSpent}
+                                    </p>
+                                    <p className="text-[11px] font-bold text-slate-800 mt-0.5">
+                                      {step.staff}
+                                    </p>
+
+                                    {/* Step Node */}
+                                    <div className="w-5 h-5 rounded-full bg-blue-600 border-2 border-white shadow-xs my-2 flex items-center justify-center text-[9px] text-white font-bold" />
+
+                                    {/* Status Pill */}
+                                    <span
+                                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-2xs ${
+                                        step.status === 'Completed'
+                                          ? 'bg-[#16A34A] text-white'
+                                          : 'bg-[#EF4444] text-white'
+                                      }`}
+                                    >
+                                      {step.status}
+                                    </span>
+
+                                    {/* Comment */}
+                                    <p className="text-xs font-bold text-slate-700 mt-2 max-w-[180px]">
+                                      {step.comment}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -740,8 +708,12 @@ export default function CrmTasksPage() {
               Previous
             </button>
             <button className="px-2.5 py-1 rounded bg-[#1E3A8A] text-white font-bold">1</button>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">2</button>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">3</button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+              2
+            </button>
+            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+              3
+            </button>
             <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
               Next
             </button>
@@ -763,8 +735,12 @@ export default function CrmTasksPage() {
                   <User className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-[#1B365D]">Client Info & Effort Tracking</h3>
-                  <p className="text-[10px] text-slate-500 font-medium">Task #{effortModalTask.id} • {effortModalTask.taskName}</p>
+                  <h3 className="font-extrabold text-sm text-[#1B365D]">
+                    Client Info & Effort Tracking
+                  </h3>
+                  <p className="text-[10px] text-slate-500 font-medium">
+                    Task #{effortModalTask.id} • {effortModalTask.taskName}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -818,7 +794,9 @@ export default function CrmTasksPage() {
                     <span>Client Details</span>
                   </h4>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Customer Name</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Customer Name
+                    </label>
                     <input
                       type="text"
                       readOnly
@@ -827,7 +805,9 @@ export default function CrmTasksPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Email Address</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Email Address
+                    </label>
                     <input
                       type="email"
                       readOnly
@@ -836,7 +816,9 @@ export default function CrmTasksPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Mobile Contact</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Mobile Contact
+                    </label>
                     <input
                       type="text"
                       readOnly
@@ -845,7 +827,9 @@ export default function CrmTasksPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Service Assigned</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Service Assigned
+                    </label>
                     <input
                       type="text"
                       readOnly
@@ -855,7 +839,9 @@ export default function CrmTasksPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">State</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                        State
+                      </label>
                       <input
                         type="text"
                         readOnly
@@ -864,7 +850,9 @@ export default function CrmTasksPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">City</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                        City
+                      </label>
                       <input
                         type="text"
                         readOnly
@@ -882,7 +870,9 @@ export default function CrmTasksPage() {
                     <span>Add Effort & Timer</span>
                   </h4>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Task Status</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Task Status
+                    </label>
                     <select
                       value={effortStatus}
                       onChange={(e) => setEffortStatus(e.target.value)}
@@ -913,7 +903,9 @@ export default function CrmTasksPage() {
                         <Play className="w-3.5 h-3.5 fill-current" />
                         <span>Start Time</span>
                       </button>
-                      <p className="text-[10px] text-slate-500 mt-1 font-mono">Captured: {startTimeCapture}</p>
+                      <p className="text-[10px] text-slate-500 mt-1 font-mono">
+                        Captured: {startTimeCapture}
+                      </p>
                     </div>
 
                     <div>
@@ -932,7 +924,9 @@ export default function CrmTasksPage() {
                         <Square className="w-3.5 h-3.5 fill-current" />
                         <span>End Time</span>
                       </button>
-                      <p className="text-[10px] text-slate-500 mt-1 font-mono">Captured: {endTimeCapture}</p>
+                      <p className="text-[10px] text-slate-500 mt-1 font-mono">
+                        Captured: {endTimeCapture}
+                      </p>
                     </div>
                   </div>
 
@@ -944,7 +938,9 @@ export default function CrmTasksPage() {
 
                   {/* Add Efforts Textarea */}
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Operational Notes</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Operational Notes
+                    </label>
                     <textarea
                       rows={2}
                       value={effortNotes}
@@ -1010,7 +1006,10 @@ export default function CrmTasksPage() {
                       <button
                         onClick={() => {
                           if (docNameInput) {
-                            setUploadedDocs([...uploadedDocs, { name: docNameInput, date: new Date().toLocaleDateString() }]);
+                            setUploadedDocs([
+                              ...uploadedDocs,
+                              { name: docNameInput, date: new Date().toLocaleDateString() },
+                            ]);
                             setDocNameInput('');
                             alert('Document uploaded successfully.');
                           }
@@ -1059,7 +1058,9 @@ export default function CrmTasksPage() {
 
             <div className="p-5 space-y-4 text-xs">
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">Select User</label>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Select User
+                </label>
                 <select
                   value={assignUser}
                   onChange={(e) => setAssignUser(e.target.value)}

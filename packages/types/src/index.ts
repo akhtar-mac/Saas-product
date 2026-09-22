@@ -87,6 +87,77 @@ export interface ChatAttachment {
   mimeType: string;
 }
 
+export type DisbursementStatus = 'PENDING' | 'PAID' | 'REJECTED';
+
+export type DisbursementCategory =
+  | 'CLIENT_REGISTRATION'
+  | 'GOVT_CHALLAN'
+  | 'STAMP_DUTY'
+  | 'TRADEMARK_FEE'
+  | 'SALARY_ADVANCE'
+  | 'OFFICE_NEED'
+  | 'UTILITY_BILL'
+  | 'TRAVEL_CONVEYANCE'
+  | 'PANTRY_REFRESHMENT'
+  | 'COURIER'
+  | 'PETTY_CASH'
+  | 'OTHER';
+
+export interface DisbursementRequest {
+  id: number;
+  requestCode: string;
+  requesterId: number;
+  requesterName?: string;
+  requesterEmail?: string;
+  officerId?: number | null;
+  officerName?: string | null;
+  conversationId?: number | null;
+  messageId?: number | null;
+  amount: number;
+  purposeCategory: DisbursementCategory | string;
+  purposeDescription: string;
+  clientRef?: string | null;
+  upiId?: string | null;
+  qrCodeUrl?: string | null;
+  status: DisbursementStatus;
+  rejectionReason?: string | null;
+  paymentProofUrl?: string | null;
+  utrNumber?: string | null;
+  paidAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DisbursementWallet {
+  id: number;
+  officerId: number;
+  officerName?: string;
+  officerEmail?: string;
+  officerAvatar?: string | null;
+  balance: number;
+  totalFunded: number;
+  totalDisbursed: number;
+  lowBalanceThreshold: number;
+  isLowBalance?: boolean;
+  isActive: boolean;
+  recentTopups?: DisbursementTopup[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DisbursementTopup {
+  id: number;
+  walletId: number;
+  officerId: number;
+  adminId: number;
+  adminName?: string;
+  amount: number;
+  paymentMode: string;
+  referenceNo?: string | null;
+  notes?: string | null;
+  createdAt: string;
+}
+
 export interface ChatMessage {
   id: number | string;
   conversationId: number | string;
@@ -94,8 +165,9 @@ export interface ChatMessage {
   senderName: string;
   senderAvatar?: string | null;
   content: string;
-  messageType: 'text' | 'file' | 'system';
+  messageType: 'text' | 'file' | 'system' | 'payment_request';
   attachments?: ChatAttachment[];
+  paymentRequest?: DisbursementRequest | null;
   createdAt: string;
   isRead?: boolean;
 }

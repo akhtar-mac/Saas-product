@@ -5,8 +5,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import {
-  Phone, Mail, MapPin, Clock, Send, CheckCircle2,
-  ArrowRight, MessageSquare, ShieldCheck, Sparkles, Loader2
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  Send,
+  CheckCircle2,
+  ArrowRight,
+  MessageSquare,
+  ShieldCheck,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
@@ -15,12 +24,14 @@ import { analytics } from '@/lib/analytics';
 const offices = [
   {
     name: 'Corporate Head Office — Chhatrapati Sambhaji Nagar',
-    address: "3rd Floor, Infront of Reliance Digital, Ashoka's Residency, Beed Bypass Rd, Deolai Parisar, CSN, Maharashtra 431001",
+    address:
+      "3rd Floor, Infront of Reliance Digital, Ashoka's Residency, Beed Bypass Rd, Deolai Parisar, CSN, Maharashtra 431001",
     phone: '+91 70710 70707',
     email: 'support@etaxwala.com',
     hours: 'Mon–Sat: 9:30 AM – 7:00 PM IST',
     isHead: true,
-    mapUrl: 'https://maps.google.com/maps?q=Ashoka%27s+Residency+Beed+Bypass+Road+Aurangabad&t=&z=14&ie=UTF8&iwloc=&output=embed',
+    mapUrl:
+      'https://maps.google.com/maps?q=Ashoka%27s+Residency+Beed+Bypass+Road+Aurangabad&t=&z=14&ie=UTF8&iwloc=&output=embed',
   },
   {
     name: 'Ambad Commercial Branch — Jalna',
@@ -29,7 +40,8 @@ const offices = [
     email: 'jalna@etaxwala.com',
     hours: 'Mon–Sat: 9:30 AM – 6:00 PM IST',
     isHead: false,
-    mapUrl: 'https://maps.google.com/maps?q=150+Jalna+Road+Ambad+Maharashtra&t=&z=14&ie=UTF8&iwloc=&output=embed',
+    mapUrl:
+      'https://maps.google.com/maps?q=150+Jalna+Road+Ambad+Maharashtra&t=&z=14&ie=UTF8&iwloc=&output=embed',
   },
 ];
 
@@ -52,12 +64,18 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const CUSTOMER_API = 'https://customer-api.etaxwala.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const CUSTOMER_API = `${API_BASE}/api`;
 
 export default function ContactPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
@@ -128,7 +146,10 @@ export default function ContactPage() {
         <div className="absolute top-0 left-0 right-0 h-1 bg-multicolor" />
         <div
           className="absolute inset-0 opacity-[0.025] pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(#7C3AED 1px, transparent 1px)', backgroundSize: '24px 24px' }}
+          style={{
+            backgroundImage: 'radial-gradient(#7C3AED 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
         />
         <div className="container-etaxwala relative z-10">
           <div className="mb-4">
@@ -141,7 +162,8 @@ export default function ContactPage() {
             Connect With Our <span className="text-multicolor">Legal &amp; Tax Advisors</span>
           </h1>
           <p className="mt-3.5 max-w-2xl text-base sm:text-lg text-slate-600 leading-relaxed">
-            Call our direct lines, email our corporate operations desk, or visit our physical legal hubs across India.
+            Call our direct lines, email our corporate operations desk, or visit our physical legal
+            hubs across India.
           </p>
         </div>
       </section>
@@ -150,17 +172,19 @@ export default function ContactPage() {
       <section className="section bg-[#FAF9F5] py-12">
         <div className="container-etaxwala max-w-6xl">
           <div className="grid gap-12 lg:grid-cols-12">
-
             {/* Left: Contact Form */}
             <div className="lg:col-span-7">
               <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE6DD] shadow-sm space-y-6">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-[#7C3AED]">Get In Touch</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-[#7C3AED]">
+                    Get In Touch
+                  </span>
                   <h2 className="text-2xl font-extrabold text-slate-900 mt-1">
                     Send Us an Inquiry
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Fill out the form below. An assigned Chartered Accountant will call you back within 5 minutes during desk hours.
+                    Fill out the form below. An assigned Chartered Accountant will call you back
+                    within 5 minutes during desk hours.
                   </p>
                 </div>
 
@@ -169,9 +193,12 @@ export default function ContactPage() {
                     <div className="w-16 h-16 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-[#7C3AED] flex items-center justify-center mx-auto">
                       <CheckCircle2 className="w-8 h-8" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900">Inquiry Received Successfully</h3>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      Inquiry Received Successfully
+                    </h3>
                     <p className="text-xs text-slate-600 max-w-sm mx-auto">
-                      Thank you! A practicing Chartered Accountant from our legal desk has received your request and will call you shortly.
+                      Thank you! A practicing Chartered Accountant from our legal desk has received
+                      your request and will call you shortly.
                     </p>
                     <div className="inline-block p-3 rounded-xl bg-[#FAF9F5] border border-[#EAE6DD] text-xs font-bold text-slate-800">
                       Direct Helpline: +91 70710 70707
@@ -189,7 +216,9 @@ export default function ContactPage() {
                           placeholder="e.g. Vikramaditya Rao"
                           className="w-full rounded-xl border border-[#EAE6DD] bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED]"
                         />
-                        {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
+                        {errors.name && (
+                          <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>
+                        )}
                       </div>
 
                       <div>
@@ -201,7 +230,9 @@ export default function ContactPage() {
                           placeholder="10-digit mobile"
                           className="w-full rounded-xl border border-[#EAE6DD] bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED]"
                         />
-                        {errors.phone && <p className="mt-1 text-xs text-rose-500">{errors.phone.message}</p>}
+                        {errors.phone && (
+                          <p className="mt-1 text-xs text-rose-500">{errors.phone.message}</p>
+                        )}
                       </div>
                     </div>
 
@@ -216,7 +247,9 @@ export default function ContactPage() {
                           placeholder="you@domain.com"
                           className="w-full rounded-xl border border-[#EAE6DD] bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED]"
                         />
-                        {errors.email && <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>}
+                        {errors.email && (
+                          <p className="mt-1 text-xs text-rose-500">{errors.email.message}</p>
+                        )}
                       </div>
 
                       <div>
@@ -228,16 +261,32 @@ export default function ContactPage() {
                           className="w-full rounded-xl border border-[#EAE6DD] bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-1 focus:ring-[#7C3AED]"
                         >
                           <option value="">Select a service category...</option>
-                          <option value="Private Limited Company">Company Registration (Pvt Ltd / LLP)</option>
-                          <option value="GST Registration & Filing">GST Registration &amp; Monthly Returns</option>
-                          <option value="Income Tax Return Filing">Income Tax Return (ITR) Filing</option>
-                          <option value="Trademark & IP Protection">Trademark, Copyright &amp; Patent</option>
-                          <option value="FPC & PACS Training">FPC Training &amp; Agriculture Advisory</option>
-                          <option value="Statutory & Tax Audit">Statutory Tax &amp; MCA Audits</option>
-                          <option value="Franchise Partnership">Franchise Partnership Inquiry</option>
+                          <option value="Private Limited Company">
+                            Company Registration (Pvt Ltd / LLP)
+                          </option>
+                          <option value="GST Registration & Filing">
+                            GST Registration &amp; Monthly Returns
+                          </option>
+                          <option value="Income Tax Return Filing">
+                            Income Tax Return (ITR) Filing
+                          </option>
+                          <option value="Trademark & IP Protection">
+                            Trademark, Copyright &amp; Patent
+                          </option>
+                          <option value="FPC & PACS Training">
+                            FPC Training &amp; Agriculture Advisory
+                          </option>
+                          <option value="Statutory & Tax Audit">
+                            Statutory Tax &amp; MCA Audits
+                          </option>
+                          <option value="Franchise Partnership">
+                            Franchise Partnership Inquiry
+                          </option>
                           <option value="General Consultation">General Corporate Advisory</option>
                         </select>
-                        {errors.service && <p className="mt-1 text-xs text-rose-500">{errors.service.message}</p>}
+                        {errors.service && (
+                          <p className="mt-1 text-xs text-rose-500">{errors.service.message}</p>
+                        )}
                       </div>
                     </div>
 
@@ -285,7 +334,9 @@ export default function ContactPage() {
 
               {/* Quick Services Links */}
               <div className="mt-8">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Popular Services</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                  Popular Services
+                </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {quickLinks.map((ql) => (
                     <Link
@@ -303,7 +354,6 @@ export default function ContactPage() {
 
             {/* Right: Offices & Google Maps Embed (1.5.4) */}
             <div className="lg:col-span-5 space-y-6">
-              
               {/* WhatsApp Direct Help */}
               <a
                 href="https://wa.me/917071070707"
@@ -318,7 +368,9 @@ export default function ContactPage() {
                   <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 transition-colors">
                     Instant WhatsApp Helpdesk
                   </h4>
-                  <p className="text-xs text-slate-500 mt-0.5">Chat directly with CA support team</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Chat directly with CA support team
+                  </p>
                 </div>
                 <ArrowRight className="w-4 h-4 text-emerald-600 ml-auto" />
               </a>
@@ -330,16 +382,20 @@ export default function ContactPage() {
                   className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4"
                 >
                   <div className="flex items-center justify-between">
-                    <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full ${
-                      o.isHead
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                        : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                    }`}>
+                    <span
+                      className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full ${
+                        o.isHead
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                          : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                      }`}
+                    >
                       {o.isHead ? 'Corporate Headquarters' : 'Commercial Branch'}
                     </span>
                   </div>
 
-                  <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">{o.name}</h3>
+                  <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
+                    {o.name}
+                  </h3>
 
                   <div className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
                     <div className="flex items-start gap-2.5">
@@ -348,11 +404,15 @@ export default function ContactPage() {
                     </div>
                     <div className="flex items-center gap-2.5">
                       <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <a href={`tel:${o.phone}`} className="hover:text-blue-600 font-semibold">{o.phone}</a>
+                      <a href={`tel:${o.phone}`} className="hover:text-blue-600 font-semibold">
+                        {o.phone}
+                      </a>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <Mail className="w-4 h-4 text-blue-600 shrink-0" />
-                      <a href={`mailto:${o.email}`} className="hover:text-blue-600 font-semibold">{o.email}</a>
+                      <a href={`mailto:${o.email}`} className="hover:text-blue-600 font-semibold">
+                        {o.email}
+                      </a>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <Clock className="w-4 h-4 text-amber-600 shrink-0" />
@@ -375,9 +435,7 @@ export default function ContactPage() {
                   </div>
                 </div>
               ))}
-
             </div>
-
           </div>
         </div>
       </section>

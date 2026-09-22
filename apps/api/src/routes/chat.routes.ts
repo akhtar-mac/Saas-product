@@ -28,13 +28,17 @@ const storage = multer.diskStorage({
 });
 
 const ALLOWED_MIMES = [
-  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'text/plain', 'text/csv',
+  'text/plain',
+  'text/csv',
 ];
 
 const upload = multer({
@@ -50,7 +54,11 @@ const upload = multer({
 });
 
 // Helper to check conversation membership or Super Admin audit
-async function canAccessConversation(userId: number, conversationId: number, isSuperAdmin = false): Promise<boolean> {
+async function canAccessConversation(
+  userId: number,
+  conversationId: number,
+  isSuperAdmin = false
+): Promise<boolean> {
   if (isSuperAdmin) return true;
   const member = await (prisma as any).chat_members.findUnique({
     where: {
@@ -84,7 +92,9 @@ router.get('/users', async (req: Request, res: Response) => {
     const formatted = users.map((u: any) => {
       let roleIds: number[] = [u.role_id];
       if (u.roles) {
-        try { roleIds = JSON.parse(u.roles); } catch {}
+        try {
+          roleIds = JSON.parse(u.roles);
+        } catch {}
       }
       const roleNames = roleIds.map((id) => ROLE_MAP[id] || 'Staff');
       return {
@@ -143,14 +153,23 @@ router.get('/conversations', async (req: Request, res: Response) => {
           const u = await (prisma as any).staff_users.findUnique({
             where: { id: otherMemberInfo.user_id },
             select: {
-              id: true, name: true, email: true, role_id: true, roles: true,
-              profile_photo: true, is_online: true, last_seen_at: true, department: true,
+              id: true,
+              name: true,
+              email: true,
+              role_id: true,
+              roles: true,
+              profile_photo: true,
+              is_online: true,
+              last_seen_at: true,
+              department: true,
             },
           });
           if (u) {
             let roleIds: number[] = [u.role_id];
             if (u.roles) {
-              try { roleIds = JSON.parse(u.roles); } catch {}
+              try {
+                roleIds = JSON.parse(u.roles);
+              } catch {}
             }
             participant = {
               id: u.id,
@@ -224,7 +243,10 @@ router.post('/conversations/direct', async (req: Request, res: Response) => {
   try {
     const currentUserId = req.user!.user_id;
     const targetUserIdNum = Number(
-      req.body.target_user_id || req.body.recipientId || req.body.targetUserId || req.body.recipient_id
+      req.body.target_user_id ||
+        req.body.recipientId ||
+        req.body.targetUserId ||
+        req.body.recipient_id
     );
 
     if (!targetUserIdNum || targetUserIdNum === currentUserId) {
@@ -295,7 +317,9 @@ router.get('/conversations/:id/messages', async (req: Request, res: Response) =>
 
     const hasAccess = await canAccessConversation(userId, convId, isSuperAdmin);
     if (!hasAccess) {
-      return res.status(403).json({ success: false, error: 'Forbidden. Not a member of this chat.' });
+      return res
+        .status(403)
+        .json({ success: false, error: 'Forbidden. Not a member of this chat.' });
     }
 
     const messages = await (prisma as any).chat_messages.findMany({
@@ -316,6 +340,60 @@ router.get('/conversations/:id/messages', async (req: Request, res: Response) =>
           select: { id: true, file_name: true, file_size: true, mime_type: true },
         });
 
+        let paymentRequest: any = null;
+        if (msg.message_type === 'payment_request') {
+          const reqRecord = await (prisma as any).disbursement_requests.findFirst({
+            where: {
+              OR: [{ message_id: msg.id }, { id: Number(msg.content) || 0 }],
+            },
+            orderBy: { id: 'desc' },
+          });
+
+          if (reqRecord) {
+            const [reqUser, offUser] = await Promise.all([
+              (prisma as any).staff_users.findUnique({
+                where: { id: reqRecord.requester_id },
+                select: { name: true, email: true },
+              }),
+              reqRecord.officer_id
+                ? (prisma as any).staff_users.findUnique({
+                    where: { id: reqRecord.officer_id },
+                    select: { name: true, email: true },
+                  })
+                : null,
+            ]);
+
+            paymentRequest = {
+              id: reqRecord.id,
+              requestCode: reqRecord.request_code,
+              requesterId: reqRecord.requester_id,
+              requesterName: reqUser?.name || 'Staff Member',
+              requesterEmail: reqUser?.email || '',
+              officerId: reqRecord.officer_id,
+              officerName: offUser?.name || null,
+              conversationId: reqRecord.conversation_id,
+              messageId: reqRecord.message_id,
+              amount: Number(reqRecord.amount),
+              purposeCategory: reqRecord.purpose_category,
+              purposeDescription: reqRecord.purpose_description,
+              clientRef: reqRecord.client_ref,
+              upiId: reqRecord.upi_id,
+              qrCodeUrl: reqRecord.qr_code_url,
+              status: reqRecord.status,
+              rejectionReason: reqRecord.rejection_reason,
+              paymentProofUrl: reqRecord.payment_proof_url,
+              utrNumber: reqRecord.utr_number,
+              paidAt: reqRecord.paid_at,
+              createdAt: reqRecord.created_at,
+              updatedAt: reqRecord.updated_at,
+            };
+          } else {
+            try {
+              paymentRequest = JSON.parse(msg.content);
+            } catch {}
+          }
+        }
+
         return {
           id: msg.id,
           conversationId: msg.conversation_id,
@@ -324,6 +402,7 @@ router.get('/conversations/:id/messages', async (req: Request, res: Response) =>
           senderAvatar: sender?.profile_photo || null,
           content: msg.content,
           messageType: msg.message_type,
+          paymentRequest,
           attachments: attachments.map((att: any) => ({
             id: att.id,
             fileName: att.file_name,
@@ -359,11 +438,15 @@ router.post('/conversations/:id/messages', async (req: Request, res: Response) =
 
     const hasAccess = await canAccessConversation(senderId, convId, false);
     if (!hasAccess) {
-      return res.status(403).json({ success: false, error: 'Cannot send message to this conversation.' });
+      return res
+        .status(403)
+        .json({ success: false, error: 'Cannot send message to this conversation.' });
     }
 
     if (!content && (!attachments || attachments.length === 0)) {
-      return res.status(400).json({ success: false, error: 'Message content or attachment required.' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'Message content or attachment required.' });
     }
 
     const messageType = attachments && attachments.length > 0 ? 'file' : 'text';
@@ -381,10 +464,12 @@ router.post('/conversations/:id/messages', async (req: Request, res: Response) =
     if (attachments && Array.isArray(attachments)) {
       for (const att of attachments) {
         if (att.id) {
-          await (prisma as any).chat_attachments.update({
-            where: { id: Number(att.id) },
-            data: { message_id: msg.id },
-          }).catch(() => {});
+          await (prisma as any).chat_attachments
+            .update({
+              where: { id: Number(att.id) },
+              data: { message_id: msg.id },
+            })
+            .catch(() => {});
         }
       }
     }
@@ -507,7 +592,9 @@ router.get('/attachments/:id', async (req: Request, res: Response) => {
       if (msg) {
         const canAccess = await canAccessConversation(userId, msg.conversation_id, isSuperAdmin);
         if (!canAccess) {
-          return res.status(403).json({ success: false, error: 'Forbidden. No access to this attachment.' });
+          return res
+            .status(403)
+            .json({ success: false, error: 'Forbidden. No access to this attachment.' });
         }
       }
     }
@@ -526,7 +613,9 @@ router.get('/admin/conversations', async (req: Request, res: Response) => {
   try {
     const isSuperAdmin = req.user!.role_ids.includes(1);
     if (!isSuperAdmin) {
-      return res.status(403).json({ success: false, error: 'Super Admin compliance clearance required.' });
+      return res
+        .status(403)
+        .json({ success: false, error: 'Super Admin compliance clearance required.' });
     }
 
     const conversations = await (prisma as any).chat_conversations.findMany({
