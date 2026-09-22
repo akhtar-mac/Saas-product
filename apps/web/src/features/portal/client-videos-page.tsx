@@ -79,7 +79,7 @@ export default function ClientVideosPage() {
         {!hasFpcAccess && (
           <Link
             to="/fpc-training"
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 shrink-0"
+            className="px-4 py-2 rounded-xl btn-multicolor font-bold text-xs shadow-sm flex items-center gap-1.5 shrink-0"
           >
             <Sparkles className="w-3.5 h-3.5" /> <span>Unlock All 10 Modules @ ₹3,999</span>
           </Link>
@@ -110,7 +110,7 @@ export default function ClientVideosPage() {
                 </p>
                 <Link
                   to="/fpc-training"
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md mt-2"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl btn-multicolor font-bold text-xs shadow-md mt-2"
                 >
                   <span>Enroll in Masterclass</span> <ArrowRight className="w-3.5 h-3.5" />
                 </Link>

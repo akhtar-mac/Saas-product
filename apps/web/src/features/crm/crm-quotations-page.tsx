@@ -485,7 +485,7 @@ export default function CrmQuotationsPage() {
 
             {/* Quotations Table */}
             <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl shadow-2xs">
-              <table className="w-full text-left text-xs border-separate border-spacing-0">
+              <table className="table-crm w-full text-left text-xs border-separate border-spacing-0">
                 <thead className="sticky top-0 z-10 bg-[#F8FAFC] text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                   <tr>
                     <th className="py-3 px-4 w-12 text-center">SR NO.</th>
@@ -770,7 +770,7 @@ export default function CrmQuotationsPage() {
             </div>
 
             <div className="overflow-x-auto overflow-y-auto max-h-96">
-              <table className="w-full text-left text-xs border-separate border-spacing-0">
+              <table className="table-crm w-full text-left text-xs border-separate border-spacing-0">
                 <thead className="sticky top-0 z-10">
                   <tr>
                     <th className="sticky top-0 z-10 bg-[#F8FAFC] py-2.5 px-3 w-8 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">#</th>
@@ -1014,13 +1014,13 @@ export default function CrmQuotationsPage() {
               </button>
               <button
                 onClick={() => handleSendWhatsApp(activeQuote)}
-                className="btn btn-sm bg-[#25D366] hover:bg-[#20b858] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="btn btn-sm btn-multicolor text-xs font-bold flex items-center gap-1.5 shadow-sm"
               >
                 <Send className="w-4 h-4" /> Send via WhatsApp
               </button>
               <button
                 onClick={() => window.print()}
-                className="btn btn-sm bg-[#1B365D] hover:bg-[#132743] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="btn btn-sm btn-multicolor text-xs font-bold flex items-center gap-1.5 shadow-sm"
               >
                 <Printer className="w-4 h-4" /> Print / Save PDF
               </button>
@@ -1091,7 +1091,7 @@ export default function CrmQuotationsPage() {
 
             {/* Itemized Table */}
             <div className="overflow-x-auto overflow-y-auto max-h-72">
-              <table className="w-full text-left text-xs border border-slate-200 border-separate border-spacing-0">
+              <table className="table-crm w-full text-left text-xs border border-slate-200 border-separate border-spacing-0">
                 <thead className="sticky top-0 z-10">
                   <tr>
                     <th className="sticky top-0 z-10 bg-[#1B365D] text-white py-2.5 px-3 w-8 text-center font-bold uppercase tracking-wider text-[11px]">#</th>

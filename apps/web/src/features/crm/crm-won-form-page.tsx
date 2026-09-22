@@ -232,7 +232,7 @@ export default function CrmWonFormPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
@@ -600,13 +600,13 @@ export default function CrmWonFormPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             type="button" onClick={handleReset}
-            className="btn border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm flex items-center justify-center gap-2 sm:w-36"
+            className="btn border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm flex items-center justify-center gap-2 sm:w-36 whitespace-nowrap shrink-0"
           >
             <RotateCcw className="w-4 h-4" /> Reset Form
           </button>
           <button
             type="submit" disabled={submitting}
-            className="btn btn-primary flex-1 text-sm flex items-center justify-center gap-2 py-3"
+            className="btn-multicolor flex-1 text-sm flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-bold whitespace-nowrap shrink-0"
           >
             {submitting ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>

@@ -570,7 +570,7 @@ export default function CrmChatPage() {
                   {!user.isSelf && (
                     <button
                       onClick={() => startDirectChat(user)}
-                      className="px-2.5 py-1 rounded-lg bg-[#1B365D] hover:bg-[#152a48] text-white text-[10px] font-bold transition-colors shrink-0 shadow-xs"
+                      className="px-2.5 py-1 rounded-xl btn-multicolor text-[10px] font-bold shrink-0"
                     >
                       Message
                     </button>
@@ -598,8 +598,8 @@ export default function CrmChatPage() {
               {loadingAudit ? (
                 <div className="text-center py-12 text-slate-400 text-xs">Loading audit logs...</div>
               ) : (
-                <div className="bg-white rounded-2xl border border-[#EAE6DD] overflow-hidden shadow-xs">
-                  <table className="w-full text-xs text-left">
+                <div className="table-crm-wrapper bg-white rounded-2xl border border-[#EAE6DD] overflow-hidden shadow-xs">
+                  <table className="table-crm w-full text-xs text-left">
                     <thead className="bg-[#FAF9F5] border-b border-[#EAE6DD] text-slate-600 font-bold uppercase text-[10px]">
                       <tr>
                         <th className="p-3">Conversation ID</th>
@@ -634,7 +634,7 @@ export default function CrmChatPage() {
                                 setActiveTab('conversations');
                                 openConversation(ac.id);
                               }}
-                              className="px-2 py-1 rounded bg-[#1B365D] text-white text-[10px] font-bold"
+                              className="px-2 py-1 rounded-xl btn-multicolor text-[10px] font-bold"
                             >
                               Inspect
                             </button>
@@ -890,7 +890,7 @@ export default function CrmChatPage() {
                 <button
                   type="submit"
                   disabled={sending || uploadingAttachment || (!messageText.trim() && !selectedFile)}
-                  className="px-4 py-2 rounded-xl bg-[#1B365D] hover:bg-[#152a48] text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 shrink-0 shadow-xs"
+                  className="px-4 py-2 rounded-xl btn-multicolor text-xs font-bold disabled:opacity-50 flex items-center gap-1.5 shrink-0"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>{uploadingAttachment ? 'Uploading...' : sending ? 'Sending...' : 'Send'}</span>

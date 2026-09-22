@@ -138,7 +138,7 @@ export default function SalesAgentDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Lead / City</th>

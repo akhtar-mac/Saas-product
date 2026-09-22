@@ -328,7 +328,7 @@ export default function FPCTrainingPage() {
                     </p>
                     <button
                       onClick={() => setStatus('idle')}
-                      className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors cursor-pointer"
+                      className="px-5 py-2.5 rounded-xl btn-multicolor font-bold text-xs transition-colors cursor-pointer"
                     >
                       Register Another Participant
                     </button>

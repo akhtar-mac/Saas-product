@@ -82,7 +82,7 @@ export default function SalesAssistantDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Lead / Contact</th>

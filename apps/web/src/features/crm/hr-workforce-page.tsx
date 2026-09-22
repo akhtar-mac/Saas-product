@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Users,
   Search,
@@ -22,6 +22,8 @@ import {
   AlertTriangle,
   RotateCcw,
   CheckSquare,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import {
@@ -285,7 +287,7 @@ export default function HrWorkforcePage() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-display font-bold text-[#1B365D]">
-              MANAGE OPERATION EMPLOYEES
+              Manage Operation Employees
             </h1>
             <span className="badge badge-navy font-mono">{staffList.length} Active Staff</span>
           </div>
@@ -301,7 +303,7 @@ export default function HrWorkforcePage() {
 
           <button
             onClick={openAddModal}
-            className="flex items-center gap-2 px-4 py-2 bg-[#A80038] hover:bg-[#88002E] text-white font-bold text-xs rounded-xl shadow-md transition-all hover:scale-105"
+            className="btn-multicolor flex items-center gap-2 py-2.5 px-4"
           >
             <UserPlus className="w-4 h-4" /> Add New Employeer
           </button>
@@ -377,7 +379,7 @@ export default function HrWorkforcePage() {
 
           <button
             onClick={openAddModal}
-            className="flex items-center gap-1.5 px-3 py-2 bg-[#A80038] hover:bg-[#88002E] text-white font-bold text-xs rounded-xl shadow-xs"
+            className="btn-multicolor flex items-center gap-1.5 py-2 px-3"
             title="Add New Employee"
           >
             <UserPlus className="w-4 h-4" /> Add Employeer
@@ -388,7 +390,7 @@ export default function HrWorkforcePage() {
       {/* Staff Table */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Name</th>
@@ -430,16 +432,16 @@ export default function HrWorkforcePage() {
                         {staff.joiningDate}
                       </td>
                       <td className="text-right">
-                        <div className="flex items-center justify-end gap-2 text-slate-500">
-                          <button onClick={openAddModal} className="hover:text-blue-600" title="Edit Employee">
-                            ✏️
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={openAddModal} className="btn-multicolor inline-flex items-center justify-center p-1.5 rounded-xl" title="Edit Employee">
+                            <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => setStaffList((prev) => prev.filter((s) => s.id !== staff.id))}
-                            className="hover:text-red-600"
+                            className="btn-multicolor inline-flex items-center justify-center p-1.5 rounded-xl"
                             title="Delete Employee"
                           >
-                            🗑️
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
@@ -455,9 +457,9 @@ export default function HrWorkforcePage() {
         <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
           <span>Showing 1 to {filtered.length} of {staffList.length} entries</span>
           <div className="flex items-center gap-1">
-            <button className="px-2 py-1 bg-slate-100 text-slate-600 rounded">Previous</button>
-            <button className="px-2.5 py-1 bg-[#1B365D] text-white font-bold rounded">1</button>
-            <button className="px-2 py-1 bg-slate-100 text-slate-600 rounded">Next</button>
+            <button className="px-2 py-1 btn-multicolor text-xs font-bold">Previous</button>
+            <button className="px-2.5 py-1 btn-multicolor text-xs font-bold">1</button>
+            <button className="px-2 py-1 btn-multicolor text-xs font-bold">Next</button>
           </div>
         </div>
       </div>
@@ -465,23 +467,23 @@ export default function HrWorkforcePage() {
       {/* Add New Employeer & Role Permissions Modal matching Screenshot */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 border border-slate-200">
-            {/* Crimson Red Modal Header matching screenshot */}
-            <div className="bg-[#A80038] text-white px-6 py-4 flex items-center justify-between">
-              <h2 className="text-base font-bold tracking-wide">Add New Employeer</h2>
+          <div className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in">
+            {/* ETaxwala standard modal header */}
+            <div className="bg-white text-[#1B365D] px-6 py-4 flex items-center justify-between border-b border-[#EAE6DD]">
+              <h2 className="text-base font-extrabold tracking-tight">Add New Employeer</h2>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-white/80 hover:text-white transition-colors"
+                className="text-slate-400 hover:text-slate-700 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleCreateEmployee} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F5F3EF]">
+            <form onSubmit={handleCreateEmployee} className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
               {/* Name */}
               <div className="flex items-center gap-3">
-                <label className="w-24 shrink-0 text-xs font-bold text-white bg-[#A80038] px-3 py-2 rounded-lg text-center">
+                <label className="w-24 shrink-0 text-xs font-bold text-slate-700 bg-[#FAF9F5] border border-[#EAE6DD] px-3 py-2 rounded-lg text-center">
                   Name
                 </label>
                 <input
@@ -490,13 +492,13 @@ export default function HrWorkforcePage() {
                   placeholder="Name"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="input text-xs w-full bg-white border-slate-300 focus:border-[#A80038]"
+                  className="input text-xs w-full bg-[#FAF9F5] border-[#EAE6DD] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20"
                 />
               </div>
 
               {/* Email */}
               <div className="flex items-center gap-3">
-                <label className="w-24 shrink-0 text-xs font-bold text-white bg-[#A80038] px-3 py-2 rounded-lg text-center">
+                <label className="w-24 shrink-0 text-xs font-bold text-slate-700 bg-[#FAF9F5] border border-[#EAE6DD] px-3 py-2 rounded-lg text-center">
                   Email
                 </label>
                 <input
@@ -505,13 +507,13 @@ export default function HrWorkforcePage() {
                   placeholder="Email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="input text-xs w-full bg-white border-slate-300 focus:border-[#A80038]"
+                  className="input text-xs w-full bg-[#FAF9F5] border-[#EAE6DD] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20"
                 />
               </div>
 
               {/* Contact */}
               <div className="flex items-center gap-3">
-                <label className="w-24 shrink-0 text-xs font-bold text-white bg-[#A80038] px-3 py-2 rounded-lg text-center">
+                <label className="w-24 shrink-0 text-xs font-bold text-slate-700 bg-[#FAF9F5] border border-[#EAE6DD] px-3 py-2 rounded-lg text-center">
                   Contact
                 </label>
                 <input
@@ -519,13 +521,13 @@ export default function HrWorkforcePage() {
                   placeholder="Contact"
                   value={form.contact}
                   onChange={(e) => setForm({ ...form, contact: e.target.value })}
-                  className="input text-xs w-full bg-white border-slate-300 focus:border-[#A80038]"
+                  className="input text-xs w-full bg-[#FAF9F5] border-[#EAE6DD] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20"
                 />
               </div>
 
               {/* Password */}
               <div className="flex items-center gap-3">
-                <label className="w-24 shrink-0 text-xs font-bold text-white bg-[#A80038] px-3 py-2 rounded-lg text-center">
+                <label className="w-24 shrink-0 text-xs font-bold text-slate-700 bg-[#FAF9F5] border border-[#EAE6DD] px-3 py-2 rounded-lg text-center">
                   Password
                 </label>
                 <div className="relative flex-1">
@@ -535,7 +537,7 @@ export default function HrWorkforcePage() {
                     placeholder="Password"
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="input text-xs w-full bg-white border-slate-300 focus:border-[#A80038] pr-9"
+                    className="input text-xs w-full bg-[#FAF9F5] border-[#EAE6DD] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 pr-9"
                   />
                   <button
                     type="button"
@@ -556,7 +558,7 @@ export default function HrWorkforcePage() {
                   required
                   value={form.role_id}
                   onChange={(e) => handleRoleChange(Number(e.target.value))}
-                  className="input text-xs w-full bg-white border-slate-300 font-bold text-[#1B365D]"
+                  className="input text-xs w-full bg-[#FAF9F5] border-[#EAE6DD] font-bold text-[#1B365D] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20"
                 >
                   {ROLES.map((r) => (
                     <option key={r.id} value={r.id}>
@@ -569,21 +571,21 @@ export default function HrWorkforcePage() {
               {/* Role Permissions Customization Section */}
               <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <span className="text-xs font-bold text-[#A80038] flex items-center gap-1">
+                  <span className="text-xs font-bold text-[#1B365D] flex items-center gap-1">
                     <Shield className="w-3.5 h-3.5" /> Customize Permissions for this Employee
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={resetToRoleDefaults}
-                      className="text-[10px] text-blue-600 hover:underline flex items-center gap-0.5 font-bold"
+                      className="btn-multicolor text-[10px] flex items-center gap-0.5 py-1.5 px-2.5"
                     >
                       <RotateCcw className="w-3 h-3" /> Reset Role Defaults
                     </button>
                     <button
                       type="button"
                       onClick={selectAllPermissions}
-                      className="text-[10px] text-purple-600 hover:underline flex items-center gap-0.5 font-bold"
+                      className="btn-multicolor text-[10px] flex items-center gap-0.5 py-1.5 px-2.5"
                     >
                       <CheckSquare className="w-3 h-3" /> Grant All (*)
                     </button>
@@ -606,7 +608,7 @@ export default function HrWorkforcePage() {
                               <label
                                 key={item.key}
                                 className={`flex items-center gap-2 p-1.5 rounded-lg border text-[11px] cursor-pointer transition-all ${isChecked
-                                    ? 'bg-red-50/70 border-red-200 text-slate-900 font-bold'
+                                    ? 'bg-[#FAF9F5] border-[#7C3AED] text-slate-900 font-bold'
                                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                                   }`}
                               >
@@ -614,7 +616,7 @@ export default function HrWorkforcePage() {
                                   type="checkbox"
                                   checked={isChecked}
                                   onChange={() => togglePermission(item.key)}
-                                  className="rounded text-[#A80038] focus:ring-[#A80038]"
+                                  className="rounded text-[#1B365D] focus:ring-[#1B365D]"
                                 />
                                 <span className="truncate">{item.label}</span>
                               </label>
@@ -638,14 +640,14 @@ export default function HrWorkforcePage() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-6 py-2 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs rounded-lg shadow-sm"
+                  className="btn-multicolor btn-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2 bg-[#1B365D] hover:bg-[#0f2444] text-white font-bold text-xs rounded-lg shadow-md"
+                  className="btn-multicolor py-2.5 px-6"
                 >
                   {submitting ? 'Adding...' : 'Add'}
                 </button>
@@ -657,3 +659,4 @@ export default function HrWorkforcePage() {
     </div>
   );
 }
+

@@ -260,7 +260,7 @@ export default function CrmManageBlogsPage() {
       {/* Table */}
       <div className="card border border-slate-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="table-crm w-full text-xs">
             <thead className="bg-[#FAF9F5] border-b border-[#EAE6DD]">
               <tr>
                 <th className="text-left px-4 py-3 font-bold text-slate-600">Blog Title</th>
@@ -467,7 +467,7 @@ export default function CrmManageBlogsPage() {
               </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 rounded-lg text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700"
+                className="px-4 py-2 rounded-lg text-xs font-semibold btn-multicolor"
               >
                 Delete
               </button>

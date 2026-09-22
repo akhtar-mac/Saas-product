@@ -78,7 +78,7 @@ export default function ConsultationDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Client Name / Phone</th>

@@ -146,15 +146,15 @@ export default function SuperAdminDashboard() {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <Link to="/crm/leads" className="flex items-center gap-2 px-4 py-2 bg-white text-brand-navy rounded-xl text-xs font-bold hover:bg-white/90 transition-colors shadow-sm">
+            <Link to="/crm/leads" className="flex items-center gap-2 px-4 py-2 btn-multicolor rounded-xl text-xs font-bold transition-colors shadow-sm">
               <Users className="w-3.5 h-3.5" />
               All Leads ({fmt(stats?.totalLeads, '17,281')})
             </Link>
-            <Link to="/crm/tasks" className="flex items-center gap-2 px-4 py-2 bg-white/15 text-white border border-white/20 rounded-xl text-xs font-bold hover:bg-white/25 transition-colors">
+            <Link to="/crm/tasks" className="flex items-center gap-2 px-4 py-2 btn-multicolor border border-white/20 rounded-xl text-xs font-bold transition-colors">
               <FileCheck2 className="w-3.5 h-3.5" />
               Tasks ({fmt(stats?.totalTasks, '4,911')})
             </Link>
-            <Link to="/crm/workforce" className="flex items-center gap-2 px-4 py-2 bg-white/15 text-white border border-white/20 rounded-xl text-xs font-bold hover:bg-white/25 transition-colors">
+            <Link to="/crm/workforce" className="flex items-center gap-2 px-4 py-2 btn-multicolor border border-white/20 rounded-xl text-xs font-bold transition-colors">
               <UserCheck className="w-3.5 h-3.5" />
               HR & Staff
             </Link>
@@ -354,7 +354,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Staff Member</th>

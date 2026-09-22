@@ -267,7 +267,7 @@ export default function ServicesHubPage() {
                   </p>
                   <Link
                     to="/appointment"
-                    className="mt-2 block w-full py-2 rounded-lg bg-white border border-[#EAE6DD] text-xs font-bold text-[#7C3AED] hover:bg-[#FAF9F5] shadow-xs"
+                    className="mt-2 block w-full py-2 rounded-lg btn-multicolor text-xs font-bold shadow-xs"
                   >
                     Book CA Call
                   </Link>

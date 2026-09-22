@@ -281,7 +281,7 @@ export default function CrmCallAnalyticsPage() {
               <Award className="w-4 h-4 text-amber-400" />
             </div>
             <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)]">
-              <table className="w-full text-sm border-separate border-spacing-0">
+              <table className="table-crm w-full text-sm border-separate border-spacing-0">
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-slate-50 border-b border-slate-200">
                     <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">#</th>

@@ -139,7 +139,7 @@ export default function SubBrandsDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Organization / Society Name</th>

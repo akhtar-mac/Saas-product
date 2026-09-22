@@ -499,7 +499,7 @@ export default function CrmUserManagementPage() {
       {/* Users Table */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
         <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)]">
-          <table className="w-full text-sm border-separate border-spacing-0">
+          <table className="table-crm w-full text-sm border-separate border-spacing-0">
             <thead className="sticky top-0 z-10">
               <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                 <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>

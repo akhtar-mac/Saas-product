@@ -5,7 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
   ShieldCheck, Lock, Mail, Phone, User, Building,
-  ArrowRight, Search, Check, Sparkles, CheckCircle2, Loader2
+  ArrowRight, Search, Check, Sparkles, CheckCircle2, Loader2,
+  Eye, EyeOff
 } from 'lucide-react';
 import { services } from '@/lib/constants/services';
 import { useAuthStore } from '@/store/auth-store';
@@ -24,6 +25,7 @@ type FormData = z.infer<typeof schema>;
 const CUSTOMER_API = 'https://customer-api.etaxwala.com/api';
 
 export default function ClientSignupPage() {
+  const [showPassword, setShowPassword] = useState(false);
   const [serviceSearch, setServiceSearch] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -182,10 +184,18 @@ export default function ClientSignupPage() {
                   <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     {...register('password')}
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="Min 6 characters"
-                    className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
+                    className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 transition-colors cursor-pointer"
+                    title={showPassword ? 'Hide Password' : 'Show Password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
                 {errors.password && <p className="mt-1 text-xs text-rose-500">{errors.password.message}</p>}
               </div>

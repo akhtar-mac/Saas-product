@@ -497,7 +497,7 @@ export default function MarketingDashboard() {
 
             <button
               onClick={() => setIsNewPostModalOpen(true)}
-              className="px-4 py-2 bg-[#0084D1] text-white rounded-xl text-xs font-bold hover:bg-[#0070b3] transition-colors flex items-center gap-1.5 shadow-sm self-start sm:self-auto"
+              className="px-4 py-2 btn-multicolor text-xs font-bold flex items-center gap-1.5 self-start sm:self-auto"
             >
               <Plus className="w-4 h-4" /> Schedule New Post
             </button>
@@ -580,7 +580,7 @@ export default function MarketingDashboard() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table className="table-crm w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase">
                     <th className="py-3 px-4">Campaign Name</th>
@@ -680,7 +680,7 @@ export default function MarketingDashboard() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table className="table-crm w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase">
                     <th className="py-3 px-4">Channel / UTM Source</th>
@@ -735,7 +735,7 @@ export default function MarketingDashboard() {
 
             <button
               onClick={() => setIsNewIntegrationModalOpen(true)}
-              className="px-4 py-2.5 bg-[#0084D1] text-white rounded-xl text-xs font-bold hover:bg-[#0070b3] transition-colors flex items-center gap-1.5 shadow-sm"
+              className="px-4 py-2.5 btn-multicolor text-xs font-bold flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" /> Connect New Provider
             </button>
@@ -784,7 +784,7 @@ export default function MarketingDashboard() {
                   <button
                     onClick={() => handleTriggerSync(item.id)}
                     disabled={syncingId === item.id}
-                    className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                    className="px-3 py-1.5 btn-multicolor rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-50"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${syncingId === item.id ? 'animate-spin' : ''}`} />
                     {syncingId === item.id ? 'Syncing...' : 'Sync Now'}
@@ -807,7 +807,7 @@ export default function MarketingDashboard() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table className="table-crm w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase">
                     <th className="py-3 px-4">Job Code</th>
@@ -928,7 +928,7 @@ export default function MarketingDashboard() {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-[#0084D1] text-white font-bold rounded-xl hover:bg-[#0070b3] transition-colors"
+                className="w-full py-3 btn-multicolor font-bold"
               >
                 Confirm & Schedule Post
               </button>
@@ -987,14 +987,14 @@ export default function MarketingDashboard() {
                   {selectedPost.status !== 'published' && (
                     <button
                       onClick={() => handleUpdatePostStatus(selectedPost.id, 'published')}
-                      className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1"
+                      className="px-4 py-2 rounded-xl btn-multicolor text-xs font-bold flex items-center gap-1"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" /> Mark Published
                     </button>
                   )}
                   <button
                     onClick={() => setSelectedPost(null)}
-                    className="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors"
+                    className="px-4 py-2 rounded-xl btn-multicolor text-xs font-bold"
                   >
                     Close
                   </button>
@@ -1086,7 +1086,7 @@ export default function MarketingDashboard() {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-[#0084D1] text-white font-bold rounded-xl hover:bg-[#0070b3] transition-colors flex items-center justify-center gap-1.5"
+                className="w-full py-3 btn-multicolor font-bold flex items-center justify-center gap-1.5"
               >
                 <ShieldCheck className="w-4 h-4" /> Save & Authorize in Vault
               </button>

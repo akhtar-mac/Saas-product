@@ -865,7 +865,7 @@ export default function CrmLayout() {
           <div className="p-4 border-t border-slate-100 space-y-2">
             <Link
               to="/portal"
-              className="text-xs text-[#1B365D] hover:text-[#00A896] flex items-center justify-between font-semibold p-2 bg-[#F7F8FA] rounded-lg border border-slate-200"
+              className="text-xs flex items-center justify-between font-semibold p-2 btn-multicolor rounded-lg"
             >
               <span className="flex items-center gap-1.5">
                 <ExternalLink className="w-3.5 h-3.5" /> Client Portal View

@@ -130,7 +130,7 @@ export function PaginatedList<T>({
         <div className="flex justify-center mt-6">
           <button
             onClick={handleLoadMore}
-            className="px-6 py-2 bg-brand-navy text-white rounded-lg hover:bg-brand-navy-dark transition-colors font-medium text-sm"
+            className="px-6 py-2 btn-multicolor rounded-lg transition-colors font-medium text-sm"
           >
             Load More
           </button>

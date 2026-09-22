@@ -326,7 +326,7 @@ export default function ServiceDetailPage() {
                       href={`https://wa.me/918069029999?text=Hi%20ETaxwala%2C%20I%20just%20enquired%20for%20${encodeURIComponent(service.name)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
+                      className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 btn-multicolor text-xs font-bold"
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span>Chat on WhatsApp Now</span>
@@ -443,7 +443,7 @@ export default function ServiceDetailPage() {
             </div>
             <a
               href="#lead-form"
-              className="hidden sm:inline-flex px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shrink-0 transition-colors"
+              className="hidden sm:inline-flex px-3 py-1.5 rounded-lg btn-multicolor font-bold text-[11px] shrink-0 transition-colors"
             >
               Avoid Late Fees
             </a>
@@ -578,7 +578,7 @@ export default function ServiceDetailPage() {
                           e.stopPropagation();
                           setSelectedPkgId(pkg.id);
                         }}
-                        className="w-full py-3.5 rounded-xl bg-[#FAF9F5] hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-[#EAE6DD] hover:border-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                        className="w-full py-3.5 rounded-xl btn-multicolor text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
                       >
                         <span>Select {pkg.name}</span>
                         <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
@@ -803,7 +803,7 @@ export default function ServiceDetailPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse border border-[#EAE6DD] rounded-2xl overflow-hidden text-xs sm:text-sm">
+            <table className="table-crm w-full text-left border-collapse border border-[#EAE6DD] rounded-2xl overflow-hidden text-xs sm:text-sm">
               <thead>
                 <tr className="bg-[#FAF9F5] border-b border-[#EAE6DD] text-slate-700">
                   <th className="p-4 font-extrabold">Feature / Capability</th>

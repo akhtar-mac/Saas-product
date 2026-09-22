@@ -370,7 +370,7 @@ function DeadlineBanner() {
         sub: '— Portal Closes Soon • Avoid Section 234F Penalty of ₹5,000',
         cardBg: 'bg-rose-950/70 border border-rose-500/40 text-rose-100 shadow-inner',
         cardLabel: 'text-rose-400 font-bold',
-        buttonClass: 'bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_20px_rgba(225,29,72,0.8)] border border-rose-400/60 animate-pulse',
+        buttonClass: 'btn-multicolor animate-pulse',
         pingColor: 'bg-rose-400',
         pingGlow: 'shadow-[0_0_8px_#F43F5E]',
         borderBottom: 'border-b-2 border-rose-700/60',
@@ -386,7 +386,7 @@ function DeadlineBanner() {
         sub: '— High CBDT Server Traffic Expected • File with CA Today',
         cardBg: 'bg-black/40 border border-white/20 text-white shadow-inner',
         cardLabel: 'text-rose-200 font-bold',
-        buttonClass: 'bg-white text-[#63071F] hover:bg-rose-50 shadow-md font-extrabold',
+        buttonClass: 'btn-multicolor font-extrabold',
         pingColor: 'bg-rose-300',
         pingGlow: 'shadow-[0_0_6px_#FB7185]',
         borderBottom: 'border-b border-rose-900/50',
@@ -402,7 +402,7 @@ function DeadlineBanner() {
         sub: '— FY 2025-26 (AY 2026-27) Tax Audit Cases',
         cardBg: 'bg-black/30 border border-white/20 text-white',
         cardLabel: 'text-white/80',
-        buttonClass: 'bg-white text-[#991B1B] hover:bg-red-50 shadow-sm font-bold',
+        buttonClass: 'btn-multicolor font-bold',
         pingColor: 'bg-white',
         pingGlow: 'shadow-sm',
         borderBottom: 'border-b border-red-900/40',
@@ -418,7 +418,7 @@ function DeadlineBanner() {
         sub: '— FY 2025-26 (AY 2026-27) Tax Audit Cases',
         cardBg: 'bg-white/20 text-white',
         cardLabel: 'text-white/75',
-        buttonClass: 'bg-white text-[#9F1239] hover:bg-rose-50 font-bold',
+        buttonClass: 'btn-multicolor font-bold',
         pingColor: 'bg-white',
         pingGlow: 'shadow-sm',
         borderBottom: 'border-b border-red-900/30',
@@ -434,7 +434,7 @@ function DeadlineBanner() {
         sub: '— FY 2025-26 (AY 2026-27) Tax Audit Cases',
         cardBg: 'bg-white/20 text-white',
         cardLabel: 'text-white/70',
-        buttonClass: 'bg-white text-[#BE123C] hover:bg-red-50 font-bold',
+        buttonClass: 'btn-multicolor font-bold',
         pingColor: 'bg-white',
         pingGlow: 'shadow-sm',
         borderBottom: 'border-b border-red-900/20',
@@ -449,7 +449,7 @@ function DeadlineBanner() {
       sub: '— FY 2025-26 (AY 2026-27) Tax Audit Cases',
       cardBg: 'bg-white/20 text-white',
       cardLabel: 'text-white/70',
-      buttonClass: 'bg-white text-[#E11D48] hover:bg-rose-50 font-bold',
+      buttonClass: 'btn-multicolor font-bold',
       pingColor: 'bg-white',
       pingGlow: 'shadow-sm',
       borderBottom: 'border-b border-rose-300/30',
@@ -743,7 +743,7 @@ function FaqSection() {
           <p className="text-xs text-slate-500 mb-3">Have more questions? Our CA team answers within 5 minutes.</p>
           <Link
             to="/contact"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs bg-[#FAF9F5] border border-[#EAE6DD] text-slate-800 hover:border-slate-300 hover:shadow-sm transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs btn-multicolor hover:shadow-sm transition-all"
           >
             Ask a CA Directly <ArrowRight className="w-3.5 h-3.5 text-[#7C3AED]" />
           </Link>
@@ -1511,7 +1511,7 @@ export default function HomePage() {
           </div>
 
           <div className="bg-white rounded-2xl border border-[#EAE6DD] overflow-x-auto shadow-xs">
-            <table className="w-full text-xs text-left border-collapse">
+            <table className="table-crm w-full text-xs text-left border-collapse">
               <thead>
                 <tr className="border-b border-[#EAE6DD] text-slate-700 font-bold uppercase text-[10px] bg-[#FAF9F5]">
                   <th className="py-3.5 px-5">Deliverable</th>

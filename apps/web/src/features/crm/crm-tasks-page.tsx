@@ -572,7 +572,7 @@ export default function CrmTasksPage() {
 
         {/* Table Data */}
         <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl shadow-2xs">
-          <table className="w-full text-left text-xs border-separate border-spacing-0">
+          <table className="table-crm w-full text-left text-xs border-separate border-spacing-0">
             <thead className="sticky top-0 z-10">
               <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider sticky top-0 z-10">
                 <th className="py-2.5 px-3 w-8 text-center">

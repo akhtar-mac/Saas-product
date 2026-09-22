@@ -20,7 +20,7 @@ export default function FloatingCTA() {
           rel="noopener noreferrer"
           aria-label="Chat on WhatsApp"
           title="Chat with us on WhatsApp"
-          className="flex items-center gap-2.5 px-4 py-3 rounded-full bg-[#25D366] hover:bg-[#1EBE59] text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.04] active:scale-[0.97] border border-[#1EBE59]/60 cursor-pointer group"
+          className="flex items-center gap-2.5 px-4 py-3 rounded-xl btn-multicolor shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.04] active:scale-[0.97] cursor-pointer group"
         >
           {/* WhatsApp Icon */}
           <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
@@ -40,7 +40,7 @@ export default function FloatingCTA() {
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-3 px-4 py-3 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] border border-slate-700/60 cursor-pointer group"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl btn-multicolor shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] cursor-pointer group"
           aria-label={open ? 'Close advisory desk' : 'Consult Chartered Accountant'}
         >
           <div className="relative flex items-center justify-center">

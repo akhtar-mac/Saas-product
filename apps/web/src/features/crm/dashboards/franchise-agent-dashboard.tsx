@@ -73,7 +73,7 @@ export default function FranchiseAgentDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Order ID</th>

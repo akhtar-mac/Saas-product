@@ -166,13 +166,13 @@ export default function CrmDesktopTrackingPage({ defaultTab = 'tracking' }: { de
 
             <div className="sm:col-span-2 flex items-center gap-2">
               <button
-                className="flex-1 bg-[#06B6D4] hover:bg-[#0891B2] text-white font-bold text-xs py-2 px-4 rounded-md shadow-xs transition-colors text-center"
+                className="flex-1 btn-multicolor font-bold text-xs py-2 px-4 text-center"
               >
                 Filter
               </button>
               <button
                 onClick={handleReset}
-                className="bg-[#1E3A8A] hover:bg-[#1E40AF] text-white font-bold text-xs py-2 px-3 rounded-md shadow-xs transition-colors text-center"
+                className="btn-multicolor font-bold text-xs py-2 px-3 text-center"
               >
                 Reset All
               </button>
@@ -224,7 +224,7 @@ export default function CrmDesktopTrackingPage({ defaultTab = 'tracking' }: { de
         {/* Table View: Tracking Report */}
         {activeTab === 'tracking' ? (
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl">
-            <table className="w-full text-left text-xs border-separate border-spacing-0">
+            <table className="table-crm w-full text-left text-xs border-separate border-spacing-0">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider">
                   <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-4 font-bold">Name</th>
@@ -265,7 +265,7 @@ export default function CrmDesktopTrackingPage({ defaultTab = 'tracking' }: { de
         ) : (
           /* Table View: Session Report */
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl">
-            <table className="w-full text-left text-xs border-separate border-spacing-0">
+            <table className="table-crm w-full text-left text-xs border-separate border-spacing-0">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider">
                   <th className="sticky top-0 z-10 bg-[#1E3A8A] py-2.5 px-3 font-bold">Name</th>
@@ -340,7 +340,7 @@ export default function CrmDesktopTrackingPage({ defaultTab = 'tracking' }: { de
               <div className="flex justify-end">
                 <button
                   onClick={() => setSelectedScreenshots(null)}
-                  className="px-4 py-2 text-xs font-bold bg-slate-800 text-white rounded-lg hover:bg-slate-700"
+                  className="px-4 py-2 text-xs font-bold btn-multicolor"
                 >
                   Close Preview
                 </button>

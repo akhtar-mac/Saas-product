@@ -217,7 +217,7 @@ export default function CrmAppointmentsPage() {
       {/* Table */}
       <div className="card border border-slate-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="table-crm w-full text-xs">
             <thead className="bg-[#FAF9F5] border-b border-[#EAE6DD]">
               <tr>
                 <th className="text-left px-4 py-3 font-bold text-slate-600">Customer</th>
@@ -270,7 +270,7 @@ export default function CrmAppointmentsPage() {
                         {appt.status === 'Pending' && (
                           <button
                             onClick={() => updateStatus(appt.id, 'Confirmed')}
-                            className="px-2 py-1 rounded-lg text-[10px] font-semibold text-white bg-blue-600 hover:bg-blue-700"
+                            className="px-2 py-1 rounded-xl text-[10px] font-semibold btn-multicolor"
                           >
                             Confirm
                           </button>
@@ -278,7 +278,7 @@ export default function CrmAppointmentsPage() {
                         {appt.status === 'Confirmed' && (
                           <button
                             onClick={() => updateStatus(appt.id, 'Completed')}
-                            className="px-2 py-1 rounded-lg text-[10px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700"
+                            className="px-2 py-1 rounded-xl text-[10px] font-semibold btn-multicolor"
                           >
                             Complete
                           </button>
@@ -286,7 +286,7 @@ export default function CrmAppointmentsPage() {
                         {(appt.status === 'Pending' || appt.status === 'Confirmed') && (
                           <button
                             onClick={() => updateStatus(appt.id, 'Cancelled')}
-                            className="px-2 py-1 rounded-lg text-[10px] font-semibold text-white bg-rose-600 hover:bg-rose-700"
+                            className="px-2 py-1 rounded-xl text-[10px] font-semibold btn-multicolor"
                           >
                             Cancel
                           </button>

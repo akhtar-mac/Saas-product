@@ -659,7 +659,7 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
   const activeInputType = currentMsg?.inputType || 'none';
 
   return (
-    <div className="w-[calc(100vw-1.5rem)] sm:w-[410px] max-w-[410px] h-[540px] max-h-[74vh] sm:max-h-[84vh] bg-[#FFFFFF] rounded-2xl sm:rounded-3xl border border-[#EAE6DD] shadow-2xl flex flex-col overflow-hidden animate-scale-in origin-bottom-right mb-2 select-none z-50">
+    <div className="w-[calc(100vw-1.5rem)] sm:w-[480px] max-w-[480px] h-[640px] max-h-[88vh] bg-[#FFFFFF] rounded-2xl sm:rounded-3xl border border-[#EAE6DD] shadow-2xl flex flex-col overflow-hidden animate-scale-in origin-bottom-right mb-2 select-none z-50">
       {/* Executive Professional Header */}
       <div className="px-4 py-3.5 bg-[#FAF9F5] border-b border-[#EAE6DD] flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
@@ -818,7 +818,7 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
                     <button
                       type="submit"
                       disabled={!inputName.trim()}
-                      className="p-2 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white disabled:opacity-40 cursor-pointer shrink-0 transition-colors"
+                      className="p-2 rounded-lg btn-multicolor disabled:opacity-40 cursor-pointer shrink-0 transition-colors"
                       title="Submit Name"
                     >
                       <Send className="w-3.5 h-3.5" />
@@ -850,7 +850,7 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
                     <button
                       type="submit"
                       disabled={inputMobile.length < 10}
-                      className="p-2 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white disabled:opacity-40 cursor-pointer shrink-0 transition-colors"
+                      className="p-2 rounded-lg btn-multicolor disabled:opacity-40 cursor-pointer shrink-0 transition-colors"
                       title="Submit Mobile"
                     >
                       <Send className="w-3.5 h-3.5" />
@@ -875,7 +875,7 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#1EBE59] text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="w-full py-3 px-4 rounded-xl btn-multicolor font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <MessageCircle className="w-4 h-4 fill-white" />
                     <span>Chat with Assigned CA on WhatsApp Now</span>

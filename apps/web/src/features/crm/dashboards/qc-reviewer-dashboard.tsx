@@ -99,7 +99,7 @@ export default function QcReviewerDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Case # / Client</th>

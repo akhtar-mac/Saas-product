@@ -319,7 +319,7 @@ export default function CrmAccountsPage() {
               setActiveCustomer(null);
               setIsAddCustomerOpen(true);
             }}
-            className="w-8 h-8 rounded-full bg-[#003A66] hover:bg-[#002B4D] text-white flex items-center justify-center shadow-xs transition-colors"
+            className="w-8 h-8 rounded-full btn-multicolor flex items-center justify-center"
             title="Add New Customer"
           >
             <UserPlus className="w-4 h-4" />
@@ -368,7 +368,7 @@ export default function CrmAccountsPage() {
 
         {/* Customers Table */}
         <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl shadow-2xs">
-          <table className="w-full text-left text-xs border-separate border-spacing-0">
+          <table className="table-crm w-full text-left text-xs border-separate border-spacing-0">
             <thead className="sticky top-0 z-10">
               <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider sticky top-0 z-10">
                 <th className="py-2.5 px-3 font-bold">Name</th>

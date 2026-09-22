@@ -132,7 +132,8 @@
 .btn-secondary-outline,
 .btn-primary,
 .btn-secondary,
-.btn-outline {
+.btn-outline,
+.wizard-btn {
   --gbtn-primary:  #7C3AED;
   --gbtn-secondary: #0084D1;
   --gbtn-accent:   #E11D48;
@@ -148,7 +149,7 @@
   overflow: hidden;
   isolation: isolate;
   border: none;
-  border-radius: 0.75rem;
+  border-radius: 0.75rem !important;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -158,6 +159,7 @@
   text-decoration: none;
   transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   user-select: none;
+  white-space: nowrap !important;
 }
 
 .btn-galaxy:focus-visible,
@@ -208,34 +210,29 @@
   transition: opacity 0.3s ease, filter 0.3s ease;
 }
 
-/* PRIMARY CTA: nebula always slightly visible (feels prominent) */
+/* ALL branded buttons match the Talk to CA style: nebula always slightly visible */
+.btn-galaxy::before,
 .btn-multicolor::before,
-.btn-primary::before {
-  animation: etax-rotate-nebula 4s linear infinite;
-  opacity: 0.55;
-}
-.btn-multicolor:hover::before,
-.btn-primary:hover::before {
-  opacity: 1;
-  animation-duration: 2s;
-  filter: blur(4px);
-}
-
-/* SECONDARY / OUTLINE: nebula hidden at rest, fires on hover */
 .btn-outline-multicolor::before,
 .btn-hover-multicolor::before,
 .btn-secondary-outline::before,
+.btn-primary::before,
 .btn-outline::before,
 .btn-secondary::before {
-  animation: etax-rotate-nebula 5s linear infinite;
-  opacity: 0;
+  animation: etax-rotate-nebula 4s linear infinite;
+  opacity: 0.55;
 }
+
+/* All branded buttons get the same prominent hover */
+.btn-galaxy:hover::before,
+.btn-multicolor:hover::before,
 .btn-outline-multicolor:hover::before,
 .btn-hover-multicolor:hover::before,
 .btn-secondary-outline:hover::before,
+.btn-primary:hover::before,
 .btn-outline:hover::before,
 .btn-secondary:hover::before {
-  opacity: 0.9;
+  opacity: 1;
   animation-duration: 2s;
   filter: blur(4px);
 }
@@ -279,42 +276,42 @@
   color: #0F172A;
 }
 
+.btn-galaxy:hover,
 .btn-multicolor:hover,
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0.8em 2em -0.5em rgba(124, 58, 237, 0.45),
-              0 0.4em 1em -0.3em rgba(0, 132, 209, 0.3);
-}
-.btn-multicolor:hover > span,
-.btn-primary:hover > span {
-  background: var(--mc-gradient-h);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 .btn-outline-multicolor:hover,
 .btn-hover-multicolor:hover,
 .btn-secondary-outline:hover,
+.btn-primary:hover,
 .btn-outline:hover,
 .btn-secondary:hover {
   transform: translateY(-2px);
   color: #0F172A;
-  box-shadow: 0 0.6em 1.8em -0.5em rgba(124, 58, 237, 0.4),
-              0 0.3em 0.8em -0.3em rgba(0, 132, 209, 0.25);
+  box-shadow: 0 0.8em 2em -0.5em rgba(124, 58, 237, 0.45),
+              0 0.4em 1em -0.3em rgba(0, 132, 209, 0.3);
 }
+.btn-galaxy:hover > span,
+.btn-multicolor:hover > span,
 .btn-outline-multicolor:hover > span,
 .btn-hover-multicolor:hover > span,
-.btn-secondary-outline:hover > span {
+.btn-secondary-outline:hover > span,
+.btn-primary:hover > span,
+.btn-outline:hover > span,
+.btn-secondary:hover > span {
   background: var(--mc-gradient-h);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Primary resting shadow (subtle, makes it feel like the main CTA) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
+/* All branded buttons share the same subtle resting shadow */
+.btn-galaxy,
 .btn-multicolor,
-.btn-primary {
+.btn-outline-multicolor,
+.btn-hover-multicolor,
+.btn-secondary-outline,
+.btn-primary,
+.btn-outline,
+.btn-secondary {
   box-shadow: 0 0.3em 1em -0.3em rgba(124, 58, 237, 0.3),
               0 0.15em 0.5em -0.2em rgba(0, 132, 209, 0.2);
 }
@@ -431,50 +428,103 @@
   border: 1px solid #FECACA;
 }
 
-/* Universal Clean ETaxwala Table & Sticky Header System */
-.table-etaxwala {
+/* ═══════════════════════════════════════════════════════════════
+   CRM STANDARD TABLE — matches the Manage Leads table styling
+   Apply `.table-crm` to any `<table>` and `.table-crm-wrapper`
+   to its immediate scroll wrapper.
+   ═══════════════════════════════════════════════════════════════ */
+.table-crm-wrapper,
+.overflow-x-auto:has(> .table-crm),
+.overflow-x-auto:has(> .table-etaxwala) {
+  position: relative !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  max-height: calc(100vh - 250px) !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL WIZARD / MODAL STANDARDISATION
+   Every fixed-overlay dialog panel gets the same Add Lead-style
+   rounded-3xl cream-border shell with the signature multicolour strip.
+   ═══════════════════════════════════════════════════════════════ */
+.fixed.inset-0.z-50 > div[class*="bg-white"][class*="rounded-"],
+.fixed.inset-0.z-50 > div[class*="bg-[#FFFDF9]"][class*="rounded-"],
+.fixed.inset-0.z-50 > div[class*="bg-white"]:not([class*="rounded"]) {
+  border: 1px solid #EAE6DD !important;
+  border-radius: 1.5rem !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.14) !important;
+  overflow: hidden !important;
+}
+
+/* Signature strip — skipped if the panel already has an explicit bg-multicolor child */
+.fixed.inset-0.z-50 > div[class*="bg-white"][class*="rounded-"]:not(:has(> .bg-multicolor))::before,
+.fixed.inset-0.z-50 > div[class*="bg-[#FFFDF9]"][class*="rounded-"]:not(:has(> .bg-multicolor))::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: var(--mc-gradient-h);
+}
+
+.table-crm.table-crm,
+.table-crm.table-crm table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-align: left;
 }
-.table-etaxwala thead {
+
+.table-crm.table-crm thead,
+.table-crm.table-crm thead tr {
   position: sticky;
   top: 0;
   z-index: 10;
 }
-.table-etaxwala thead tr {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: #FAF9F5;
-}
-.table-etaxwala th {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding: 0.75rem 1rem;
-  font-size: 0.7rem;
-  font-weight: 700;
+
+.table-crm.table-crm thead tr {
+  background-color: #1E3A8A !important;
+  color: #FFFFFF !important;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #475569;
-  border-bottom: 1px solid #EAE6DD;
-  background-color: #FAF9F5;
+  font-size: 0.68rem;
 }
-.table-etaxwala td {
-  padding: 0.85rem 1rem;
-  color: #1E293B;
-  border-bottom: 1px solid #F1ECE4;
+
+.table-crm.table-crm th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 0.625rem 0.75rem !important;
+  font-weight: 700;
+  color: #FFFFFF !important;
+  background-color: inherit;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  white-space: nowrap;
+}
+
+.table-crm.table-crm td {
+  padding: 0.625rem 0.75rem !important;
+  border-bottom: 1px solid #F1F5F9 !important;
   vertical-align: middle;
-  background-color: #FFFFFF;
+  background-color: transparent;
 }
-.table-etaxwala tbody tr:hover td {
-  background-color: #FAF9F5;
+
+.table-crm.table-crm tbody tr {
+  background-color: #FFFFFF !important;
 }
-.table-etaxwala tbody tr:last-child td {
-  border-bottom: none;
+
+.table-crm.table-crm tbody tr:nth-child(even) {
+  background-color: #F9FAFB !important;
+}
+
+.table-crm.table-crm tbody tr:hover td {
+  background-color: rgba(240, 249, 255, 0.4) !important;
+}
+
+.table-crm.table-crm tbody tr:last-child td {
+  border-bottom: none !important;
 }
 
 /* Global Sticky Table Header & Scrollable Table Rows */
@@ -507,14 +557,15 @@ table thead th {
   position: relative;
   overflow-x: auto;
   overflow-y: auto;
-  max-height: calc(100vh - 280px);
+  max-height: calc(100vh - 250px);
 }
 
-/* Any overflow-x-auto div wrapping a table also gets vertical scroll */
+/* Any overflow-x-auto div wrapping a table also gets vertical scroll & CRM wrapper look */
 .overflow-x-auto:has(> table),
+.overflow-x-auto:has(> .table-crm),
 .overflow-x-auto:has(> .table-etaxwala) {
   overflow-y: auto;
-  max-height: calc(100vh - 280px);
+  max-height: calc(100vh - 250px);
 }
 
 /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Star Particles ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
@@ -1598,5 +1649,222 @@ table thead th {
   cursor: pointer;
   border: 3px solid #FFFFFF;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+   UNIVERSAL BUTTON STANDARDISATION
+   Every standalone .btn-* variant renders like the header "Talk to a CA" button.
+   ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬  */
+
+/* Override buttons that previously had unique colours (panda/gold/single-moving etc.) */
+.btn-panda,
+.btn-gold,
+.btn-accent,
+.btn-single-moving,
+.btn-single-moving-solid {
+  --gbtn-primary:  #7C3AED;
+  --gbtn-secondary: #0084D1;
+  --gbtn-accent:   #E11D48;
+  --gbtn-accent2:  #F97316;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 0.75rem !important;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  user-select: none;
+  box-shadow: 0 0.3em 1em -0.3em rgba(124, 58, 237, 0.3),
+              0 0.15em 0.5em -0.2em rgba(0, 132, 209, 0.2);
+}
+
+/* Shared nebula border (rotating, slightly blurred) */
+.btn-panda::before,
+.btn-gold::before,
+.btn-accent::before,
+.btn-single-moving::before,
+.btn-single-moving-solid::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  z-index: -2;
+  background: conic-gradient(
+    from 0deg,
+    #EAE6DD         0deg,
+    var(--gbtn-primary)   60deg,
+    var(--gbtn-secondary) 120deg,
+    #EAE6DD        180deg,
+    var(--gbtn-accent)    240deg,
+    var(--gbtn-accent2)   290deg,
+    var(--gbtn-primary)   330deg,
+    #EAE6DD         360deg
+  );
+  border-radius: inherit;
+  filter: blur(6px);
+  opacity: 0.55;
+  animation: etax-rotate-nebula 4s linear infinite;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* Inner white mask keeps the interior clean */
+.btn-panda::after,
+.btn-gold::after,
+.btn-accent::after,
+.btn-single-moving::after,
+.btn-single-moving-solid::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: #FFFFFF;
+  border-radius: inherit;
+  z-index: -1;
+}
+
+/* Children above the mask */
+.btn-panda > *,
+.btn-gold > *,
+.btn-accent > *,
+.btn-single-moving > *,
+.btn-single-moving-solid > * {
+  position: relative;
+  z-index: 2;
+  color: #0F172A !important;
+}
+
+/* Hover state matches Talk to CA */
+.btn-panda:hover,
+.btn-gold:hover,
+.btn-accent:hover,
+.btn-single-moving:hover,
+.btn-single-moving-solid:hover {
+  transform: translateY(-2px);
+  color: #0F172A !important;
+  box-shadow: 0 0.8em 2em -0.5em rgba(124, 58, 237, 0.45),
+              0 0.4em 1em -0.3em rgba(0, 132, 209, 0.3);
+}
+
+.btn-panda:hover::before,
+.btn-gold:hover::before,
+.btn-accent:hover::before,
+.btn-single-moving:hover::before,
+.btn-single-moving-solid:hover::before {
+  opacity: 1;
+  animation-duration: 2s;
+  filter: blur(4px);
+}
+
+.btn-accent {
+  border-radius: 0.75rem !important;
+}
+
+.btn-panda:active,
+.btn-gold:active,
+.btn-accent:active,
+.btn-single-moving:active,
+.btn-single-moving-solid:active {
+  transform: scale(0.97);
+}
+
+/* Text gradient on hover when wrapped in a <span> */
+.btn-panda:hover > span,
+.btn-gold:hover > span,
+.btn-accent:hover > span,
+.btn-single-moving:hover > span,
+.btn-single-moving-solid:hover > span {
+  background: var(--mc-gradient-h);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Catch inline-coloured .btn elements that bypass the named variants */
+.btn[class*="bg-"] {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+  border: none !important;
+  border-radius: 0.75rem !important;
+  transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  box-shadow: 0 0.3em 1em -0.3em rgba(124, 58, 237, 0.3),
+              0 0.15em 0.5em -0.2em rgba(0, 132, 209, 0.2) !important;
+}
+
+.btn[class*="bg-"]::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: -4px !important;
+  z-index: -2 !important;
+  background: conic-gradient(
+    from 0deg,
+    #EAE6DD         0deg,
+    #7C3AED         60deg,
+    #0084D1         120deg,
+    #EAE6DD        180deg,
+    #E11D48         240deg,
+    #F97316         290deg,
+    #7C3AED         330deg,
+    #EAE6DD         360deg
+  ) !important;
+  border-radius: inherit !important;
+  filter: blur(6px) !important;
+  opacity: 0.55 !important;
+  animation: etax-rotate-nebula 4s linear infinite !important;
+  transition: opacity 0.3s ease, filter 0.3s ease !important;
+}
+
+.btn[class*="bg-"]::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 2px !important;
+  background: #FFFFFF !important;
+  border-radius: inherit !important;
+  z-index: -1 !important;
+}
+
+.btn[class*="bg-"] > * {
+  position: relative !important;
+  z-index: 2 !important;
+  color: #0F172A !important;
+}
+
+.btn[class*="bg-"]:hover {
+  transform: translateY(-2px) !important;
+  color: #0F172A !important;
+  box-shadow: 0 0.8em 2em -0.5em rgba(124, 58, 237, 0.45),
+              0 0.4em 1em -0.3em rgba(0, 132, 209, 0.3) !important;
+}
+
+.btn[class*="bg-"]:hover::before {
+  opacity: 1 !important;
+  animation-duration: 2s !important;
+  filter: blur(4px) !important;
+}
+
+.btn[class*="bg-"]:active {
+  transform: scale(0.97) !important;
+}
+
+.btn[class*="bg-"]:hover > span {
+  background: var(--mc-gradient-h) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
 }
 

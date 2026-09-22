@@ -276,7 +276,7 @@ export default function AppointmentPage() {
                   <div className="pt-4 flex flex-wrap justify-center gap-3">
                     <button
                       onClick={() => setStatus('idle')}
-                      className="px-6 py-3 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors cursor-pointer"
+                      className="px-6 py-3 rounded-xl btn-multicolor font-bold text-xs transition-colors cursor-pointer"
                     >
                       Book Another Slot
                     </button>
@@ -462,17 +462,17 @@ export default function AppointmentPage() {
                   <button
                     type="submit"
                     disabled={status === 'loading'}
-                    className="w-full py-4 rounded-xl btn-multicolor text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    className="w-full py-4 rounded-xl btn-multicolor text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 whitespace-nowrap shrink-0"
                   >
                     {status === 'loading' ? (
-                      <>
+                      <span className="inline-flex items-center gap-2 whitespace-nowrap">
                         <Loader2 className="w-4 h-4 animate-spin" /> Confirming Appointment...
-                      </>
+                      </span>
                     ) : (
-                      <>
+                      <span className="inline-flex items-center gap-2 whitespace-nowrap">
                         <Calendar className="w-4 h-4" /> Confirm Free CA Consultation
                         <ArrowRight className="w-4 h-4 ml-1" />
-                      </>
+                      </span>
                     )}
                   </button>
 

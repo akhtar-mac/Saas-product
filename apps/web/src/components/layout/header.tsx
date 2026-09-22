@@ -548,14 +548,14 @@ export default function Header() {
             <Link
               to="/portal/login"
               onClick={() => setMobileOpen(false)}
-              className="py-2 text-center block text-xs font-bold text-slate-800 bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl"
+              className="py-2 text-center block text-xs font-bold btn-multicolor rounded-xl"
             >
               Client Portal
             </Link>
             <Link
               to="/crm/login"
               onClick={() => setMobileOpen(false)}
-              className="py-2 text-center block text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl"
+              className="py-2 text-center block text-xs font-bold btn-multicolor rounded-xl"
             >
               Staff CRM
             </Link>

@@ -154,7 +154,7 @@ export default function SoftwareSolutionsPage() {
               </a>
               <a
                 href="#capabilities"
-                className="px-6 py-3.5 rounded-xl bg-white border border-[#EAE6DD] hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center gap-2 shadow-xs transition-colors"
+                className="px-6 py-3.5 rounded-xl btn-multicolor font-bold text-xs flex items-center gap-2 shadow-xs transition-colors"
               >
                 <span>Explore Solutions</span>
               </a>
@@ -241,7 +241,7 @@ export default function SoftwareSolutionsPage() {
                     <a
                       href="#project-consultation"
                       onClick={() => setProjectType(cap.title)}
-                      className="w-full py-2.5 px-4 rounded-xl bg-[#FAF9F5] hover:bg-slate-100 text-slate-900 border border-[#EAE6DD] font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                      className="w-full py-2.5 px-4 rounded-xl btn-multicolor font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
                     >
                       <span>Get Architecture Proposal for {cap.title}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -323,7 +323,7 @@ export default function SoftwareSolutionsPage() {
                   href={`https://wa.me/918069029999?text=Hi%20ETaxwala%20Tech%2C%20I%20just%20submitted%20a%20project%20inquiry%20for%20${encodeURIComponent(projectType)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-3 btn-multicolor font-bold text-xs"
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span>Connect Instantly on WhatsApp</span>

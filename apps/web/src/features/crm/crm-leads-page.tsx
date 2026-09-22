@@ -818,7 +818,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
         {/* Table View */}
         <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl shadow-2xs">
-          <table className="w-full text-left text-xs border-separate border-spacing-0">
+          <table className="table-crm w-full text-left text-xs border-separate border-spacing-0">
             <thead className="sticky top-0 z-10">
               <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider sticky top-0 z-10">
                 <th className="py-2.5 px-3 w-8 text-center">
@@ -953,7 +953,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                                 prev.map((l) => (l.id === item.id ? { ...l, isAssign: false } : l))
                               );
                             }}
-                            className="bg-[#16A34A] hover:bg-[#15803D] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-2xs"
+                            className="btn-multicolor text-[10px] font-bold px-2 py-0.5 rounded-xl shadow-2xs"
                           >
                             Assigned
                           </button>
@@ -964,7 +964,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                                 prev.map((l) => (l.id === item.id ? { ...l, isAssign: true } : l))
                               );
                             }}
-                            className="bg-[#DC2626] hover:bg-[#B91C1C] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-2xs"
+                            className="btn-multicolor text-[10px] font-bold px-2 py-0.5 rounded-xl shadow-2xs"
                           >
                             Un-Assign
                           </button>

@@ -142,7 +142,7 @@ export default function OpsExecutiveDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Order # / Client</th>
