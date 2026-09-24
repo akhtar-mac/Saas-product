@@ -706,6 +706,21 @@ export default function CrmLayout() {
                       </div>
                     )}
 
+                    {/* Manage Employee (Sales Manager creates Sales Employees) */}
+                    {can('workforce:view') && (
+                      <Link
+                        to="/crm/workforce"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/workforce'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Employee</span>
+                      </Link>
+                    )}
+
                     {/* Appointments */}
                     {can('appointments:manage') && (
                       <Link
