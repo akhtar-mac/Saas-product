@@ -776,7 +776,7 @@ function getAllowedSubordinateRoles(creatorRoleId: number): number[] | null {
   // Operations Manager
   if (creatorRoleId === 3) return [8, 12];
   // Sales Manager
-  if (creatorRoleId === 4) return [7, 13];
+  if (creatorRoleId === 4) return [7];
   // Marketing Manager
   if (creatorRoleId === 5) return [9];
   // Franchise Manager

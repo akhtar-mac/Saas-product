@@ -133,7 +133,7 @@ export default function HrWorkforcePage() {
   const getAllowedEmployeeRoles = (roleId: number): number[] => {
     if ([1, 2, 14].includes(roleId)) return ROLES.map((r) => r.id); // Super Admin / Admin / HR see all
     if (roleId === 3) return [8, 12]; // Operations Manager -> Operations Employee, Operations Assistant
-    if (roleId === 4) return [7, 13]; // Sales Manager -> Sales Employee, Sales Assistant
+    if (roleId === 4) return [7]; // Sales Manager -> Sales Employee ONLY
     if (roleId === 5) return [9]; // Marketing Manager -> Marketing Employee
     if (roleId === 6) return [10]; // Franchise Manager -> Franchise Partner
     return [];
