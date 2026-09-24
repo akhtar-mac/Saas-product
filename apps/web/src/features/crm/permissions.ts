@@ -364,6 +364,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'leads:subbrands',
     'quotations:view',
     'tasks:view',
+    'workforce:view',
     'accounts:view',
     'appointments:manage',
     'chat:view',
