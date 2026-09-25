@@ -172,7 +172,7 @@ export default function ClientPaymentsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Invoice ID</th>

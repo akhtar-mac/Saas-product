@@ -125,9 +125,7 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
     };
     try {
       const stored = JSON.parse(localStorage.getItem('etaxwala_leads') || '[]');
-      const existingIdx = stored.findIndex(
-        (l: any) => l.mobile && l.mobile === lead.mobile
-      );
+      const existingIdx = stored.findIndex((l: any) => l.mobile && l.mobile === lead.mobile);
       if (existingIdx >= 0) {
         stored[existingIdx] = { ...stored[existingIdx], ...lead };
       } else {
@@ -162,9 +160,11 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
     setIsTyping(true);
 
     setTimeout(() => {
-      let botText = 'Great! To connect you with our Senior Chartered Accountant, may I know your full name?';
+      let botText =
+        'Great! To connect you with our Senior Chartered Accountant, may I know your full name?';
       if (lang === 'hi') {
-        botText = 'बहुत बढ़िया! हमारे वरिष्ठ चार्टर्ड अकाउंटेंट से जोड़ने के लिए, कृपया अपना पूरा नाम बताएं:';
+        botText =
+          'बहुत बढ़िया! हमारे वरिष्ठ चार्टर्ड अकाउंटेंट से जोड़ने के लिए, कृपया अपना पूरा नाम बताएं:';
       } else if (lang === 'mr') {
         botText = 'छान! आमच्या वरिष्ठ चार्टर्ड अकाउंटंटशी जोडण्यासाठी, कृपया आपले पूर्ण नाव सांगा:';
       }
@@ -393,7 +393,10 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
   // ─── STEP 5: Handle MCQ option clicks ───
   const handleOptionSelect = (option: ChatOption) => {
     // Check if selecting language
-    if (!consultation.name && (option.value === 'en' || option.value === 'hi' || option.value === 'mr')) {
+    if (
+      !consultation.name &&
+      (option.value === 'en' || option.value === 'hi' || option.value === 'mr')
+    ) {
       handleLanguageSelect(option.value as 'en' | 'hi' | 'mr', option.label);
       return;
     }
@@ -659,7 +662,7 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
   const activeInputType = currentMsg?.inputType || 'none';
 
   return (
-    <div className="w-[calc(100vw-1.5rem)] sm:w-[410px] max-w-[410px] h-[540px] max-h-[74vh] sm:max-h-[84vh] bg-[#FFFFFF] rounded-2xl sm:rounded-3xl border border-[#EAE6DD] shadow-2xl flex flex-col overflow-hidden animate-scale-in origin-bottom-right mb-2 select-none z-50">
+    <div className="w-[calc(100vw-1.5rem)] sm:w-[480px] max-w-[480px] h-[640px] max-h-[88vh] bg-[#FFFFFF] rounded-2xl sm:rounded-3xl border border-[#EAE6DD] shadow-2xl flex flex-col overflow-hidden animate-scale-in origin-bottom-right mb-2 select-none z-50">
       {/* Executive Professional Header */}
       <div className="px-4 py-3.5 bg-[#FAF9F5] border-b border-[#EAE6DD] flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
@@ -808,8 +811,8 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
                         consultation.language === 'hi'
                           ? 'अपना पूरा नाम लिखें (उदा. राहुल शर्मा)...'
                           : consultation.language === 'mr'
-                          ? 'आपले पूर्ण नाव लिहा (उदा. राहुल शर्मा)...'
-                          : 'Enter your full name (e.g. Rahul Sharma)...'
+                            ? 'आपले पूर्ण नाव लिहा (उदा. राहुल शर्मा)...'
+                            : 'Enter your full name (e.g. Rahul Sharma)...'
                       }
                       value={inputName}
                       onChange={(e) => setInputName(e.target.value)}
@@ -818,7 +821,7 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
                     <button
                       type="submit"
                       disabled={!inputName.trim()}
-                      className="p-2 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white disabled:opacity-40 cursor-pointer shrink-0 transition-colors"
+                      className="p-2 rounded-lg btn-multicolor disabled:opacity-40 cursor-pointer shrink-0 transition-colors"
                       title="Submit Name"
                     >
                       <Send className="w-3.5 h-3.5" />
@@ -850,7 +853,7 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
                     <button
                       type="submit"
                       disabled={inputMobile.length < 10}
-                      className="p-2 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white disabled:opacity-40 cursor-pointer shrink-0 transition-colors"
+                      className="p-2 rounded-lg btn-multicolor disabled:opacity-40 cursor-pointer shrink-0 transition-colors"
                       title="Submit Mobile"
                     >
                       <Send className="w-3.5 h-3.5" />
@@ -875,7 +878,7 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#1EBE59] text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="w-full py-3 px-4 rounded-xl btn-multicolor font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <MessageCircle className="w-4 h-4 fill-white" />
                     <span>Chat with Assigned CA on WhatsApp Now</span>

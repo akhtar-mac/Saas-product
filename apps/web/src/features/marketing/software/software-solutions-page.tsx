@@ -1,10 +1,26 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Code, LayoutDashboard, Smartphone, Layers, ArrowRight,
-  CheckCircle2, Sparkles, Server, Shield, Zap, Laptop,
-  Database, GitBranch, Terminal, MessageCircle, Phone,
-  Check, Star, Cpu, Lock
+  Code,
+  LayoutDashboard,
+  Smartphone,
+  Layers,
+  ArrowRight,
+  CheckCircle2,
+  Sparkles,
+  Server,
+  Shield,
+  Zap,
+  Laptop,
+  Database,
+  GitBranch,
+  Terminal,
+  MessageCircle,
+  Phone,
+  Check,
+  Star,
+  Cpu,
+  Lock,
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
@@ -78,10 +94,22 @@ const capabilities = [
 ];
 
 const techStack = [
-  { category: 'Frontend & UI', items: ['React 18', 'Next.js', 'TypeScript', 'TailwindCSS', 'Vite', 'Shadcn UI'] },
-  { category: 'Backend & APIs', items: ['Node.js', 'Express', 'Python FastAPI', 'Go', 'GraphQL', 'REST APIs'] },
-  { category: 'Database & Cache', items: ['PostgreSQL', 'Prisma ORM', 'Redis', 'MongoDB', 'Supabase'] },
-  { category: 'Cloud & DevOps', items: ['AWS', 'Cloudflare Workers', 'Docker', 'GitHub Actions', 'Vercel'] },
+  {
+    category: 'Frontend & UI',
+    items: ['React 18', 'Next.js', 'TypeScript', 'TailwindCSS', 'Vite', 'Shadcn UI'],
+  },
+  {
+    category: 'Backend & APIs',
+    items: ['Node.js', 'Express', 'Python FastAPI', 'Go', 'GraphQL', 'REST APIs'],
+  },
+  {
+    category: 'Database & Cache',
+    items: ['PostgreSQL', 'Prisma ORM', 'Redis', 'MongoDB', 'Supabase'],
+  },
+  {
+    category: 'Cloud & DevOps',
+    items: ['AWS', 'Cloudflare Workers', 'Docker', 'GitHub Actions', 'Vercel'],
+  },
 ];
 
 export default function SoftwareSolutionsPage() {
@@ -115,10 +143,7 @@ export default function SoftwareSolutionsPage() {
       <div className="bg-[#FAF9F5] border-b border-[#EAE6DD] py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Breadcrumbs
-            items={[
-              { label: 'Home', href: '/' },
-              { label: 'Software & Tech Solutions' },
-            ]}
+            items={[{ label: 'Home', href: '/' }, { label: 'Software & Tech Solutions' }]}
             className="text-xs text-slate-500"
           />
         </div>
@@ -141,7 +166,9 @@ export default function SoftwareSolutionsPage() {
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-normal">
-              Beyond tax and legal compliance, E-Taxwala is your full-cycle technology partner. We engineer high-conversion web platforms, iOS &amp; Android mobile applications, internal admin consoles, and automated fintech billing systems.
+              Beyond tax and legal compliance, E-Taxwala is your full-cycle technology partner. We
+              engineer high-conversion web platforms, iOS &amp; Android mobile applications,
+              internal admin consoles, and automated fintech billing systems.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -154,7 +181,7 @@ export default function SoftwareSolutionsPage() {
               </a>
               <a
                 href="#capabilities"
-                className="px-6 py-3.5 rounded-xl bg-white border border-[#EAE6DD] hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center gap-2 shadow-xs transition-colors"
+                className="px-6 py-3.5 rounded-xl btn-multicolor font-bold text-xs flex items-center gap-2 shadow-xs transition-colors"
               >
                 <span>Explore Solutions</span>
               </a>
@@ -194,7 +221,8 @@ export default function SoftwareSolutionsPage() {
               Our Core Software Engineering Capabilities
             </h2>
             <p className="text-xs sm:text-sm text-slate-500">
-              From conception to production deployment, we build robust software that drives real revenue.
+              From conception to production deployment, we build robust software that drives real
+              revenue.
             </p>
           </div>
 
@@ -227,7 +255,9 @@ export default function SoftwareSolutionsPage() {
                     </p>
 
                     <div className="space-y-2 pt-2">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Technical Highlights</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        Technical Highlights
+                      </p>
                       {cap.features.map((feat, idx) => (
                         <div key={idx} className="flex items-start gap-2.5 text-xs text-slate-700">
                           <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -241,7 +271,7 @@ export default function SoftwareSolutionsPage() {
                     <a
                       href="#project-consultation"
                       onClick={() => setProjectType(cap.title)}
-                      className="w-full py-2.5 px-4 rounded-xl bg-[#FAF9F5] hover:bg-slate-100 text-slate-900 border border-[#EAE6DD] font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                      className="w-full py-2.5 px-4 rounded-xl btn-multicolor font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
                     >
                       <span>Get Architecture Proposal for {cap.title}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -265,7 +295,8 @@ export default function SoftwareSolutionsPage() {
               Modern, High-Performance Technology Stack
             </h2>
             <p className="text-xs sm:text-sm text-slate-500">
-              We never use slow, bloated templates. We build modern, modular, production-tested software.
+              We never use slow, bloated templates. We build modern, modular, production-tested
+              software.
             </p>
           </div>
 
@@ -306,7 +337,8 @@ export default function SoftwareSolutionsPage() {
                 Let's Architect Your Next Web App or Dashboard
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto">
-                Share your requirements. Our Principal Solutions Architect will review your scope and provide a feasibility breakdown within 24 hours.
+                Share your requirements. Our Principal Solutions Architect will review your scope
+                and provide a feasibility breakdown within 24 hours.
               </p>
             </div>
 
@@ -317,13 +349,15 @@ export default function SoftwareSolutionsPage() {
                 </div>
                 <h3 className="text-xl font-extrabold text-emerald-900">Project Brief Received!</h3>
                 <p className="text-xs sm:text-sm text-emerald-700 max-w-md mx-auto leading-relaxed">
-                  Thank you, <strong>{name}</strong>. Our technical engineering lead will reach out to you at <strong>{phone}</strong> / <strong>{email}</strong> to discuss wireframes and milestones.
+                  Thank you, <strong>{name}</strong>. Our technical engineering lead will reach out
+                  to you at <strong>{phone}</strong> / <strong>{email}</strong> to discuss
+                  wireframes and milestones.
                 </p>
                 <a
                   href={`https://wa.me/918069029999?text=Hi%20ETaxwala%20Tech%2C%20I%20just%20submitted%20a%20project%20inquiry%20for%20${encodeURIComponent(projectType)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-3 btn-multicolor font-bold text-xs"
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span>Connect Instantly on WhatsApp</span>
@@ -332,7 +366,9 @@ export default function SoftwareSolutionsPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">What do you want to build?</label>
+                  <label className="text-xs font-bold text-slate-700">
+                    What do you want to build?
+                  </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
                       'Custom Web Application',
@@ -394,7 +430,9 @@ export default function SoftwareSolutionsPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Brief Scope or Target Functionality</label>
+                  <label className="text-xs font-bold text-slate-700">
+                    Brief Scope or Target Functionality
+                  </label>
                   <textarea
                     rows={3}
                     value={scope}
@@ -421,7 +459,8 @@ export default function SoftwareSolutionsPage() {
 
                 <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                   <span className="flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-slate-400" /> NDA &amp; Code Ownership Guaranteed
+                    <Lock className="w-3.5 h-3.5 text-slate-400" /> NDA &amp; Code Ownership
+                    Guaranteed
                   </span>
                   <span>Direct Desk: 080-6902-9999</span>
                 </div>

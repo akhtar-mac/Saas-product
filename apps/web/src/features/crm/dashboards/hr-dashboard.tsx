@@ -110,9 +110,7 @@ export default function HrDashboard() {
       });
       const json = await res.json();
       if (json.success) {
-        setApplicants((prev) =>
-          prev.map((app) => (app.id === id ? json.data : app))
-        );
+        setApplicants((prev) => prev.map((app) => (app.id === id ? json.data : app)));
         if (selectedApplicant?.id === id) {
           setSelectedApplicant(json.data);
         }
@@ -135,9 +133,7 @@ export default function HrDashboard() {
       });
       const json = await res.json();
       if (json.success) {
-        setApplicants((prev) =>
-          prev.map((app) => (app.id === id ? json.data : app))
-        );
+        setApplicants((prev) => prev.map((app) => (app.id === id ? json.data : app)));
         setSelectedApplicant(json.data);
         setNewNote('');
       }
@@ -161,17 +157,41 @@ export default function HrDashboard() {
   const getStatusBadge = (status: Applicant['status']) => {
     switch (status) {
       case 'new':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">New Applied</span>;
+        return (
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+            New Applied
+          </span>
+        );
       case 'review':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">Under Review</span>;
+        return (
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
+            Under Review
+          </span>
+        );
       case 'shortlisted':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">Shortlisted</span>;
+        return (
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
+            Shortlisted
+          </span>
+        );
       case 'interview_scheduled':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">Interview Set</span>;
+        return (
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+            Interview Set
+          </span>
+        );
       case 'offered':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Offer Sent</span>;
+        return (
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            Offer Sent
+          </span>
+        );
       case 'rejected':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">Archived / Rejected</span>;
+        return (
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+            Archived / Rejected
+          </span>
+        );
       default:
         return null;
     }
@@ -189,7 +209,8 @@ export default function HrDashboard() {
             <span className="badge badge-gold">People & Finance</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Connected to website <code className="text-[#0084D1] font-semibold">/careers</code> application desk, team workforce rosters & accounts ledger.
+            Connected to website <code className="text-[#0084D1] font-semibold">/careers</code>{' '}
+            application desk, team workforce rosters & accounts ledger.
           </p>
         </div>
 
@@ -197,9 +218,7 @@ export default function HrDashboard() {
         <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
           <button
             onClick={() => setActiveTab('ats')}
-            className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-              activeTab === 'ats' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 btn-multicolor"
           >
             <Briefcase className="w-3.5 h-3.5" />
             Careers ATS Funnel
@@ -211,18 +230,14 @@ export default function HrDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('workforce')}
-            className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-              activeTab === 'workforce' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 btn-multicolor"
           >
             <Users className="w-3.5 h-3.5" />
             Workforce (218)
           </button>
           <button
             onClick={() => setActiveTab('accounts')}
-            className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-              activeTab === 'accounts' ? 'bg-white text-brand-navy shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 btn-multicolor"
           >
             <Receipt className="w-3.5 h-3.5" />
             Accounts & Payroll
@@ -243,9 +258,14 @@ export default function HrDashboard() {
               { label: 'Interviews', value: counts.interview_scheduled, color: 'text-blue-600' },
               { label: 'Offers Given', value: counts.offered, color: 'text-emerald-600' },
             ].map((stat, i) => (
-              <div key={i} className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm text-center">
+              <div
+                key={i}
+                className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm text-center"
+              >
                 <p className="text-[11px] font-semibold text-slate-500">{stat.label}</p>
-                <p className={`font-display font-extrabold text-xl mt-0.5 ${stat.color}`}>{stat.value}</p>
+                <p className={`font-display font-extrabold text-xl mt-0.5 ${stat.color}`}>
+                  {stat.value}
+                </p>
               </div>
             ))}
           </div>
@@ -294,7 +314,7 @@ export default function HrDashboard() {
           {/* Applicants Table */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="table-crm w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     <th className="py-3.5 px-4">Candidate</th>
@@ -376,7 +396,7 @@ export default function HrDashboard() {
                             e.stopPropagation();
                             setSelectedApplicant(app);
                           }}
-                          className="px-2.5 py-1 text-xs font-bold text-[#0084D1] bg-[#0084D1]/10 rounded-lg hover:bg-[#0084D1] hover:text-white transition-colors"
+                          className="px-2.5 py-1 text-xs font-bold rounded-xl btn-multicolor"
                         >
                           Review
                         </button>
@@ -396,7 +416,9 @@ export default function HrDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Headcount</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Total Headcount
+                </p>
                 <p className="text-3xl font-display font-extrabold text-brand-navy mt-1">218</p>
                 <p className="text-xs text-slate-400 mt-1">Across 6 operational divisions</p>
               </div>
@@ -407,7 +429,9 @@ export default function HrDashboard() {
 
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Attendance Today</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Attendance Today
+                </p>
                 <p className="text-3xl font-display font-extrabold text-emerald-600 mt-1">95.8%</p>
                 <p className="text-xs text-slate-400 mt-1">209 active staff clocked in</p>
               </div>
@@ -418,7 +442,9 @@ export default function HrDashboard() {
 
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Desktrack Productivity</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Desktrack Productivity
+                </p>
                 <p className="text-3xl font-display font-extrabold text-purple-600 mt-1">8.4 hrs</p>
                 <p className="text-xs text-slate-400 mt-1">Avg productive screen time</p>
               </div>
@@ -434,21 +460,56 @@ export default function HrDashboard() {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { name: 'Audit & Tax (Chartered Accountants)', staff: 46, present: 45, head: 'CA Sunil Sharma' },
-                { name: 'Corporate Sales & Business Dev', staff: 68, present: 65, head: 'Rajesh Verma' },
-                { name: 'Operations & ROC Filings', staff: 54, present: 52, head: 'Meera Deshpande' },
-                { name: 'IT & Software Engineering', staff: 18, present: 18, head: 'Lead Architect' },
-                { name: 'Marketing, Social & Media Hub', staff: 12, present: 11, head: 'Aishwarya Kadam' },
-                { name: 'HR, Payroll & Accounts Desk', staff: 20, present: 18, head: 'HR Team Lead' },
+                {
+                  name: 'Audit & Tax (Chartered Accountants)',
+                  staff: 46,
+                  present: 45,
+                  head: 'CA Sunil Sharma',
+                },
+                {
+                  name: 'Corporate Sales & Business Dev',
+                  staff: 68,
+                  present: 65,
+                  head: 'Rajesh Verma',
+                },
+                {
+                  name: 'Operations & ROC Filings',
+                  staff: 54,
+                  present: 52,
+                  head: 'Meera Deshpande',
+                },
+                {
+                  name: 'IT & Software Engineering',
+                  staff: 18,
+                  present: 18,
+                  head: 'Lead Architect',
+                },
+                {
+                  name: 'Marketing, Social & Media Hub',
+                  staff: 12,
+                  present: 11,
+                  head: 'Aishwarya Kadam',
+                },
+                {
+                  name: 'HR, Payroll & Accounts Desk',
+                  staff: 20,
+                  present: 18,
+                  head: 'HR Team Lead',
+                },
               ].map((dept, i) => (
-                <div key={i} className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition-colors">
+                <div
+                  key={i}
+                  className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition-colors"
+                >
                   <div className="flex items-center justify-between">
                     <p className="font-bold text-sm text-slate-800">{dept.name}</p>
                     <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
                       {dept.present}/{dept.staff}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-2">Team Lead: <span className="text-slate-600 font-semibold">{dept.head}</span></p>
+                  <p className="text-xs text-slate-400 mt-2">
+                    Team Lead: <span className="text-slate-600 font-semibold">{dept.head}</span>
+                  </p>
                 </div>
               ))}
             </div>
@@ -462,7 +523,9 @@ export default function HrDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
               <p className="text-xs font-bold text-slate-500 uppercase">Monthly Payroll</p>
-              <p className="text-2xl font-display font-extrabold text-brand-navy mt-1">₹54,80,000</p>
+              <p className="text-2xl font-display font-extrabold text-brand-navy mt-1">
+                ₹54,80,000
+              </p>
               <p className="text-xs text-emerald-600 font-semibold mt-1">₹51.2L disbursed on 1st</p>
             </div>
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
@@ -491,20 +554,47 @@ export default function HrDashboard() {
             </div>
             <div className="space-y-3">
               {[
-                { client: 'M/s Phoenix Auto Components', inv: 'INV-2026-881', amount: '₹48,000', service: 'Annual ROC Compliance & Tax Audit', status: 'Paid via Razorpay' },
-                { client: 'Apex Biotech Innovations LLP', inv: 'INV-2026-882', amount: '₹22,500', service: 'GST Notice Response Section 73', status: 'Pending Approval' },
-                { client: 'Zenith Logistics Hub', inv: 'INV-2026-883', amount: '₹65,000', service: 'Custom SaaS Fleet Module (Advance 50%)', status: 'Paid via RTGS' },
+                {
+                  client: 'M/s Phoenix Auto Components',
+                  inv: 'INV-2026-881',
+                  amount: '₹48,000',
+                  service: 'Annual ROC Compliance & Tax Audit',
+                  status: 'Paid via Razorpay',
+                },
+                {
+                  client: 'Apex Biotech Innovations LLP',
+                  inv: 'INV-2026-882',
+                  amount: '₹22,500',
+                  service: 'GST Notice Response Section 73',
+                  status: 'Pending Approval',
+                },
+                {
+                  client: 'Zenith Logistics Hub',
+                  inv: 'INV-2026-883',
+                  amount: '₹65,000',
+                  service: 'Custom SaaS Fleet Module (Advance 50%)',
+                  status: 'Paid via RTGS',
+                },
               ].map((inv, i) => (
-                <div key={i} className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors text-xs">
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors text-xs"
+                >
                   <div>
                     <p className="font-bold text-slate-800">{inv.client}</p>
-                    <p className="text-slate-400 text-[11px]">{inv.inv} • {inv.service}</p>
+                    <p className="text-slate-400 text-[11px]">
+                      {inv.inv} • {inv.service}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="font-extrabold text-slate-800 text-sm">{inv.amount}</p>
-                    <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      inv.status.includes('Paid') ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-                    }`}>
+                    <span
+                      className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        inv.status.includes('Paid')
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-amber-50 text-amber-700'
+                      }`}
+                    >
                       {inv.status}
                     </span>
                   </div>
@@ -557,7 +647,11 @@ export default function HrDashboard() {
                     Shortlist
                   </button>
                   <button
-                    onClick={() => handleUpdateStatus(selectedApplicant.id, 'interview_scheduled', { interviewDate: 'Scheduled for Tomorrow 3 PM' })}
+                    onClick={() =>
+                      handleUpdateStatus(selectedApplicant.id, 'interview_scheduled', {
+                        interviewDate: 'Scheduled for Tomorrow 3 PM',
+                      })
+                    }
                     className="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition-colors"
                   >
                     Set Interview
@@ -593,12 +687,16 @@ export default function HrDashboard() {
                 </div>
                 <div>
                   <p className="text-slate-400 font-semibold">Expected CTC</p>
-                  <p className="font-bold text-emerald-600 mt-0.5">{selectedApplicant.expectedCtc || 'Not specified'}</p>
+                  <p className="font-bold text-emerald-600 mt-0.5">
+                    {selectedApplicant.expectedCtc || 'Not specified'}
+                  </p>
                 </div>
                 {selectedApplicant.noticePeriod && (
                   <div>
                     <p className="text-slate-400 font-semibold">Notice Period</p>
-                    <p className="font-bold text-slate-800 mt-0.5">{selectedApplicant.noticePeriod}</p>
+                    <p className="font-bold text-slate-800 mt-0.5">
+                      {selectedApplicant.noticePeriod}
+                    </p>
                   </div>
                 )}
                 {selectedApplicant.linkedin && (
@@ -623,14 +721,16 @@ export default function HrDashboard() {
                     <FileText className="w-5 h-5 text-[#0084D1]" />
                     <div>
                       <p className="font-bold text-slate-800">Uploaded Resume Attachment</p>
-                      <p className="text-[11px] text-slate-500">{selectedApplicant.resumeFileName || 'resume.pdf'}</p>
+                      <p className="text-[11px] text-slate-500">
+                        {selectedApplicant.resumeFileName || 'resume.pdf'}
+                      </p>
                     </div>
                   </div>
                   <a
                     href={`${API_BASE}${selectedApplicant.resumeUrl}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-3 py-1.5 bg-[#0084D1] text-white rounded-lg font-bold hover:bg-[#0070b3] transition-colors"
+                    className="px-3 py-1.5 rounded-xl btn-multicolor font-bold"
                   >
                     Download CV
                   </a>
@@ -643,7 +743,10 @@ export default function HrDashboard() {
                 <div className="space-y-2">
                   {selectedApplicant.notes && selectedApplicant.notes.length > 0 ? (
                     selectedApplicant.notes.map((n, i) => (
-                      <div key={i} className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-slate-700">
+                      <div
+                        key={i}
+                        className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-slate-700"
+                      >
                         {n}
                       </div>
                     ))
@@ -663,7 +766,7 @@ export default function HrDashboard() {
                   />
                   <button
                     onClick={() => handleAddNote(selectedApplicant.id)}
-                    className="px-3.5 py-2 bg-brand-navy text-white rounded-lg font-bold hover:bg-brand-navy/90 transition-colors flex items-center gap-1"
+                    className="px-3.5 py-2 btn-multicolor rounded-lg font-bold transition-colors flex items-center gap-1"
                   >
                     <Send className="w-3.5 h-3.5" /> Save
                   </button>

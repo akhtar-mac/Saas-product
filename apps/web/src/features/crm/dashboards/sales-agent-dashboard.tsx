@@ -88,7 +88,8 @@ export default function SalesAgentDashboard() {
             <span className="badge badge-gold">Sales Executive</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Dial assigned leads directly, log conversation outcomes, trigger WhatsApp templates & send instant quotations.
+            Dial assigned leads directly, log conversation outcomes, trigger WhatsApp templates &
+            send instant quotations.
           </p>
         </div>
 
@@ -102,17 +103,51 @@ export default function SalesAgentDashboard() {
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: 'My Assigned Queue', value: '18 Leads', sub: '4 pending 1st call', icon: Clock, color: '#003A66', bg: 'rgba(0,58,102,0.08)' },
-          { title: 'Calls Logged Today', value: '24 Calls', sub: 'Daily Target: 40 calls', icon: PhoneCall, color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-          { title: 'Quotations Sent', value: '7 Quotes', sub: 'Total Value: ₹94,500', icon: FileSpreadsheet, color: '#D97706', bg: 'rgba(217,119,6,0.08)' },
-          { title: 'Deals Converted', value: '2 Closed', sub: 'Revenue: ₹32,998', icon: CheckCircle2, color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' },
+          {
+            title: 'My Assigned Queue',
+            value: '18 Leads',
+            sub: '4 pending 1st call',
+            icon: Clock,
+            color: '#003A66',
+            bg: 'rgba(0,58,102,0.08)',
+          },
+          {
+            title: 'Calls Logged Today',
+            value: '24 Calls',
+            sub: 'Daily Target: 40 calls',
+            icon: PhoneCall,
+            color: '#059669',
+            bg: 'rgba(5,150,105,0.08)',
+          },
+          {
+            title: 'Quotations Sent',
+            value: '7 Quotes',
+            sub: 'Total Value: ₹94,500',
+            icon: FileSpreadsheet,
+            color: '#D97706',
+            bg: 'rgba(217,119,6,0.08)',
+          },
+          {
+            title: 'Deals Converted',
+            value: '2 Closed',
+            sub: 'Revenue: ₹32,998',
+            icon: CheckCircle2,
+            color: '#7C3AED',
+            bg: 'rgba(124,58,237,0.08)',
+          },
         ].map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <div key={kpi.title} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div
+              key={kpi.title}
+              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-500">{kpi.title}</span>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: kpi.bg }}>
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: kpi.bg }}
+                >
                   <Icon className="w-4 h-4" style={{ color: kpi.color }} />
                 </div>
               </div>
@@ -132,13 +167,15 @@ export default function SalesAgentDashboard() {
             <h3 className="font-display font-bold text-base text-slate-800">
               Active Assigned Priority Queue
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Click call to dial and save conversation logs</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Click call to dial and save conversation logs
+            </p>
           </div>
           <span className="badge badge-navy">Priority Leads</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Lead / City</th>
@@ -154,23 +191,25 @@ export default function SalesAgentDashboard() {
                 <tr key={lead.id}>
                   <td>
                     <p className="font-bold text-slate-800 text-xs">{lead.name}</p>
-                    <p className="text-[10px] text-slate-400">{lead.city} • Lead #{lead.id}</p>
+                    <p className="text-[10px] text-slate-400">
+                      {lead.city} • Lead #{lead.id}
+                    </p>
                   </td>
-                  <td className="text-xs font-mono text-brand-navy font-bold">
-                    {lead.phone}
-                  </td>
-                  <td className="text-xs text-slate-700 font-medium">
-                    {lead.service}
-                  </td>
+                  <td className="text-xs font-mono text-brand-navy font-bold">{lead.phone}</td>
+                  <td className="text-xs text-slate-700 font-medium">{lead.service}</td>
                   <td>
                     <span className="badge badge-navy text-[10px]">{lead.source}</span>
                   </td>
                   <td>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                      lead.status === 'Assigned' ? 'bg-blue-50 text-blue-700' :
-                      lead.status === 'Follow Up' ? 'bg-amber-50 text-amber-700' :
-                      'bg-purple-50 text-purple-700'
-                    }`}>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                        lead.status === 'Assigned'
+                          ? 'bg-blue-50 text-blue-700'
+                          : lead.status === 'Follow Up'
+                            ? 'bg-amber-50 text-amber-700'
+                            : 'bg-purple-50 text-purple-700'
+                      }`}
+                    >
                       {lead.status}
                     </span>
                   </td>
@@ -260,11 +299,15 @@ export default function SalesAgentDashboard() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Next Follow-up Date</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Next Follow-up Date
+                  </label>
                   <input type="date" className="input text-xs" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Next Follow-up Time</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Next Follow-up Time
+                  </label>
                   <input type="time" className="input text-xs" />
                 </div>
               </div>
@@ -273,7 +316,7 @@ export default function SalesAgentDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsCallModalOpen(false)}
-                  className="btn btn-outline btn-sm"
+                  className="btn btn-outline btn-sm btn-multicolor"
                 >
                   Cancel
                 </button>

@@ -24,10 +24,34 @@ export default function OpsManagerDashboard() {
   ];
 
   const opsTeam = [
-    { name: 'CA Pooja Kulkarni', role: 'Senior CA Specialist', activeCases: 26, slaScore: '98%', pendingAction: 2 },
-    { name: 'Vikas Shinde', role: 'Operations Executive', activeCases: 34, slaScore: '94%', pendingAction: 5 },
-    { name: 'Megha More', role: 'Verification Executive', activeCases: 28, slaScore: '96%', pendingAction: 1 },
-    { name: 'Rohit Joshi', role: 'Operations Assistant', activeCases: 22, slaScore: '91%', pendingAction: 4 },
+    {
+      name: 'CA Pooja Kulkarni',
+      role: 'Senior CA Specialist',
+      activeCases: 26,
+      slaScore: '98%',
+      pendingAction: 2,
+    },
+    {
+      name: 'Vikas Shinde',
+      role: 'Operations Executive',
+      activeCases: 34,
+      slaScore: '94%',
+      pendingAction: 5,
+    },
+    {
+      name: 'Megha More',
+      role: 'Verification Executive',
+      activeCases: 28,
+      slaScore: '96%',
+      pendingAction: 1,
+    },
+    {
+      name: 'Rohit Joshi',
+      role: 'Operations Assistant',
+      activeCases: 22,
+      slaScore: '91%',
+      pendingAction: 4,
+    },
   ];
 
   return (
@@ -42,7 +66,8 @@ export default function OpsManagerDashboard() {
             <span className="badge badge-gold">Operations Manager</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            4,911 operations tasks, 10-stage lifecycle tracking, SLA compliance, bottleneck detection & workload distribution.
+            4,911 operations tasks, 10-stage lifecycle tracking, SLA compliance, bottleneck
+            detection & workload distribution.
           </p>
         </div>
 
@@ -54,17 +79,51 @@ export default function OpsManagerDashboard() {
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: 'Total Active Filings', value: '184 Active', sub: 'Across 8 core categories', icon: ClipboardList, color: '#003A66', bg: 'rgba(0,58,102,0.08)' },
-          { title: 'SLA Compliance Rate', value: '95.2%', sub: '175 cases on track', icon: CheckCircle2, color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-          { title: 'Govt Query / At Risk', value: '9 Orders', sub: 'Requires CA intervention', icon: AlertTriangle, color: '#DC2626', bg: 'rgba(220,38,38,0.08)' },
-          { title: 'Completed This Month', value: '142 Deliveries', sub: 'Certificates dispatched', icon: FileCheck2, color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' },
+          {
+            title: 'Total Active Filings',
+            value: '184 Active',
+            sub: 'Across 8 core categories',
+            icon: ClipboardList,
+            color: '#003A66',
+            bg: 'rgba(0,58,102,0.08)',
+          },
+          {
+            title: 'SLA Compliance Rate',
+            value: '95.2%',
+            sub: '175 cases on track',
+            icon: CheckCircle2,
+            color: '#059669',
+            bg: 'rgba(5,150,105,0.08)',
+          },
+          {
+            title: 'Govt Query / At Risk',
+            value: '9 Orders',
+            sub: 'Requires CA intervention',
+            icon: AlertTriangle,
+            color: '#DC2626',
+            bg: 'rgba(220,38,38,0.08)',
+          },
+          {
+            title: 'Completed This Month',
+            value: '142 Deliveries',
+            sub: 'Certificates dispatched',
+            icon: FileCheck2,
+            color: '#7C3AED',
+            bg: 'rgba(124,58,237,0.08)',
+          },
         ].map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <div key={kpi.title} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div
+              key={kpi.title}
+              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-500">{kpi.title}</span>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: kpi.bg }}>
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: kpi.bg }}
+                >
                   <Icon className="w-4 h-4" style={{ color: kpi.color }} />
                 </div>
               </div>
@@ -84,21 +143,24 @@ export default function OpsManagerDashboard() {
             <h3 className="font-display font-bold text-base text-slate-800">
               Live Cases by 10-Stage Lifecycle
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Real-time status tracking from document intake to government approval</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Real-time status tracking from document intake to government approval
+            </p>
           </div>
           <span className="badge badge-navy">184 Live Cases</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {stageBreakdown.map((item, i) => (
-            <div key={i} className="p-3.5 rounded-xl bg-[#F7F8FA] border border-slate-200/80 space-y-2">
+            <div
+              key={i}
+              className="p-3.5 rounded-xl bg-[#F7F8FA] border border-slate-200/80 space-y-2"
+            >
               <div className="flex items-center justify-between">
                 <span className="w-2.5 h-2.5 rounded-full bg-brand-gold" />
                 <span className="text-xl font-display font-bold text-slate-800">{item.count}</span>
               </div>
-              <p className="text-[11px] font-semibold text-slate-600 leading-tight">
-                {item.stage}
-              </p>
+              <p className="text-[11px] font-semibold text-slate-600 leading-tight">{item.stage}</p>
             </div>
           ))}
         </div>
@@ -111,13 +173,15 @@ export default function OpsManagerDashboard() {
             <h3 className="font-display font-bold text-base text-slate-800">
               Operations Team Workload & SLA Matrix
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Team workload balance, filing specializations, and urgent actions</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Team workload balance, filing specializations, and urgent actions
+            </p>
           </div>
           <span className="badge badge-navy">Operations Specialists</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Operations Specialist</th>

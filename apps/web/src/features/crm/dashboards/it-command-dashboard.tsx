@@ -107,11 +107,18 @@ interface TelemetryData {
     redis: { status: string; latencyMs: number };
     websockets: { status: string; connectedClients: number; activeRooms: number };
   };
-  endpointsTraffic: { path: string; requestsToday: number; avgLatency: string; successRate: string }[];
+  endpointsTraffic: {
+    path: string;
+    requestsToday: number;
+    avgLatency: string;
+    successRate: string;
+  }[];
 }
 
 export default function ItCommandDashboard() {
-  const [activeTab, setActiveTab] = useState<'leads' | 'meetings' | 'quotes' | 'telemetry'>('leads');
+  const [activeTab, setActiveTab] = useState<'leads' | 'meetings' | 'quotes' | 'telemetry'>(
+    'leads'
+  );
   const [leads, setLeads] = useState<TechLead[]>([]);
   const [meetings, setMeetings] = useState<ClientMeeting[]>([]);
   const [quotations, setQuotations] = useState<TechQuotation[]>([]);
@@ -254,11 +261,10 @@ export default function ItCommandDashboard() {
               <Terminal className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-display font-bold">
-                IT & Solutions Command Center
-              </h1>
+              <h1 className="text-2xl font-display font-bold">IT & Solutions Command Center</h1>
               <p className="text-xs text-blue-200/70 mt-0.5">
-                Internal Tech Team Workspace • Client Discovery Calls • Technical Proposals & Quotations • Telemetry
+                Internal Tech Team Workspace • Client Discovery Calls • Technical Proposals &
+                Quotations • Telemetry
               </p>
             </div>
           </div>
@@ -269,7 +275,9 @@ export default function ItCommandDashboard() {
           <button
             onClick={() => setActiveTab('leads')}
             className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-              activeTab === 'leads' ? 'bg-[#0084D1] text-white shadow-sm' : 'text-slate-300 hover:text-white'
+              activeTab === 'leads'
+                ? 'bg-[#0084D1] text-white shadow-sm'
+                : 'text-slate-300 hover:text-white'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
@@ -278,7 +286,9 @@ export default function ItCommandDashboard() {
           <button
             onClick={() => setActiveTab('meetings')}
             className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-              activeTab === 'meetings' ? 'bg-[#0084D1] text-white shadow-sm' : 'text-slate-300 hover:text-white'
+              activeTab === 'meetings'
+                ? 'bg-[#0084D1] text-white shadow-sm'
+                : 'text-slate-300 hover:text-white'
             }`}
           >
             <Video className="w-3.5 h-3.5" />
@@ -287,7 +297,9 @@ export default function ItCommandDashboard() {
           <button
             onClick={() => setActiveTab('quotes')}
             className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-              activeTab === 'quotes' ? 'bg-[#0084D1] text-white shadow-sm' : 'text-slate-300 hover:text-white'
+              activeTab === 'quotes'
+                ? 'bg-[#0084D1] text-white shadow-sm'
+                : 'text-slate-300 hover:text-white'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
@@ -296,7 +308,9 @@ export default function ItCommandDashboard() {
           <button
             onClick={() => setActiveTab('telemetry')}
             className={`px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-              activeTab === 'telemetry' ? 'bg-[#0084D1] text-white shadow-sm' : 'text-slate-300 hover:text-white'
+              activeTab === 'telemetry'
+                ? 'bg-[#0084D1] text-white shadow-sm'
+                : 'text-slate-300 hover:text-white'
             }`}
           >
             <Activity className="w-3.5 h-3.5" />
@@ -310,7 +324,9 @@ export default function ItCommandDashboard() {
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           <p className="text-xs font-bold text-slate-500 uppercase">Tech Pipeline</p>
           <p className="font-display font-bold text-2xl text-brand-navy mt-1">₹19.5 Lakh</p>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-1">3 Discovery Calls Active</p>
+          <p className="text-[11px] text-emerald-600 font-semibold mt-1">
+            3 Discovery Calls Active
+          </p>
         </div>
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           <p className="text-xs font-bold text-slate-500 uppercase">Quotations Sent</p>
@@ -319,13 +335,17 @@ export default function ItCommandDashboard() {
         </div>
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           <p className="text-xs font-bold text-slate-500 uppercase">Active Projects</p>
-          <p className="font-display font-bold text-2xl text-[#0084D1] mt-1">{projects.length} In Progress</p>
+          <p className="font-display font-bold text-2xl text-[#0084D1] mt-1">
+            {projects.length} In Progress
+          </p>
           <p className="text-[11px] text-slate-400 mt-1">Apex Commodities + ETaxwala 2.0</p>
         </div>
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
           <p className="text-xs font-bold text-slate-500 uppercase">API Health & Uptime</p>
           <p className="font-display font-bold text-2xl text-emerald-600 mt-1">99.9% Uptime</p>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-1">PostgreSQL & WebSockets Live</p>
+          <p className="text-[11px] text-emerald-600 font-semibold mt-1">
+            PostgreSQL & WebSockets Live
+          </p>
         </div>
       </div>
 
@@ -343,7 +363,7 @@ export default function ItCommandDashboard() {
             </div>
             <button
               onClick={() => setIsMeetingModalOpen(true)}
-              className="px-4 py-2 bg-brand-navy text-white text-xs font-bold rounded-xl hover:bg-brand-navy/90 transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 btn-multicolor text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" /> Schedule Discovery Call
             </button>
@@ -360,18 +380,24 @@ export default function ItCommandDashboard() {
                     <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-[#0084D1] rounded-full">
                       {lead.projectType}
                     </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      lead.status === 'won' ? 'bg-emerald-50 text-emerald-700' :
-                      lead.status === 'discovery_booked' ? 'bg-purple-50 text-purple-700' :
-                      'bg-slate-100 text-slate-700'
-                    }`}>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        lead.status === 'won'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : lead.status === 'discovery_booked'
+                            ? 'bg-purple-50 text-purple-700'
+                            : 'bg-slate-100 text-slate-700'
+                      }`}
+                    >
                       {lead.status.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>
 
                   <h3 className="font-bold text-base text-slate-900">{lead.clientName}</h3>
                   {lead.companyName && (
-                    <p className="text-xs font-semibold text-slate-500 mt-0.5">{lead.companyName}</p>
+                    <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                      {lead.companyName}
+                    </p>
                   )}
 
                   <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600">
@@ -415,7 +441,7 @@ export default function ItCommandDashboard() {
                       setMeetNotes(lead.requirements);
                       setIsMeetingModalOpen(true);
                     }}
-                    className="px-3 py-1.5 bg-[#0084D1] text-white text-xs font-bold rounded-lg hover:bg-[#0070b3] transition-colors flex items-center gap-1"
+                    className="px-3 py-1.5 rounded-xl btn-multicolor text-xs font-bold flex items-center gap-1"
                   >
                     <Video className="w-3 h-3" /> Book Meet
                   </button>
@@ -440,7 +466,7 @@ export default function ItCommandDashboard() {
             </div>
             <button
               onClick={() => setIsMeetingModalOpen(true)}
-              className="px-4 py-2 bg-[#0084D1] text-white text-xs font-bold rounded-xl hover:bg-[#0070b3] transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 btn-multicolor text-xs font-bold flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" /> New Meeting Link
             </button>
@@ -459,11 +485,13 @@ export default function ItCommandDashboard() {
                   </div>
                   <h3 className="font-bold text-base text-slate-900">{meet.meetingTitle}</h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    Client: <span className="font-bold text-slate-800">{meet.clientName}</span> • Duration: {meet.durationMinutes} mins
+                    Client: <span className="font-bold text-slate-800">{meet.clientName}</span> •
+                    Duration: {meet.durationMinutes} mins
                   </p>
                   {meet.clientNotes && (
                     <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 max-w-2xl">
-                      <span className="font-bold text-slate-700">Agenda / Scope Notes:</span> {meet.clientNotes}
+                      <span className="font-bold text-slate-700">Agenda / Scope Notes:</span>{' '}
+                      {meet.clientNotes}
                     </p>
                   )}
                 </div>
@@ -488,7 +516,7 @@ export default function ItCommandDashboard() {
                     href={meet.meetUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                    className="px-4 py-2 rounded-xl btn-multicolor text-xs font-bold flex items-center justify-center gap-1.5"
                   >
                     <Video className="w-4 h-4" /> Join Video Call
                   </a>
@@ -508,12 +536,13 @@ export default function ItCommandDashboard() {
                 Technical Quotations & Proposals Studio
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Milestone-based pricing, scope breakdown, and proposals generated for client sign-off
+                Milestone-based pricing, scope breakdown, and proposals generated for client
+                sign-off
               </p>
             </div>
             <button
               onClick={() => setIsQuoteModalOpen(true)}
-              className="px-4 py-2 bg-[#0084D1] text-white text-xs font-bold rounded-xl hover:bg-[#0070b3] transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 btn-multicolor text-xs font-bold flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" /> Create Quotation
             </button>
@@ -521,15 +550,29 @@ export default function ItCommandDashboard() {
 
           <div className="space-y-6">
             {quotations.map((quote) => (
-              <div key={quote.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+              <div
+                key={quote.id}
+                className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5"
+              >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-slate-400">{quote.quoteNumber}</span>
-                      <span className="badge badge-gold text-[10px]">{quote.status.toUpperCase()}</span>
+                      <span className="font-mono text-xs font-bold text-slate-400">
+                        {quote.quoteNumber}
+                      </span>
+                      <span className="badge badge-gold text-[10px]">
+                        {quote.status.toUpperCase()}
+                      </span>
                     </div>
-                    <h3 className="font-display font-bold text-lg text-slate-900 mt-1">{quote.projectTitle}</h3>
-                    <p className="text-xs text-slate-500">Prepared for: <span className="font-bold text-slate-800">{quote.clientName} ({quote.companyName || quote.clientEmail})</span></p>
+                    <h3 className="font-display font-bold text-lg text-slate-900 mt-1">
+                      {quote.projectTitle}
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Prepared for:{' '}
+                      <span className="font-bold text-slate-800">
+                        {quote.clientName} ({quote.companyName || quote.clientEmail})
+                      </span>
+                    </p>
                   </div>
 
                   <div className="text-left sm:text-right">
@@ -542,10 +585,15 @@ export default function ItCommandDashboard() {
 
                 {/* Tech Stack Chips */}
                 <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase mb-2">Architectural Tech Stack</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase mb-2">
+                    Architectural Tech Stack
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
                     {quote.techStack.map((tech, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+                      <span
+                        key={i}
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200"
+                      >
                         {tech}
                       </span>
                     ))}
@@ -554,9 +602,11 @@ export default function ItCommandDashboard() {
 
                 {/* Milestone Breakdown Table */}
                 <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase mb-2">Scope Milestones & Payments</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase mb-2">
+                    Scope Milestones & Payments
+                  </p>
                   <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                    <table className="w-full text-left text-xs">
+                    <table className="table-crm w-full text-left text-xs">
                       <thead className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase">
                         <tr>
                           <th className="py-2.5 px-4">Milestone Phase</th>
@@ -570,7 +620,9 @@ export default function ItCommandDashboard() {
                           <tr key={idx}>
                             <td className="py-2.5 px-4 font-bold text-slate-800">{m.title}</td>
                             <td className="py-2.5 px-4 text-slate-600">{m.description}</td>
-                            <td className="py-2.5 px-4 font-semibold text-slate-500">{m.percentage}% ({m.estimatedWeeks} wks)</td>
+                            <td className="py-2.5 px-4 font-semibold text-slate-500">
+                              {m.percentage}% ({m.estimatedWeeks} wks)
+                            </td>
                             <td className="py-2.5 px-4 font-bold text-brand-navy text-right">
                               ₹{m.amount.toLocaleString('en-IN')}
                             </td>
@@ -595,17 +647,27 @@ export default function ItCommandDashboard() {
                 <span className="text-xs font-bold text-slate-500 uppercase">Server Runtime</span>
                 <Server className="w-4 h-4 text-emerald-600" />
               </div>
-              <p className="font-display font-bold text-xl text-slate-800 mt-2">{telemetry.server.uptime}</p>
-              <p className="text-[11px] text-slate-400 mt-1">Node {telemetry.server.nodeVersion} • {telemetry.server.cpuCount} Cores</p>
+              <p className="font-display font-bold text-xl text-slate-800 mt-2">
+                {telemetry.server.uptime}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Node {telemetry.server.nodeVersion} • {telemetry.server.cpuCount} Cores
+              </p>
             </div>
 
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500 uppercase">PostgreSQL Database</span>
+                <span className="text-xs font-bold text-slate-500 uppercase">
+                  PostgreSQL Database
+                </span>
                 <Cpu className="w-4 h-4 text-[#0084D1]" />
               </div>
-              <p className="font-display font-bold text-xl text-emerald-600 mt-2">Connected ({telemetry.services.database.latencyMs}ms)</p>
-              <p className="text-[11px] text-slate-400 mt-1">{telemetry.services.database.engine} • Pool active</p>
+              <p className="font-display font-bold text-xl text-emerald-600 mt-2">
+                Connected ({telemetry.services.database.latencyMs}ms)
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1">
+                {telemetry.services.database.engine} • Pool active
+              </p>
             </div>
 
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
@@ -613,8 +675,13 @@ export default function ItCommandDashboard() {
                 <span className="text-xs font-bold text-slate-500 uppercase">Memory Footprint</span>
                 <Terminal className="w-4 h-4 text-purple-600" />
               </div>
-              <p className="font-display font-bold text-xl text-slate-800 mt-2">{telemetry.server.memory.rssMb} MB RSS</p>
-              <p className="text-[11px] text-slate-400 mt-1">Heap: {telemetry.server.memory.heapUsedMb} MB / {telemetry.server.memory.heapTotalMb} MB</p>
+              <p className="font-display font-bold text-xl text-slate-800 mt-2">
+                {telemetry.server.memory.rssMb} MB RSS
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Heap: {telemetry.server.memory.heapUsedMb} MB /{' '}
+                {telemetry.server.memory.heapTotalMb} MB
+              </p>
             </div>
           </div>
 
@@ -625,14 +692,19 @@ export default function ItCommandDashboard() {
             </h3>
             <div className="space-y-4">
               {projects.map((proj) => (
-                <div key={proj.id} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-3">
+                <div
+                  key={proj.id}
+                  className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-3"
+                >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
                         {proj.stage}
                       </span>
                       <h4 className="font-bold text-sm text-slate-900 mt-1">{proj.title}</h4>
-                      <p className="text-xs text-slate-400">Client: {proj.clientName} • Lead: {proj.leadEngineer}</p>
+                      <p className="text-xs text-slate-400">
+                        Client: {proj.clientName} • Lead: {proj.leadEngineer}
+                      </p>
                     </div>
 
                     <div className="flex items-center gap-2 text-xs">
@@ -641,7 +713,7 @@ export default function ItCommandDashboard() {
                           href={proj.repoUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-100 flex items-center gap-1"
+                          className="px-2.5 py-1 rounded-lg border border-slate-200 btn-multicolor font-bold flex items-center gap-1"
                         >
                           <GitBranch className="w-3.5 h-3.5 text-slate-500" /> Repo
                         </a>
@@ -651,7 +723,7 @@ export default function ItCommandDashboard() {
                           href={proj.stagingUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-2.5 py-1 rounded-lg bg-[#0084D1] text-white font-bold hover:bg-[#0070b3] flex items-center gap-1"
+                          className="px-2.5 py-1 rounded-xl btn-multicolor font-bold flex items-center gap-1"
                         >
                           <ExternalLink className="w-3.5 h-3.5" /> Staging
                         </a>
@@ -687,14 +759,19 @@ export default function ItCommandDashboard() {
               <h3 className="font-display font-bold text-lg text-slate-800 flex items-center gap-2">
                 <Video className="w-5 h-5 text-[#0084D1]" /> Schedule Client Discovery Call
               </h3>
-              <button onClick={() => setIsMeetingModalOpen(false)} className="text-slate-400 hover:text-slate-700">
+              <button
+                onClick={() => setIsMeetingModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleCreateMeeting} className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Client / Company Name *</label>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Client / Company Name *
+                </label>
                 <input
                   type="text"
                   placeholder="e.g., Rajesh Khanna (Zenith Retail)"
@@ -706,7 +783,9 @@ export default function ItCommandDashboard() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Meeting Title / Topic *</label>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Meeting Title / Topic *
+                </label>
                 <input
                   type="text"
                   placeholder="e.g., SaaS Discovery: Architecture & Pricing Call"
@@ -729,7 +808,9 @@ export default function ItCommandDashboard() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Scope & Requirement Notes</label>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Scope & Requirement Notes
+                </label>
                 <textarea
                   rows={3}
                   placeholder="What tech requirements or questions to address on call..."
@@ -739,10 +820,7 @@ export default function ItCommandDashboard() {
                 />
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-3 bg-[#0084D1] text-white font-bold rounded-xl hover:bg-[#0070b3] transition-colors"
-              >
+              <button type="submit" className="w-full py-3 btn-multicolor font-bold">
                 Generate Google Meet & Save
               </button>
             </form>
@@ -758,7 +836,10 @@ export default function ItCommandDashboard() {
               <h3 className="font-display font-bold text-lg text-slate-800 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#0084D1]" /> Create Technical Proposal
               </h3>
-              <button onClick={() => setIsQuoteModalOpen(false)} className="text-slate-400 hover:text-slate-700">
+              <button
+                onClick={() => setIsQuoteModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -812,7 +893,9 @@ export default function ItCommandDashboard() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Tech Stack (comma separated)</label>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Tech Stack (comma separated)
+                </label>
                 <input
                   type="text"
                   value={quoteStack}
@@ -821,10 +904,7 @@ export default function ItCommandDashboard() {
                 />
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-3 bg-[#0084D1] text-white font-bold rounded-xl hover:bg-[#0070b3] transition-colors"
-              >
+              <button type="submit" className="w-full py-3 btn-multicolor font-bold">
                 Generate Milestone Quotation
               </button>
             </form>

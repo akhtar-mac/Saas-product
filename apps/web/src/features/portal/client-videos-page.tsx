@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Video, Play, Lock, CheckCircle2, Clock, BookOpen,
-  Award, Sparkles, AlertCircle, ArrowRight
+  Video,
+  Play,
+  Lock,
+  CheckCircle2,
+  Clock,
+  BookOpen,
+  Award,
+  Sparkles,
+  AlertCircle,
+  ArrowRight,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -79,7 +87,7 @@ export default function ClientVideosPage() {
         {!hasFpcAccess && (
           <Link
             to="/fpc-training"
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 shrink-0"
+            className="px-4 py-2 rounded-xl btn-multicolor font-bold text-xs shadow-sm flex items-center gap-1.5 shrink-0"
           >
             <Sparkles className="w-3.5 h-3.5" /> <span>Unlock All 10 Modules @ ₹3,999</span>
           </Link>
@@ -106,11 +114,12 @@ export default function ClientVideosPage() {
                 </div>
                 <h3 className="text-lg font-bold">Premium Course Video Locked</h3>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  This module is part of the 10-day FPC Masterclass. Upgrade your account to access all recordings, worksheets, and live CA Q&amp;A.
+                  This module is part of the 10-day FPC Masterclass. Upgrade your account to access
+                  all recordings, worksheets, and live CA Q&amp;A.
                 </p>
                 <Link
                   to="/fpc-training"
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md mt-2"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl btn-multicolor font-bold text-xs shadow-md mt-2"
                 >
                   <span>Enroll in Masterclass</span> <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
@@ -126,8 +135,12 @@ export default function ClientVideosPage() {
               </span>
               <span className="text-xs text-slate-400">Medium: Marathi (मराठी)</span>
             </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{activeVideo.title}</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{activeVideo.desc}</p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              {activeVideo.title}
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              {activeVideo.desc}
+            </p>
           </div>
         </div>
 
@@ -153,15 +166,23 @@ export default function ClientVideosPage() {
                         : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 bg-white dark:bg-slate-900'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                      isAccessible
-                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                        : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
-                    }`}>
-                      {isAccessible ? <Play className="w-3.5 h-3.5 fill-current" /> : <Lock className="w-3.5 h-3.5" />}
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                        isAccessible
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                          : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                      }`}
+                    >
+                      {isAccessible ? (
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                      ) : (
+                        <Lock className="w-3.5 h-3.5" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{item.title}</p>
+                      <p className="font-bold text-slate-800 dark:text-slate-200 line-clamp-1">
+                        {item.title}
+                      </p>
                       <p className="text-[10px] text-slate-400 mt-0.5">{item.duration}</p>
                     </div>
                   </button>

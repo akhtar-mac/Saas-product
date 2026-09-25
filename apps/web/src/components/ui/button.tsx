@@ -1,7 +1,8 @@
 import React from 'react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'multicolor' | 'outline' | 'ghost' | 'danger' | 'panda' | 'gold';
+  variant?:
+    'primary' | 'secondary' | 'multicolor' | 'outline' | 'ghost' | 'danger' | 'panda' | 'gold';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -25,12 +26,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     // All galaxy variants: white bg + rotating nebula border (light theme)
     const variants = {
-      primary:    'btn-multicolor',
+      primary: 'btn-multicolor',
       multicolor: 'btn-multicolor',
-      secondary:  'btn-outline-multicolor',
-      outline:    'btn-outline-multicolor',
-      panda:      'btn-panda',
-      gold:       'btn-gold',
+      secondary: 'btn-outline-multicolor',
+      outline: 'btn-outline-multicolor',
+      panda: 'btn-panda',
+      gold: 'btn-gold',
       ghost:
         'relative cursor-pointer overflow-hidden rounded-xl bg-transparent hover:bg-[#FAF9F5] text-slate-700 transition-colors duration-200 font-semibold',
       danger:
@@ -53,7 +54,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={`inline-flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
+        className={`inline-flex items-center justify-center whitespace-nowrap shrink-0 disabled:opacity-60 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
         {...props}
       >
         {/* Floating star particles (galaxy variants only) */}
@@ -68,7 +69,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
               fill="none"
               viewBox="0 0 24 24"
             >
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
               <path
                 className="opacity-75"
                 fill="currentColor"

@@ -16,9 +16,30 @@ export default function QcReviewerDashboard() {
   const [rejectReason, setRejectReason] = useState('');
 
   const [qcQueue, setQcQueue] = useState([
-    { id: 301, client: 'Sharma Agri Exports Pvt Ltd', service: 'SPICe+ Part B Incorporation Filing', filedBy: 'CA Pooja Kulkarni', docsCount: 8, status: 'Pending QC' },
-    { id: 302, client: 'Green Leaf Bio Organics', service: 'Trademark Class 31 Filing', filedBy: 'Vikas Shinde', docsCount: 4, status: 'Pending QC' },
-    { id: 303, client: 'Apex Logistics LLP', service: 'GST New Application ARN-901', filedBy: 'Megha More', docsCount: 6, status: 'Pending QC' },
+    {
+      id: 301,
+      client: 'Sharma Agri Exports Pvt Ltd',
+      service: 'SPICe+ Part B Incorporation Filing',
+      filedBy: 'CA Pooja Kulkarni',
+      docsCount: 8,
+      status: 'Pending QC',
+    },
+    {
+      id: 302,
+      client: 'Green Leaf Bio Organics',
+      service: 'Trademark Class 31 Filing',
+      filedBy: 'Vikas Shinde',
+      docsCount: 4,
+      status: 'Pending QC',
+    },
+    {
+      id: 303,
+      client: 'Apex Logistics LLP',
+      service: 'GST New Application ARN-901',
+      filedBy: 'Megha More',
+      docsCount: 6,
+      status: 'Pending QC',
+    },
   ]);
 
   const handleApprove = (id: number) => {
@@ -51,29 +72,62 @@ export default function QcReviewerDashboard() {
             <span className="badge badge-gold">Zero-Defect Quality Gate</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Pre-submission audit to prevent government rejections, MCA/GST query notices, and spelling defects.
+            Pre-submission audit to prevent government rejections, MCA/GST query notices, and
+            spelling defects.
           </p>
         </div>
 
-        <span className="badge badge-green text-xs py-1.5 px-3">
-          Pass Rate: 96.4%
-        </span>
+        <span className="badge badge-green text-xs py-1.5 px-3">Pass Rate: 96.4%</span>
       </div>
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: 'Pending QC Reviews', value: qcQueue.length, sub: 'Awaiting inspection', icon: FileCheck2, color: '#003A66', bg: 'rgba(0,58,102,0.08)' },
-          { title: 'Passed QC Today', value: '19 Filings', sub: 'Ready for govt portal', icon: CheckCircle2, color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-          { title: 'Returned with Defects', value: '2 Filings', sub: 'Sent back to operations', icon: RotateCcw, color: '#DC2626', bg: 'rgba(220,38,38,0.08)' },
-          { title: 'First-Pass Quality Rate', value: '96.4%', sub: '+1.2% this month', icon: ShieldCheck, color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' },
+          {
+            title: 'Pending QC Reviews',
+            value: qcQueue.length,
+            sub: 'Awaiting inspection',
+            icon: FileCheck2,
+            color: '#003A66',
+            bg: 'rgba(0,58,102,0.08)',
+          },
+          {
+            title: 'Passed QC Today',
+            value: '19 Filings',
+            sub: 'Ready for govt portal',
+            icon: CheckCircle2,
+            color: '#059669',
+            bg: 'rgba(5,150,105,0.08)',
+          },
+          {
+            title: 'Returned with Defects',
+            value: '2 Filings',
+            sub: 'Sent back to operations',
+            icon: RotateCcw,
+            color: '#DC2626',
+            bg: 'rgba(220,38,38,0.08)',
+          },
+          {
+            title: 'First-Pass Quality Rate',
+            value: '96.4%',
+            sub: '+1.2% this month',
+            icon: ShieldCheck,
+            color: '#7C3AED',
+            bg: 'rgba(124,58,237,0.08)',
+          },
         ].map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <div key={kpi.title} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div
+              key={kpi.title}
+              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-500">{kpi.title}</span>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: kpi.bg }}>
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: kpi.bg }}
+                >
                   <Icon className="w-4 h-4" style={{ color: kpi.color }} />
                 </div>
               </div>
@@ -93,13 +147,15 @@ export default function QcReviewerDashboard() {
             <h3 className="font-display font-bold text-base text-slate-800">
               Pre-Filing Document Inspection Queue
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Click QC Pass to approve or Return to send back with defect annotations</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Click QC Pass to approve or Return to send back with defect annotations
+            </p>
           </div>
           <span className="badge badge-navy">Inspection Queue</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Case # / Client</th>
@@ -183,7 +239,7 @@ export default function QcReviewerDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="btn btn-outline btn-sm"
+                  className="btn btn-outline btn-sm btn-multicolor"
                 >
                   Cancel
                 </button>

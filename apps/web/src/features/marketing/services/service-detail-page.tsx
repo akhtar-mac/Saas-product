@@ -2,10 +2,31 @@ import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CheckCircle2, ArrowRight, Phone, MessageCircle, FileBadge,
-  ChevronRight, Star, Clock, ShieldCheck, FileCheck, HelpCircle,
-  Sparkles, Lock, Building2, UserCheck, AlertCircle, Laptop,
-  Check, X, ChevronDown, Award, Send, Info, Layers, Zap
+  CheckCircle2,
+  ArrowRight,
+  Phone,
+  MessageCircle,
+  FileBadge,
+  ChevronRight,
+  Star,
+  Clock,
+  ShieldCheck,
+  FileCheck,
+  HelpCircle,
+  Sparkles,
+  Lock,
+  Building2,
+  UserCheck,
+  AlertCircle,
+  Laptop,
+  Check,
+  X,
+  ChevronDown,
+  Award,
+  Send,
+  Info,
+  Layers,
+  Zap,
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
@@ -21,7 +42,7 @@ import {
   getServiceComparison,
   getServiceSoftwareFeatures,
   getServiceFaqs,
-  ServicePackage
+  ServicePackage,
 } from '@/lib/constants/services';
 import { cn } from '@/lib/utils';
 import LiveSocialProofGrid from '@/components/marketing/live-social-proof-grid';
@@ -32,19 +53,21 @@ export default function ServiceDetailPage() {
   const category = service ? getCategoryById(service.category) : null;
 
   // Selected package state
-  const packages = useMemo(() => service ? getServicePackages(service) : [], [service]);
-  const [selectedPkgId, setSelectedPkgId] = useState<string>(() => packages[1]?.id || packages[0]?.id || 'standard');
+  const packages = useMemo(() => (service ? getServicePackages(service) : []), [service]);
+  const [selectedPkgId, setSelectedPkgId] = useState<string>(
+    () => packages[1]?.id || packages[0]?.id || 'standard'
+  );
   const selectedPackage = useMemo(
     () => packages.find((p) => p.id === selectedPkgId) || packages[0],
     [packages, selectedPkgId]
   );
 
   // Document tab state
-  const docGroups = useMemo(() => service ? getServiceDocuments(service) : [], [service]);
+  const docGroups = useMemo(() => (service ? getServiceDocuments(service) : []), [service]);
   const [activeDocTab, setActiveDocTab] = useState<number>(0);
 
   // FAQ accordion state
-  const faqs = useMemo(() => service ? getServiceFaqs(service) : [], [service]);
+  const faqs = useMemo(() => (service ? getServiceFaqs(service) : []), [service]);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   // Lead Form State
@@ -99,7 +122,8 @@ export default function ServiceDetailPage() {
               Need Help with {formattedTitle}?
             </h2>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Our practicing Chartered Accountants handle all custom legal incorporations, registrations, and tax appeals.
+              Our practicing Chartered Accountants handle all custom legal incorporations,
+              registrations, and tax appeals.
             </p>
           </div>
 
@@ -133,7 +157,9 @@ export default function ServiceDetailPage() {
   const processSteps = getServiceProcessSteps(service);
   const comparison = getServiceComparison(service);
   const softwareFeatures = getServiceSoftwareFeatures(service);
-  const related = services.filter((s) => s.category === service.category && s.id !== service.id).slice(0, 3);
+  const related = services
+    .filter((s) => s.category === service.category && s.id !== service.id)
+    .slice(0, 3);
 
   const displayRating = service.rating || 4.9;
   const displayReviews = service.reviewCount || 3420;
@@ -144,7 +170,10 @@ export default function ServiceDetailPage() {
       {/* ── SEO & JSON-LD Structured Data ── */}
       <SEO
         title={`${service.name} Online in India | ETaxwala CA Platform`}
-        description={service.subtitle || `${service.name} filing by practicing Chartered Accountants and automated software. 100% compliant, transparent pricing, fast turnaround.`}
+        description={
+          service.subtitle ||
+          `${service.name} filing by practicing Chartered Accountants and automated software. 100% compliant, transparent pricing, fast turnaround.`
+        }
         keywords={`${service.name}, ${category?.name || 'Taxation'}, CA filing India, GST compliance, ETaxwala software`}
         url={`/services/${service.category}/${service.slug}`}
         type="product"
@@ -179,13 +208,27 @@ export default function ServiceDetailPage() {
       <div className="sticky top-16 sm:top-20 z-40 bg-white/95 backdrop-blur-md border-b border-[#EAE6DD] hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-12 text-xs font-semibold">
           <div className="flex items-center gap-6 text-slate-600">
-            <a href="#overview" className="hover:text-[#0084D1] transition-colors">Overview</a>
-            <a href="#packages" className="hover:text-[#0084D1] transition-colors">Plans &amp; Pricing</a>
-            <a href="#process" className="hover:text-[#0084D1] transition-colors">Step-by-Step Process</a>
-            <a href="#documents" className="hover:text-[#0084D1] transition-colors">Required Documents</a>
-            <a href="#software-edge" className="hover:text-[#0084D1] transition-colors">Software Edge</a>
-            <a href="#comparison" className="hover:text-[#0084D1] transition-colors">Why ETaxwala</a>
-            <a href="#faqs" className="hover:text-[#0084D1] transition-colors">FAQs</a>
+            <a href="#overview" className="hover:text-[#0084D1] transition-colors">
+              Overview
+            </a>
+            <a href="#packages" className="hover:text-[#0084D1] transition-colors">
+              Plans &amp; Pricing
+            </a>
+            <a href="#process" className="hover:text-[#0084D1] transition-colors">
+              Step-by-Step Process
+            </a>
+            <a href="#documents" className="hover:text-[#0084D1] transition-colors">
+              Required Documents
+            </a>
+            <a href="#software-edge" className="hover:text-[#0084D1] transition-colors">
+              Software Edge
+            </a>
+            <a href="#comparison" className="hover:text-[#0084D1] transition-colors">
+              Why ETaxwala
+            </a>
+            <a href="#faqs" className="hover:text-[#0084D1] transition-colors">
+              FAQs
+            </a>
           </div>
 
           <div className="flex items-center gap-3">
@@ -207,7 +250,10 @@ export default function ServiceDetailPage() {
       </div>
 
       {/* ── Hero Section (Split Grid with Sticky Lead Capture Form) ── */}
-      <section id="overview" className="relative bg-[#FFFDF9] py-10 sm:py-16 border-b border-[#EAE6DD] overflow-hidden">
+      <section
+        id="overview"
+        className="relative bg-[#FFFDF9] py-10 sm:py-16 border-b border-[#EAE6DD] overflow-hidden"
+      >
         {/* Subtle decorative background gradient */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-blue-50/50 via-purple-50/30 to-transparent rounded-full blur-3xl pointer-events-none" />
 
@@ -250,7 +296,10 @@ export default function ServiceDetailPage() {
               {/* Key Deliverables Bullet Checklist */}
               <div className="grid sm:grid-cols-2 gap-2.5 pt-2">
                 {service.inclusions.slice(0, 6).map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700 font-medium">
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700 font-medium"
+                  >
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                     <span>{item}</span>
                   </div>
@@ -259,13 +308,18 @@ export default function ServiceDetailPage() {
 
               {/* Stats Bar */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-[#EAE6DD]">
-                {(service.stats || [
-                  { label: 'Returns Filed', value: '45,000+' },
-                  { label: 'On-Time Rate', value: '99.8%' },
-                  { label: 'Verified CAs', value: '100% Certified' },
-                  { label: 'Turnaround', value: displayTurnaround },
-                ]).map((stat, i) => (
-                  <div key={i} className="p-3 rounded-2xl bg-white border border-[#EAE6DD] shadow-xs">
+                {(
+                  service.stats || [
+                    { label: 'Returns Filed', value: '45,000+' },
+                    { label: 'On-Time Rate', value: '99.8%' },
+                    { label: 'Verified CAs', value: '100% Certified' },
+                    { label: 'Turnaround', value: displayTurnaround },
+                  ]
+                ).map((stat, i) => (
+                  <div
+                    key={i}
+                    className="p-3 rounded-2xl bg-white border border-[#EAE6DD] shadow-xs"
+                  >
                     <p className="text-lg sm:text-xl font-extrabold text-slate-900">{stat.value}</p>
                     <p className="text-[11px] text-slate-500 font-medium">{stat.label}</p>
                   </div>
@@ -277,7 +331,9 @@ export default function ServiceDetailPage() {
                 <div className="flex items-center gap-1 text-amber-500 font-bold">
                   <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                   <span className="text-slate-900 font-extrabold text-sm">{displayRating}</span>
-                  <span className="text-slate-400 font-normal">({displayReviews.toLocaleString()} reviews)</span>
+                  <span className="text-slate-400 font-normal">
+                    ({displayReviews.toLocaleString()} reviews)
+                  </span>
                 </div>
                 <span className="text-slate-300">•</span>
                 <span className="flex items-center gap-1 font-semibold text-slate-700">
@@ -309,7 +365,8 @@ export default function ServiceDetailPage() {
                     Get Free CA Consultation &amp; Quote
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Selected: <strong className="text-slate-800">{selectedPackage?.name}</strong> (<span className="tracking-widest font-mono">₹ * * * *</span>)
+                    Selected: <strong className="text-slate-800">{selectedPackage?.name}</strong> (
+                    <span className="tracking-widest font-mono">₹ * * * *</span>)
                   </p>
                 </div>
 
@@ -320,13 +377,14 @@ export default function ServiceDetailPage() {
                     </div>
                     <h4 className="text-base font-extrabold text-emerald-900">Request Received!</h4>
                     <p className="text-xs text-emerald-700 leading-relaxed">
-                      Thank you, <strong>{leadName}</strong>. Our senior tax specialist has been assigned and will call you at <strong>{leadMobile}</strong> shortly.
+                      Thank you, <strong>{leadName}</strong>. Our senior tax specialist has been
+                      assigned and will call you at <strong>{leadMobile}</strong> shortly.
                     </p>
                     <a
                       href={`https://wa.me/918069029999?text=Hi%20ETaxwala%2C%20I%20just%20enquired%20for%20${encodeURIComponent(service.name)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
+                      className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 btn-multicolor text-xs font-bold"
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span>Chat on WhatsApp Now</span>
@@ -342,7 +400,9 @@ export default function ServiceDetailPage() {
                     )}
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-700">Your Full Name *</label>
+                      <label className="text-[11px] font-bold text-slate-700">
+                        Your Full Name *
+                      </label>
                       <input
                         type="text"
                         required
@@ -355,7 +415,9 @@ export default function ServiceDetailPage() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-[11px] font-bold text-slate-700">Mobile Number *</label>
+                        <label className="text-[11px] font-bold text-slate-700">
+                          Mobile Number *
+                        </label>
                         <input
                           type="tel"
                           required
@@ -379,7 +441,9 @@ export default function ServiceDetailPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-slate-700">Choose Filing Package</label>
+                      <label className="text-[11px] font-bold text-slate-700">
+                        Choose Filing Package
+                      </label>
                       <select
                         value={selectedPkgId}
                         onChange={(e) => setSelectedPkgId(e.target.value)}
@@ -414,7 +478,10 @@ export default function ServiceDetailPage() {
                       <span className="flex items-center gap-1">
                         <Lock className="w-3 h-3 text-slate-400" /> 100% Privacy Protected
                       </span>
-                      <a href="tel:08069029999" className="font-bold text-[#0084D1] hover:underline">
+                      <a
+                        href="tel:08069029999"
+                        className="font-bold text-[#0084D1] hover:underline"
+                      >
                         Or Call: 080-6902-9999
                       </a>
                     </div>
@@ -435,15 +502,17 @@ export default function ServiceDetailPage() {
             </div>
             <div className="flex-1 space-y-0.5">
               <p className="font-extrabold text-slate-900">
-                Statutory Compliance Alert ({service.complianceAlert.legalSection || 'Department Rules'})
+                Statutory Compliance Alert (
+                {service.complianceAlert.legalSection || 'Department Rules'})
               </p>
               <p className="text-amber-800">
-                <strong>Due Date:</strong> {service.complianceAlert.dueDate}. {service.complianceAlert.penaltyText}
+                <strong>Due Date:</strong> {service.complianceAlert.dueDate}.{' '}
+                {service.complianceAlert.penaltyText}
               </p>
             </div>
             <a
               href="#lead-form"
-              className="hidden sm:inline-flex px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shrink-0 transition-colors"
+              className="hidden sm:inline-flex px-3 py-1.5 rounded-lg btn-multicolor font-bold text-[11px] shrink-0 transition-colors"
             >
               Avoid Late Fees
             </a>
@@ -462,7 +531,8 @@ export default function ServiceDetailPage() {
               Choose the Right Plan for Your Business
             </h2>
             <p className="text-xs sm:text-sm text-slate-500">
-              No hidden charges. Standard government statutory fees and CA drafting charges are bundled transparently.
+              No hidden charges. Standard government statutory fees and CA drafting charges are
+              bundled transparently.
             </p>
           </div>
 
@@ -537,13 +607,16 @@ export default function ServiceDetailPage() {
                         </p>
                       )}
                       <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-amber-500" /> Execution: {pkg.turnaround || displayTurnaround}
+                        <Clock className="w-3 h-3 text-amber-500" /> Execution:{' '}
+                        {pkg.turnaround || displayTurnaround}
                       </p>
                     </div>
 
                     {/* Features List */}
                     <div className="space-y-2.5 pt-1">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">What's Included</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        What's Included
+                      </p>
                       {pkg.features.map((feat, idx) => (
                         <div key={idx} className="flex items-start gap-2 text-xs text-slate-700">
                           <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -561,7 +634,9 @@ export default function ServiceDetailPage() {
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedPkgId(pkg.id);
-                          document.getElementById('lead-form')?.scrollIntoView({ behavior: 'smooth' });
+                          document
+                            .getElementById('lead-form')
+                            ?.scrollIntoView({ behavior: 'smooth' });
                         }}
                         className="w-full py-3.5 rounded-xl btn-multicolor text-xs font-extrabold shadow-md flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-[0.98]"
                       >
@@ -578,7 +653,7 @@ export default function ServiceDetailPage() {
                           e.stopPropagation();
                           setSelectedPkgId(pkg.id);
                         }}
-                        className="w-full py-3.5 rounded-xl bg-[#FAF9F5] hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-[#EAE6DD] hover:border-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                        className="w-full py-3.5 rounded-xl btn-multicolor text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
                       >
                         <span>Select {pkg.name}</span>
                         <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
@@ -603,7 +678,8 @@ export default function ServiceDetailPage() {
               How E-Taxwala Executes Your {service.name}
             </h2>
             <p className="text-xs sm:text-sm text-slate-500">
-              Our 4-step structured methodology ensures zero manual errors and strict statutory deadline compliance.
+              Our 4-step structured methodology ensures zero manual errors and strict statutory
+              deadline compliance.
             </p>
           </div>
 
@@ -627,9 +703,7 @@ export default function ServiceDetailPage() {
                   <h4 className="text-base font-extrabold text-slate-900 group-hover:text-[#0084D1] transition-colors">
                     {step.title}
                   </h4>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {step.desc}
-                  </p>
+                  <p className="text-xs text-slate-600 leading-relaxed">{step.desc}</p>
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-[#EAE6DD]/60 flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
@@ -706,9 +780,15 @@ export default function ServiceDetailPage() {
             <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-2xl flex items-center justify-between text-xs text-blue-900">
               <span className="flex items-center gap-2">
                 <Info className="w-4 h-4 text-[#0084D1] shrink-0" />
-                <span>Don't have all documents right now? Our CA will guide you on how to procure or format them.</span>
+                <span>
+                  Don't have all documents right now? Our CA will guide you on how to procure or
+                  format them.
+                </span>
               </span>
-              <a href="#lead-form" className="font-bold text-[#0084D1] hover:underline shrink-0 ml-2">
+              <a
+                href="#lead-form"
+                className="font-bold text-[#0084D1] hover:underline shrink-0 ml-2"
+              >
                 Ask CA →
               </a>
             </div>
@@ -717,7 +797,10 @@ export default function ServiceDetailPage() {
       </section>
 
       {/* ── The Software & Tech Advantage (IndiaFilings Ledgers Equivalent) ── */}
-      <section id="software-edge" className="py-16 sm:py-20 bg-[#FAF9F5] border-b border-[#EAE6DD] relative overflow-hidden">
+      <section
+        id="software-edge"
+        className="py-16 sm:py-20 bg-[#FAF9F5] border-b border-[#EAE6DD] relative overflow-hidden"
+      >
         {/* Subtle decorative background glow */}
         <div className="absolute top-0 right-10 w-96 h-96 bg-gradient-to-bl from-blue-100/40 via-purple-100/30 to-transparent rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-10 w-80 h-80 bg-gradient-to-tr from-amber-100/40 via-rose-100/20 to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -731,7 +814,9 @@ export default function ServiceDetailPage() {
               Powered by E-Taxwala Cloud Software &amp; Client Portal
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-              Unlike traditional CAs using manual spreadsheets, every client receives free access to our proprietary cloud portal for automated reconciliations, status tracking, and 8-year document vault.
+              Unlike traditional CAs using manual spreadsheets, every client receives free access to
+              our proprietary cloud portal for automated reconciliations, status tracking, and
+              8-year document vault.
             </p>
           </div>
 
@@ -751,7 +836,9 @@ export default function ServiceDetailPage() {
                     </span>
                   )}
                 </div>
-                <h3 className="text-base font-extrabold text-slate-900 group-hover:text-[#0084D1] transition-colors">{feat.title}</h3>
+                <h3 className="text-base font-extrabold text-slate-900 group-hover:text-[#0084D1] transition-colors">
+                  {feat.title}
+                </h3>
                 <p className="text-xs text-slate-600 leading-relaxed font-normal">{feat.desc}</p>
               </div>
             ))}
@@ -770,7 +857,8 @@ export default function ServiceDetailPage() {
                 </h4>
               </div>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Log into your client dashboard to view your active service milestones, download invoices &amp; certificates.
+                Log into your client dashboard to view your active service milestones, download
+                invoices &amp; certificates.
               </p>
             </div>
 
@@ -798,16 +886,19 @@ export default function ServiceDetailPage() {
               Why Smart Businesses Choose E-Taxwala
             </h2>
             <p className="text-xs sm:text-sm text-slate-500">
-              See how we stack up against traditional local accounting firms and fly-by-night portals.
+              See how we stack up against traditional local accounting firms and fly-by-night
+              portals.
             </p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse border border-[#EAE6DD] rounded-2xl overflow-hidden text-xs sm:text-sm">
+            <table className="table-crm w-full text-left border-collapse border border-[#EAE6DD] rounded-2xl overflow-hidden text-xs sm:text-sm">
               <thead>
                 <tr className="bg-[#FAF9F5] border-b border-[#EAE6DD] text-slate-700">
                   <th className="p-4 font-extrabold">Feature / Capability</th>
-                  <th className="p-4 font-extrabold text-[#0084D1] bg-blue-50/50">E-Taxwala Platform</th>
+                  <th className="p-4 font-extrabold text-[#0084D1] bg-blue-50/50">
+                    E-Taxwala Platform
+                  </th>
                   <th className="p-4 font-bold text-slate-500">Traditional Offline CA</th>
                   <th className="p-4 font-bold text-slate-500">Cheap / Discount Sites</th>
                 </tr>
@@ -818,21 +909,33 @@ export default function ServiceDetailPage() {
                     <td className="p-4 font-bold text-slate-800">{row.feature}</td>
                     <td className="p-4 font-extrabold text-[#0084D1] bg-blue-50/30">
                       {typeof row.etaxwala === 'boolean' ? (
-                        row.etaxwala ? <Check className="w-4 h-4 text-emerald-600" /> : <X className="w-4 h-4 text-rose-500" />
+                        row.etaxwala ? (
+                          <Check className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <X className="w-4 h-4 text-rose-500" />
+                        )
                       ) : (
                         row.etaxwala
                       )}
                     </td>
                     <td className="p-4 text-slate-600">
                       {typeof row.traditionalCA === 'boolean' ? (
-                        row.traditionalCA ? <Check className="w-4 h-4 text-emerald-600" /> : <X className="w-4 h-4 text-rose-500" />
+                        row.traditionalCA ? (
+                          <Check className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <X className="w-4 h-4 text-rose-500" />
+                        )
                       ) : (
                         row.traditionalCA
                       )}
                     </td>
                     <td className="p-4 text-slate-400">
                       {typeof row.cheapSites === 'boolean' ? (
-                        row.cheapSites ? <Check className="w-4 h-4 text-emerald-600" /> : <X className="w-4 h-4 text-rose-500" />
+                        row.cheapSites ? (
+                          <Check className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <X className="w-4 h-4 text-rose-500" />
+                        )
                       ) : (
                         row.cheapSites
                       )}
@@ -905,9 +1008,14 @@ export default function ServiceDetailPage() {
                 <h3 className="text-lg font-extrabold text-slate-900">
                   Related Services in {category?.name || 'this Category'}
                 </h3>
-                <p className="text-xs text-slate-500">Explore complementary business registrations &amp; return filings.</p>
+                <p className="text-xs text-slate-500">
+                  Explore complementary business registrations &amp; return filings.
+                </p>
               </div>
-              <Link to="/services" className="text-xs font-bold text-[#0084D1] hover:underline flex items-center gap-1">
+              <Link
+                to="/services"
+                className="text-xs font-bold text-[#0084D1] hover:underline flex items-center gap-1"
+              >
                 <span>View All 250+</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -947,7 +1055,8 @@ export default function ServiceDetailPage() {
               Ready to Complete Your {service.name}?
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Speak directly with our practicing Chartered Accountant team. Avoid delays, maximize tax savings, and stay 100% compliant.
+              Speak directly with our practicing Chartered Accountant team. Avoid delays, maximize
+              tax savings, and stay 100% compliant.
             </p>
           </div>
 

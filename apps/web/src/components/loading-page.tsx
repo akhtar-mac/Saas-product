@@ -20,7 +20,7 @@ export const LoadingPage: React.FC<LoadingPageProps> = ({
   useEffect(() => {
     if (isLoading) {
       setShowLoading(true);
-      
+
       const timeoutId = setTimeout(() => {
         setShouldShowFallback(true);
       }, loadingTimeout);
@@ -104,33 +104,35 @@ export function PaginatedList<T>({
   }
 
   if (error) {
-    return errorState || (
-      <div className="p-8 text-center text-red-600 dark:text-red-400">
-        <p className="font-semibold">Failed to load data</p>
-        <p className="text-sm mt-2 text-slate-500">{error.message}</p>
-      </div>
+    return (
+      errorState || (
+        <div className="p-8 text-center text-red-600 dark:text-red-400">
+          <p className="font-semibold">Failed to load data</p>
+          <p className="text-sm mt-2 text-slate-500">{error.message}</p>
+        </div>
+      )
     );
   }
 
   if (items.length === 0) {
-    return emptyState || (
-      <div className="p-8 text-center text-slate-500">
-        <p>No items found</p>
-      </div>
+    return (
+      emptyState || (
+        <div className="p-8 text-center text-slate-500">
+          <p>No items found</p>
+        </div>
+      )
     );
   }
 
   return (
     <>
-      <div className="space-y-4">
-        {displayedItems.map((item, index) => children(item, index))}
-      </div>
+      <div className="space-y-4">{displayedItems.map((item, index) => children(item, index))}</div>
 
       {hasMore && (
         <div className="flex justify-center mt-6">
           <button
             onClick={handleLoadMore}
-            className="px-6 py-2 bg-brand-navy text-white rounded-lg hover:bg-brand-navy-dark transition-colors font-medium text-sm"
+            className="px-6 py-2 btn-multicolor rounded-lg transition-colors font-medium text-sm"
           >
             Load More
           </button>
@@ -188,19 +190,17 @@ export const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
 
       {isFetchingNextPage && (
         <div className="flex justify-center py-4">
-          {loader || <div className="w-6 h-6 border-2 border-brand-navy border-t-transparent rounded-full animate-spin" />}
+          {loader || (
+            <div className="w-6 h-6 border-2 border-brand-navy border-t-transparent rounded-full animate-spin" />
+          )}
         </div>
       )}
 
       {!hasMore && endMessage && (
-        <div className="text-center py-4 text-slate-500 text-sm">
-          {endMessage}
-        </div>
+        <div className="text-center py-4 text-slate-500 text-sm">{endMessage}</div>
       )}
 
-      {hasMore && (
-        <div ref={setRef} className="h-1" />
-      )}
+      {hasMore && <div ref={setRef} className="h-1" />}
     </>
   );
 };

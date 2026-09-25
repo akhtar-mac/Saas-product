@@ -54,12 +54,39 @@ export default function SalesAssistantDashboard() {
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: 'New Unassigned Leads', value: '42 Leads', sub: 'Awaiting allocation', color: '#003A66', bg: 'rgba(0,58,102,0.08)' },
-          { title: 'Processed Today', value: '118 Leads', sub: 'Assigned to telecallers', color: '#059669', bg: 'rgba(5,150,105,0.08)' },
-          { title: 'Deduplicated / Junk', value: '6 Leads', sub: 'Spam filtered out', color: '#D97706', bg: 'rgba(217,119,6,0.08)' },
-          { title: 'Avg Allocation Time', value: '4.2 Mins', sub: 'Fast-track SLA', color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' },
+          {
+            title: 'New Unassigned Leads',
+            value: '42 Leads',
+            sub: 'Awaiting allocation',
+            color: '#003A66',
+            bg: 'rgba(0,58,102,0.08)',
+          },
+          {
+            title: 'Processed Today',
+            value: '118 Leads',
+            sub: 'Assigned to telecallers',
+            color: '#059669',
+            bg: 'rgba(5,150,105,0.08)',
+          },
+          {
+            title: 'Deduplicated / Junk',
+            value: '6 Leads',
+            sub: 'Spam filtered out',
+            color: '#D97706',
+            bg: 'rgba(217,119,6,0.08)',
+          },
+          {
+            title: 'Avg Allocation Time',
+            value: '4.2 Mins',
+            sub: 'Fast-track SLA',
+            color: '#7C3AED',
+            bg: 'rgba(124,58,237,0.08)',
+          },
         ].map((kpi) => (
-          <div key={kpi.title} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div
+            key={kpi.title}
+            className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between"
+          >
             <span className="text-xs font-semibold text-slate-500">{kpi.title}</span>
             <div className="mt-3">
               <p className="font-display font-bold text-2xl text-slate-800">{kpi.value}</p>
@@ -76,13 +103,15 @@ export default function SalesAssistantDashboard() {
             <h3 className="font-display font-bold text-base text-slate-800">
               Fresh Inbound Inquiries
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Live records streaming from PostgreSQL `leads` table</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Live records streaming from PostgreSQL `leads` table
+            </p>
           </div>
           <span className="badge badge-navy">Live Inflow</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Lead / Contact</th>
@@ -104,11 +133,17 @@ export default function SalesAssistantDashboard() {
                   <tr key={lead.id}>
                     <td>
                       <p className="font-bold text-slate-800 text-xs">{lead.name}</p>
-                      <p className="text-[10px] text-brand-navy font-mono font-semibold">{lead.contact}</p>
+                      <p className="text-[10px] text-brand-navy font-mono font-semibold">
+                        {lead.contact}
+                      </p>
                     </td>
                     <td className="text-xs text-slate-700 font-medium">{lead.service}</td>
                     <td className="text-xs text-slate-500">{lead.city || 'India'}</td>
-                    <td><span className="badge badge-navy text-[10px]">{lead.source || 'Website'}</span></td>
+                    <td>
+                      <span className="badge badge-navy text-[10px]">
+                        {lead.source || 'Website'}
+                      </span>
+                    </td>
                     <td className="text-right">
                       <Link to="/crm/leads" className="btn btn-primary btn-sm">
                         Assign Telecaller

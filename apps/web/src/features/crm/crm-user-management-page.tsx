@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Users, Plus, Search, Edit2, UserCheck, UserX,
-  Shield, ChevronDown, X, Eye, EyeOff, Check,
-  AlertTriangle, Briefcase, Phone, Mail, Clock, CheckSquare, Square, RotateCcw,
+  Users,
+  Plus,
+  Search,
+  Edit2,
+  UserCheck,
+  UserX,
+  Shield,
+  ChevronDown,
+  X,
+  Eye,
+  EyeOff,
+  Check,
+  AlertTriangle,
+  Briefcase,
+  Phone,
+  Mail,
+  Clock,
+  CheckSquare,
+  Square,
+  RotateCcw,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
-import {
-  PERMISSIONS_CATALOG,
-  ROLE_DEFAULT_PERMISSIONS,
-  ALL_PERMISSIONS,
-} from './permissions';
+import { RoleType } from '@etaxwala/types';
+import { PERMISSIONS_CATALOG, ROLE_DEFAULT_PERMISSIONS, ALL_PERMISSIONS } from './permissions';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
@@ -77,14 +91,19 @@ function RoleBadge({ roleId }: { roleId: number }) {
   );
 }
 
+const MANAGER_ROLE_IDS = [1, 2, 3, 4, 5, 6, 14, 15];
+
 export default function CrmUserManagementPage() {
-  const { staffToken } = useAuthStore();
+  const { staffToken, staffUser } = useAuthStore();
+  const currentUserId = staffUser?.id;
+  const currentRole = staffUser?.role;
+  const isExecutive = currentRole === RoleType.SUPER_ADMIN || currentRole === RoleType.ADMIN; // Super Admin / Admin see all
   const [users, setUsers] = useState<StaffUser[]>([]);
   const [filtered, setFiltered] = useState<StaffUser[]>([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState(0);
   const [loading, setLoading] = useState(true);
-  
+
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
@@ -120,23 +139,42 @@ export default function CrmUserManagementPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      const crmUrl =
+        currentUserId && !isExecutive
+          ? `${API_BASE}/v1/crm/users?created_by=${currentUserId}`
+          : `${API_BASE}/v1/crm/users`;
       let res = await fetch(`${API_BASE}/v1/admin/users`, { headers: authHeaders });
       let data = await res.json();
       if (!data.success) {
-        res = await fetch(`${API_BASE}/v1/crm/users`);
+        res = await fetch(crmUrl);
         data = await res.json();
       }
       if (data.success && Array.isArray(data.data)) {
-        setUsers(data.data);
-        setFiltered(data.data);
+        // Only manager-level users should appear on Manage Manager page
+        const managersOnly = data.data.filter(
+          (u: StaffUser) =>
+            MANAGER_ROLE_IDS.includes(u.role_id) ||
+            (u.role_ids && u.role_ids.some((id) => MANAGER_ROLE_IDS.includes(id)))
+        );
+        setUsers(managersOnly);
+        setFiltered(managersOnly);
       }
     } catch {
       try {
-        const res = await fetch(`${API_BASE}/v1/crm/users`);
+        const crmUrl =
+          currentUserId && !isExecutive
+            ? `${API_BASE}/v1/crm/users?created_by=${currentUserId}`
+            : `${API_BASE}/v1/crm/users`;
+        const res = await fetch(crmUrl);
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
-          setUsers(data.data);
-          setFiltered(data.data);
+          const managersOnly = data.data.filter(
+            (u: StaffUser) =>
+              MANAGER_ROLE_IDS.includes(u.role_id) ||
+              (u.role_ids && u.role_ids.some((id) => MANAGER_ROLE_IDS.includes(id)))
+          );
+          setUsers(managersOnly);
+          setFiltered(managersOnly);
         }
       } catch {}
     } finally {
@@ -165,9 +203,7 @@ export default function CrmUserManagementPage() {
     }
     if (roleFilter !== 0) {
       result = result.filter(
-        (u) =>
-          u.role_id === roleFilter ||
-          (u.role_ids && u.role_ids.includes(roleFilter))
+        (u) => u.role_id === roleFilter || (u.role_ids && u.role_ids.includes(roleFilter))
       );
     }
     setFiltered(result);
@@ -350,12 +386,15 @@ export default function CrmUserManagementPage() {
       let data = await res.json();
       if (!res.ok || !data.success) {
         // Fallback to unauthenticated CRM users route
-        const crmUrl = isEditMode ? `${API_BASE}/v1/crm/users/${editingUserId}` : `${API_BASE}/v1/crm/users`;
+        const crmUrl = isEditMode
+          ? `${API_BASE}/v1/crm/users/${editingUserId}`
+          : `${API_BASE}/v1/crm/users`;
         const crmMethod = isEditMode ? 'PUT' : 'POST';
+        const crmPayload = { ...payload, created_by: currentUserId };
         res = await fetch(crmUrl, {
           method: crmMethod,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(crmPayload),
         });
         data = await res.json();
       }
@@ -453,13 +492,43 @@ export default function CrmUserManagementPage() {
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Staff Users', value: stats.total, icon: Users, color: '#003A66', bg: '#EFF6FF' },
-          { label: 'Active Accounts', value: stats.active, icon: UserCheck, color: '#059669', bg: '#F0FDF4' },
-          { label: 'Inactive Accounts', value: stats.inactive, icon: UserX, color: '#DC2626', bg: '#FEF2F2' },
-          { label: 'Active Roles', value: stats.roles, icon: Shield, color: '#7C3AED', bg: '#F5F3FF' },
+          {
+            label: 'Total Staff Users',
+            value: stats.total,
+            icon: Users,
+            color: '#003A66',
+            bg: '#EFF6FF',
+          },
+          {
+            label: 'Active Accounts',
+            value: stats.active,
+            icon: UserCheck,
+            color: '#059669',
+            bg: '#F0FDF4',
+          },
+          {
+            label: 'Inactive Accounts',
+            value: stats.inactive,
+            icon: UserX,
+            color: '#DC2626',
+            bg: '#FEF2F2',
+          },
+          {
+            label: 'Active Roles',
+            value: stats.roles,
+            icon: Shield,
+            color: '#7C3AED',
+            bg: '#F5F3FF',
+          },
         ].map(({ label, value, icon: Icon, color, bg }) => (
-          <div key={label} className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-3 shadow-xs">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: bg }}>
+          <div
+            key={label}
+            className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-3 shadow-xs"
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: bg }}
+            >
               <Icon className="w-5 h-5" style={{ color }} />
             </div>
             <div>
@@ -499,15 +568,27 @@ export default function CrmUserManagementPage() {
       {/* Users Table */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
         <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)]">
-          <table className="w-full text-sm border-separate border-spacing-0">
+          <table className="table-crm w-full text-sm border-separate border-spacing-0">
             <thead className="sticky top-0 z-10">
               <tr className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
-                <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>
-                <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
-                <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Assigned Permissions</th>
-                <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">Contact</th>
-                <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="sticky top-0 z-10 bg-slate-50 text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  User
+                </th>
+                <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Assigned Permissions
+                </th>
+                <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">
+                  Contact
+                </th>
+                <th className="sticky top-0 z-10 bg-slate-50 text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="sticky top-0 z-10 bg-slate-50 text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -550,7 +631,9 @@ export default function CrmUserManagementPage() {
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900 text-sm">{user.name}</p>
-                            <p className="text-xs text-slate-400 font-medium">{user.position || 'Staff Member'}</p>
+                            <p className="text-xs text-slate-400 font-medium">
+                              {user.position || 'Staff Member'}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -584,7 +667,7 @@ export default function CrmUserManagementPage() {
                           )}
                           <button
                             onClick={() => openRoleAssignModal(user)}
-                            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF9F5] hover:bg-slate-200 text-[#1B365D] border border-[#EAE6DD] transition-colors"
+                            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold btn-multicolor transition-colors"
                             title="Add an additional role to this user"
                           >
                             <Plus className="w-2.5 h-2.5" /> Role
@@ -599,7 +682,8 @@ export default function CrmUserManagementPage() {
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 bg-blue-50 text-[#1B365D] border border-blue-100 px-2 py-0.5 rounded-md text-[11px] font-bold">
-                            <CheckSquare className="w-3 h-3 text-brand-purple" /> {effectivePerms.length} Active Permissions
+                            <CheckSquare className="w-3 h-3 text-brand-purple" />{' '}
+                            {effectivePerms.length} Active Permissions
                           </span>
                         )}
                       </td>
@@ -655,7 +739,11 @@ export default function CrmUserManagementPage() {
                               }`}
                               title={user.is_active ? 'Deactivate' : 'Reactivate'}
                             >
-                              {user.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                              {user.is_active ? (
+                                <UserX className="w-4 h-4" />
+                              ) : (
+                                <UserCheck className="w-4 h-4" />
+                              )}
                             </button>
                           )}
                         </div>
@@ -707,7 +795,9 @@ export default function CrmUserManagementPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Email Address *
+                  </label>
                   <input
                     type="email"
                     required
@@ -744,7 +834,9 @@ export default function CrmUserManagementPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Phone Number
+                  </label>
                   <input
                     type="tel"
                     placeholder="+91 98765 43210"
@@ -755,7 +847,9 @@ export default function CrmUserManagementPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Position Title</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Position Title
+                  </label>
                   <input
                     type="text"
                     placeholder="e.g. Senior Manager"
@@ -784,10 +878,13 @@ export default function CrmUserManagementPage() {
                   className="input text-sm w-full font-semibold text-[#1B365D] bg-white border-blue-200"
                 >
                   {Object.entries(
-                    ROLES.reduce((acc, r) => {
-                      (acc[r.group] = acc[r.group] || []).push(r);
-                      return acc;
-                    }, {} as Record<string, typeof ROLES>)
+                    ROLES.reduce(
+                      (acc, r) => {
+                        (acc[r.group] = acc[r.group] || []).push(r);
+                        return acc;
+                      },
+                      {} as Record<string, typeof ROLES>
+                    )
                   ).map(([group, roles]) => (
                     <optgroup key={group} label={`── ${group} ──`}>
                       {roles.map((r) => (
@@ -805,7 +902,8 @@ export default function CrmUserManagementPage() {
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                   <div>
                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                      <Shield className="w-4 h-4 text-brand-purple" /> Dynamic Role Permissions (Assigned at User Creation)
+                      <Shield className="w-4 h-4 text-brand-purple" /> Dynamic Role Permissions
+                      (Assigned at User Creation)
                     </h3>
                     <p className="text-[11px] text-slate-500 mt-0.5">
                       Custom check/uncheck permissions for this specific user
@@ -816,7 +914,7 @@ export default function CrmUserManagementPage() {
                     <button
                       type="button"
                       onClick={resetToRoleDefaults}
-                      className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-lg border border-blue-200"
+                      className="text-xs font-semibold flex items-center gap-1 btn-multicolor px-2 py-1 rounded-lg"
                       title="Reset permissions to selected role defaults"
                     >
                       <RotateCcw className="w-3 h-3" /> Reset Defaults
@@ -824,7 +922,7 @@ export default function CrmUserManagementPage() {
                     <button
                       type="button"
                       onClick={selectAllPermissions}
-                      className="text-xs text-purple-600 hover:text-purple-800 font-semibold flex items-center gap-1 bg-purple-50 px-2 py-1 rounded-lg border border-purple-200"
+                      className="text-xs font-semibold flex items-center gap-1 btn-multicolor px-2 py-1 rounded-lg"
                       title="Grant all system permissions"
                     >
                       <CheckSquare className="w-3 h-3" /> Grant All (*)
@@ -837,7 +935,10 @@ export default function CrmUserManagementPage() {
                   {categories.map((cat) => {
                     const catItems = PERMISSIONS_CATALOG.filter((p) => p.category === cat);
                     return (
-                      <div key={cat} className="space-y-2 bg-slate-50/70 p-3 rounded-xl border border-slate-200/80">
+                      <div
+                        key={cat}
+                        className="space-y-2 bg-slate-50/70 p-3 rounded-xl border border-slate-200/80"
+                      >
                         <span className="text-xs font-bold text-slate-700 block border-b border-slate-200 pb-1">
                           {cat} Permissions
                         </span>
@@ -863,7 +964,9 @@ export default function CrmUserManagementPage() {
                                 />
                                 <div>
                                   <p className="font-bold">{item.label}</p>
-                                  <p className="text-[10px] text-slate-500 leading-tight">{item.description}</p>
+                                  <p className="text-[10px] text-slate-500 leading-tight">
+                                    {item.description}
+                                  </p>
                                 </div>
                               </label>
                             );
@@ -898,8 +1001,8 @@ export default function CrmUserManagementPage() {
                   {submitting
                     ? 'Saving User...'
                     : isEditMode
-                    ? 'Update User & Permissions'
-                    : 'Create User with Permissions'}
+                      ? 'Update User & Permissions'
+                      : 'Create User with Permissions'}
                 </button>
               </div>
             </form>
@@ -913,11 +1016,10 @@ export default function CrmUserManagementPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  Assign Additional Role
-                </h3>
+                <h3 className="text-base font-bold text-slate-900">Assign Additional Role</h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  User: <strong className="text-[#1B365D]">{selectedUserForRole.name}</strong> ({selectedUserForRole.email})
+                  User: <strong className="text-[#1B365D]">{selectedUserForRole.name}</strong> (
+                  {selectedUserForRole.email})
                 </p>
               </div>
               <button
@@ -934,12 +1036,15 @@ export default function CrmUserManagementPage() {
                   Currently Assigned Roles:
                 </label>
                 <div className="flex flex-wrap gap-1.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  {selectedUserForRole.assigned_roles && selectedUserForRole.assigned_roles.length > 0 ? (
+                  {selectedUserForRole.assigned_roles &&
+                  selectedUserForRole.assigned_roles.length > 0 ? (
                     selectedUserForRole.assigned_roles.map((r) => (
                       <span
                         key={r.id}
                         className="px-2 py-0.5 rounded-md text-xs font-bold text-white shadow-xs"
-                        style={{ backgroundColor: ROLES.find((rl) => rl.id === r.id)?.color || '#64748B' }}
+                        style={{
+                          backgroundColor: ROLES.find((rl) => rl.id === r.id)?.color || '#64748B',
+                        }}
                       >
                         {r.name}
                       </span>
@@ -960,7 +1065,10 @@ export default function CrmUserManagementPage() {
                   className="input text-sm w-full font-semibold text-[#1B365D] bg-white"
                 >
                   {ROLES.filter(
-                    (r) => !(selectedUserForRole.role_ids || [selectedUserForRole.role_id]).includes(r.id)
+                    (r) =>
+                      !(selectedUserForRole.role_ids || [selectedUserForRole.role_id]).includes(
+                        r.id
+                      )
                   ).map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name} ({r.group})

@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Phone, Lock, ArrowLeft, CheckCircle2, KeyRound, Loader2, ShieldCheck } from 'lucide-react';
+import {
+  Mail,
+  Phone,
+  Lock,
+  ArrowLeft,
+  CheckCircle2,
+  KeyRound,
+  Loader2,
+  ShieldCheck,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 
 export default function ClientForgotPasswordPage() {
   const [step, setStep] = useState<'request' | 'verify' | 'reset' | 'done'>('request');
@@ -8,6 +19,7 @@ export default function ClientForgotPasswordPage() {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -60,16 +72,14 @@ export default function ClientForgotPasswordPage() {
 
   return (
     <div className="min-h-screen bg-[#FFFDF9] flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-lg space-y-6">
         {/* Brand */}
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2.5">
             <img src="/logo_black.png" alt="ETaxwala" className="h-10 w-auto" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 mt-2">
-              Reset Your Password
-            </h1>
+            <h1 className="text-2xl font-bold text-slate-900 mt-2">Reset Your Password</h1>
             <p className="text-xs text-slate-500 max-w-xs mx-auto mt-1">
               Verify your identity to regain access to your ETaxwala client vault.
             </p>
@@ -102,10 +112,14 @@ export default function ClientForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-xl btn-multicolor text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                className="w-full py-3.5 rounded-xl btn-multicolor text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 whitespace-nowrap shrink-0"
               >
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Verification OTP'}
+                <span className="relative z-10 flex items-center justify-center gap-2 whitespace-nowrap">
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Send Verification OTP'
+                  )}
                 </span>
               </button>
             </form>
@@ -139,9 +153,9 @@ export default function ClientForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-xl btn-multicolor text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                className="w-full py-3.5 rounded-xl btn-multicolor text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 whitespace-nowrap shrink-0"
               >
-                <span className="relative z-10 flex items-center justify-center gap-2">
+                <span className="relative z-10 flex items-center justify-center gap-2 whitespace-nowrap">
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify Code'}
                 </span>
               </button>
@@ -157,13 +171,21 @@ export default function ClientForgotPasswordPage() {
                 <div className="relative">
                   <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Min 6 characters"
-                    className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
+                    className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 transition-colors cursor-pointer"
+                    title={showPassword ? 'Hide Password' : 'Show Password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -174,13 +196,21 @@ export default function ClientForgotPasswordPage() {
                 <div className="relative">
                   <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter password"
-                    className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
+                    className="w-full rounded-xl border border-slate-300 bg-white pl-9 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 transition-colors cursor-pointer"
+                    title={showPassword ? 'Hide Password' : 'Show Password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -189,7 +219,7 @@ export default function ClientForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-xl btn-multicolor text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                className="w-full py-3.5 rounded-xl btn-multicolor text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 whitespace-nowrap shrink-0"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Set New Password'}
@@ -217,7 +247,10 @@ export default function ClientForgotPasswordPage() {
           )}
 
           <div className="mt-6 pt-4 border-t border-[#EAE6DD] text-center">
-            <Link to="/portal/login" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#0084D1] font-semibold">
+            <Link
+              to="/portal/login"
+              className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#0084D1] font-semibold"
+            >
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Login
             </Link>
           </div>

@@ -1,0 +1,169 @@
+# ETaxwala CRM Dashboard — Tab/Page Gap Analysis
+
+> Generated from: `apps/web/src/features/crm/crm-layout.tsx` + `apps/web/src/app/App.tsx`
+> Date: 2026-09-19
+
+---
+
+## Legend
+
+| Status         | Meaning                                            |
+| -------------- | -------------------------------------------------- |
+| ✅ Ready       | Dedicated page exists and route is wired           |
+| ⚠️ Shared/Stub | Route exists but points to a generic/shared page   |
+| ❌ Missing     | Menu item is disabled or route/page does NOT exist |
+
+---
+
+## 1. Operation Manager Accordion
+
+| #   | Tab / Sub-tab        | Current Route                    | Targets Component                          | Status     | Notes                                                |
+| --- | -------------------- | -------------------------------- | ------------------------------------------ | ---------- | ---------------------------------------------------- |
+| 1   | Dashboard            | `/crm`                           | `CrmMainDashboard` → `OpsManagerDashboard` | ✅ Ready   | Role-based dashboard component exists                |
+| 2   | **Manage Desktrack** | —                                | —                                          | —          | Parent group                                         |
+| 2.1 | Tracking Report      | `/crm/desktop-report`            | `CrmDesktopTrackingPage`                   | ⚠️ Shared  | Same component reused; needs dedicated tracking view |
+| 2.2 | Session Report       | `/crm/desktop-report-idle`       | `CrmDesktopTrackingPage`                   | ⚠️ Shared  | Same component reused; needs idle/session view       |
+| 2.3 | Block Website        | —                                | —                                          | ❌ Missing | Currently a disabled `<span>` in sidebar             |
+| 3   | Manage Employee      | `/crm/operation-manage-employee` | `HrWorkforcePage`                          | ⚠️ Shared  | Uses generic HR workforce page                       |
+| 4   | Manage Customer      | `/crm/operation-manage-customer` | `CrmAccountsPage`                          | ⚠️ Shared  | Same as accounts page                                |
+| 5   | Manage Tasks         | `/crm/operation-manage-tasks`    | `CrmTasksPage`                             | ⚠️ Shared  | Same tasks page used by sales                        |
+| 6   | Customers Details    | `/crm/accounts`                  | `CrmAccountsPage`                          | ⚠️ Shared  | Duplicate route to same accounts page                |
+| 7   | Locations            | —                                | —                                          | ❌ Missing | Currently a disabled `<span>` in sidebar             |
+
+**Operation Manager — Missing Pages to Build:**
+
+1. `BlockWebsitePage` — CRUD blocked domains/URLs for staff desktop tracking.
+2. `LocationsPage` — Office/branch locations CRUD.
+3. Dedicated `TrackingReportPage` (separate from Session Report).
+4. Dedicated `SessionReportPage` (idle/login-logout analytics).
+5. Dedicated `OpsManageEmployeePage` (operation-team-specific filters).
+6. Dedicated `OpsManageCustomerPage`.
+7. Dedicated `OpsManageTasksPage`.
+
+---
+
+## 2. Franchise Manager Accordion
+
+| #   | Tab / Sub-tab          | Current Route       | Targets Component                         | Status     | Notes                                        |
+| --- | ---------------------- | ------------------- | ----------------------------------------- | ---------- | -------------------------------------------- |
+| 1   | Dashboard              | `/crm`              | `CrmMainDashboard` → `FranchiseDashboard` | ✅ Ready   | Role dashboard exists                        |
+| 2   | Manage Partners        | `/crm/franchise`    | `CrmMainDashboard`                        | ❌ Missing | Routes to generic dashboard, no partner page |
+| 3   | Manage Partners Orders | `/crm/franchise`    | `CrmMainDashboard`                        | ❌ Missing | Same stub route                              |
+| 4   | Manage Inquiries       | `/crm/leads`        | `CrmLeadsPage`                            | ⚠️ Shared  | Generic leads page                           |
+| 5   | Partners Leads         | `/crm/leads`        | `CrmLeadsPage`                            | ⚠️ Shared  | Generic leads page                           |
+| 6   | Training Videos        | `/portal/videos`    | `ClientVideosPage`                        | ❌ Wrong   | Redirects to **client portal**, not CRM      |
+| 7   | Service Documents      | `/portal/documents` | `ClientDocumentsPage`                     | ❌ Wrong   | Redirects to **client portal**, not CRM      |
+
+**Franchise Manager — Missing Pages to Build:**
+
+1. `FranchisePartnersPage` — list/add/edit/delete franchise partners.
+2. `FranchisePartnerOrdersPage` — partner-wise order/commission tracking.
+3. `FranchiseInquiriesPage` — inquiries from partners (filtered leads).
+4. `PartnersLeadsPage` — leads generated by partners.
+5. `FranchiseTrainingVideosPage` — training material library inside CRM.
+6. `FranchiseServiceDocumentsPage` — SOP/documents for partners inside CRM.
+
+---
+
+## 3. Sales Manager Accordion
+
+| #   | Tab / Sub-tab              | Current Route                     | Targets Component                            | Status     | Notes                                        |
+| --- | -------------------------- | --------------------------------- | -------------------------------------------- | ---------- | -------------------------------------------- |
+| 1   | Dashboard                  | `/crm`                            | `CrmMainDashboard` → `SalesManagerDashboard` | ✅ Ready   | Role dashboard exists                        |
+| 2   | **Manage Leads**           | —                                 | —                                            | —          | Parent group                                 |
+| 2.1 | Lead List                  | `/crm/sales-manage-leads`         | `CrmLeadsPage`                               | ⚠️ Shared  | Generic leads page                           |
+| 2.2 | Leads Details              | `/crm/sales-manage-leads-details` | `CrmLeadsPage`                               | ⚠️ Shared  | Generic leads page                           |
+| 2.3 | Customer Inquiries         | `/crm/leads`                      | `CrmLeadsPage`                               | ⚠️ Shared  | Generic leads page                           |
+| 3   | **Udyomi Leads**           | `/crm/sub-brands`                 | `CrmMainDashboard`                           | ❌ Missing | Routes to dashboard stub                     |
+| 3.1 | Udyomi Lead List           | —                                 | —                                            | ❌ Missing | Not in sidebar                               |
+| 3.2 | Udyomi Leads Details       | —                                 | —                                            | ❌ Missing | Not in sidebar                               |
+| 3.3 | Udyomi Customer Inquiries  | —                                 | —                                            | ❌ Missing | Not in sidebar                               |
+| 4   | **Sahakar Leads**          | `/crm/sub-brands`                 | `CrmMainDashboard`                           | ❌ Missing | Routes to dashboard stub                     |
+| 4.1 | Sahakar Lead List          | —                                 | —                                            | ❌ Missing | Not in sidebar                               |
+| 4.2 | Sahakar Leads Details      | —                                 | —                                            | ❌ Missing | Not in sidebar                               |
+| 4.3 | Sahakar Customer Inquiries | —                                 | —                                            | ❌ Missing | Not in sidebar                               |
+| 5   | **Quotations**             | —                                 | —                                            | —          | Parent group                                 |
+| 5.1 | Manage Quotations          | `/crm/quotations`                 | `CrmQuotationsPage`                          | ✅ Ready   | Dedicated page exists                        |
+| 5.2 | Create New                 | `/crm/quotation`                  | `CrmQuotationsPage`                          | ⚠️ Shared  | Same generic page, no dedicated create form  |
+| 6   | My Tasks                   | `/crm/tasks`                      | `CrmTasksPage`                               | ⚠️ Shared  | Generic tasks page                           |
+| 7   | Manage Employee            | `/crm/workforce`                  | `HrWorkforcePage`                            | ⚠️ Shared  | Generic HR page                              |
+| 8   | Service Questions          | —                                 | —                                            | ❌ Missing | Not wired                                    |
+| 9   | Manage Partners            | —                                 | —                                            | ❌ Missing | Not wired (different from Franchise Manager) |
+| 10  | Manage Customers           | `/crm/accounts`                   | `CrmAccountsPage`                            | ⚠️ Shared  | Generic accounts page                        |
+| 11  | My Leads                   | `/crm/leads`                      | `CrmLeadsPage`                               | ⚠️ Shared  | Generic leads page                           |
+| 12  | Internal Task              | —                                 | —                                            | ❌ Missing | Not wired                                    |
+
+**Sales Manager — Missing Pages to Build:**
+
+1. `UdyomiLeadsPage` (with Lead List / Details / Inquiries tabs).
+2. `SahakarLeadsPage` (with Lead List / Details / Inquiries tabs).
+3. `CreateQuotationPage` — dedicated create-new quotation form.
+4. `ServiceQuestionsPage` — configurable Q&A per service.
+5. `SalesManagePartnersPage` — partner/agent management for sales channel.
+6. `InternalTaskPage` — internal task assignment for sales team.
+7. Dedicated `SalesMyTasksPage`, `SalesManageEmployeePage`, `SalesManageCustomersPage`.
+
+---
+
+## 4. Admin / Super Admin Accordion
+
+| #   | Tab / Sub-tab   | Current Route         | Targets Component                          | Status         | Notes                                        |
+| --- | --------------- | --------------------- | ------------------------------------------ | -------------- | -------------------------------------------- |
+| 1   | Dashboard       | `/crm`                | `CrmMainDashboard` → `SuperAdminDashboard` | ✅ Ready       | Role dashboard exists                        |
+| 2   | Manage Manager  | `/crm/users`          | `CrmUserManagementPage`                    | ✅ Ready       | Dedicated page exists                        |
+| 3   | Manage Category | —                     | —                                          | ❌ Missing     | Disabled in sidebar                          |
+| 4   | Manage Services | —                     | —                                          | ❌ Missing     | Disabled in sidebar                          |
+| 5   | Manage Packages | —                     | —                                          | ❌ Missing     | Disabled in sidebar                          |
+| 6   | Manage Blogs    | —                     | —                                          | ❌ Missing     | Disabled in sidebar                          |
+| 7   | Blog Comments   | —                     | —                                          | ❌ Missing     | Disabled in sidebar                          |
+| 8   | All Blogs       | —                     | —                                          | ❌ Missing     | Disabled in sidebar                          |
+| 9   | Manage Ads      | —                     | —                                          | ❌ Missing     | Disabled in sidebar                          |
+| 10  | User Activities | `/crm/call-analytics` | `CrmCallAnalyticsPage`                     | ⚠️ Wrong label | Route is call analytics, not user activities |
+| 11  | Appointments    | —                     | —                                          | ❌ Missing     | Disabled in sidebar                          |
+| 12  | Webinar         | —                     | —                                          | ❌ Missing     | Disabled in sidebar                          |
+| 13  | Reports         | —                     | —                                          | ❌ Missing     | Disabled in sidebar                          |
+
+**Super Admin — Missing Pages to Build:**
+
+1. `ManageCategoryPage` — service categories CRUD.
+2. `ManageServicesPage` — 250+ services CRUD.
+3. `ManagePackagesPage` — combo packages CRUD.
+4. `ManageBlogsPage` — blog posts CRUD with rich text.
+5. `BlogCommentsPage` — approve/reply/delete comments.
+6. `AllBlogsPage` — view/preview all blogs.
+7. `ManageAdsPage` — ads/banners CRUD.
+8. `UserActivitiesPage` — audit log of staff actions.
+9. `AppointmentsPage` — all appointments list/filter/export.
+10. `WebinarPage` — webinar CRUD + registrations.
+11. `ReportsPage` — consolidated reports landing.
+12. `UserProfilePage` — edit profile, photo, password.
+
+---
+
+## Summary: Missing vs Existing
+
+| Section           | Tabs Listed | Ready | Shared/Stub | Missing |
+| ----------------- | ----------- | ----- | ----------- | ------- |
+| Operation Manager | 7           | 1     | 5           | 2       |
+| Franchise Manager | 7           | 1     | 2           | 4       |
+| Sales Manager     | 14          | 1     | 9           | 4       |
+| Super Admin       | 12          | 2     | 1           | 9       |
+| **TOTAL**         | **40**      | **5** | **17**      | **19**  |
+
+> Note: Many "Shared/Stub" items can be kept if they are intentionally the same page with different filters. For clean UX, it is better to give each top-level tab its own dedicated page/component.
+
+---
+
+## Recommended Build Order (Priority)
+
+1. **Super Admin core**: Manage Category, Manage Services, Manage Packages, Manage Blogs, Appointments.
+2. **Sales Manager core**: Udyomi Leads, Sahakar Leads, Create Quotation, Service Questions.
+3. **Operation Manager core**: Block Website, Locations.
+4. **Franchise Manager core**: Franchise Partners, Partners Orders, Partners Leads.
+5. **Shared utilities**: User Activities (audit log), Reports, User Profile.
+
+---
+
+## Next Step
+
+Confirm which accordion/role to build first, or approve the full list. Each page will be created as a dedicated React component under `apps/web/src/features/crm/` with its own route in `App.tsx` and a matching sidebar link.

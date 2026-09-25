@@ -4,7 +4,15 @@ export interface PermissionDefinition {
   key: string;
   label: string;
   description: string;
-  category: 'Dashboard' | 'Operations' | 'Sales' | 'Franchise' | 'HR' | 'Marketing' | 'IT & Solutions' | 'Admin & System';
+  category:
+    | 'Dashboard'
+    | 'Operations'
+    | 'Sales'
+    | 'Franchise'
+    | 'HR'
+    | 'Marketing'
+    | 'IT & Solutions'
+    | 'Admin & System';
 }
 
 export const PERMISSIONS_CATALOG: PermissionDefinition[] = [
@@ -118,26 +126,6 @@ export const PERMISSIONS_CATALOG: PermissionDefinition[] = [
     category: 'Franchise',
   },
 
-  // Admin & System
-  {
-    key: 'admin:view',
-    label: 'Admin / Support View',
-    description: 'Access Admin and System settings menu',
-    category: 'Admin & System',
-  },
-  {
-    key: 'users:manage',
-    label: 'User Management & Permissions',
-    description: 'Create users, assign roles, and edit granular permissions',
-    category: 'Admin & System',
-  },
-  {
-    key: 'call_analytics:view',
-    label: 'Call Analytics & User Activities',
-    description: 'Track Android mobile call logs, session activities and audit logs',
-    category: 'Admin & System',
-  },
-
   // HR & ATS
   {
     key: 'hr:view',
@@ -215,12 +203,144 @@ export const PERMISSIONS_CATALOG: PermissionDefinition[] = [
     description: 'View server health, database latency and connection pools',
     category: 'IT & Solutions',
   },
+
+  // Admin & System
+  {
+    key: 'admin:view',
+    label: 'Admin / Support View',
+    description: 'Access Admin and System settings menu',
+    category: 'Admin & System',
+  },
+  {
+    key: 'users:manage',
+    label: 'User Management & Permissions',
+    description: 'Create users, assign roles, and edit granular permissions',
+    category: 'Admin & System',
+  },
+  {
+    key: 'call_analytics:view',
+    label: 'Call Analytics & User Activities',
+    description: 'Track Android mobile call logs, session activities and audit logs',
+    category: 'Admin & System',
+  },
+  {
+    key: 'categories:manage',
+    label: 'Manage Categories',
+    description: 'Create, edit and delete service categories',
+    category: 'Admin & System',
+  },
+  {
+    key: 'services:manage',
+    label: 'Manage Services',
+    description: 'Create, edit and delete services and pricing',
+    category: 'Admin & System',
+  },
+  {
+    key: 'packages:manage',
+    label: 'Manage Packages',
+    description: 'Create, edit and delete combo packages',
+    category: 'Admin & System',
+  },
+  {
+    key: 'blogs:manage',
+    label: 'Manage Blogs',
+    description: 'Create, edit and delete blog posts and comments',
+    category: 'Admin & System',
+  },
+  {
+    key: 'ads:manage',
+    label: 'Manage Ads',
+    description: 'Create, edit and delete advertisements and banners',
+    category: 'Admin & System',
+  },
+  {
+    key: 'webinars:manage',
+    label: 'Manage Webinars',
+    description: 'Create webinars and view registrations',
+    category: 'Admin & System',
+  },
+  {
+    key: 'appointments:manage',
+    label: 'Manage Appointments',
+    description: 'View and manage all customer appointments',
+    category: 'Admin & System',
+  },
+  {
+    key: 'reports:view',
+    label: 'View Reports',
+    description: 'Access consolidated business reports',
+    category: 'Admin & System',
+  },
+
+  // Enterprise Chat
+  {
+    key: 'chat:view',
+    label: 'View Staff Chat',
+    description: 'Read messages in staff chat channels',
+    category: 'Admin & System',
+  },
+  {
+    key: 'chat:send',
+    label: 'Send Staff Chat Messages',
+    description: 'Send messages in staff chat channels',
+    category: 'Admin & System',
+  },
+  {
+    key: 'chat:attachments',
+    label: 'Send Chat Attachments',
+    description: 'Upload files in staff chat channels',
+    category: 'Admin & System',
+  },
 ];
 
 // All permission keys as array
 export const ALL_PERMISSIONS = PERMISSIONS_CATALOG.map((p) => p.key);
 
-// Default permissions pre-configured for each of the 15 Role IDs
+/**
+ * Returns allowed permission catalog definitions for a specific manager role.
+ * Restricts department managers to only their domain permissions.
+ */
+export function getDepartmentPermissions(creatorRoleId: number): PermissionDefinition[] {
+  // Super Admin (1), Admin (2), HR (14) -> Full Catalog
+  if (creatorRoleId === 1 || creatorRoleId === 2 || creatorRoleId === 14) {
+    return PERMISSIONS_CATALOG;
+  }
+
+  // Operations Manager (3) -> Dashboard + Operations domain only
+  if (creatorRoleId === 3) {
+    return PERMISSIONS_CATALOG.filter(
+      (p) => p.category === 'Dashboard' || p.category === 'Operations'
+    );
+  }
+
+  // Sales Manager (4) -> Dashboard + Sales domain only
+  if (creatorRoleId === 4) {
+    return PERMISSIONS_CATALOG.filter((p) => p.category === 'Dashboard' || p.category === 'Sales');
+  }
+
+  // Marketing Manager (5) / Sub-brands Manager (15) -> Dashboard + Sales + Marketing + IT
+  if (creatorRoleId === 5 || creatorRoleId === 15) {
+    return PERMISSIONS_CATALOG.filter(
+      (p) =>
+        p.category === 'Dashboard' ||
+        p.category === 'Sales' ||
+        p.category === 'Marketing' ||
+        p.category === 'IT & Solutions'
+    );
+  }
+
+  // Franchise Manager (6) -> Dashboard + Franchise domain only
+  if (creatorRoleId === 6) {
+    return PERMISSIONS_CATALOG.filter(
+      (p) => p.category === 'Dashboard' || p.category === 'Franchise'
+    );
+  }
+
+  // Fallback -> Dashboard only
+  return PERMISSIONS_CATALOG.filter((p) => p.category === 'Dashboard');
+}
+
+// Default permissions pre-configured for each of the 16 Role IDs
 export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
   // 1: Super Admin
   1: ['*'],
@@ -237,6 +357,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'operations:customers',
     'operations:tasks',
     'accounts:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 4: Sales Manager
@@ -249,6 +372,13 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'tasks:view',
     'workforce:view',
     'accounts:view',
+    'appointments:manage',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+    'it:view',
+    'it:leads',
+    'it:quotations',
   ],
 
   // 5: Marketing Manager
@@ -262,6 +392,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'leads:view',
     'leads:subbrands',
     'call_analytics:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 6: Franchise Manager
@@ -272,6 +405,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'franchise:inquiries',
     'franchise:training',
     'leads:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 7: Sales Employee
@@ -281,6 +417,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'leads:view',
     'quotations:view',
     'tasks:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 8: Operations Employee
@@ -289,22 +428,64 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'operations:view',
     'operations:tasks',
     'operations:customers',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 9: Marketing Employee
-  9: ['dashboard:view', 'marketing:view', 'marketing:social', 'sales:view', 'leads:view'],
+  9: [
+    'dashboard:view',
+    'marketing:view',
+    'marketing:social',
+    'sales:view',
+    'leads:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
 
   // 10: Franchise Partner
-  10: ['dashboard:view', 'franchise:view', 'franchise:training'],
+  10: [
+    'dashboard:view',
+    'franchise:view',
+    'franchise:training',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
 
   // 11: Consultation
-  11: ['dashboard:view', 'sales:view', 'leads:view', 'tasks:view'],
+  11: [
+    'dashboard:view',
+    'sales:view',
+    'leads:view',
+    'tasks:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
 
   // 12: Operations Assistant
-  12: ['dashboard:view', 'operations:view', 'operations:tasks'],
+  12: [
+    'dashboard:view',
+    'operations:view',
+    'operations:tasks',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
 
   // 13: Sales Assistant
-  13: ['dashboard:view', 'sales:view', 'leads:view', 'tasks:view'],
+  13: [
+    'dashboard:view',
+    'sales:view',
+    'leads:view',
+    'tasks:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
 
   // 14: HR
   14: [
@@ -316,6 +497,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'workforce:view',
     'operations:employees',
     'users:manage',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
   ],
 
   // 15: Website Manager / IT Lead
@@ -327,6 +511,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'it:projects',
     'infrastructure:view',
     'admin:view',
+    'blogs:manage',
     'chat:view',
     'chat:send',
     'chat:attachments',
@@ -340,21 +525,21 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
 export const ROLE_NAME_DEFAULT_PERMISSIONS: Record<string, string[]> = {
   SUPER_ADMIN: ['*'],
   ADMIN: ['*'],
-  OPERATIONS_MANAGER: [...(ROLE_DEFAULT_PERMISSIONS[3] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  SALES_MANAGER: [...(ROLE_DEFAULT_PERMISSIONS[4] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  MARKETING_MANAGER: [...(ROLE_DEFAULT_PERMISSIONS[5] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  FRANCHISE_MANAGER: [...(ROLE_DEFAULT_PERMISSIONS[6] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  SALES_EMPLOYEE: [...(ROLE_DEFAULT_PERMISSIONS[7] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  OPERATIONS_EMPLOYEE: [...(ROLE_DEFAULT_PERMISSIONS[8] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  MARKETING_EMPLOYEE: [...(ROLE_DEFAULT_PERMISSIONS[9] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  FRANCHISE_EMPLOYEE: [...(ROLE_DEFAULT_PERMISSIONS[10] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  FRANCHISE_PARTNER: [...(ROLE_DEFAULT_PERMISSIONS[10] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  CONSULTATION: [...(ROLE_DEFAULT_PERMISSIONS[11] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  OPERATIONS_ASSISTANT: [...(ROLE_DEFAULT_PERMISSIONS[12] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  SALES_ASSISTANT: [...(ROLE_DEFAULT_PERMISSIONS[13] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  HR: [...(ROLE_DEFAULT_PERMISSIONS[14] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  WEBSITE_MANAGER: [...(ROLE_DEFAULT_PERMISSIONS[15] || []), 'chat:view', 'chat:send', 'chat:attachments'],
-  STAFF: ['dashboard:view', 'chat:view', 'chat:send', 'chat:attachments'],
+  OPERATIONS_MANAGER: ROLE_DEFAULT_PERMISSIONS[3],
+  SALES_MANAGER: ROLE_DEFAULT_PERMISSIONS[4],
+  MARKETING_MANAGER: ROLE_DEFAULT_PERMISSIONS[5],
+  FRANCHISE_MANAGER: ROLE_DEFAULT_PERMISSIONS[6],
+  SALES_EMPLOYEE: ROLE_DEFAULT_PERMISSIONS[7],
+  OPERATIONS_EMPLOYEE: ROLE_DEFAULT_PERMISSIONS[8],
+  MARKETING_EMPLOYEE: ROLE_DEFAULT_PERMISSIONS[9],
+  FRANCHISE_EMPLOYEE: ROLE_DEFAULT_PERMISSIONS[10],
+  FRANCHISE_PARTNER: ROLE_DEFAULT_PERMISSIONS[10],
+  CONSULTATION: ROLE_DEFAULT_PERMISSIONS[11],
+  OPERATIONS_ASSISTANT: ROLE_DEFAULT_PERMISSIONS[12],
+  SALES_ASSISTANT: ROLE_DEFAULT_PERMISSIONS[13],
+  HR: ROLE_DEFAULT_PERMISSIONS[14],
+  WEBSITE_MANAGER: ROLE_DEFAULT_PERMISSIONS[15],
+  STAFF: ROLE_DEFAULT_PERMISSIONS[16],
 };
 
 /**
@@ -368,9 +553,12 @@ export function hasUserPermission(
   userRoles?: (number | string)[]
 ): boolean {
   // Check if any assigned role has Super Admin bypass
-  const allRoles = userRoles && userRoles.length > 0
-    ? userRoles
-    : roleIdOrName !== undefined ? [roleIdOrName] : [];
+  const allRoles =
+    userRoles && userRoles.length > 0
+      ? userRoles
+      : roleIdOrName !== undefined
+        ? [roleIdOrName]
+        : [];
 
   const isSuperOrAdmin = allRoles.some(
     (r) =>

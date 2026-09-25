@@ -1,10 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Users, PhoneCall, Target, TrendingUp, Award, CheckCircle2,
-  Clock, ArrowRight, UserCheck, Send, Zap, PhoneForwarded,
-  RefreshCw, AlertCircle, FileText, Star, BarChart2,
-  ChevronRight, UserPlus, Calendar, Percent,
+  Users,
+  PhoneCall,
+  Target,
+  TrendingUp,
+  Award,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  UserCheck,
+  Send,
+  Zap,
+  PhoneForwarded,
+  RefreshCw,
+  AlertCircle,
+  FileText,
+  Star,
+  BarChart2,
+  ChevronRight,
+  UserPlus,
+  Calendar,
+  Percent,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -53,16 +70,30 @@ const LEAD_STATUS: Record<number, { label: string; color: string; bg: string }> 
 };
 
 function StatCard({
-  title, value, sub, icon: Icon, color, bg, loading,
+  title,
+  value,
+  sub,
+  icon: Icon,
+  color,
+  bg,
+  loading,
 }: {
-  title: string; value: string | number; sub: string;
-  icon: React.ElementType; color: string; bg: string; loading: boolean;
+  title: string;
+  value: string | number;
+  sub: string;
+  icon: React.ElementType;
+  color: string;
+  bg: string;
+  loading: boolean;
 }) {
   return (
     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-slate-500">{title}</span>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: bg }}>
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: bg }}
+        >
           <Icon className="w-4 h-4" style={{ color }} />
         </div>
       </div>
@@ -113,9 +144,7 @@ export default function SalesManagerDashboard() {
       if (agentsData.success) {
         // Filter to only sales agents (role_id 4,7,13)
         setAgents(
-          (agentsData.data || []).filter((u: StaffAgent) =>
-            [4, 7, 13].includes(u.role_id)
-          )
+          (agentsData.data || []).filter((u: StaffAgent) => [4, 7, 13].includes(u.role_id))
         );
       }
       setLastRefreshed(new Date());
@@ -123,18 +152,75 @@ export default function SalesManagerDashboard() {
       setError('Could not connect to the API server. Showing fallback demo data.');
       // Fallback demo data
       setStats({
-        totalLeads: 17281, totalCustomers: 1373,
-        totalQuotations: 1874, totalCalls: 79900, monthlyRevenue: 4850000,
+        totalLeads: 17281,
+        totalCustomers: 1373,
+        totalQuotations: 1874,
+        totalCalls: 79900,
+        monthlyRevenue: 4850000,
       });
       setRecentLeads([
-        { id: 17281, name: 'Ravi Sharma', contact: '+91 98765 43210', service: 'GST Registration', city: 'Pune', lead_type: 0, is_assign: 0, source: 'Facebook', date: new Date().toISOString() },
-        { id: 17280, name: 'Sneha Patil', contact: '+91 91234 56789', service: 'Private Limited Company', city: 'Mumbai', lead_type: 2, is_assign: 1, source: 'Google Ads', date: new Date().toISOString() },
-        { id: 17279, name: 'Deepak Verma', contact: '+91 99887 65432', service: 'Income Tax Filing', city: 'Nagpur', lead_type: 4, is_assign: 1, source: 'Referral', date: new Date().toISOString() },
-        { id: 17278, name: 'Anjali Singh', contact: '+91 88001 23456', service: 'FSSAI License', city: 'Nashik', lead_type: 1, is_assign: 0, source: 'Website', date: new Date().toISOString() },
+        {
+          id: 17281,
+          name: 'Ravi Sharma',
+          contact: '+91 98765 43210',
+          service: 'GST Registration',
+          city: 'Pune',
+          lead_type: 0,
+          is_assign: 0,
+          source: 'Facebook',
+          date: new Date().toISOString(),
+        },
+        {
+          id: 17280,
+          name: 'Sneha Patil',
+          contact: '+91 91234 56789',
+          service: 'Private Limited Company',
+          city: 'Mumbai',
+          lead_type: 2,
+          is_assign: 1,
+          source: 'Google Ads',
+          date: new Date().toISOString(),
+        },
+        {
+          id: 17279,
+          name: 'Deepak Verma',
+          contact: '+91 99887 65432',
+          service: 'Income Tax Filing',
+          city: 'Nagpur',
+          lead_type: 4,
+          is_assign: 1,
+          source: 'Referral',
+          date: new Date().toISOString(),
+        },
+        {
+          id: 17278,
+          name: 'Anjali Singh',
+          contact: '+91 88001 23456',
+          service: 'FSSAI License',
+          city: 'Nashik',
+          lead_type: 1,
+          is_assign: 0,
+          source: 'Website',
+          date: new Date().toISOString(),
+        },
       ]);
       setAgents([
-        { id: 7, name: 'Priya Sharma (Sales Exec)', email: 'priya.sales@etaxwala.com', role_id: 7, role_name: 'Sales Employee', is_active: true },
-        { id: 13, name: 'Sales Assistant', email: 'assistant.sales@etaxwala.com', role_id: 13, role_name: 'Sales Assistant', is_active: true },
+        {
+          id: 7,
+          name: 'Priya Sharma (Sales Exec)',
+          email: 'priya.sales@etaxwala.com',
+          role_id: 7,
+          role_name: 'Sales Employee',
+          is_active: true,
+        },
+        {
+          id: 13,
+          name: 'Sales Assistant',
+          email: 'assistant.sales@etaxwala.com',
+          role_id: 13,
+          role_name: 'Sales Assistant',
+          is_active: true,
+        },
       ]);
     } finally {
       setLoading(false);
@@ -171,7 +257,8 @@ export default function SalesManagerDashboard() {
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Real-time PostgreSQL data — {stats?.totalLeads?.toLocaleString() ?? '...'} total leads, telecaller performance & conversion analytics.
+            Real-time PostgreSQL data — {stats?.totalLeads?.toLocaleString() ?? '...'} total leads,
+            telecaller performance & conversion analytics.
           </p>
         </div>
 
@@ -179,7 +266,7 @@ export default function SalesManagerDashboard() {
           <button
             onClick={fetchDashboardData}
             disabled={loading}
-            className="btn btn-outline btn-sm flex items-center gap-1.5"
+            className="btn btn-outline btn-sm flex items-center gap-1.5 btn-multicolor"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -187,7 +274,7 @@ export default function SalesManagerDashboard() {
           <Link to="/crm/leads" className="btn btn-primary btn-sm">
             <Users className="w-3.5 h-3.5" /> Manage Leads
           </Link>
-          <Link to="/crm/quotations" className="btn btn-outline btn-sm">
+          <Link to="/crm/quotations" className="btn btn-outline btn-sm btn-multicolor">
             <Send className="w-3.5 h-3.5" /> Quotations
           </Link>
         </div>
@@ -274,7 +361,6 @@ export default function SalesManagerDashboard() {
 
       {/* Two-column: Recent Leads + Sales Agents */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         {/* Recent Leads from DB */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
@@ -287,7 +373,7 @@ export default function SalesManagerDashboard() {
                 Most recent 10 leads from the database
               </p>
             </div>
-            <Link to="/crm/leads" className="btn btn-outline btn-sm text-xs">
+            <Link to="/crm/leads" className="btn btn-outline btn-sm text-xs btn-multicolor">
               View All <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
             </Link>
           </div>
@@ -349,11 +435,9 @@ export default function SalesManagerDashboard() {
                 <UserPlus className="w-4 h-4 text-emerald-600" />
                 Sales Team Roster
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Active sales agents from the DB
-              </p>
+              <p className="text-xs text-slate-400 mt-0.5">Active sales agents from the DB</p>
             </div>
-            <Link to="/crm/users" className="btn btn-outline btn-sm text-xs">
+            <Link to="/crm/users" className="btn btn-outline btn-sm text-xs btn-multicolor">
               Manage <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
             </Link>
           </div>
@@ -386,11 +470,13 @@ export default function SalesManagerDashboard() {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-0.5 shrink-0">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      agent.is_active
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-slate-100 text-slate-500'
-                    }`}>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        agent.is_active
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-slate-100 text-slate-500'
+                      }`}
+                    >
                       {agent.is_active ? 'Active' : 'Inactive'}
                     </span>
                     <span className="text-[9px] text-slate-400">{agent.role_name}</span>
@@ -402,10 +488,16 @@ export default function SalesManagerDashboard() {
 
           {/* Quick Actions */}
           <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2">
-            <Link to="/crm/leads" className="btn btn-sm border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5 text-xs">
+            <Link
+              to="/crm/leads"
+              className="btn btn-sm border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5 text-xs"
+            >
               <PhoneCall className="w-3.5 h-3.5" /> Leads Pipeline
             </Link>
-            <Link to="/crm/quotations" className="btn btn-sm border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5 text-xs">
+            <Link
+              to="/crm/quotations"
+              className="btn btn-sm border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5 text-xs"
+            >
               <FileText className="w-3.5 h-3.5" /> Quotations
             </Link>
           </div>
@@ -428,9 +520,7 @@ export default function SalesManagerDashboard() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-3">
           {Object.entries(LEAD_STATUS).map(([statusId, info]) => {
             const count = recentLeads.filter((l) => l.lead_type === Number(statusId)).length;
-            const pct = recentLeads.length > 0
-              ? Math.round((count / recentLeads.length) * 100)
-              : 0;
+            const pct = recentLeads.length > 0 ? Math.round((count / recentLeads.length) * 100) : 0;
             return (
               <div
                 key={statusId}
@@ -453,10 +543,34 @@ export default function SalesManagerDashboard() {
       {/* Quick nav cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Manage All Leads', desc: 'View, assign, and filter leads', icon: Users, to: '/crm/leads', color: '#003A66' },
-          { label: 'Quotation Maker', desc: 'Create & send professional quotations', icon: FileText, to: '/crm/quotations', color: '#D97706' },
-          { label: 'My Tasks', desc: 'Follow-up calls & meeting tasks', icon: CheckCircle2, to: '/crm/tasks', color: '#7C3AED' },
-          { label: 'User Management', desc: 'Add or manage sales team members', icon: UserPlus, to: '/crm/users', color: '#059669' },
+          {
+            label: 'Manage All Leads',
+            desc: 'View, assign, and filter leads',
+            icon: Users,
+            to: '/crm/leads',
+            color: '#003A66',
+          },
+          {
+            label: 'Quotation Maker',
+            desc: 'Create & send professional quotations',
+            icon: FileText,
+            to: '/crm/quotations',
+            color: '#D97706',
+          },
+          {
+            label: 'My Tasks',
+            desc: 'Follow-up calls & meeting tasks',
+            icon: CheckCircle2,
+            to: '/crm/tasks',
+            color: '#7C3AED',
+          },
+          {
+            label: 'User Management',
+            desc: 'Add or manage sales team members',
+            icon: UserPlus,
+            to: '/crm/users',
+            color: '#059669',
+          },
         ].map(({ label, desc, icon: Icon, to, color }) => (
           <Link
             key={label}
@@ -470,7 +584,9 @@ export default function SalesManagerDashboard() {
               <Icon className="w-5 h-5" style={{ color }} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-slate-800 group-hover:text-brand-navy">{label}</p>
+              <p className="text-sm font-bold text-slate-800 group-hover:text-brand-navy">
+                {label}
+              </p>
               <p className="text-[10px] text-slate-400 truncate">{desc}</p>
             </div>
             <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-brand-navy ml-auto shrink-0 transition-colors" />

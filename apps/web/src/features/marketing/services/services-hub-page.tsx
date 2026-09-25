@@ -1,24 +1,51 @@
 import { useState, useMemo } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import {
-  Search, Building2, FileBadge, Receipt, ClipboardCheck,
-  Lightbulb, Sparkles, FileText, ArrowRight, TrendingUp,
-  Filter, SlidersHorizontal, Check, Clock, ShieldCheck,
-  X, HelpCircle, PhoneCall, ChevronRight
+  Search,
+  Building2,
+  FileBadge,
+  Receipt,
+  ClipboardCheck,
+  Lightbulb,
+  Sparkles,
+  FileText,
+  ArrowRight,
+  TrendingUp,
+  Filter,
+  SlidersHorizontal,
+  Check,
+  Clock,
+  ShieldCheck,
+  X,
+  HelpCircle,
+  PhoneCall,
+  ChevronRight,
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
 import CtaBanner from '@/components/cta-banner';
 import QuickEnquiryModal from '@/components/quick-enquiry-modal';
-import { services, categories, formatPrice, getFeaturedServices, getServiceBySlug } from '@/lib/constants/services';
+import {
+  services,
+  categories,
+  formatPrice,
+  getFeaturedServices,
+  getServiceBySlug,
+} from '@/lib/constants/services';
 
 export default function ServicesHubPage() {
   const { categorySlug } = useParams<{ categorySlug?: string }>();
 
   // If the param is actually a direct service slug, route directly to its detail page
-  const directService = useMemo(() => categorySlug ? getServiceBySlug(categorySlug) : null, [categorySlug]);
+  const directService = useMemo(
+    () => (categorySlug ? getServiceBySlug(categorySlug) : null),
+    [categorySlug]
+  );
   if (directService) {
-    const catSlug = directService.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const catSlug = directService.category
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
     return <Navigate to={`/services/${catSlug}/${directService.slug}`} replace />;
   }
 
@@ -38,7 +65,8 @@ export default function ServicesHubPage() {
           s.inclusions.some((i) => i.toLowerCase().includes(search.toLowerCase())) ||
           s.category.toLowerCase().includes(search.toLowerCase());
 
-        const matchCat = activeCategory === 'all' || s.category.toLowerCase() === activeCategory.toLowerCase();
+        const matchCat =
+          activeCategory === 'all' || s.category.toLowerCase() === activeCategory.toLowerCase();
 
         return matchSearch && matchCat;
       })
@@ -60,7 +88,8 @@ export default function ServicesHubPage() {
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
           name: 'ETaxwala Business Services Catalog',
-          description: 'Full catalog of 250+ statutory business registration, taxation, and legal services.',
+          description:
+            'Full catalog of 250+ statutory business registration, taxation, and legal services.',
         }}
       />
 
@@ -75,13 +104,15 @@ export default function ServicesHubPage() {
 
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 text-xs font-semibold uppercase tracking-wider mb-4">
-              <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> 250+ Professional Practice Solutions
+              <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> 250+ Professional Practice
+              Solutions
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
               Comprehensive <span className="text-multicolor">Corporate &amp; Tax Solutions</span>
             </h1>
             <p className="mt-3.5 max-w-2xl text-base sm:text-lg text-slate-600 leading-relaxed">
-              From same-day private limited name approvals to multi-crore tax audit defense. 100% CA-reviewed workflows with guaranteed statutory compliance.
+              From same-day private limited name approvals to multi-crore tax audit defense. 100%
+              CA-reviewed workflows with guaranteed statutory compliance.
             </p>
 
             {/* Quick Search Bar */}
@@ -133,7 +164,6 @@ export default function ServicesHubPage() {
                 );
               })}
             </div>
-
           </div>
         </div>
       </section>
@@ -183,7 +213,6 @@ export default function ServicesHubPage() {
       <section className="section bg-[#FAF9F5] py-12 lg:py-16">
         <div className="container-etaxwala">
           <div className="flex flex-col lg:flex-row gap-8">
-            
             {/* Left Sidebar Filter Controls */}
             <aside className="lg:w-64 shrink-0 space-y-6">
               <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EAE6DD] shadow-xs space-y-6">
@@ -193,7 +222,10 @@ export default function ServicesHubPage() {
                   </span>
                   {(activeCategory !== 'all' || search) && (
                     <button
-                      onClick={() => { setActiveCategory('all'); setSearch(''); }}
+                      onClick={() => {
+                        setActiveCategory('all');
+                        setSearch('');
+                      }}
                       className="text-[11px] font-bold text-[#0084D1] hover:underline cursor-pointer"
                     >
                       Reset
@@ -216,12 +248,16 @@ export default function ServicesHubPage() {
                       }`}
                     >
                       <span>All Verticals</span>
-                      <span className={`text-[10px] ${activeCategory === 'all' ? 'text-slate-300' : 'text-slate-400'}`}>
+                      <span
+                        className={`text-[10px] ${activeCategory === 'all' ? 'text-slate-300' : 'text-slate-400'}`}
+                      >
                         {services.length}
                       </span>
                     </button>
                     {categories.map((c) => {
-                      const count = services.filter((s) => s.category.toLowerCase() === c.id.toLowerCase()).length;
+                      const count = services.filter(
+                        (s) => s.category.toLowerCase() === c.id.toLowerCase()
+                      ).length;
                       const isSelected = activeCategory.toLowerCase() === c.id.toLowerCase();
                       return (
                         <button
@@ -234,7 +270,9 @@ export default function ServicesHubPage() {
                           }`}
                         >
                           <span className="truncate pr-2">{c.name}</span>
-                          <span className={`text-[10px] shrink-0 ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}>
+                          <span
+                            className={`text-[10px] shrink-0 ${isSelected ? 'text-slate-300' : 'text-slate-400'}`}
+                          >
                             {count}
                           </span>
                         </button>
@@ -267,12 +305,11 @@ export default function ServicesHubPage() {
                   </p>
                   <Link
                     to="/appointment"
-                    className="mt-2 block w-full py-2 rounded-lg bg-white border border-[#EAE6DD] text-xs font-bold text-[#7C3AED] hover:bg-[#FAF9F5] shadow-xs"
+                    className="mt-2 block w-full py-2 rounded-lg btn-multicolor text-xs font-bold shadow-xs"
                   >
                     Book CA Call
                   </Link>
                 </div>
-
               </div>
             </aside>
 
@@ -280,7 +317,8 @@ export default function ServicesHubPage() {
             <main className="flex-1">
               <div className="flex items-center justify-between mb-6">
                 <p className="text-xs font-semibold text-slate-500">
-                  Showing <strong className="text-slate-900">{filtered.length}</strong> available services
+                  Showing <strong className="text-slate-900">{filtered.length}</strong> available
+                  services
                 </p>
               </div>
 
@@ -291,10 +329,14 @@ export default function ServicesHubPage() {
                   </div>
                   <h3 className="text-base font-bold text-slate-900">No matching services found</h3>
                   <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                    Try searching for broader terms like "Company", "Tax", "GST", "Trademark" or reset your category filter.
+                    Try searching for broader terms like "Company", "Tax", "GST", "Trademark" or
+                    reset your category filter.
                   </p>
                   <button
-                    onClick={() => { setActiveCategory('all'); setSearch(''); }}
+                    onClick={() => {
+                      setActiveCategory('all');
+                      setSearch('');
+                    }}
                     className="px-5 py-2.5 rounded-xl btn-multicolor text-white font-bold text-xs shadow-xs"
                   >
                     Reset All Filters
@@ -333,7 +375,9 @@ export default function ServicesHubPage() {
 
                       <div className="mt-6 pt-4 border-t border-[#EAE6DD] flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Pricing</span>
+                          <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">
+                            Pricing
+                          </span>
                           <span className="text-xs font-bold text-slate-800">Custom Quote</span>
                         </div>
 
@@ -351,7 +395,6 @@ export default function ServicesHubPage() {
                 </div>
               )}
             </main>
-
           </div>
         </div>
       </section>

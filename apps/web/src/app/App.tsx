@@ -55,6 +55,11 @@ const CrmUserManagementPage = lazy(() => import('@/features/crm/crm-user-managem
 const CrmWonFormPage = lazy(() => import('@/features/crm/crm-won-form-page'));
 const CrmCallAnalyticsPage = lazy(() => import('@/features/crm/crm-call-analytics-page'));
 const CrmDesktopTrackingPage = lazy(() => import('@/features/crm/crm-desktop-tracking-page'));
+const CrmManageCategoryPage = lazy(() => import('@/features/crm/crm-manage-category-page'));
+const CrmManageServicesPage = lazy(() => import('@/features/crm/crm-manage-services-page'));
+const CrmManagePackagesPage = lazy(() => import('@/features/crm/crm-manage-packages-page'));
+const CrmManageBlogsPage = lazy(() => import('@/features/crm/crm-manage-blogs-page'));
+const CrmAppointmentsPage = lazy(() => import('@/features/crm/crm-appointments-page'));
 const CrmChatPage = lazy(() => import('@/features/crm/pages/crm-chat-page'));
 const HrDashboard = lazy(() => import('@/features/crm/dashboards/hr-dashboard'));
 const MarketingDashboard = lazy(() => import('@/features/crm/dashboards/marketing-dashboard'));
@@ -163,6 +168,48 @@ export default function App() {
             element={
               <CrmProtectedRoute allowedRoleIds={[1, 2, 3, 14]}>
                 <CrmUserManagementPage />
+              </CrmProtectedRoute>
+            }
+          />
+
+          {/* Super Admin / Admin catalog management */}
+          <Route
+            path="manage-categories"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2]}>
+                <CrmManageCategoryPage />
+              </CrmProtectedRoute>
+            }
+          />
+          <Route
+            path="manage-services"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2]}>
+                <CrmManageServicesPage />
+              </CrmProtectedRoute>
+            }
+          />
+          <Route
+            path="manage-packages"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2]}>
+                <CrmManagePackagesPage />
+              </CrmProtectedRoute>
+            }
+          />
+          <Route
+            path="manage-blogs"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2, 15]}>
+                <CrmManageBlogsPage />
+              </CrmProtectedRoute>
+            }
+          />
+          <Route
+            path="appointments"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2]}>
+                <CrmAppointmentsPage />
               </CrmProtectedRoute>
             }
           />

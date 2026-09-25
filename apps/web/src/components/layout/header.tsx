@@ -2,10 +2,24 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Menu, X, Phone, ChevronDown, ArrowRight,
-  Search, User, Sparkles, Building2, Receipt,
-  ClipboardCheck, FileBadge, Code, LayoutDashboard,
-  Smartphone, Layers, CheckCircle2, MessageCircle
+  Menu,
+  X,
+  Phone,
+  ChevronDown,
+  ArrowRight,
+  Search,
+  User,
+  Sparkles,
+  Building2,
+  Receipt,
+  ClipboardCheck,
+  FileBadge,
+  Code,
+  LayoutDashboard,
+  Smartphone,
+  Layers,
+  CheckCircle2,
+  MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { services } from '@/lib/constants/services';
@@ -25,7 +39,11 @@ const navDropdowns: NavItem[] = [
     id: 'startup',
     label: 'Startup',
     items: [
-      { label: 'Private Limited Company', to: '/services/registration/private-limited', badge: 'Popular' },
+      {
+        label: 'Private Limited Company',
+        to: '/services/registration/private-limited',
+        badge: 'Popular',
+      },
       { label: 'Limited Liability Partnership (LLP)', to: '/services/registration/llp' },
       { label: 'One Person Company (OPC)', to: '/services/registration/opc' },
       { label: 'Section 8 NGO Company', to: '/services/registration/section-8-ngo' },
@@ -38,13 +56,31 @@ const navDropdowns: NavItem[] = [
     id: 'registrations',
     label: 'Registrations & IP',
     items: [
-      { label: 'GST Registration (Regular)', to: '/services/other-registrations/gst-regular', badge: 'Fast' },
+      {
+        label: 'GST Registration (Regular)',
+        to: '/services/other-registrations/gst-regular',
+        badge: 'Fast',
+      },
       { label: 'Udyam / MSME Registration', to: '/services/other-registrations/msme' },
-      { label: 'Trademark Application Filing', to: '/services/ip/trademark-application', badge: '24 Hours' },
-      { label: 'FSSAI Food License (Basic/State)', to: '/services/other-registrations/fssai-basic', badge: 'Popular' },
+      {
+        label: 'Trademark Application Filing',
+        to: '/services/ip/trademark-application',
+        badge: '24 Hours',
+      },
+      {
+        label: 'FSSAI Food License (Basic/State)',
+        to: '/services/other-registrations/fssai-basic',
+        badge: 'Popular',
+      },
       { label: 'Import Export Code (IEC)', to: '/services/other-registrations/import-export-code' },
-      { label: 'ISO 9001:2015 Certification', to: '/services/other-registrations/iso-certification' },
-      { label: 'Digital Signature (DSC Class 3)', to: '/services/other-registrations/dsc-signing-encryption' },
+      {
+        label: 'ISO 9001:2015 Certification',
+        to: '/services/other-registrations/iso-certification',
+      },
+      {
+        label: 'Digital Signature (DSC Class 3)',
+        to: '/services/other-registrations/dsc-signing-encryption',
+      },
       { label: '12A & 80G NGO Registration', to: '/services/other-registrations/80g-12a' },
     ],
   },
@@ -52,9 +88,17 @@ const navDropdowns: NavItem[] = [
     id: 'tax-compliance',
     label: 'Tax & Compliance',
     items: [
-      { label: 'GST Return Filing (GSTR-1 & 3B)', to: '/services/taxation/gst-return', badge: '100% ITC' },
+      {
+        label: 'GST Return Filing (GSTR-1 & 3B)',
+        to: '/services/taxation/gst-return',
+        badge: '100% ITC',
+      },
       { label: 'Income Tax Return (ITR) Filing', to: '/itr-filing', badge: 'Fast Track' },
-      { label: 'Pvt Ltd Annual ROC Compliance', to: '/services/audit/audit-pvt-ltd', badge: 'Annual' },
+      {
+        label: 'Pvt Ltd Annual ROC Compliance',
+        to: '/services/audit/audit-pvt-ltd',
+        badge: 'Annual',
+      },
       { label: 'LLP Annual Return Form-11', to: '/services/taxation/llp-form-11' },
       { label: 'Tax Audit (Section 44AB)', to: '/services/taxation/tax-audit-with-acct' },
       { label: 'TDS & TCS Return Filing', to: '/services/taxation/tds-return' },
@@ -67,11 +111,30 @@ const navDropdowns: NavItem[] = [
     label: 'Software & Tech',
     badge: 'Dev',
     items: [
-      { label: 'Custom Web Applications & SaaS', to: '/software-solutions#web-apps', badge: 'Full-Stack' },
-      { label: 'Enterprise Business Dashboards', to: '/software-solutions#dashboards', badge: 'Analytics' },
-      { label: 'iOS & Android Mobile App Dev', to: '/software-solutions#mobile-apps', badge: 'Mobile' },
-      { label: 'Fintech, Invoicing & GST Engines', to: '/software-solutions#invoicing-tools', badge: 'Automated' },
-      { label: 'Core Banking Software for Societies', to: '/services/consultancy/banking-software' },
+      {
+        label: 'Custom Web Applications & SaaS',
+        to: '/software-solutions#web-apps',
+        badge: 'Full-Stack',
+      },
+      {
+        label: 'Enterprise Business Dashboards',
+        to: '/software-solutions#dashboards',
+        badge: 'Analytics',
+      },
+      {
+        label: 'iOS & Android Mobile App Dev',
+        to: '/software-solutions#mobile-apps',
+        badge: 'Mobile',
+      },
+      {
+        label: 'Fintech, Invoicing & GST Engines',
+        to: '/software-solutions#invoicing-tools',
+        badge: 'Automated',
+      },
+      {
+        label: 'Core Banking Software for Societies',
+        to: '/services/consultancy/banking-software',
+      },
     ],
   },
   {
@@ -171,7 +234,12 @@ export default function Header() {
     if (!searchQuery.trim()) return services.slice(0, 6);
     const q = searchQuery.toLowerCase();
     return services
-      .filter((s) => s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || s.slug.includes(q))
+      .filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          s.category.toLowerCase().includes(q) ||
+          s.slug.includes(q)
+      )
       .slice(0, 6);
   }, [searchQuery]);
 
@@ -184,7 +252,6 @@ export default function Header() {
     >
       <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 lg:h-16" ref={navRef}>
-          
           {/* Left: Brand Logo & Navigation */}
           <div className="flex items-center gap-3 xl:gap-5 min-w-0">
             {/* Official Brand Logo */}
@@ -200,10 +267,12 @@ export default function Header() {
             </Link>
 
             {/* Horizontal Nav Links: Minimalist, spacious, strictly single line */}
-            <nav className={cn(
-              "hidden lg:flex items-center gap-1.5 xl:gap-2.5 text-[13px] font-medium text-slate-700 transition-opacity duration-200",
-              searchExpanded ? "opacity-40 xl:opacity-100" : "opacity-100"
-            )}>
+            <nav
+              className={cn(
+                'hidden lg:flex items-center gap-1.5 xl:gap-2.5 text-[13px] font-medium text-slate-700 transition-opacity duration-200',
+                searchExpanded ? 'opacity-40 xl:opacity-100' : 'opacity-100'
+              )}
+            >
               {navDropdowns.map((nav) => {
                 const isOpen = activeDropdown === nav.id;
 
@@ -273,14 +342,17 @@ export default function Header() {
 
           {/* Right: Expandable Search (Right-to-Left), Portal, & Talk to CA CTA */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-4 relative">
-            
             {/* ── Expandable Search Bar (Slides smoothly Right-to-Left in 60fps) ── */}
             <div ref={searchContainerRef} className="relative flex items-center">
               <motion.div
                 initial={false}
                 animate={{
                   width: searchExpanded
-                    ? (isMobile ? Math.min(window.innerWidth - 32, 280) : (window.innerWidth < 1280 ? 270 : 320))
+                    ? isMobile
+                      ? Math.min(window.innerWidth - 32, 280)
+                      : window.innerWidth < 1280
+                        ? 270
+                        : 320
                     : 38,
                   borderColor: searchExpanded ? '#0084D1' : '#EAE6DD',
                   backgroundColor: searchExpanded ? '#ffffff' : '#FAF9F5',
@@ -449,7 +521,6 @@ export default function Header() {
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
-
         </div>
       </div>
 
@@ -548,14 +619,14 @@ export default function Header() {
             <Link
               to="/portal/login"
               onClick={() => setMobileOpen(false)}
-              className="py-2 text-center block text-xs font-bold text-slate-800 bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl"
+              className="py-2 text-center block text-xs font-bold btn-multicolor rounded-xl"
             >
               Client Portal
             </Link>
             <Link
               to="/crm/login"
               onClick={() => setMobileOpen(false)}
-              className="py-2 text-center block text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl"
+              className="py-2 text-center block text-xs font-bold btn-multicolor rounded-xl"
             >
               Staff CRM
             </Link>

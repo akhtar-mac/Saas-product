@@ -1,29 +1,85 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  DollarSign, User, Building2, Mail, Phone, MapPin,
-  Tag, Package, CreditCard, CalendarDays, MessageSquare,
-  Upload, CheckCircle2, AlertTriangle, ArrowLeft,
-  Percent, X, Loader2, FileText, RotateCcw,
+  DollarSign,
+  User,
+  Building2,
+  Mail,
+  Phone,
+  MapPin,
+  Tag,
+  Package,
+  CreditCard,
+  CalendarDays,
+  MessageSquare,
+  Upload,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowLeft,
+  Percent,
+  X,
+  Loader2,
+  FileText,
+  RotateCcw,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 const INDIAN_STATES = [
-  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat',
-  'Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh',
-  'Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab',
-  'Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh',
-  'Uttarakhand','West Bengal','Delhi','Jammu & Kashmir','Ladakh','Chandigarh',
-  'Dadra & Nagar Haveli','Daman & Diu','Lakshadweep','Puducherry',
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chhattisgarh',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
+  'Delhi',
+  'Jammu & Kashmir',
+  'Ladakh',
+  'Chandigarh',
+  'Dadra & Nagar Haveli',
+  'Daman & Diu',
+  'Lakshadweep',
+  'Puducherry',
 ];
 
 const PAYMENT_MODES = ['Cash', 'UPI', 'Bank Transfer', 'Card', 'Cheque', 'NEFT/RTGS', 'DD'];
 
-interface Category { category_id: number; category_name: string; }
-interface Service { service_id: number; service_name: string; price?: number; }
-interface CouponResult { discount_amount: number; message: string; }
+interface Category {
+  category_id: number;
+  category_name: string;
+}
+interface Service {
+  service_id: number;
+  service_name: string;
+  price?: number;
+}
+interface CouponResult {
+  discount_amount: number;
+  message: string;
+}
 
 interface WonFormData {
   name: string;
@@ -45,12 +101,22 @@ interface WonFormData {
 }
 
 const INITIAL_FORM: WonFormData = {
-  name: '', company_name: '', email: '', mobile: '',
-  state: 'Maharashtra', city: '',
-  category_id: '', service_id: '',
-  total_amount: '', coupon_code: '', discount_amount: '0',
-  payment_mode: 'UPI', paid_amount: '',
-  next_due_date: '', comment: '', payment_screenshot_url: '',
+  name: '',
+  company_name: '',
+  email: '',
+  mobile: '',
+  state: 'Maharashtra',
+  city: '',
+  category_id: '',
+  service_id: '',
+  total_amount: '',
+  coupon_code: '',
+  discount_amount: '0',
+  payment_mode: 'UPI',
+  paid_amount: '',
+  next_due_date: '',
+  comment: '',
+  payment_screenshot_url: '',
 };
 
 export default function CrmWonFormPage() {
@@ -83,8 +149,10 @@ export default function CrmWonFormPage() {
   // Fetch categories on mount
   useEffect(() => {
     fetch(`${API_BASE}/v1/crm/categories`, { headers: authHeaders })
-      .then(r => r.json())
-      .then(d => { if (d.success) setCategories(d.data); })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) setCategories(d.data);
+      })
       .catch(() => {
         // Demo categories
         setCategories([
@@ -98,11 +166,16 @@ export default function CrmWonFormPage() {
 
   // Fetch services when category changes
   useEffect(() => {
-    if (!form.category_id) { setServices([]); return; }
-    setForm(f => ({ ...f, service_id: '' }));
+    if (!form.category_id) {
+      setServices([]);
+      return;
+    }
+    setForm((f) => ({ ...f, service_id: '' }));
     fetch(`${API_BASE}/v1/crm/categories/${form.category_id}/services`, { headers: authHeaders })
-      .then(r => r.json())
-      .then(d => { if (d.success) setServices(d.data); })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) setServices(d.data);
+      })
       .catch(() => {
         const demos: Record<number, Service[]> = {
           1: [
@@ -121,9 +194,9 @@ export default function CrmWonFormPage() {
 
   // Auto-fill price when service is selected
   useEffect(() => {
-    const svc = services.find(s => s.service_id === Number(form.service_id));
+    const svc = services.find((s) => s.service_id === Number(form.service_id));
     if (svc?.price) {
-      setForm(f => ({ ...f, total_amount: String(svc.price) }));
+      setForm((f) => ({ ...f, total_amount: String(svc.price) }));
     }
   }, [form.service_id, services]);
 
@@ -134,13 +207,14 @@ export default function CrmWonFormPage() {
     setCouponResult(null);
     try {
       const res = await fetch(`${API_BASE}/v1/crm/coupons/validate`, {
-        method: 'POST', headers: authHeaders,
+        method: 'POST',
+        headers: authHeaders,
         body: JSON.stringify({ code: form.coupon_code, total_amount: form.total_amount }),
       });
       const data = await res.json();
       if (data.success) {
         setCouponResult(data.data);
-        setForm(f => ({ ...f, discount_amount: String(data.data.discount_amount) }));
+        setForm((f) => ({ ...f, discount_amount: String(data.data.discount_amount) }));
       } else {
         setCouponError(data.error || 'Invalid coupon.');
       }
@@ -158,7 +232,10 @@ export default function CrmWonFormPage() {
     reader.onload = () => {
       setUploadPreview(reader.result as string);
       // In production: upload to R2/S3 and store the URL
-      setForm(f => ({ ...f, payment_screenshot_url: `screenshot_${Date.now()}.${file.name.split('.').pop()}` }));
+      setForm((f) => ({
+        ...f,
+        payment_screenshot_url: `screenshot_${Date.now()}.${file.name.split('.').pop()}`,
+      }));
     };
     reader.readAsDataURL(file);
   };
@@ -176,7 +253,8 @@ export default function CrmWonFormPage() {
 
     try {
       const res = await fetch(`${API_BASE}/v1/crm/leads/${leadId}/convert`, {
-        method: 'POST', headers: authHeaders,
+        method: 'POST',
+        headers: authHeaders,
         body: JSON.stringify({
           ...form,
           total_amount: total,
@@ -214,16 +292,22 @@ export default function CrmWonFormPage() {
         </div>
         <h2 className="text-2xl font-display font-bold text-slate-900 mb-2">Lead Converted! 🎉</h2>
         <p className="text-slate-500 max-w-sm mb-2">
-          The lead has been marked as <strong>Won</strong>. Customer record created and an Operations task has been spawned automatically.
+          The lead has been marked as <strong>Won</strong>. Customer record created and an
+          Operations task has been spawned automatically.
         </p>
         <p className="text-xs text-slate-400 mb-8">
-          Unpaid balance of <strong className="text-slate-700">₹{unpaid.toLocaleString('en-IN')}</strong> will be collected by Operations before final document release.
+          Unpaid balance of{' '}
+          <strong className="text-slate-700">₹{unpaid.toLocaleString('en-IN')}</strong> will be
+          collected by Operations before final document release.
         </p>
         <div className="flex gap-3">
           <button onClick={() => navigate('/crm/leads')} className="btn btn-primary text-sm">
             Back to Leads
           </button>
-          <button onClick={() => navigate('/crm/tasks')} className="btn border border-slate-200 text-sm text-slate-700">
+          <button
+            onClick={() => navigate('/crm/tasks')}
+            className="btn border border-slate-200 text-sm text-slate-700"
+          >
             View Operations Queue
           </button>
         </div>
@@ -232,7 +316,7 @@ export default function CrmWonFormPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
@@ -263,19 +347,26 @@ export default function CrmWonFormPage() {
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
-                  required type="text" placeholder="Rajesh Kumar"
-                  value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                  required
+                  type="text"
+                  placeholder="Rajesh Kumar"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="input pl-9 text-sm w-full"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Company / Shop Name</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Company / Shop Name
+              </label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
-                  type="text" placeholder="Rajesh Traders Pvt Ltd"
-                  value={form.company_name} onChange={e => setForm({ ...form, company_name: e.target.value })}
+                  type="text"
+                  placeholder="Rajesh Traders Pvt Ltd"
+                  value={form.company_name}
+                  onChange={(e) => setForm({ ...form, company_name: e.target.value })}
                   className="input pl-9 text-sm w-full"
                 />
               </div>
@@ -285,8 +376,10 @@ export default function CrmWonFormPage() {
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
-                  type="email" placeholder="rajesh@example.com"
-                  value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
+                  type="email"
+                  placeholder="rajesh@example.com"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="input pl-9 text-sm w-full"
                 />
               </div>
@@ -298,9 +391,12 @@ export default function CrmWonFormPage() {
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
-                  required type="tel" placeholder="+91 98765 43210"
+                  required
+                  type="tel"
+                  placeholder="+91 98765 43210"
                   pattern="[0-9+\s-]{10,15}"
-                  value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value })}
+                  value={form.mobile}
+                  onChange={(e) => setForm({ ...form, mobile: e.target.value })}
                   className="input pl-9 text-sm w-full"
                 />
               </div>
@@ -310,18 +406,25 @@ export default function CrmWonFormPage() {
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <select
-                  value={form.state} onChange={e => setForm({ ...form, state: e.target.value })}
+                  value={form.state}
+                  onChange={(e) => setForm({ ...form, state: e.target.value })}
                   className="input pl-9 text-sm w-full"
                 >
-                  {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {INDIAN_STATES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">City</label>
               <input
-                type="text" placeholder="Mumbai"
-                value={form.city} onChange={e => setForm({ ...form, city: e.target.value })}
+                type="text"
+                placeholder="Mumbai"
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
                 className="input text-sm w-full"
               />
             </div>
@@ -341,13 +444,16 @@ export default function CrmWonFormPage() {
               <div className="relative">
                 <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <select
-                  required value={form.category_id}
-                  onChange={e => setForm({ ...form, category_id: Number(e.target.value) || '' })}
+                  required
+                  value={form.category_id}
+                  onChange={(e) => setForm({ ...form, category_id: Number(e.target.value) || '' })}
                   className="input pl-9 text-sm w-full"
                 >
                   <option value="">— Select Category —</option>
-                  {categories.map(c => (
-                    <option key={c.category_id} value={c.category_id}>{c.category_name}</option>
+                  {categories.map((c) => (
+                    <option key={c.category_id} value={c.category_id}>
+                      {c.category_name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -361,16 +467,17 @@ export default function CrmWonFormPage() {
                 <select
                   required
                   value={form.service_id}
-                  onChange={e => setForm({ ...form, service_id: Number(e.target.value) || '' })}
+                  onChange={(e) => setForm({ ...form, service_id: Number(e.target.value) || '' })}
                   disabled={!form.category_id || services.length === 0}
                   className="input pl-9 text-sm w-full disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">
                     {!form.category_id ? '— Select a category first —' : '— Select Service —'}
                   </option>
-                  {services.map(s => (
+                  {services.map((s) => (
                     <option key={s.service_id} value={s.service_id}>
-                      {s.service_name}{s.price ? ` (₹${s.price.toLocaleString('en-IN')})` : ''}
+                      {s.service_name}
+                      {s.price ? ` (₹${s.price.toLocaleString('en-IN')})` : ''}
                     </option>
                   ))}
                 </select>
@@ -392,11 +499,17 @@ export default function CrmWonFormPage() {
                 Total Amount (₹) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">
+                  ₹
+                </span>
                 <input
-                  required type="number" min="0" step="1" placeholder="16499"
+                  required
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="16499"
                   value={form.total_amount}
-                  onChange={e => setForm({ ...form, total_amount: e.target.value })}
+                  onChange={(e) => setForm({ ...form, total_amount: e.target.value })}
                   className="input pl-7 text-sm w-full font-semibold"
                 />
               </div>
@@ -404,14 +517,17 @@ export default function CrmWonFormPage() {
 
             {/* Coupon Code */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Apply Coupon Code</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Apply Coupon Code
+              </label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
-                    type="text" placeholder="SAVE500"
+                    type="text"
+                    placeholder="SAVE500"
                     value={form.coupon_code}
-                    onChange={e => {
+                    onChange={(e) => {
                       setForm({ ...form, coupon_code: e.target.value.toUpperCase() });
                       setCouponResult(null);
                       setCouponError(null);
@@ -420,7 +536,8 @@ export default function CrmWonFormPage() {
                   />
                 </div>
                 <button
-                  type="button" onClick={validateCoupon}
+                  type="button"
+                  onClick={validateCoupon}
                   disabled={!form.coupon_code || couponLoading}
                   className="btn border border-slate-200 text-slate-700 text-xs hover:bg-slate-50 px-3 shrink-0"
                 >
@@ -441,13 +558,19 @@ export default function CrmWonFormPage() {
 
             {/* Discount Amount */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Discount Amount (₹)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Discount Amount (₹)
+              </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">
+                  ₹
+                </span>
                 <input
-                  type="number" min="0" placeholder="0"
+                  type="number"
+                  min="0"
+                  placeholder="0"
                   value={form.discount_amount}
-                  onChange={e => setForm({ ...form, discount_amount: e.target.value })}
+                  onChange={(e) => setForm({ ...form, discount_amount: e.target.value })}
                   className="input pl-7 text-sm w-full"
                 />
               </div>
@@ -461,11 +584,16 @@ export default function CrmWonFormPage() {
               <div className="relative">
                 <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <select
-                  required value={form.payment_mode}
-                  onChange={e => setForm({ ...form, payment_mode: e.target.value })}
+                  required
+                  value={form.payment_mode}
+                  onChange={(e) => setForm({ ...form, payment_mode: e.target.value })}
                   className="input pl-9 text-sm w-full"
                 >
-                  {PAYMENT_MODES.map(m => <option key={m} value={m}>{m}</option>)}
+                  {PAYMENT_MODES.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -476,11 +604,16 @@ export default function CrmWonFormPage() {
                 Advance Paid Amount (₹) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">
+                  ₹
+                </span>
                 <input
-                  required type="number" min="0" placeholder="5000"
+                  required
+                  type="number"
+                  min="0"
+                  placeholder="5000"
                   value={form.paid_amount}
-                  onChange={e => setForm({ ...form, paid_amount: e.target.value })}
+                  onChange={(e) => setForm({ ...form, paid_amount: e.target.value })}
                   className="input pl-7 text-sm w-full font-semibold"
                 />
               </div>
@@ -493,7 +626,9 @@ export default function CrmWonFormPage() {
                 <span className="ml-1 text-[10px] font-normal text-slate-400">Auto-calculated</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">
+                  ₹
+                </span>
                 <input
                   readOnly
                   value={total > 0 ? unpaid.toLocaleString('en-IN') : ''}
@@ -511,15 +646,21 @@ export default function CrmWonFormPage() {
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-xs text-slate-500 font-medium">Total</p>
-                  <p className="text-lg font-bold font-display text-slate-900">₹{total.toLocaleString('en-IN')}</p>
+                  <p className="text-lg font-bold font-display text-slate-900">
+                    ₹{total.toLocaleString('en-IN')}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-emerald-600 font-medium">Advance Paid</p>
-                  <p className="text-lg font-bold font-display text-emerald-600">₹{paid.toLocaleString('en-IN')}</p>
+                  <p className="text-lg font-bold font-display text-emerald-600">
+                    ₹{paid.toLocaleString('en-IN')}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-amber-600 font-medium">Balance Due</p>
-                  <p className="text-lg font-bold font-display text-amber-600">₹{unpaid.toLocaleString('en-IN')}</p>
+                  <p className="text-lg font-bold font-display text-amber-600">
+                    ₹{unpaid.toLocaleString('en-IN')}
+                  </p>
                 </div>
               </div>
             </div>
@@ -528,12 +669,15 @@ export default function CrmWonFormPage() {
           {/* Next Due Date */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Next Due Date (Balance Payment)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Next Due Date (Balance Payment)
+              </label>
               <div className="relative">
                 <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
-                  type="date" value={form.next_due_date}
-                  onChange={e => setForm({ ...form, next_due_date: e.target.value })}
+                  type="date"
+                  value={form.next_due_date}
+                  onChange={(e) => setForm({ ...form, next_due_date: e.target.value })}
                   min={new Date().toISOString().split('T')[0]}
                   className="input pl-9 text-sm w-full"
                 />
@@ -553,15 +697,21 @@ export default function CrmWonFormPage() {
               rows={3}
               placeholder="Any additional notes about this client or payment..."
               value={form.comment}
-              onChange={e => setForm({ ...form, comment: e.target.value })}
+              onChange={(e) => setForm({ ...form, comment: e.target.value })}
               className="input text-sm w-full resize-none"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">Payment Screenshot / Proof</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              Payment Screenshot / Proof
+            </label>
             <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-200 rounded-xl p-6 cursor-pointer hover:border-brand-navy hover:bg-brand-navy/5 transition-all">
               {uploadPreview ? (
-                <img src={uploadPreview} alt="Payment proof" className="max-h-40 rounded-lg object-contain" />
+                <img
+                  src={uploadPreview}
+                  alt="Payment proof"
+                  className="max-h-40 rounded-lg object-contain"
+                />
               ) : (
                 <>
                   <Upload className="w-8 h-8 text-slate-300" />
@@ -572,7 +722,8 @@ export default function CrmWonFormPage() {
                 </>
               )}
               <input
-                type="file" accept="image/*,.pdf"
+                type="file"
+                accept="image/*,.pdf"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -580,7 +731,10 @@ export default function CrmWonFormPage() {
             {uploadPreview && (
               <button
                 type="button"
-                onClick={() => { setUploadPreview(null); setForm(f => ({ ...f, payment_screenshot_url: '' })); }}
+                onClick={() => {
+                  setUploadPreview(null);
+                  setForm((f) => ({ ...f, payment_screenshot_url: '' }));
+                }}
                 className="mt-2 text-xs text-red-500 hover:underline"
               >
                 Remove screenshot
@@ -599,26 +753,32 @@ export default function CrmWonFormPage() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
           <button
-            type="button" onClick={handleReset}
-            className="btn border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm flex items-center justify-center gap-2 sm:w-36"
+            type="button"
+            onClick={handleReset}
+            className="btn border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm flex items-center justify-center gap-2 sm:w-36 whitespace-nowrap shrink-0"
           >
             <RotateCcw className="w-4 h-4" /> Reset Form
           </button>
           <button
-            type="submit" disabled={submitting}
-            className="btn btn-primary flex-1 text-sm flex items-center justify-center gap-2 py-3"
+            type="submit"
+            disabled={submitting}
+            className="btn-multicolor flex-1 text-sm flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-bold whitespace-nowrap shrink-0"
           >
             {submitting ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Processing...
+              </>
             ) : (
-              <><CheckCircle2 className="w-4 h-4" /> Mark as Won & Convert Lead</>
+              <>
+                <CheckCircle2 className="w-4 h-4" /> Mark as Won & Convert Lead
+              </>
             )}
           </button>
         </div>
 
         <p className="text-center text-xs text-slate-400">
-          Submitting will mark the lead as <strong>Won</strong>, create a customer record, record the advance payment,
-          and automatically spawn an Operations task.
+          Submitting will mark the lead as <strong>Won</strong>, create a customer record, record
+          the advance payment, and automatically spawn an Operations task.
         </p>
       </form>
     </div>

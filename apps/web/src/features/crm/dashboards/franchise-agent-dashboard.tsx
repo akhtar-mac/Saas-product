@@ -14,9 +14,30 @@ import {
 
 export default function FranchiseAgentDashboard() {
   const partnerOrders = [
-    { orderId: 'ORD-8812', partner: 'Shree Ganesh CSC Center (Nagpur)', client: 'Kisan Bio Fertilizers', service: 'Private Limited Incorporation', commission: '₹3,500', status: 'In Progress' },
-    { orderId: 'ORD-8813', partner: 'Apex Taxation Hub (Surat)', client: 'Surat Diamond Traders', service: 'GST Annual Return (GSTR-9)', commission: '₹1,800', status: 'Completed' },
-    { orderId: 'ORD-8814', partner: 'Krishi Vikas Seva (Nashik)', client: 'Godavari FPC Ltd', service: 'FPC Annual Compliance & ROC Filing', commission: '₹4,200', status: 'Govt Filing' },
+    {
+      orderId: 'ORD-8812',
+      partner: 'Shree Ganesh CSC Center (Nagpur)',
+      client: 'Kisan Bio Fertilizers',
+      service: 'Private Limited Incorporation',
+      commission: '₹3,500',
+      status: 'In Progress',
+    },
+    {
+      orderId: 'ORD-8813',
+      partner: 'Apex Taxation Hub (Surat)',
+      client: 'Surat Diamond Traders',
+      service: 'GST Annual Return (GSTR-9)',
+      commission: '₹1,800',
+      status: 'Completed',
+    },
+    {
+      orderId: 'ORD-8814',
+      partner: 'Krishi Vikas Seva (Nashik)',
+      client: 'Godavari FPC Ltd',
+      service: 'FPC Annual Compliance & ROC Filing',
+      commission: '₹4,200',
+      status: 'Govt Filing',
+    },
   ];
 
   return (
@@ -31,7 +52,8 @@ export default function FranchiseAgentDashboard() {
             <span className="badge badge-gold">Field Partner Executive</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Partner relationship management, local center orders onboarding & commission disbursements.
+            Partner relationship management, local center orders onboarding & commission
+            disbursements.
           </p>
         </div>
 
@@ -45,12 +67,35 @@ export default function FranchiseAgentDashboard() {
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: 'My Partner Centers', value: '38 Centers', sub: 'Western Region Hubs', color: '#003A66' },
-          { title: 'Orders Booked (MTD)', value: '142 Orders', sub: 'Revenue ₹18.4 Lakhs', color: '#059669' },
-          { title: 'Earned Commissions', value: '₹1,84,500', sub: 'Paid via instant IMPS', color: '#D97706' },
-          { title: 'Avg Onboarding TAT', value: '24 Hours', sub: 'KYC & Portal live', color: '#7C3AED' },
+          {
+            title: 'My Partner Centers',
+            value: '38 Centers',
+            sub: 'Western Region Hubs',
+            color: '#003A66',
+          },
+          {
+            title: 'Orders Booked (MTD)',
+            value: '142 Orders',
+            sub: 'Revenue ₹18.4 Lakhs',
+            color: '#059669',
+          },
+          {
+            title: 'Earned Commissions',
+            value: '₹1,84,500',
+            sub: 'Paid via instant IMPS',
+            color: '#D97706',
+          },
+          {
+            title: 'Avg Onboarding TAT',
+            value: '24 Hours',
+            sub: 'KYC & Portal live',
+            color: '#7C3AED',
+          },
         ].map((kpi) => (
-          <div key={kpi.title} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div
+            key={kpi.title}
+            className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between"
+          >
             <span className="text-xs font-semibold text-slate-500">{kpi.title}</span>
             <div className="mt-3">
               <p className="font-display font-bold text-2xl text-slate-800">{kpi.value}</p>
@@ -67,13 +112,15 @@ export default function FranchiseAgentDashboard() {
             <h3 className="font-display font-bold text-base text-slate-800">
               Recent Partner Bookings
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Orders submitted by offline CSC & franchise centers</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Orders submitted by offline CSC & franchise centers
+            </p>
           </div>
           <span className="badge badge-navy">Live Network</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Order ID</th>

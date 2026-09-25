@@ -74,9 +74,7 @@ export default function OpsExecutiveDashboard() {
     if (!selectedTask) return;
 
     setMyTasks((prev) =>
-      prev.map((t) =>
-        t.id === selectedTask.id ? { ...t, status: nextStage } : t
-      )
+      prev.map((t) => (t.id === selectedTask.id ? { ...t, status: nextStage } : t))
     );
     setIsAdvanceModalOpen(false);
     setAdvanceRemarks('');
@@ -94,7 +92,8 @@ export default function OpsExecutiveDashboard() {
             <span className="badge badge-gold">Operations Specialist</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Review client documents, execute government portal filings (MCA/GST/ITR/IP), and advance 10-stage milestones.
+            Review client documents, execute government portal filings (MCA/GST/ITR/IP), and advance
+            10-stage milestones.
           </p>
         </div>
 
@@ -106,17 +105,51 @@ export default function OpsExecutiveDashboard() {
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: 'Assigned to Me', value: '14 Cases', sub: '4 Due this week', icon: FileCheck2, color: '#003A66', bg: 'rgba(0,58,102,0.08)' },
-          { title: 'Document Review', value: '3 Cases', sub: 'Awaiting client upload', icon: Clock, color: '#D97706', bg: 'rgba(217,119,6,0.08)' },
-          { title: 'Ready for Govt Portal', value: '5 Cases', sub: 'MCA / GST / FoSCoS', icon: ShieldCheck, color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' },
-          { title: 'Delivered This Month', value: '18 Orders', sub: '100% on-time SLA score', icon: CheckCircle2, color: '#059669', bg: 'rgba(5,150,105,0.08)' },
+          {
+            title: 'Assigned to Me',
+            value: '14 Cases',
+            sub: '4 Due this week',
+            icon: FileCheck2,
+            color: '#003A66',
+            bg: 'rgba(0,58,102,0.08)',
+          },
+          {
+            title: 'Document Review',
+            value: '3 Cases',
+            sub: 'Awaiting client upload',
+            icon: Clock,
+            color: '#D97706',
+            bg: 'rgba(217,119,6,0.08)',
+          },
+          {
+            title: 'Ready for Govt Portal',
+            value: '5 Cases',
+            sub: 'MCA / GST / FoSCoS',
+            icon: ShieldCheck,
+            color: '#7C3AED',
+            bg: 'rgba(124,58,237,0.08)',
+          },
+          {
+            title: 'Delivered This Month',
+            value: '18 Orders',
+            sub: '100% on-time SLA score',
+            icon: CheckCircle2,
+            color: '#059669',
+            bg: 'rgba(5,150,105,0.08)',
+          },
         ].map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <div key={kpi.title} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div
+              key={kpi.title}
+              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-500">{kpi.title}</span>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: kpi.bg }}>
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: kpi.bg }}
+                >
                   <Icon className="w-4 h-4" style={{ color: kpi.color }} />
                 </div>
               </div>
@@ -136,13 +169,15 @@ export default function OpsExecutiveDashboard() {
             <h3 className="font-display font-bold text-base text-slate-800">
               Active Service Orders Assigned
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Advancing status automatically notifies the client on their portal timeline</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Advancing status automatically notifies the client on their portal timeline
+            </p>
           </div>
           <span className="badge badge-navy">Active Cases</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-etaxwala">
+          <table className="table-crm">
             <thead>
               <tr>
                 <th>Order # / Client</th>
@@ -158,7 +193,9 @@ export default function OpsExecutiveDashboard() {
                 <tr key={task.id}>
                   <td>
                     <p className="font-bold text-slate-800 text-xs">{task.clientName}</p>
-                    <p className="text-[10px] text-slate-400">{task.business} • #{task.id}</p>
+                    <p className="text-[10px] text-slate-400">
+                      {task.business} • #{task.id}
+                    </p>
                   </td>
                   <td className="text-xs font-semibold text-slate-700">{task.service}</td>
                   <td className="text-xs">
@@ -243,7 +280,7 @@ export default function OpsExecutiveDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsAdvanceModalOpen(false)}
-                  className="btn btn-outline btn-sm"
+                  className="btn btn-outline btn-sm btn-multicolor"
                 >
                   Cancel
                 </button>
