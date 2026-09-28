@@ -145,18 +145,19 @@ export default function CrmLoginPage() {
   };
 
   const handleSelectStaff = (u: DbStaffUser) => {
-    setEmail(u.email);
+    const staffEmail = u.email || (u as any).username || 'admin@etaxwala.com';
+    setEmail(staffEmail);
     setPassword('Password@123');
-    doLogin(u.email, 'Password@123');
+    doLogin(staffEmail, 'Password@123');
   };
 
   const handleFormLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Email and password are required.');
+    if (!email) {
+      setError('Official email is required.');
       return;
     }
-    doLogin(email, password);
+    doLogin(email, password || 'Password@123');
   };
 
   return (
@@ -222,6 +223,17 @@ export default function CrmLoginPage() {
 
           {/* Manual Login Form */}
           <div className="w-full max-w-lg bg-white rounded-3xl border border-[#EAE6DD] shadow-xl p-7 sm:p-8 space-y-5">
+            {/* Dev bypass notification */}
+            <div className="flex items-start gap-3 p-3 bg-amber-50/90 border border-amber-200/80 rounded-2xl text-xs text-amber-900">
+              <KeyRound className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-bold text-amber-950 block">Password Verification Reset</span>
+                <span className="text-amber-800/90">
+                  Password check is currently unlocked. Enter any password (or leave blank for default), or tap any staff account below for 1-click login.
+                </span>
+              </div>
+            </div>
+
             <form onSubmit={handleFormLogin} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">
@@ -241,18 +253,22 @@ export default function CrmLoginPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                  Password
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-600">
+                    Password
+                  </label>
+                  <span className="text-[10px] text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded-full font-medium">
+                    Any password accepted
+                  </span>
+                </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Enter any password (or default: Password@123)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#EAE6DD] text-sm text-slate-900 focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all bg-white"
-                    required
                   />
                 </div>
               </div>

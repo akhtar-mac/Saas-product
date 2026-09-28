@@ -196,7 +196,7 @@ export default function ClientPaymentsPage() {
                     <span className="badge badge-green text-[10px]">{inv.status}</span>
                   </td>
                   <td className="text-right">
-                    <button className="btn-panda btn-sm text-xs cursor-pointer">
+                    <button className="btn-outline-multicolor btn-sm text-xs cursor-pointer">
                       <Download className="w-3.5 h-3.5 text-[#0084D1]" /> Download GST PDF
                     </button>
                   </td>

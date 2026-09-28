@@ -24,7 +24,7 @@ export default function FloatingCTA() {
           className="flex items-center gap-2.5 px-4 py-3 rounded-xl btn-multicolor shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.04] active:scale-[0.97] cursor-pointer group"
         >
           {/* WhatsApp Icon */}
-          <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/30 transition-transform group-hover:scale-105">
             <svg
               viewBox="0 0 24 24"
               className="w-4 h-4 fill-white"
@@ -34,11 +34,12 @@ export default function FloatingCTA() {
             </svg>
           </div>
           <div className="text-left pr-0.5">
-            <p className="text-xs font-extrabold tracking-tight leading-tight text-white">
+            <p className="text-xs font-extrabold tracking-tight leading-tight text-slate-900 group-hover:text-[#0084D1] transition-colors">
               WhatsApp Us
             </p>
-            <p className="text-[10px] text-white/80 font-medium leading-none mt-0.5">
-              Reply in &lt; 2 mins
+            <p className="text-[10px] text-emerald-600 font-bold leading-none mt-0.5 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+              <span>Reply in &lt; 2 mins</span>
             </p>
           </div>
         </a>
@@ -53,7 +54,7 @@ export default function FloatingCTA() {
           aria-label={open ? 'Close advisory desk' : 'Consult Chartered Accountant'}
         >
           <div className="relative flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-transform group-hover:scale-110">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0084D1] via-[#7C3AED] to-[#E11D48] flex items-center justify-center text-white shrink-0 shadow-sm shadow-indigo-500/30 transition-transform group-hover:scale-105">
               {open ? (
                 <X className="w-4 h-4 text-white" />
               ) : (
@@ -61,21 +62,23 @@ export default function FloatingCTA() {
               )}
             </div>
             {!open && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border-2 border-slate-900" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border-2 border-white" />
               </span>
             )}
           </div>
 
           <div className="text-left pr-1">
-            <p className="text-xs font-extrabold tracking-tight leading-tight text-white">
+            <p className="text-xs font-extrabold tracking-tight leading-tight text-slate-900 group-hover:text-[#7C3AED] transition-colors">
               {open ? 'Close Advisory' : 'Consult a CA'}
             </p>
             {!open && (
-              <p className="text-[10px] text-slate-300 font-medium leading-none mt-0.5 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                <span>Online • Free Advice</span>
+              <p className="text-[10px] text-slate-600 font-bold leading-none mt-0.5 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                <span className="text-emerald-700 font-bold">Online</span>
+                <span className="text-slate-400">•</span>
+                <span>Free Advice</span>
               </p>
             )}
           </div>

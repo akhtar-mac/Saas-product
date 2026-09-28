@@ -1,4 +1,5 @@
-final String domain = "https://application-api.etaxwala.com/api/";
+const String _defaultDomain = "https://application-api.etaxwala.com/api/";
+final String domain = const String.fromEnvironment('APP_API_URL', defaultValue: _defaultDomain);
 
 
 

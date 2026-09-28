@@ -68,7 +68,7 @@ router.post('/benchmark', async (req: Request, res: Response, next: NextFunction
 router.get('/database-stats', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tables: any[] = await prisma.$queryRawUnsafe(`
-      SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;
+      SELECT table_name AS tablename FROM information_schema.tables WHERE table_schema = DATABASE() ORDER BY table_name;
     `);
 
     // Verify key legacy production record counts

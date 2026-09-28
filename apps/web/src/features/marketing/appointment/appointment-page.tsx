@@ -557,7 +557,7 @@ export default function AppointmentPage() {
                   <button
                     type="submit"
                     disabled={status === 'loading'}
-                    className="w-full py-4 rounded-xl btn-multicolor text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 whitespace-nowrap shrink-0"
+                    className="w-full py-4 rounded-xl btn-multicolor font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 whitespace-nowrap shrink-0 group"
                   >
                     {status === 'loading' ? (
                       <span className="inline-flex items-center gap-2 whitespace-nowrap">
@@ -566,7 +566,7 @@ export default function AppointmentPage() {
                     ) : (
                       <span className="inline-flex items-center gap-2 whitespace-nowrap">
                         <Calendar className="w-4 h-4" /> Confirm Free CA Consultation
-                        <ArrowRight className="w-4 h-4 ml-1" />
+                        <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
                       </span>
                     )}
                   </button>

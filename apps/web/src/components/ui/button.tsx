@@ -2,7 +2,17 @@ import React from 'react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:
-    'primary' | 'secondary' | 'multicolor' | 'outline' | 'ghost' | 'danger' | 'panda' | 'gold';
+    | 'primary'
+    | 'theme'
+    | 'secondary'
+    | 'multicolor'
+    | 'outline'
+    | 'ghost'
+    | 'danger'
+    | 'panda'
+    | 'call'
+    | 'ca-call'
+    | 'gold';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -27,10 +37,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // All galaxy variants: white bg + rotating nebula border (light theme)
     const variants = {
       primary: 'btn-multicolor',
+      theme: 'btn-multicolor',
       multicolor: 'btn-multicolor',
       secondary: 'btn-outline-multicolor',
       outline: 'btn-outline-multicolor',
-      panda: 'btn-panda',
+      panda: 'btn-ca-call',
+      call: 'btn-ca-call',
+      'ca-call': 'btn-ca-call',
       gold: 'btn-gold',
       ghost:
         'relative cursor-pointer overflow-hidden rounded-xl bg-transparent hover:bg-[#FAF9F5] text-slate-700 transition-colors duration-200 font-semibold',
@@ -46,6 +59,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const isGalaxy =
       variant === 'primary' ||
+      variant === 'theme' ||
       variant === 'multicolor' ||
       variant === 'secondary' ||
       variant === 'outline';

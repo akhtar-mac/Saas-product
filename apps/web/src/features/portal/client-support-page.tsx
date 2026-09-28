@@ -11,6 +11,7 @@ import {
   Mail,
   X,
 } from 'lucide-react';
+import { playStaffMessageSentChime, playStaffChatChime } from '@/lib/staff-chat-audio';
 
 export default function ClientSupportPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,6 +63,7 @@ export default function ClientSupportPage() {
 
     const userMsg = chatMessage.trim();
     setChatMessage('');
+    playStaffMessageSentChime();
 
     setMessages((prev) => [
       ...prev,

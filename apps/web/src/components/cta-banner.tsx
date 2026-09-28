@@ -43,15 +43,15 @@ export const CtaBanner: React.FC<CtaBannerProps> = ({
                 {subtitle}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-3.5 justify-center items-stretch sm:items-center">
-                {/* Primary: Galaxy dark button */}
+                {/* Primary: Signature Theme Button */}
                 <Link
                   to={primaryButtonLink}
-                  className="px-6 py-3.5 rounded-xl btn-multicolor text-white justify-center"
+                  className="px-6 py-3.5 rounded-xl btn-multicolor justify-center"
                 >
                   <span className="btn-galaxy__stars" aria-hidden="true" />
                   <span className="relative z-[2] inline-flex items-center gap-2 font-bold text-sm">
                     <span>{primaryButtonText}</span>
-                    <ArrowRight className="btn-galaxy__icon w-4 h-4 text-white" />
+                    <ArrowRight className="btn-galaxy__icon w-4 h-4 text-slate-700" />
                   </span>
                 </Link>
 

@@ -8,12 +8,19 @@ import {
   SALES_TEAM,
   OPS_MANAGERS,
 } from '../middleware/auth.middleware.js';
+import { validateBody } from '../middleware/validate.middleware.js';
+import { ConvertLeadSchema } from '../schemas/crm.schema.js';
 
 const router = Router();
 
 // ─── POST /v1/crm/leads/:id/convert  (Won Conversion Form) ───────────────────
 // Only Sales Employees (role 7) and above sales roles can submit
-router.post('/leads/:id/convert', verifyJWT, requireRole([1, 2, 4, 7, 13]), async (req: Request, res: Response) => {
+router.post(
+  '/leads/:id/convert',
+  verifyJWT,
+  requireRole([1, 2, 4, 7, 13]),
+  validateBody(ConvertLeadSchema),
+  async (req: Request, res: Response) => {
   try {
     const lead_id = Number(req.params.id);
     const {

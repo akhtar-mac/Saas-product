@@ -225,7 +225,7 @@ export default function ClientDocumentsPage() {
                   <button className="btn-outline-multicolor btn-sm text-xs cursor-pointer">
                     <Eye className="w-3 h-3" /> Preview
                   </button>
-                  <button className="btn-panda btn-sm text-xs cursor-pointer">
+                  <button className="btn-outline-multicolor btn-sm text-xs cursor-pointer">
                     <Download className="w-3.5 h-3.5 text-[#0084D1]" /> Download
                   </button>
                 </>

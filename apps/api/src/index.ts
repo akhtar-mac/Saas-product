@@ -23,6 +23,7 @@ import aiAutomationRoutes from './routes/ai-automation.routes.js';
 import disbursementRoutes from './routes/disbursement.routes.js';
 import { initChatSocket } from './socket/chat.socket.js';
 import { prisma } from './config/db.js';
+import { authRateLimit, apiRateLimit } from './middleware/rate-limit.middleware.js';
 import path from 'path';
 
 const app = express();
@@ -33,18 +34,32 @@ initChatSocket(httpServer);
 app.use(helmet());
 app.use(
   cors({
-    origin: [env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174'],
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1') ||
+        origin.endsWith('.etaxwala.com') ||
+        origin === 'https://etaxwala.com' ||
+        origin === env.FRONTEND_URL
+      ) {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
     credentials: true,
   })
 );
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// ─── Request Logger ───────────────────────────────────────────────────────────
+// ─── Request Logger & Global API Rate Limit ──────────────────────────────────
 app.use(requestLogger);
+app.use('/v1', apiRateLimit);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
-app.get('/health', (_req, res) => {
+app.get(['/health', '/v1/health'], (_req, res) => {
   res.json({
     status: 'ok',
     environment: env.NODE_ENV,
@@ -60,8 +75,9 @@ app.get('/health', (_req, res) => {
   });
 });
 
-// ─── Auth routes (public — no JWT required) ───────────────────────────────────
-app.use('/v1/auth', authRoutes);
+// ─── Auth routes (Rate limited to prevent brute force) ────────────────────────
+app.use('/v1/auth', authRateLimit, authRoutes);
+app.use('/v1/customer/auth', authRateLimit);
 
 // ─── Staff Admin: User management (JWT + Admin role required inside router) ───
 app.use('/v1/admin/users', usersRoutes);

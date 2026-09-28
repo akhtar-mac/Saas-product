@@ -19,6 +19,9 @@ import {
   Download,
   RefreshCw,
   MessageSquare,
+  MessageCircle,
+  Volume2,
+  VolumeX,
   Sparkles,
   ChevronRight,
   Eye,
@@ -39,11 +42,18 @@ import { PaymentRequestCard } from '../components/payment-request-card';
 import { RequestMoneyModal } from '../components/request-money-modal';
 import { FulfillPaymentModal } from '../components/fulfill-payment-modal';
 import { AdminFloatDrawer } from '../components/admin-float-drawer';
+import {
+  playStaffChatChime,
+  playStaffMessageSentChime,
+  isStaffChatSoundEnabled,
+  setStaffChatSoundEnabled,
+} from '@/lib/staff-chat-audio';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 export default function CrmChatPage() {
   const { staffUser, staffToken } = useAuthStore();
+  const [soundEnabled, setSoundEnabled] = useState(() => isStaffChatSoundEnabled());
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [staffDirectory, setStaffDirectory] = useState<ChatUser[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
@@ -132,6 +142,12 @@ export default function CrmChatPage() {
 
     // Real-time message receiver
     socket.on('message:new', (data: { conversationId: number; message: any }) => {
+      // Play authentic ETaxwala staff incoming chime if from another user
+      const currentUserId = staffUser?.id || (staffUser as any)?.user_id;
+      if (data?.message && Number(data.message.senderId) !== Number(currentUserId)) {
+        playStaffChatChime();
+      }
+
       if (activeConversationId === data.conversationId) {
         setMessages((prev) => {
           // Prevent duplicates
@@ -447,6 +463,7 @@ export default function CrmChatPage() {
         setMessageText('');
         setSelectedFile(null);
         scrollToBottom();
+        playStaffMessageSentChime();
       } else {
         setErrorMsg(data.error || 'Failed to send message.');
       }
@@ -891,8 +908,34 @@ export default function CrmChatPage() {
                   </div>
                 </div>
 
-                {/* Role tags */}
-                <div className="flex items-center gap-1.5">
+                {/* Header actions: Staff Sound Alerts & Role tags */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !soundEnabled;
+                      setSoundEnabled(next);
+                      setStaffChatSoundEnabled(next);
+                      if (next) playStaffChatChime();
+                    }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border ${
+                      soundEnabled
+                        ? 'bg-blue-50 text-[#0084D1] border-blue-200 hover:bg-blue-100 shadow-2xs'
+                        : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                    }`}
+                    title={soundEnabled ? 'Staff Chat Chimes Active (Click to mute)' : 'Muted (Click to enable audio chime)'}
+                  >
+                    <div className="w-3.5 h-3.5 rounded-lg bg-gradient-to-tr from-[#1B365D] to-[#0084D1] flex items-center justify-center text-white">
+                      <MessageSquare className="w-2 h-2 fill-white stroke-none" />
+                    </div>
+                    {soundEnabled ? (
+                      <Volume2 className="w-3.5 h-3.5 text-[#0084D1]" />
+                    ) : (
+                      <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                    <span className="text-[11px] font-bold hidden sm:inline">Sound Alerts</span>
+                  </button>
+
                   {activeParticipant?.roles?.map((r) => (
                     <span
                       key={r}

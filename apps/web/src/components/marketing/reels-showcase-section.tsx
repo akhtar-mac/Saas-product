@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Play, Volume2, VolumeX, Heart, Share2, Eye,
   ArrowRight, X, ChevronLeft, ChevronRight,
@@ -255,7 +256,7 @@ export default function ReelsShowcaseSection() {
         title: activeReel?.title,
         text: activeReel?.description,
         url: window.location.href,
-      }).catch(() => {});
+      }).catch(() => { });
     } else {
       navigator.clipboard.writeText(window.location.href);
       setCopied(true);
@@ -281,7 +282,7 @@ export default function ReelsShowcaseSection() {
 
   return (
     <section className="py-20 bg-[#FAF9F5] border-y border-[#EAE6DD] relative overflow-hidden">
-      
+
       {/* ── Background Subtle Ambient Shapes ── */}
       <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-bl from-rose-100/30 via-purple-100/20 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-gradient-to-tr from-blue-100/30 via-teal-100/20 to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -335,7 +336,7 @@ export default function ReelsShowcaseSection() {
         <div className="relative overflow-hidden py-2 bg-white/70 backdrop-blur-sm rounded-2xl border border-[#EAE6DD] shadow-2xs">
           <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white via-white/80 to-transparent z-10" />
           <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white via-white/80 to-transparent z-10" />
-          
+
           <div className="flex overflow-hidden">
             <div className="animate-marquee-left-fast pause-on-hover flex items-center gap-6 whitespace-nowrap">
               {[...TRENDING_TOPICS, ...TRENDING_TOPICS].map((topic, i) => (
@@ -351,7 +352,7 @@ export default function ReelsShowcaseSection() {
 
         {/* ── The 9:16 Vertical Reels Continuous Flowing Slider ── */}
         <div className="relative w-full overflow-hidden py-2">
-          
+
           {/* Edge Gradient Fade Masks */}
           <div className="pointer-events-none absolute inset-y-0 left-0 w-12 sm:w-28 md:w-40 bg-gradient-to-r from-[#FAF9F5] via-[#FAF9F5]/90 to-transparent z-20" />
           <div className="pointer-events-none absolute inset-y-0 right-0 w-12 sm:w-28 md:w-40 bg-gradient-to-l from-[#FAF9F5] via-[#FAF9F5]/90 to-transparent z-20" />
@@ -376,7 +377,7 @@ export default function ReelsShowcaseSection() {
                   ) : (
                     <div className={`absolute inset-0 bg-gradient-to-b ${reel.gradient} transition-transform duration-500 group-hover:scale-105`} />
                   )}
-                  
+
                   {/* Dark gradient mask for top & bottom content readability */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-black/60" />
 
@@ -476,15 +477,16 @@ export default function ReelsShowcaseSection() {
               <span>080-6902-9999</span>
             </a>
 
-            <a
-              href="/appointment"
-              className="px-5 py-2.5 rounded-xl btn-multicolor text-xs font-extrabold shadow-xs hover:shadow-md transition-all cursor-pointer"
+            <Link
+              to="/appointment"
+              aria-label="Book a free consultation call with a Chartered Accountant"
+              className="group px-5 py-2.5 rounded-xl btn-multicolor text-xs font-extrabold shadow-xs hover:shadow-md transition-all cursor-pointer inline-flex items-center"
             >
               <span className="relative z-10 text-slate-900 font-extrabold flex items-center gap-1.5">
                 <span>Book Free CA Call</span>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-700" />
+                <ArrowRight className="w-3.5 h-3.5 text-slate-700 transition-transform duration-200 group-hover:translate-x-1" />
               </span>
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -495,7 +497,7 @@ export default function ReelsShowcaseSection() {
           ═════════════════════════════════════════════════════════════════ */}
       {activeReel && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
-          
+
           {/* Close Button */}
           <button
             type="button"
@@ -527,7 +529,7 @@ export default function ReelsShowcaseSection() {
 
           {/* Phone Reel Frame (9:16 Aspect Ratio) */}
           <div className="relative w-full max-w-[380px] h-[85vh] max-h-[720px] rounded-[36px] overflow-hidden shadow-2xl border-4 border-slate-800 bg-black flex flex-col justify-between select-none">
-            
+
             {/* Reel Video Simulation Background */}
             {activeReel.posterUrl ? (
               <img
@@ -656,17 +658,16 @@ export default function ReelsShowcaseSection() {
               </p>
 
               {/* Direct Booking CTA inside player */}
-              <div className="pt-2">
-                <a
-                  href="/appointment"
-                  className="w-full py-2.5 px-4 rounded-xl btn-multicolor font-bold text-xs shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-slate-900"
+                <Link
+                  to="/appointment"
+                  aria-label={`Consult with ${activeReel.speaker.name}`}
+                  className="group w-full py-2.5 px-4 rounded-xl btn-multicolor font-bold text-xs shadow-md flex items-center justify-center gap-1.5 cursor-pointer text-slate-900 transition-all"
                 >
                   <span className="relative z-10 font-bold flex items-center justify-center gap-1.5">
                     <span>Consult with {activeReel.speaker.name}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
                   </span>
-                </a>
-              </div>
+                </Link>
             </div>
 
           </div>

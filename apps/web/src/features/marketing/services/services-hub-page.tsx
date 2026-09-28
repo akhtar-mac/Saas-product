@@ -384,10 +384,13 @@ export default function ServicesHubPage() {
                         <button
                           type="button"
                           onClick={() => setSelectedEnquiryService(s.name)}
-                          className="btn-panda"
+                          aria-label={`Book free CA call for ${s.name}`}
+                          className="group px-4 py-2 rounded-xl btn-multicolor text-xs font-extrabold shadow-xs hover:shadow-md transition-all cursor-pointer inline-flex items-center"
                         >
-                          <span>Details</span>
-                          <ArrowRight className="w-3.5 h-3.5 btn-panda-icon" />
+                          <span className="relative z-10 text-slate-900 font-extrabold flex items-center gap-1.5">
+                            <span>Book Free CA Call</span>
+                            <ArrowRight className="w-3.5 h-3.5 text-slate-700 transition-transform duration-200 group-hover:translate-x-1" />
+                          </span>
                         </button>
                       </div>
                     </div>

@@ -43,6 +43,7 @@ import {
   DollarSign,
   UserCheck,
   MessageSquare,
+  MessageCircle,
   Target,
   Terminal,
 } from 'lucide-react';
@@ -51,8 +52,9 @@ import { RoleType } from '@etaxwala/types';
 import CommandPalette from './components/command-palette';
 import NotificationCenter, { NotificationBadge } from './components/notification-center';
 import { hasUserPermission } from './permissions';
+import { ChatNotificationProvider, useChatNotification } from './context/chat-notification-context';
 
-export default function CrmLayout() {
+function CrmLayoutContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     sales: true,
@@ -68,6 +70,7 @@ export default function CrmLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { staffUser, activeRole, setStaffRole, logoutStaff } = useAuthStore();
+  const { unreadChatCount, triggerTestWhatsAppNotification } = useChatNotification();
   const UNREAD_COUNT = 4;
 
   const toggleSection = (section: string) => {
@@ -853,55 +856,57 @@ export default function CrmLayout() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#FAF9F5]">
-        {/* Top Header matching exact screenshot banner ("ETaxwala Business Solution Pvt Ltd" / Employee Name) */}
-        <header className="hidden md:flex items-center justify-between px-4 py-3 bg-[#FFFDF9] border-b border-[#EAE6DD] sticky top-0 z-20 shadow-xs">
-          {/* Sidebar toggle + Company / Brand Banner */}
-          <div className="flex items-center gap-3">
+        {/* Top Header strictly single line banner */}
+        <header className="hidden md:flex items-center justify-between px-4 h-14 min-h-[56px] max-h-[56px] bg-[#FFFDF9] border-b border-[#EAE6DD] sticky top-0 z-20 shadow-xs whitespace-nowrap gap-3">
+          {/* Left: Sidebar toggle + Company / Brand Banner */}
+          <div className="flex items-center gap-2.5 shrink-0 whitespace-nowrap min-w-0">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg text-slate-500 hover:text-[#1B365D] hover:bg-slate-100 transition-colors shrink-0"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-[#1B365D] hover:bg-slate-100 transition-colors shrink-0"
               title={sidebarOpen ? 'Hide Sidebar' : 'Show Sidebar'}
               id="sidebar-toggle-btn"
             >
               <Menu className="w-4 h-4" />
             </button>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-[#1B365D]">
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <span className="font-bold text-sm text-[#1B365D] whitespace-nowrap tracking-tight">
                 ETaxwala Business Solution Pvt Ltd
               </span>
-              <span className="text-slate-300">|</span>
-              <span className="text-xs font-semibold text-slate-600">
+              <span className="text-slate-300 hidden lg:inline">|</span>
+              <span className="text-xs font-semibold text-slate-500 whitespace-nowrap hidden lg:inline max-w-[220px] truncate">
                 {currentRoleInfo.staffName} ({currentRoleInfo.label})
               </span>
             </div>
           </div>
 
-          {/* Center search / Cmd+K */}
-          <div className="flex items-center gap-4 flex-1 max-w-sm mx-6">
+          {/* Center: Search / Cmd+K strictly single line */}
+          <div className="hidden lg:flex items-center flex-1 max-w-[280px] mx-2 shrink min-w-[180px]">
             <button
               onClick={() => setCmdPaletteOpen(true)}
-              className="relative w-full flex items-center gap-2 bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3.5 py-1.5 text-xs text-slate-400 hover:border-[#1B365D]/40 hover:text-slate-600 transition-colors text-left cursor-pointer"
+              className="relative w-full flex items-center justify-between gap-2 bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-1.5 text-xs text-slate-400 hover:border-[#1B365D]/40 hover:text-slate-600 transition-colors text-left cursor-pointer whitespace-nowrap overflow-hidden"
               id="cmd-palette-trigger"
             >
-              <Search className="w-3.5 h-3.5 shrink-0" />
-              <span className="flex-1">Search leads, tasks, staff... (Cmd+K)</span>
-              <kbd className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px] font-mono border border-slate-200">
+              <div className="flex items-center gap-2 truncate">
+                <Search className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                <span className="truncate">Search leads, tasks...</span>
+              </div>
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px] font-mono border border-slate-200 shrink-0">
                 <Command className="w-2.5 h-2.5" />K
               </kbd>
             </button>
           </div>
 
-          {/* Right quick stats, role switcher & notification */}
-          <div className="flex items-center gap-3">
-            {/* Header Role Switcher for Multi-Role Users */}
-            <div className="flex items-center gap-2 bg-[#FAF9F5] border border-[#EAE6DD] px-2.5 py-1 rounded-xl">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider hidden lg:inline">
-                Active Role:
+          {/* Right: Quick actions, role switcher & profile strictly single line */}
+          <div className="flex items-center gap-2.5 shrink-0 whitespace-nowrap ml-auto">
+            {/* Header Role Switcher */}
+            <div className="flex items-center gap-1.5 bg-[#FAF9F5] border border-[#EAE6DD] px-2.5 py-1.5 rounded-xl shrink-0 whitespace-nowrap">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden xl:inline">
+                ACTIVE ROLE:
               </span>
               <select
                 value={activeRole}
                 onChange={(e) => setStaffRole(e.target.value as RoleType)}
-                className="text-xs font-bold bg-transparent text-[#1B365D] focus:outline-none cursor-pointer"
+                className="text-xs font-bold bg-transparent text-[#1B365D] focus:outline-none cursor-pointer max-w-[190px] truncate"
                 id="header-role-switcher"
               >
                 {roleOptions.map((opt) => (
@@ -912,10 +917,28 @@ export default function CrmLayout() {
               </select>
             </div>
 
+            {/* ETaxwala Live Staff Chat Alert Pill */}
+            <button
+              type="button"
+              onClick={() => triggerTestWhatsAppNotification()}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50/90 hover:bg-blue-100 border border-blue-200 text-blue-900 text-xs font-bold transition-all shadow-xs cursor-pointer shrink-0 whitespace-nowrap group active:scale-95"
+              title="Click to test Staff Chat Popup Notification & Chime"
+              id="staff-test-notif-btn"
+            >
+              <div className="relative w-4 h-4 rounded-md bg-gradient-to-tr from-[#1B365D] to-[#0084D1] flex items-center justify-center text-white shadow-2xs shrink-0">
+                <MessageSquare className="w-2.5 h-2.5 fill-white stroke-none" />
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+              </div>
+              <span className="text-[11px] font-bold text-[#1B365D] whitespace-nowrap">Staff Alerts</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-[#0084D1] text-white text-[10px] font-black group-hover:scale-110 transition-transform shrink-0">
+                {unreadChatCount}
+              </span>
+            </button>
+
             {/* Quick Chat Shortcut */}
             <Link
               to="/crm/chat"
-              className={`p-2 rounded-xl transition-colors relative flex items-center gap-1.5 text-xs font-bold ${
+              className={`px-2.5 py-1.5 rounded-xl transition-colors relative flex items-center gap-1.5 text-xs font-bold shrink-0 whitespace-nowrap ${
                 location.pathname === '/crm/chat'
                   ? 'bg-[#1B365D] text-white shadow-xs'
                   : 'bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 hover:text-[#1B365D]'
@@ -923,17 +946,17 @@ export default function CrmLayout() {
               title="Staff Internal Chat"
               id="header-chat-btn"
             >
-              <MessageSquare className="w-4 h-4 text-[#7C3AED]" />
-              <span className="hidden sm:inline">Staff Chat</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <MessageSquare className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
+              <span className="whitespace-nowrap">Staff Chat</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             </Link>
 
             {/* Notification Bell */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 ref={bellRef}
                 onClick={() => setNotifOpen((prev) => !prev)}
-                className="relative p-2 rounded-xl bg-[#FAF9F5] border border-[#EAE6DD] text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                className="relative p-1.5 rounded-xl bg-[#FAF9F5] border border-[#EAE6DD] text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors shrink-0"
                 id="notification-bell"
               >
                 <Bell className="w-4 h-4" />
@@ -947,7 +970,7 @@ export default function CrmLayout() {
             </div>
 
             {/* Profile Avatar */}
-            <div className="w-8 h-8 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+            <div className="w-8 h-8 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
               {currentRoleInfo.staffName.charAt(0)}
             </div>
           </div>
@@ -962,5 +985,13 @@ export default function CrmLayout() {
       {/* Global Command Palette */}
       <CommandPalette isOpen={cmdPaletteOpen} onClose={() => setCmdPaletteOpen(false)} />
     </div>
+  );
+}
+
+export default function CrmLayout() {
+  return (
+    <ChatNotificationProvider>
+      <CrmLayoutContent />
+    </ChatNotificationProvider>
   );
 }

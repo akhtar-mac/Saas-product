@@ -230,7 +230,7 @@ export default function QuickEnquiryModal({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="btn-panda w-full py-3 mt-2 text-xs font-extrabold flex items-center justify-center gap-2"
+                  className="btn-multicolor w-full py-3 mt-2 text-xs font-extrabold flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
@@ -240,7 +240,7 @@ export default function QuickEnquiryModal({
                   ) : (
                     <>
                       <span>Get Free Quote &amp; Callback</span>
-                      <ArrowRight className="w-4 h-4 btn-panda-icon" />
+                      <ArrowRight className="w-4 h-4 text-slate-700" />
                     </>
                   )}
                 </button>
