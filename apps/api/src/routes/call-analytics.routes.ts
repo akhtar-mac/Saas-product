@@ -204,8 +204,9 @@ router.get('/summary', verifyJWT, requireRole([1, 2, 4, 7, 13]), async (req: Req
       const incoming_calls = logList.filter(l => l.direction === 'incoming').length;
       const outgoing_calls = logList.filter(l => l.direction === 'outgoing').length;
       const missed_calls = logList.filter(l => l.status === 'missed' || l.status === 'rejected').length;
+      const answered_calls = logList.filter(l => l.status === 'answered' || (l.duration_seconds && l.duration_seconds > 0)).length;
       const total_duration = logList.reduce((acc, l) => acc + (l.duration_seconds || 0), 0);
-      return { total_calls, incoming_calls, outgoing_calls, missed_calls, total_duration };
+      return { total_calls, incoming_calls, outgoing_calls, missed_calls, answered_calls, total_duration };
     };
 
     res.json({
@@ -217,6 +218,38 @@ router.get('/summary', verifyJWT, requireRole([1, 2, 4, 7, 13]), async (req: Req
     });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to fetch call summary.' });
+  }
+});
+
+// ─── GET /v1/call-logs/lead-details/:id ───────────────────────────────────────
+// Get call history details for a single lead
+router.get('/lead-details/:id', verifyJWT, requireRole([1, 2, 4, 7, 13]), async (req: Request, res: Response) => {
+  try {
+    const leadId = Number(req.params.id);
+    const lead = await prisma.leads.findUnique({
+      where: { id: leadId },
+      select: { id: true, name: true, contact: true, email: true },
+    });
+    if (!lead) return res.status(404).json({ success: false, error: 'Lead not found.' });
+
+    const calls = await (prisma as any).call_logs.findMany({
+      where: { lead_id: leadId },
+      orderBy: { called_at: 'desc' },
+      take: 20,
+    }).catch(() => []);
+
+    res.json({
+      success: true,
+      lead,
+      calls: calls.map((c: any) => ({
+        id: c.id,
+        call_type: c.status === 'missed' ? 'Missed' : c.direction === 'outgoing' ? 'Outgoing' : 'Incoming',
+        duration: c.duration_seconds || 0,
+        call_timestamp: c.called_at,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to fetch lead call details.' });
   }
 });
 
