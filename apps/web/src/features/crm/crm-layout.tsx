@@ -370,29 +370,6 @@ function CrmLayoutContent() {
               </Link>
             )}
 
-            {/* Staff Users & Roles (Live SQL DB) */}
-            {(isSuperAdmin ||
-              can('users:manage') ||
-              [1, 2, 3, 14].some((rid) => staffUser?.roleIds?.includes(rid))) && (
-              <Link
-                to="/crm/users"
-                onClick={handleNavClick}
-                className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
-                  location.pathname === '/crm/users'
-                    ? 'bg-[#1B365D] text-white shadow-sm'
-                    : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <UserCheck
-                    className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/users' ? 'text-white' : 'text-[#003A66]'}`}
-                  />
-                  <span>Users &amp; Roles</span>
-                </div>
-                <span className="badge badge-navy text-[9px] px-1.5 py-0.2">SQL Roster</span>
-              </Link>
-            )}
-
             {/* Department Hubs: HR Desk, Marketing Suite, IT Command Center */}
             <div className="pt-2 pb-1 px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
               Department Hubs
@@ -682,18 +659,6 @@ function CrmLayoutContent() {
 
                 {openSections.sales && (
                   <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
-                    {/* Dashboard */}
-                    <Link
-                      to="/crm"
-                      onClick={handleNavClick}
-                      className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                        location.pathname === '/crm'
-                          ? 'bg-blue-50 text-[#1B365D] font-bold'
-                          : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
-                      }`}
-                    >
-                      <span>Dashboard</span>
-                    </Link>
 
                     {/* Call Report */}
                     {can('call_analytics:view') && (
@@ -753,25 +718,7 @@ function CrmLayoutContent() {
                       <span>Service Questions</span>
                     </Link>
 
-                    {/* Manage Partners & Partner Orders */}
-                    {can('franchise:partners') && (
-                      <>
-                        <Link
-                          to="/crm/franchise"
-                          onClick={handleNavClick}
-                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                        >
-                          <span>Manage Partners</span>
-                        </Link>
-                        <Link
-                          to="/crm/franchise"
-                          onClick={handleNavClick}
-                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                        >
-                          <span>Manage Partners Orders</span>
-                        </Link>
-                      </>
-                    )}
+
 
                     {/* Manage Leads Dropdown Subgroup */}
                     {can('leads:view') && (
@@ -897,50 +844,6 @@ function CrmLayoutContent() {
                       </div>
                     )}
 
-                    {/* Appointments */}
-                    {can('appointments:manage') && (
-                      <Link
-                        to="/crm/appointments"
-                        onClick={handleNavClick}
-                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname === '/crm/appointments'
-                            ? 'bg-blue-50 text-[#1B365D] font-bold'
-                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
-                        }`}
-                      >
-                        <span>Appointments</span>
-                      </Link>
-                    )}
-
-                    {/* Staff Chat */}
-                    {can('chat:view') && (
-                      <Link
-                        to="/crm/chat"
-                        onClick={handleNavClick}
-                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname === '/crm/chat'
-                            ? 'bg-blue-50 text-[#1B365D] font-bold'
-                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
-                        }`}
-                      >
-                        <span>Staff Chat</span>
-                      </Link>
-                    )}
-
-                    {/* IT Command Center */}
-                    {can('it:view') && (
-                      <Link
-                        to="/crm/it-command"
-                        onClick={handleNavClick}
-                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname === '/crm/it-command'
-                            ? 'bg-blue-50 text-[#1B365D] font-bold'
-                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
-                        }`}
-                      >
-                        <span>IT Command Center</span>
-                      </Link>
-                    )}
                   </div>
                 )}
               </div>
@@ -1121,7 +1024,7 @@ function CrmLayoutContent() {
 
                 {openSections.admin && (
                   <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
-                    {can('users:manage') && (
+                    {(isSuperAdmin || can('users:manage')) && (
                       <Link
                         to="/crm/users"
                         onClick={handleNavClick}
@@ -1131,7 +1034,7 @@ function CrmLayoutContent() {
                             : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
                         }`}
                       >
-                        <span>Manage Manager / Users</span>
+                        <span>Users &amp; Roles</span>
                       </Link>
                     )}
 
@@ -1190,19 +1093,6 @@ function CrmLayoutContent() {
                       </Link>
                     )}
 
-                    {can('call_analytics:view') && (
-                      <Link
-                        to="/crm/call-analytics"
-                        onClick={handleNavClick}
-                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname === '/crm/call-analytics'
-                            ? 'bg-blue-50 text-[#1B365D] font-bold'
-                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
-                        }`}
-                      >
-                        <span>User Activities</span>
-                      </Link>
-                    )}
 
                     {can('appointments:manage') && (
                       <Link
