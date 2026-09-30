@@ -1176,7 +1176,6 @@ function CrmLayoutContent() {
                         <span>Manage Packages</span>
                       </Link>
                     )}
-
                     {can('blogs:manage') && (
                       <Link
                         to="/crm/manage-blogs"
@@ -1190,16 +1189,6 @@ function CrmLayoutContent() {
                         <span>Manage Blogs</span>
                       </Link>
                     )}
-
-                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                      Blog Comments
-                    </span>
-                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                      All Blogs
-                    </span>
-                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                      Manage Ads
-                    </span>
 
                     {can('call_analytics:view') && (
                       <Link
@@ -1228,13 +1217,6 @@ function CrmLayoutContent() {
                         <span>Appointments</span>
                       </Link>
                     )}
-
-                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                      Webinar
-                    </span>
-                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                      Reports
-                    </span>
                   </div>
                 )}
               </div>
