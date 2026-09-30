@@ -140,6 +140,7 @@ function CrmLayoutContent() {
   ];
 
   const isSuperAdmin =
+    activeRole === RoleType.SUPER_ADMIN ||
     staffUser?.role === RoleType.SUPER_ADMIN ||
     (Array.isArray(staffUser?.roles) && staffUser.roles.includes(RoleType.SUPER_ADMIN));
 
@@ -166,32 +167,64 @@ function CrmLayoutContent() {
     }
   };
 
-  const showOpsSection =
-    can('operations:view') ||
-    can('desktop_tracking:view') ||
-    can('operations:employees') ||
-    can('operations:customers') ||
-    can('operations:tasks') ||
-    can('accounts:view');
+  // Role detection — checks activeRole (handles both Super Admin switcher and actual user login)
+  const isActiveRole = (roleType: RoleType | string) =>
+    activeRole === roleType || activeRole === (roleType as string);
 
-  const showFranchiseSection =
-    can('franchise:view') ||
-    can('franchise:partners') ||
-    can('franchise:inquiries') ||
-    can('franchise:training');
+  const isAdmin =
+    isSuperAdmin ||
+    isActiveRole(RoleType.ADMIN) ||
+    (!isSuperAdmin && (staffUser?.roles || []).includes(RoleType.ADMIN)) ||
+    (!isSuperAdmin && (staffUser?.roleIds || []).includes(2));
 
-  const showSalesSection =
-    can('sales:view') ||
-    can('leads:view') ||
-    can('leads:subbrands') ||
-    can('quotations:view') ||
-    can('tasks:view') ||
-    can('workforce:view') ||
-    can('accounts:view');
+  const isSalesManager =
+    isSuperAdmin ||
+    isActiveRole(RoleType.SALES_MANAGER) ||
+    (!isSuperAdmin && (staffUser?.roles || []).includes(RoleType.SALES_MANAGER)) ||
+    (!isSuperAdmin && (staffUser?.roleIds || []).includes(4));
 
   const isSalesEmployee =
-    activeRole === RoleType.SALES_EMPLOYEE ||
-    (!isSuperAdmin && (staffUser?.roles || []).includes(RoleType.SALES_EMPLOYEE));
+    isActiveRole(RoleType.SALES_EMPLOYEE) ||
+    (!isSuperAdmin && (staffUser?.roles || []).includes(RoleType.SALES_EMPLOYEE)) ||
+    (!isSuperAdmin && (staffUser?.roleIds || []).includes(7));
+
+  const isOpsManager =
+    isSuperAdmin ||
+    isActiveRole(RoleType.OPERATIONS_MANAGER) ||
+    (!isSuperAdmin && (staffUser?.roles || []).includes(RoleType.OPERATIONS_MANAGER)) ||
+    (!isSuperAdmin && (staffUser?.roleIds || []).includes(3));
+
+  const isFranchiseManager =
+    isSuperAdmin ||
+    isActiveRole(RoleType.FRANCHISE_MANAGER) ||
+    (!isSuperAdmin && (staffUser?.roles || []).includes(RoleType.FRANCHISE_MANAGER)) ||
+    (!isSuperAdmin && (staffUser?.roleIds || []).includes(6));
+
+  // Section visibility: Super Admin sees all main manager sections directly in sidebar
+  const showOpsSection =
+    (isSuperAdmin || isOpsManager) &&
+    (can('operations:view') ||
+      can('desktop_tracking:view') ||
+      can('operations:employees') ||
+      can('operations:customers') ||
+      can('operations:tasks') ||
+      can('accounts:view'));
+
+  const showFranchiseSection =
+    (isSuperAdmin || isFranchiseManager) &&
+    (can('franchise:view') ||
+      can('franchise:partners') ||
+      can('franchise:inquiries') ||
+      can('franchise:training'));
+
+  const showSalesSection =
+    (isSuperAdmin || isSalesManager) &&
+    (isSuperAdmin ||
+      can('sales:view') ||
+      can('leads:view') ||
+      can('quotations:view') ||
+      can('tasks:view') ||
+      can('workforce:view'));
 
   const showSalesEmployeeSection =
     isSalesEmployee &&
@@ -199,7 +232,17 @@ function CrmLayoutContent() {
       can('quotations:view') ||
       can('tasks:view'));
 
-  const showAdminSection = can('admin:view') || can('users:manage') || can('call_analytics:view');
+  const showAdminSection =
+    isSuperAdmin ||
+    isAdmin ||
+    can('admin:view') ||
+    can('users:manage') ||
+    can('categories:manage') ||
+    can('services:manage') ||
+    can('packages:manage') ||
+    can('blogs:manage') ||
+    can('call_analytics:view') ||
+    can('appointments:manage');
 
   return (
     <div className="h-screen bg-[#FAF9F5] text-slate-800 flex flex-col md:flex-row font-sans overflow-hidden">
@@ -639,7 +682,98 @@ function CrmLayoutContent() {
 
                 {openSections.sales && (
                   <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
-                    {/* Manage Leads sub-group */}
+                    {/* Dashboard */}
+                    <Link
+                      to="/crm"
+                      onClick={handleNavClick}
+                      className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                        location.pathname === '/crm'
+                          ? 'bg-blue-50 text-[#1B365D] font-bold'
+                          : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>Dashboard</span>
+                    </Link>
+
+                    {/* Call Report */}
+                    {can('call_analytics:view') && (
+                      <Link
+                        to="/crm/call-analytics"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/call-analytics'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Call Report</span>
+                      </Link>
+                    )}
+
+                    {/* Manage Employee */}
+                    {can('workforce:view') && (
+                      <Link
+                        to="/crm/workforce"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/workforce'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Employee</span>
+                      </Link>
+                    )}
+
+                    {/* Customer */}
+                    {can('accounts:view') && (
+                      <Link
+                        to="/crm/accounts"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/accounts'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Customer</span>
+                      </Link>
+                    )}
+
+                    {/* Service Questions */}
+                    <Link
+                      to="/crm/services"
+                      onClick={handleNavClick}
+                      className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                        location.pathname === '/crm/services'
+                          ? 'bg-blue-50 text-[#1B365D] font-bold'
+                          : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>Service Questions</span>
+                    </Link>
+
+                    {/* Manage Partners & Partner Orders */}
+                    {can('franchise:partners') && (
+                      <>
+                        <Link
+                          to="/crm/franchise"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <span>Manage Partners</span>
+                        </Link>
+                        <Link
+                          to="/crm/franchise"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <span>Manage Partners Orders</span>
+                        </Link>
+                      </>
+                    )}
+
+                    {/* Manage Leads Dropdown Subgroup */}
                     {can('leads:view') && (
                       <div className="space-y-0.5">
                         <button
@@ -650,121 +784,161 @@ function CrmLayoutContent() {
                             <Users className="w-3.5 h-3.5 text-slate-400" />
                             <span>Manage Leads</span>
                           </div>
-                          {openSections.leadsSub ? (
-                            <ChevronDown className="w-3 h-3" />
-                          ) : (
-                            <ChevronRight className="w-3 h-3" />
-                          )}
+                          {openSections.leadsSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                         </button>
 
                         {openSections.leadsSub && (
                           <div className="pl-5 space-y-1 py-1 text-[11px]">
                             <Link
-                              to="/crm/sales-manage-leads"
+                              to="/crm/leads"
                               onClick={handleNavClick}
                               className={`block py-1 px-2 rounded-md ${
-                                location.pathname === '/crm/sales-manage-leads' ||
                                 location.pathname === '/crm/leads'
                                   ? 'bg-[#1B365D] text-white font-bold'
                                   : 'text-slate-600 hover:text-[#1B365D]'
                               }`}
                             >
-                              Lead List
+                              ETaxwala Leads List
                             </Link>
                             <Link
-                              to="/crm/sales-manage-leads-details"
+                              to="/crm/leads?source=udyamikisan"
                               onClick={handleNavClick}
-                              className={`block py-1 px-2 rounded-md ${
-                                location.pathname === '/crm/sales-manage-leads-details'
-                                  ? 'bg-[#1B365D] text-white font-bold'
-                                  : 'text-slate-600 hover:text-[#1B365D]'
-                              }`}
+                              className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
                             >
-                              Leads Details
+                              Udyomi Leads List
                             </Link>
                             <Link
-                              to="/crm/leads"
+                              to="/crm/leads?source=sahakar"
                               onClick={handleNavClick}
-                              className="block py-1 px-2 text-slate-600 hover:text-[#1B365D]"
+                              className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
                             >
-                              Customer Inquiries
+                              Sahakar Leads List
                             </Link>
                           </div>
                         )}
                       </div>
                     )}
 
-                    {can('leads:subbrands') && (
-                      <>
-                        <Link
-                          to="/crm/sub-brands"
-                          onClick={handleNavClick}
-                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                    {/* Quotations sub-group */}
+                    {can('quotations:view') && (
+                      <div className="space-y-0.5">
+                        <button
+                          onClick={() => toggleSection('quotationsSub')}
+                          className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
                         >
-                          <span>Udyomi Leads</span>
-                        </Link>
-                        <Link
-                          to="/crm/sub-brands"
-                          onClick={handleNavClick}
-                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                        >
-                          <span>Sahakar Leads</span>
-                        </Link>
-                      </>
+                          <div className="flex items-center gap-1.5">
+                            <FileCheck2 className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Quotations</span>
+                          </div>
+                          {openSections.quotationsSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        </button>
+
+                        {openSections.quotationsSub && (
+                          <div className="pl-5 space-y-1 py-1 text-[11px]">
+                            <Link
+                              to="/crm/quotations"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/quotations'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              Manage Quotations
+                            </Link>
+                            <Link
+                              to="/crm/quotations"
+                              onClick={handleNavClick}
+                              className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
+                            >
+                              Create New Quotation
+                            </Link>
+                          </div>
+                        )}
+                      </div>
                     )}
 
-                    {can('quotations:view') && (
+                    {/* Tasks sub-group */}
+                    {can('tasks:view') && (
+                      <div className="space-y-0.5">
+                        <button
+                          onClick={() => toggleSection('tasksSub')}
+                          className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <ClipboardList className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Tasks</span>
+                          </div>
+                          {openSections.tasksSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        </button>
+
+                        {openSections.tasksSub && (
+                          <div className="pl-5 space-y-1 py-1 text-[11px]">
+                            <Link
+                              to="/crm/tasks"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/tasks'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              My Tasks
+                            </Link>
+                            <Link
+                              to="/crm/operation-manage-tasks"
+                              onClick={handleNavClick}
+                              className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
+                            >
+                              Internal Task
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Appointments */}
+                    {can('appointments:manage') && (
                       <Link
-                        to="/crm/quotations"
+                        to="/crm/appointments"
                         onClick={handleNavClick}
                         className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname.startsWith('/crm/quotation')
+                          location.pathname === '/crm/appointments'
                             ? 'bg-blue-50 text-[#1B365D] font-bold'
                             : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
                         }`}
                       >
-                        <span>Quotations</span>
-                        <span className="badge badge-gold text-[9px] px-1 py-0.2">Letterhead</span>
+                        <span>Appointments</span>
                       </Link>
                     )}
 
-                    {can('tasks:view') && (
+                    {/* Staff Chat */}
+                    {can('chat:view') && (
                       <Link
-                        to="/crm/tasks"
+                        to="/crm/chat"
                         onClick={handleNavClick}
-                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/chat'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
                       >
-                        <span>My Tasks</span>
+                        <span>Staff Chat</span>
                       </Link>
                     )}
 
-                    {can('workforce:view') && (
+                    {/* IT Command Center */}
+                    {can('it:view') && (
                       <Link
-                        to="/crm/workforce"
+                        to="/crm/it-command"
                         onClick={handleNavClick}
-                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/it-command'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
                       >
-                        <span>Manage Employee</span>
-                      </Link>
-                    )}
-
-                    {can('accounts:view') && (
-                      <Link
-                        to="/crm/accounts"
-                        onClick={handleNavClick}
-                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                      >
-                        <span>Manage Customers</span>
-                      </Link>
-                    )}
-
-                    {can('leads:view') && (
-                      <Link
-                        to="/crm/leads"
-                        onClick={handleNavClick}
-                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
-                      >
-                        <span>My Leads</span>
+                        <span>IT Command Center</span>
                       </Link>
                     )}
                   </div>
@@ -951,28 +1125,110 @@ function CrmLayoutContent() {
                       <Link
                         to="/crm/users"
                         onClick={handleNavClick}
-                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/users'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
                       >
-                        <span>Staff Users &amp; Roles</span>
+                        <span>Manage Manager / Users</span>
                       </Link>
                     )}
+
+                    {can('categories:manage') && (
+                      <Link
+                        to="/crm/manage-categories"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/manage-categories'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Category</span>
+                      </Link>
+                    )}
+
+                    {can('services:manage') && (
+                      <Link
+                        to="/crm/manage-services"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/manage-services'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Services</span>
+                      </Link>
+                    )}
+
+                    {can('packages:manage') && (
+                      <Link
+                        to="/crm/manage-packages"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/manage-packages'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Packages</span>
+                      </Link>
+                    )}
+
+                    {can('blogs:manage') && (
+                      <Link
+                        to="/crm/manage-blogs"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/manage-blogs'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Blogs</span>
+                      </Link>
+                    )}
+
+                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
+                      Blog Comments
+                    </span>
+                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
+                      All Blogs
+                    </span>
+                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
+                      Manage Ads
+                    </span>
 
                     {can('call_analytics:view') && (
                       <Link
                         to="/crm/call-analytics"
                         onClick={handleNavClick}
-                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/call-analytics'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
                       >
                         <span>User Activities</span>
                       </Link>
                     )}
 
-                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                      Manage Blogs
-                    </span>
-                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                      Appointments
-                    </span>
+                    {can('appointments:manage') && (
+                      <Link
+                        to="/crm/appointments"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/appointments'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Appointments</span>
+                      </Link>
+                    )}
+
                     <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
                       Webinar
                     </span>
