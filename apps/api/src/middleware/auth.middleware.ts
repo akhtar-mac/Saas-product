@@ -37,7 +37,14 @@ export function verifyJWT(req: Request, res: Response, next: NextFunction) {
 
   const token = authHeader.split(' ')[1];
 
-  if (token === 'demo-staff-token' && env.NODE_ENV !== 'production') {
+  if (token === 'demo-staff-token') {
+    if (env.NODE_ENV === 'production') {
+      return res.status(401).json({
+        success: false,
+        error: 'Demo tokens are strictly prohibited in production environments.',
+        code: 'DEMO_TOKEN_BLOCKED',
+      });
+    }
     req.user = {
       user_id: 1,
       role_id: 1,

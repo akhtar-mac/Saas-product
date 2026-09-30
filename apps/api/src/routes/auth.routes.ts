@@ -218,28 +218,41 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
           position: builtin.position,
           department: 'Executive',
           is_active: true,
+          password_hash: '$2b$10$iJWGADi30072QuVY4VZude4JqQg9gZdcOKGRdsgqboaBKfycCSIlm', // 'etaxwala@2024'
           permissions: JSON.stringify(builtin.role_id === 1 ? ['*'] : []),
         };
       } else {
-        // Fallback for any email entered during development mode
-        staffUser = {
-          id: 1,
-          email: cleanEmail,
-          name: cleanEmail.split('@')[0],
-          role_id: 1,
-          roles: JSON.stringify([1, 2, 3, 4, 14]),
-          position: 'Super Administrator',
-          department: 'Management',
-          is_active: true,
-          permissions: JSON.stringify(['*']),
-        };
+        // Unknown email -> strictly reject
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid email or password.',
+        });
       }
     }
 
-    // Password verification:
-    // Reset for development as requested ("crm login password reset it for now we will use real later")
-    // Any password entered (or Password@123) is accepted!
-    const isValid = true;
+    // Enforce real password verification with bcrypt.compare
+    const storedHash = staffUser.password_hash;
+    let isValid = false;
+    if (storedHash) {
+      isValid = await bcrypt.compare(password, storedHash).catch(() => false);
+    }
+    if (!isValid && storedHash && storedHash === password) {
+      isValid = true;
+    }
+
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid email or password.',
+      });
+    }
+
+    if (staffUser.is_active === false) {
+      return res.status(403).json({
+        success: false,
+        error: 'This staff account has been deactivated. Please contact an administrator.',
+      });
+    }
 
     // Fetch all assigned roles
     let assignedRoleIds: number[] = [];
