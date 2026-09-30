@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/auth-store';
+import { RoleType } from '@etaxwala/types';
 import {
   Search,
   Plus,
@@ -271,10 +273,15 @@ const STATUS_KPIS = [
 export default function CrmLeadsPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { staffUser, activeRole } = useAuthStore();
 
   // Mode: 'list' (Lead List) vs 'details' (Leads Details) vs 'inquiry' (Customer Inquiries)
   const isDetailsView = location.pathname.includes('details') || location.search.includes('view=details');
   const isInquiryView = location.pathname.includes('inquiry') || location.search.includes('view=inquiry');
+
+  // Role-based visibility — Sales Employees have restricted view (no bulk assign, no selection)
+  const isSalesEmployee = activeRole === RoleType.SALES_EMPLOYEE;
+  const isManager = !isSalesEmployee; // Manager / Admin can assign leads to other staff
 
   const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS);
   const [activeStatusKpi, setActiveStatusKpi] = useState<string | null>(null);
@@ -653,22 +660,6 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
               <Plus className="w-4 h-4" />
             </button>
 
-            {/* Assign Leads To */}
-            <div className="btn-multicolor relative shadow-2xs rounded-xl">
-              <select
-                value={assignStaff}
-                onChange={(e) => setAssignStaff(e.target.value)}
-                className="bg-transparent text-slate-800 font-bold text-xs py-2 px-3 pr-7 focus:outline-none cursor-pointer appearance-none relative z-2"
-              >
-                <option value="Assign Leads To">Assign Leads To</option>
-                <option value="Krushna Shinde">Krushna Shinde</option>
-                <option value="Netra Divekar">Netra Divekar</option>
-                <option value="Manisha Shinde">Manisha Shinde</option>
-                <option value="Shashikant Panchal">Shashikant Panchal</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-600 absolute right-2 top-2.5 pointer-events-none z-2" />
-            </div>
-
             {/* Status Dropdown */}
             <div className="btn-multicolor relative shadow-2xs rounded-xl">
               <select
@@ -686,39 +677,56 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2.5 pointer-events-none z-2" />
             </div>
 
-            {/* Bulk Add */}
-            <button
-              onClick={handleBulkAssign}
-              className="btn-multicolor py-2 px-4 shadow-2xs"
-            >
-              <span className="text-xs font-bold">Bulk Add</span>
-            </button>
+            {/* Manager-only: Assign Leads To + Bulk Add + Sample Excel + Import FB */}
+            {isManager && (
+              <>
+                <div className="btn-multicolor relative shadow-2xs rounded-xl">
+                  <select
+                    value={assignStaff}
+                    onChange={(e) => setAssignStaff(e.target.value)}
+                    className="bg-transparent text-slate-800 font-bold text-xs py-2 px-3 pr-7 focus:outline-none cursor-pointer appearance-none relative z-2"
+                  >
+                    <option value="Assign Leads To">Assign Leads To</option>
+                    <option value="Krushna Shinde">Krushna Shinde</option>
+                    <option value="Netra Divekar">Netra Divekar</option>
+                    <option value="Manisha Shinde">Manisha Shinde</option>
+                    <option value="Shashikant Panchal">Shashikant Panchal</option>
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-600 absolute right-2 top-2.5 pointer-events-none z-2" />
+                </div>
 
-            {/* Sample Excel (Blue single-color moving outline) */}
-            <button
-              onClick={() => alert('Sample Excel download template initiated.')}
-              className="btn-multicolor py-2 px-4 shadow-2xs"
-              style={{
-                '--c-base': '#2563EB',
-                '--c-light': '#93C5FD',
-                '--c-dark': '#1D4ED8',
-              } as React.CSSProperties}
-            >
-              <span className="text-xs font-bold text-slate-800">Sample Excel</span>
-            </button>
+                <button
+                  onClick={handleBulkAssign}
+                  className="btn-multicolor py-2 px-4 shadow-2xs"
+                >
+                  <span className="text-xs font-bold">Bulk Add</span>
+                </button>
 
-            {/* Import FB (Navy single-color moving outline) */}
-            <button
-              onClick={() => alert('Facebook Leads Sync API triggered.')}
-              className="btn-multicolor py-2 px-4 shadow-2xs"
-              style={{
-                '--c-base': '#1E3A8A',
-                '--c-light': '#60A5FA',
-                '--c-dark': '#0F172A',
-              } as React.CSSProperties}
-            >
-              <span className="text-xs font-bold text-slate-800">Import FB</span>
-            </button>
+                <button
+                  onClick={() => alert('Sample Excel download template initiated.')}
+                  className="btn-multicolor py-2 px-4 shadow-2xs"
+                  style={{
+                    '--c-base': '#2563EB',
+                    '--c-light': '#93C5FD',
+                    '--c-dark': '#1D4ED8',
+                  } as React.CSSProperties}
+                >
+                  <span className="text-xs font-bold text-slate-800">Sample Excel</span>
+                </button>
+
+                <button
+                  onClick={() => alert('Facebook Leads Sync API triggered.')}
+                  className="btn-multicolor py-2 px-4 shadow-2xs"
+                  style={{
+                    '--c-base': '#1E3A8A',
+                    '--c-light': '#60A5FA',
+                    '--c-dark': '#0F172A',
+                  } as React.CSSProperties}
+                >
+                  <span className="text-xs font-bold text-slate-800">Import FB</span>
+                </button>
+              </>
+            )}
           </div>
 
           {isDetailsView && (
@@ -780,14 +788,17 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
           <table className="table-crm w-full text-left text-xs border-separate border-spacing-0">
             <thead className="sticky top-0 z-10">
               <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider sticky top-0 z-10">
-                <th className="py-2.5 px-3 w-8 text-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.size === leads.length && leads.length > 0}
-                    onChange={toggleSelectAll}
-                    className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
-                  />
-                </th>
+                {/* Checkbox column only visible for managers (for bulk assign) */}
+                {isManager && (
+                  <th className="py-2.5 px-3 w-8 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === leads.length && leads.length > 0}
+                      onChange={toggleSelectAll}
+                      className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
+                    />
+                  </th>
+                )}
                 {isDetailsView ? (
                   <>
                     <th className="py-2.5 px-2 w-8 text-center">#</th>
@@ -800,7 +811,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                     <th className="py-2.5 px-3 font-bold">City</th>
                     <th className="py-2.5 px-3 font-bold">Service</th>
                     <th className="py-2.5 px-3 font-bold">Added By</th>
-                    <th className="py-2.5 px-3 font-bold">Assign To</th>
+                    {isManager && <th className="py-2.5 px-3 font-bold">Assign To</th>}
                     <th className="py-2.5 px-3 font-bold">Assign Date</th>
                     <th className="py-2.5 px-3 font-bold">Status</th>
                   </>
@@ -812,8 +823,8 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                     <th className="py-2.5 px-3 font-bold">State</th>
                     <th className="py-2.5 px-3 font-bold">City</th>
                     <th className="py-2.5 px-3 font-bold">Service</th>
-                    <th className="py-2.5 px-3 font-bold">Added By</th>
-                    <th className="py-2.5 px-3 font-bold">Is Assign</th>
+                    <th className="py-2.5 px-3 font-bold">Lead Source</th>
+                    {isManager && <th className="py-2.5 px-3 font-bold">Is Assign</th>}
                     <th className="py-2.5 px-3 font-bold text-center">Action</th>
                   </>
                 )}
@@ -825,14 +836,16 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                   key={item.id}
                   className={idx % 2 === 0 ? 'bg-white hover:bg-sky-50/40' : 'bg-[#F9FAFB] hover:bg-sky-50/40'}
                 >
-                  <td className="py-2.5 px-3 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(item.id)}
-                      onChange={() => toggleSelect(item.id)}
-                      className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
-                    />
-                  </td>
+                  {isManager && (
+                    <td className="py-2.5 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(item.id)}
+                        onChange={() => toggleSelect(item.id)}
+                        className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
+                      />
+                    </td>
+                  )}
 
                   {isDetailsView ? (
                     <>
@@ -861,8 +874,15 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                       </td>
                       <td className="py-2.5 px-3 text-slate-600 font-semibold">{item.leadScore}</td>
                       <td className="py-2.5 px-3">
-                        <span className="bg-[#0284c7] text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                          {item.leadSource || 'ETaxwala'}
+                        {/* Lead Source badge: ETaxwala (blue), Udyami Kisan (amber), Sahakar (green) */}
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                          item.leadSource?.toLowerCase().includes('udyami') ? 'bg-amber-500 text-white' :
+                          item.leadSource?.toLowerCase().includes('sahakar') ? 'bg-emerald-600 text-white' :
+                          'bg-[#0284c7] text-white'
+                        }`}>
+                          {item.leadSource?.toLowerCase().includes('udyami') ? 'Udyami Kisan' :
+                           item.leadSource?.toLowerCase().includes('sahakar') ? 'Sahakar' :
+                           'ETaxwala'}
                         </span>
                       </td>
                       <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{item.fDate}</td>
@@ -871,13 +891,15 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                       <td className="py-2.5 px-3 text-slate-600">{item.city}</td>
                       <td className="py-2.5 px-3 text-slate-700 font-medium">{item.service}</td>
                       <td className="py-2.5 px-3 text-slate-600">{item.addedBy}</td>
-                      <td className="py-2.5 px-3">
-                        {item.assignTo === 'Not Assigned' ? (
-                          <span className="text-red-600 font-bold">{item.assignTo}</span>
-                        ) : (
-                          <span className="text-slate-800 font-medium">{item.assignTo}</span>
-                        )}
-                      </td>
+                      {isManager && (
+                        <td className="py-2.5 px-3">
+                          {item.assignTo === 'Not Assigned' ? (
+                            <span className="text-red-600 font-bold">{item.assignTo}</span>
+                          ) : (
+                            <span className="text-slate-800 font-medium">{item.assignTo}</span>
+                          )}
+                        </td>
+                      )}
                       <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{item.assignDate}</td>
                       <td className="py-2.5 px-3">
                         <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
@@ -903,32 +925,45 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
                       <td className="py-2.5 px-3 text-slate-600">{item.state}</td>
                       <td className="py-2.5 px-3 text-slate-600">{item.city}</td>
                       <td className="py-2.5 px-3 text-slate-700 font-medium">{item.service}</td>
-                      <td className="py-2.5 px-3 text-slate-600">{item.addedBy}</td>
                       <td className="py-2.5 px-3">
-                        {item.isAssign ? (
-                          <button
-                            onClick={() => {
-                              setLeads((prev) =>
-                                prev.map((l) => (l.id === item.id ? { ...l, isAssign: false } : l))
-                              );
-                            }}
-                            className="btn-multicolor text-[10px] font-bold px-2 py-0.5 rounded-xl shadow-2xs"
-                          >
-                            Assigned
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setLeads((prev) =>
-                                prev.map((l) => (l.id === item.id ? { ...l, isAssign: true } : l))
-                              );
-                            }}
-                            className="btn-multicolor text-[10px] font-bold px-2 py-0.5 rounded-xl shadow-2xs"
-                          >
-                            Un-Assign
-                          </button>
-                        )}
+                        {/* Lead Source: ETaxwala / Udyami Kisan / Sahakar */}
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                          item.leadSource?.toLowerCase().includes('udyami') ? 'bg-amber-500 text-white' :
+                          item.leadSource?.toLowerCase().includes('sahakar') ? 'bg-emerald-600 text-white' :
+                          'bg-[#0284c7] text-white'
+                        }`}>
+                          {item.leadSource?.toLowerCase().includes('udyami') ? 'Udyami Kisan' :
+                           item.leadSource?.toLowerCase().includes('sahakar') ? 'Sahakar' :
+                           'ETaxwala'}
+                        </span>
                       </td>
+                      {isManager && (
+                        <td className="py-2.5 px-3">
+                          {item.isAssign ? (
+                            <button
+                              onClick={() => {
+                                setLeads((prev) =>
+                                  prev.map((l) => (l.id === item.id ? { ...l, isAssign: false } : l))
+                                );
+                              }}
+                              className="btn-multicolor text-[10px] font-bold px-2 py-0.5 rounded-xl shadow-2xs"
+                            >
+                              Assigned
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setLeads((prev) =>
+                                  prev.map((l) => (l.id === item.id ? { ...l, isAssign: true } : l))
+                                );
+                              }}
+                              className="btn-multicolor text-[10px] font-bold px-2 py-0.5 rounded-xl shadow-2xs"
+                            >
+                              Un-Assign
+                            </button>
+                          )}
+                        </td>
+                      )}
                       <td className="py-2.5 px-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
