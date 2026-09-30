@@ -173,6 +173,169 @@ router.get(
   }
 );
 
+// ─── GET /v1/call-logs/staff ─────────────────────────────────────────────────
+// Get staff list for filtering call logs
+router.get('/staff', verifyJWT, requireRole([...ADMIN_ROLES, ...SALES_MANAGERS]), async (req: Request, res: Response) => {
+  try {
+    const staff = await prisma.staff_users.findMany({
+      where: { is_active: true },
+      select: { id: true, name: true, role_id: true },
+      orderBy: { name: 'asc' },
+    });
+    res.json({ success: true, data: staff });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to fetch staff list.' });
+  }
+});
+
+// ─── GET /v1/call-logs/summary ───────────────────────────────────────────────
+// Detailed call summary breakdown (Total & Today) like old CRM Call Report
+router.get('/summary', verifyJWT, requireRole([1, 2, 4, 7, 13]), async (req: Request, res: Response) => {
+  try {
+    const { from, to, user_id, lead_source } = req.query;
+
+    const targetUserId = req.user!.role_id === 7 || req.user!.role_id === 13 ? req.user!.user_id : user_id ? Number(user_id) : undefined;
+
+    // Build base filter for call_logs
+    const baseWhere: any = {};
+    if (targetUserId) baseWhere.user_id = targetUserId;
+    if (from || to) {
+      baseWhere.called_at = {};
+      if (from) baseWhere.called_at.gte = new Date(from as string);
+      if (to)   baseWhere.called_at.lte = new Date(to as string);
+    }
+
+    const logs = await (prisma as any).call_logs.findMany({
+      where: baseWhere,
+      select: { direction: true, status: true, duration_seconds: true, called_at: true },
+    }).catch(() => []);
+
+    // Filter for today
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStart = new Date(todayStr);
+    const todayEnd = new Date(todayStr + 'T23:59:59.999Z');
+
+    const todayLogs = logs.filter((l: any) => {
+      const d = new Date(l.called_at);
+      return d >= todayStart && d <= todayEnd;
+    });
+
+    const calculateStats = (logList: any[]) => {
+      const total_calls = logList.length;
+      const incoming_calls = logList.filter((l: any) => l.direction === 'incoming').length;
+      const outgoing_calls = logList.filter((l: any) => l.direction === 'outgoing').length;
+      const missed_calls = logList.filter((l: any) => l.status === 'missed' || l.status === 'rejected').length;
+      const total_duration = logList.reduce((acc: number, l: any) => acc + (l.duration_seconds || 0), 0);
+      return { total_calls, incoming_calls, outgoing_calls, missed_calls, total_duration };
+    };
+
+    res.json({
+      success: true,
+      data: {
+        total: calculateStats(logs),
+        today: calculateStats(todayLogs),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to fetch call summary.' });
+  }
+});
+
+// ─── GET /v1/call-logs/history ───────────────────────────────────────────────
+// Detailed call history log table (from call_logs & call_history)
+router.get('/history', verifyJWT, requireRole([1, 2, 4, 7, 13]), async (req: Request, res: Response) => {
+  try {
+    const { from, to, user_id, call_type, lead_source, search, page = '1', limit = '50' } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page as string) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit as string) || 50));
+    const skip = (pageNum - 1) * limitNum;
+
+    const targetUserId = (req.user!.role_id === 7 || req.user!.role_id === 13)
+      ? req.user!.user_id
+      : user_id ? Number(user_id) : undefined;
+
+    const where: any = {};
+    if (targetUserId) where.user_id = targetUserId;
+    if (call_type) {
+      if (call_type === 'incoming') where.direction = 'incoming';
+      else if (call_type === 'outgoing') where.direction = 'outgoing';
+      else if (call_type === 'missed') where.status = { in: ['missed', 'rejected'] };
+    }
+    if (from || to) {
+      where.called_at = {};
+      if (from) where.called_at.gte = new Date(from as string);
+      if (to)   where.called_at.lte = new Date(to as string);
+    }
+    if (search) {
+      where.OR = [
+        { phone_number: { contains: search as string } },
+      ];
+    }
+
+    const [logs, total] = await Promise.all([
+      (prisma as any).call_logs.findMany({
+        where,
+        orderBy: { called_at: 'desc' },
+        skip,
+        take: limitNum,
+      }).catch(() => []),
+      (prisma as any).call_logs.count({ where }).catch(() => 0),
+    ]);
+
+    // Fetch associated lead and staff user details
+    const leadIds = [...new Set(logs.map((l: any) => l.lead_id).filter(Boolean))];
+    const userIds = [...new Set(logs.map((l: any) => l.user_id).filter(Boolean))];
+
+    const [leads, users] = await Promise.all([
+      leadIds.length ? prisma.leads.findMany({
+        where: { id: { in: leadIds as number[] } },
+        select: { id: true, name: true, contact: true, source: true },
+      }) : [],
+      userIds.length ? prisma.staff_users.findMany({
+        where: { id: { in: userIds as number[] } },
+        select: { id: true, name: true },
+      }) : [],
+    ]);
+
+    const leadMap = new Map(leads.map((l: any) => [l.id, l]));
+    const userMap = new Map(users.map((u: any) => [u.id, u]));
+
+    const formattedData = logs.map((l: any) => {
+      const lead = l.lead_id ? leadMap.get(l.lead_id) : null;
+      const user = userMap.get(l.user_id);
+      return {
+        id: l.id,
+        lead_id: l.lead_id,
+        lead_name: lead?.name || 'Unknown Lead',
+        lead_contact: lead?.contact || l.phone_number,
+        lead_source: lead?.source || 'Direct',
+        phone_number: l.phone_number,
+        direction: l.direction,
+        status: l.status,
+        call_type: l.status === 'missed' ? 'incoming_missed' : l.direction === 'outgoing' ? 'outgoing' : 'incoming',
+        duration_seconds: l.duration_seconds || 0,
+        user_id: l.user_id,
+        user_name: user?.name || 'Staff #' + l.user_id,
+        called_at: l.called_at,
+      };
+    });
+
+    res.json({
+      success: true,
+      data: formattedData,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to fetch call history.' });
+  }
+});
+
 // ─── Helper: Aggregation over call_history ──────────────────────────────────
 async function getEmployeeAnalytics(userIds: number[], from?: string, to?: string) {
   try {

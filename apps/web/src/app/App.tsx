@@ -208,7 +208,7 @@ export default function App() {
           <Route
             path="appointments"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2]}>
+              <CrmProtectedRoute allowedRoleIds={[1, 2, 7]}>
                 <CrmAppointmentsPage />
               </CrmProtectedRoute>
             }

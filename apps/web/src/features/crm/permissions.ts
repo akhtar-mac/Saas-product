@@ -417,9 +417,14 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'leads:view',
     'quotations:view',
     'tasks:view',
+    'accounts:view',
+    'appointments:manage',
     'chat:view',
     'chat:send',
     'chat:attachments',
+    'it:view',
+    'it:leads',
+    'it:quotations',
   ],
 
   // 8: Operations Employee

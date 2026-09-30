@@ -63,6 +63,9 @@ function CrmLayoutContent() {
     admin: false,
     desktop: false,
     leadsSub: true,
+    salesEmployee: true,
+    quotationsSub: false,
+    tasksSub: false,
   });
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -185,6 +188,16 @@ function CrmLayoutContent() {
     can('tasks:view') ||
     can('workforce:view') ||
     can('accounts:view');
+
+  const isSalesEmployee =
+    activeRole === RoleType.SALES_EMPLOYEE ||
+    (!isSuperAdmin && (staffUser?.roles || []).includes(RoleType.SALES_EMPLOYEE));
+
+  const showSalesEmployeeSection =
+    isSalesEmployee &&
+    (can('leads:view') ||
+      can('quotations:view') ||
+      can('tasks:view'));
 
   const showAdminSection = can('admin:view') || can('users:manage') || can('call_analytics:view');
 
@@ -752,6 +765,161 @@ function CrmLayoutContent() {
                         className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
                       >
                         <span>My Leads</span>
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 4.5 SALES EMPLOYEE ACCORDION */}
+            {showSalesEmployeeSection && (
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => toggleSection('salesEmployee')}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Users className="w-4 h-4 text-[#1B365D] shrink-0" />
+                    <span>Sales Employee</span>
+                  </div>
+                  {openSections.salesEmployee ? (
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  )}
+                </button>
+
+                {openSections.salesEmployee && (
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
+                    {/* Manage Leads */}
+                    {can('leads:view') && (
+                      <Link
+                        to="/crm/leads"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/leads' || location.pathname === '/crm/sales-manage-leads'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Leads</span>
+                      </Link>
+                    )}
+
+                    {/* Customers */}
+                    {can('accounts:view') && (
+                      <Link
+                        to="/crm/accounts"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/accounts'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Customers</span>
+                      </Link>
+                    )}
+
+                    {/* Quotations sub-group */}
+                    {can('quotations:view') && (
+                      <div className="space-y-0.5">
+                        <button
+                          onClick={() => toggleSection('quotationsSub')}
+                          className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <FileCheck2 className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Quotations</span>
+                          </div>
+                          {openSections.quotationsSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        </button>
+
+                        {openSections.quotationsSub && (
+                          <div className="pl-5 space-y-1 py-1 text-[11px]">
+                            <Link
+                              to="/crm/quotations"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/quotations'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              Manage Quotations
+                            </Link>
+                            <Link
+                              to="/crm/quotation"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/quotation'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              Create New
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Tasks sub-group */}
+                    {can('tasks:view') && (
+                      <div className="space-y-0.5">
+                        <button
+                          onClick={() => toggleSection('tasksSub')}
+                          className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <ClipboardList className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Tasks</span>
+                          </div>
+                          {openSections.tasksSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        </button>
+
+                        {openSections.tasksSub && (
+                          <div className="pl-5 space-y-1 py-1 text-[11px]">
+                            <Link
+                              to="/crm/tasks"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/tasks'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              My Tasks
+                            </Link>
+                            <Link
+                              to="/crm/operation-manage-tasks"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/operation-manage-tasks'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              Internal Task
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Appointments */}
+                    {can('appointments:manage') && (
+                      <Link
+                        to="/crm/appointments"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/appointments'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Appointments</span>
                       </Link>
                     )}
                   </div>

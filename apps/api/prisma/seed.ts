@@ -210,9 +210,7 @@ async function main() {
         },
       });
     }
-    await prisma.$executeRawUnsafe(
-      `SELECT setval(pg_get_serial_sequence('staff_users','id'),(SELECT MAX(id) FROM staff_users));`
-    );
+    // MySQL uses AUTO_INCREMENT — no need to reset sequences like PostgreSQL
   } catch (err: any) {
     console.log('Notice:', err?.message || err);
   }
