@@ -57,8 +57,8 @@ export default function CrmLayout() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     sales: true,
     operations: true,
-    franchise: false,
-    admin: false,
+    franchise: true,
+    admin: true,
     desktop: false,
     leadsSub: true,
     quotationsSub: true,
@@ -163,42 +163,63 @@ export default function CrmLayout() {
     }
   };
 
-  const isSalesManager = activeRole === 'SALES_MANAGER' || staffUser?.roleIds?.[0] === 4;
-  const isSalesEmployee = activeRole === 'SALES_EMPLOYEE' || staffUser?.roleIds?.[0] === 7;
+  // Role detection — checks activeRole (handles both Super Admin switcher and actual user login)
+  const isActiveRole = (roleType: RoleType | string) =>
+    activeRole === roleType || activeRole === (roleType as string);
 
+  const isSalesManager =
+    isSuperAdmin ||
+    isActiveRole(RoleType.SALES_MANAGER) ||
+    (!isSuperAdmin && (staffUser?.roleIds || []).includes(4));
+
+  const isSalesEmployee =
+    isActiveRole(RoleType.SALES_EMPLOYEE) ||
+    (!isSuperAdmin && (staffUser?.roleIds || []).includes(7));
+
+  const isOpsManager =
+    isSuperAdmin ||
+    isActiveRole(RoleType.OPERATIONS_MANAGER) ||
+    (!isSuperAdmin && (staffUser?.roleIds || []).includes(3));
+
+  const isFranchiseManager =
+    isSuperAdmin ||
+    isActiveRole(RoleType.FRANCHISE_MANAGER) ||
+    (!isSuperAdmin && (staffUser?.roleIds || []).includes(6));
+
+  // Section visibility: Super Admin sees all main manager sections directly in sidebar
   const showOpsSection =
-    can('operations:view') ||
-    can('desktop_tracking:view') ||
-    can('operations:employees') ||
-    can('operations:customers') ||
-    can('operations:tasks') ||
-    can('accounts:view');
+    (isSuperAdmin || isOpsManager) &&
+    (can('operations:view') ||
+      can('desktop_tracking:view') ||
+      can('operations:employees') ||
+      can('operations:customers') ||
+      can('operations:tasks') ||
+      can('accounts:view'));
 
   const showFranchiseSection =
-    can('franchise:view') ||
-    can('franchise:partners') ||
-    can('franchise:inquiries') ||
-    can('franchise:training');
+    (isSuperAdmin || isFranchiseManager) &&
+    (can('franchise:view') ||
+      can('franchise:partners') ||
+      can('franchise:inquiries') ||
+      can('franchise:training'));
 
   const showSalesSection =
-    isSalesManager &&
-    (can('sales:view') ||
+    (isSuperAdmin || isSalesManager) &&
+    (isSuperAdmin ||
+      can('sales:view') ||
       can('leads:view') ||
-      can('leads:subbrands') ||
       can('quotations:view') ||
       can('tasks:view') ||
-      can('workforce:view') ||
-      can('accounts:view'));
+      can('workforce:view'));
 
   const showSalesEmployeeSection =
     isSalesEmployee &&
     (can('leads:view') ||
       can('quotations:view') ||
-      can('tasks:view') ||
-      can('accounts:view'));
+      can('tasks:view'));
 
   const showAdminSection =
-    can('admin:view') || can('users:manage') || can('call_analytics:view');
+    isSuperAdmin || can('admin:view') || can('users:manage') || can('call_analytics:view');
 
   return (
     <div className="h-screen bg-[#FAF9F5] text-slate-800 flex flex-col md:flex-row font-sans overflow-hidden">
@@ -591,7 +612,7 @@ export default function CrmLayout() {
                 >
                   <div className="flex items-center gap-2.5">
                     <PhoneCall className="w-4 h-4 text-[#1B365D] shrink-0" />
-                    <span>Sales Manager</span>
+                    <span>Sales Manager Hub</span>
                   </div>
                   {openSections.sales ? (
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
@@ -602,22 +623,50 @@ export default function CrmLayout() {
 
                 {openSections.sales && (
                   <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
-                    {/* Manage Leads */}
-                    {can('leads:view') && (
+                    {/* Dashboard */}
+                    <Link
+                      to="/crm"
+                      onClick={handleNavClick}
+                      className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                        location.pathname === '/crm'
+                          ? 'bg-blue-50 text-[#1B365D] font-bold'
+                          : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>Dashboard</span>
+                    </Link>
+
+                    {/* Call Report */}
+                    {can('call_analytics:view') && (
                       <Link
-                        to="/crm/leads"
+                        to="/crm/call-analytics"
                         onClick={handleNavClick}
                         className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname === '/crm/leads' || location.pathname === '/crm/sales-manage-leads'
+                          location.pathname === '/crm/call-analytics'
                             ? 'bg-blue-50 text-[#1B365D] font-bold'
                             : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
                         }`}
                       >
-                        <span>Manage Leads</span>
+                        <span>Call Report</span>
                       </Link>
                     )}
 
-                    {/* Customers */}
+                    {/* Manage Employee */}
+                    {can('workforce:view') && (
+                      <Link
+                        to="/crm/workforce"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/workforce'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Manage Employee</span>
+                      </Link>
+                    )}
+
+                    {/* Customer */}
                     {can('accounts:view') && (
                       <Link
                         to="/crm/accounts"
@@ -628,8 +677,87 @@ export default function CrmLayout() {
                             : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
                         }`}
                       >
-                        <span>Customers</span>
+                        <span>Customer</span>
                       </Link>
+                    )}
+
+                    {/* Service Questions */}
+                    <Link
+                      to="/crm/services"
+                      onClick={handleNavClick}
+                      className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                        location.pathname === '/crm/services'
+                          ? 'bg-blue-50 text-[#1B365D] font-bold'
+                          : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>Service Questions</span>
+                    </Link>
+
+                    {/* Manage Partners & Partner Orders */}
+                    {can('franchise:partners') && (
+                      <>
+                        <Link
+                          to="/crm/franchise"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <span>Manage Partners</span>
+                        </Link>
+                        <Link
+                          to="/crm/franchise"
+                          onClick={handleNavClick}
+                          className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <span>Manage Partners Orders</span>
+                        </Link>
+                      </>
+                    )}
+
+                    {/* Manage Leads Dropdown Subgroup */}
+                    {can('leads:view') && (
+                      <div className="space-y-0.5">
+                        <button
+                          onClick={() => toggleSection('leadsSub')}
+                          className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Manage Leads</span>
+                          </div>
+                          {openSections.leadsSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        </button>
+
+                        {openSections.leadsSub && (
+                          <div className="pl-5 space-y-1 py-1 text-[11px]">
+                            <Link
+                              to="/crm/leads"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/leads'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              ETaxwala Leads List
+                            </Link>
+                            <Link
+                              to="/crm/leads?source=udyamikisan"
+                              onClick={handleNavClick}
+                              className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
+                            >
+                              Udyomi Leads List
+                            </Link>
+                            <Link
+                              to="/crm/leads?source=sahakar"
+                              onClick={handleNavClick}
+                              className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
+                            >
+                              Sahakar Leads List
+                            </Link>
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* Quotations sub-group */}
@@ -660,15 +788,11 @@ export default function CrmLayout() {
                               Manage Quotations
                             </Link>
                             <Link
-                              to="/crm/quotation"
+                              to="/crm/quotations"
                               onClick={handleNavClick}
-                              className={`block py-1 px-2 rounded-md ${
-                                location.pathname === '/crm/quotation'
-                                  ? 'bg-[#1B365D] text-white font-bold'
-                                  : 'text-slate-600 hover:text-[#1B365D]'
-                              }`}
+                              className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
                             >
-                              Create New
+                              Create New Quotation
                             </Link>
                           </div>
                         )}
@@ -705,32 +829,13 @@ export default function CrmLayout() {
                             <Link
                               to="/crm/operation-manage-tasks"
                               onClick={handleNavClick}
-                              className={`block py-1 px-2 rounded-md ${
-                                location.pathname === '/crm/operation-manage-tasks'
-                                  ? 'bg-[#1B365D] text-white font-bold'
-                                  : 'text-slate-600 hover:text-[#1B365D]'
-                              }`}
+                              className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
                             >
                               Internal Task
                             </Link>
                           </div>
                         )}
                       </div>
-                    )}
-
-                    {/* Manage Employee (Sales Manager creates Sales Employees) */}
-                    {can('workforce:view') && (
-                      <Link
-                        to="/crm/workforce"
-                        onClick={handleNavClick}
-                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname === '/crm/workforce'
-                            ? 'bg-blue-50 text-[#1B365D] font-bold'
-                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
-                        }`}
-                      >
-                        <span>Manage Employee</span>
-                      </Link>
                     )}
 
                     {/* Appointments */}
