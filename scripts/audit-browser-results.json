@@ -1,0 +1,389 @@
+[
+  {
+    "page": "CRM Dashboard",
+    "url": "http://localhost:5173/crm",
+    "h1": "Executive Master Cockpit",
+    "h2": "Lead Acquisition Trends",
+    "tableRows": 8,
+    "inputs": 2,
+    "buttons": 14,
+    "textLength": 4543,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Manage Categories",
+    "url": "http://localhost:5173/crm/manage-categories",
+    "h1": "Manage Categories",
+    "h2": "",
+    "tableRows": 9,
+    "inputs": 3,
+    "buttons": 31,
+    "textLength": 2415,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Manage Services",
+    "url": "http://localhost:5173/crm/manage-services",
+    "h1": "Manage Services",
+    "h2": "",
+    "tableRows": 5,
+    "inputs": 4,
+    "buttons": 23,
+    "textLength": 2093,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Manage Packages",
+    "url": "http://localhost:5173/crm/manage-packages",
+    "h1": "Manage Packages",
+    "h2": "",
+    "tableRows": 3,
+    "inputs": 3,
+    "buttons": 19,
+    "textLength": 1711,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Manage Blogs",
+    "url": "http://localhost:5173/crm/manage-blogs",
+    "h1": "Manage Blogs",
+    "h2": "",
+    "tableRows": 4,
+    "inputs": 4,
+    "buttons": 21,
+    "textLength": 1916,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Appointments",
+    "url": "http://localhost:5173/crm/appointments",
+    "h1": "Appointments",
+    "h2": "",
+    "tableRows": 5,
+    "inputs": 5,
+    "buttons": 25,
+    "textLength": 1962,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Users & Roles",
+    "url": "http://localhost:5173/crm/users",
+    "h1": "User & Role Permission Management",
+    "h2": "",
+    "tableRows": 9,
+    "inputs": 4,
+    "buttons": 38,
+    "textLength": 2743,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Leads Pipeline",
+    "url": "http://localhost:5173/crm/leads",
+    "h1": "",
+    "h2": "",
+    "tableRows": 9,
+    "inputs": 15,
+    "buttons": 88,
+    "textLength": 2765,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Quotations Studio",
+    "url": "http://localhost:5173/crm/quotations",
+    "h1": "Quotations",
+    "h2": "",
+    "tableRows": 5,
+    "inputs": 4,
+    "buttons": 39,
+    "textLength": 2153,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Operations Tasks",
+    "url": "http://localhost:5173/crm/tasks",
+    "h1": "",
+    "h2": "",
+    "tableRows": 7,
+    "inputs": 15,
+    "buttons": 54,
+    "textLength": 2666,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Accounts / Customers",
+    "url": "http://localhost:5173/crm/accounts",
+    "h1": "",
+    "h2": "CUSTOMER LIST",
+    "tableRows": 5,
+    "inputs": 4,
+    "buttons": 34,
+    "textLength": 1869,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Call Analytics",
+    "url": "http://localhost:5173/crm/call-analytics",
+    "h1": "Call Report & Analytics",
+    "h2": "Call Logs & Activity",
+    "tableRows": 2,
+    "inputs": 8,
+    "buttons": 17,
+    "textLength": 2035,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [
+      {
+        "url": "http://localhost:5001/v1/call-logs/staff",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/call-logs/staff",
+        "status": 500
+      }
+    ],
+    "status": "PASS"
+  },
+  {
+    "page": "Workforce Roster",
+    "url": "http://localhost:5173/crm/workforce",
+    "h1": "MANAGE OPERATION EMPLOYEES",
+    "h2": "",
+    "tableRows": 18,
+    "inputs": 4,
+    "buttons": 61,
+    "textLength": 3226,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "IT Command Center",
+    "url": "http://localhost:5173/crm/it-command",
+    "h1": "IT & Solutions Command Center",
+    "h2": "Inbound Software & Tech Inquiries",
+    "tableRows": 0,
+    "inputs": 2,
+    "buttons": 19,
+    "textLength": 1843,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [
+      {
+        "url": "http://localhost:5001/v1/it/leads",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/it/meetings",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/it/quotations",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/it/projects",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/it/telemetry",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/it/leads",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/it/meetings",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/it/quotations",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/it/projects",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/it/telemetry",
+        "status": 500
+      }
+    ],
+    "status": "PASS"
+  },
+  {
+    "page": "Marketing Hub",
+    "url": "http://localhost:5173/crm/marketing",
+    "h1": "Marketing & Growth Intelligence Hub",
+    "h2": "",
+    "tableRows": 0,
+    "inputs": 2,
+    "buttons": 24,
+    "textLength": 1793,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [
+      {
+        "url": "http://localhost:5001/v1/marketing/posts",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/marketing/campaigns",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/marketing/attribution",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/marketing/integrations",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/marketing/sync-jobs",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/marketing/overview",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/marketing/posts",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/marketing/campaigns",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/marketing/attribution",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/marketing/integrations",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/marketing/sync-jobs",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/marketing/overview",
+        "status": 500
+      }
+    ],
+    "status": "PASS"
+  },
+  {
+    "page": "HR Desk",
+    "url": "http://localhost:5173/crm/hr",
+    "h1": "HR & Accounts Command Center",
+    "h2": "",
+    "tableRows": 1,
+    "inputs": 3,
+    "buttons": 22,
+    "textLength": 1655,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [
+      {
+        "url": "http://localhost:5001/v1/hr/applicants",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/hr/applicants",
+        "status": 500
+      }
+    ],
+    "status": "PASS"
+  },
+  {
+    "page": "Franchise Network",
+    "url": "http://localhost:5173/crm/franchise",
+    "h1": "Franchise & Partner Ecosystem Portal",
+    "h2": "Top Regional Franchise Partners",
+    "tableRows": 5,
+    "inputs": 2,
+    "buttons": 15,
+    "textLength": 2169,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [],
+    "status": "PASS"
+  },
+  {
+    "page": "Sub-Brands Hub",
+    "url": "http://localhost:5173/crm/sub-brands",
+    "h1": "Sub-Brand Operations & Multi-Tenancy Hub",
+    "h2": "Active Udyami Kisan FPC Registrations & Governance",
+    "tableRows": 1,
+    "inputs": 2,
+    "buttons": 16,
+    "textLength": 2037,
+    "isBlank": false,
+    "hasErrorBoundary": false,
+    "consoleErrors": [],
+    "networkErrors": [
+      {
+        "url": "http://localhost:5001/v1/crm/sub-brands/leads",
+        "status": 500
+      },
+      {
+        "url": "http://localhost:5001/v1/crm/sub-brands/leads",
+        "status": 500
+      }
+    ],
+    "status": "PASS"
+  }
+]
