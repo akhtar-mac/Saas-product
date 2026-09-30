@@ -35,6 +35,25 @@ interface DbStaffUser {
   department?: string;
 }
 
+const DEFAULT_STAFF_USERS: DbStaffUser[] = [
+  { id: 1, email: 'admin@etaxwala.com', name: 'Super Admin', role_id: 1, role_name: 'super_admin', position: 'Chief Executive Officer', department: 'Executive' },
+  { id: 2, email: 'general.admin@etaxwala.com', name: 'General Administrator', role_id: 2, role_name: 'admin', position: 'Systems Administrator', department: 'Administration' },
+  { id: 3, email: 'ops.manager@etaxwala.com', name: 'Operations Manager', role_id: 3, role_name: 'operations_manager', position: 'Head of Operations', department: 'Operations' },
+  { id: 4, email: 'sales.manager@etaxwala.com', name: 'Sales Manager', role_id: 4, role_name: 'sales_manager', position: 'Head of Sales', department: 'Sales' },
+  { id: 5, email: 'marketing@etaxwala.com', name: 'Marketing Manager', role_id: 5, role_name: 'marketing_manager', position: 'Growth Lead', department: 'Marketing' },
+  { id: 6, email: 'franchise@etaxwala.com', name: 'Franchise Manager', role_id: 6, role_name: 'franchise_manager', position: 'Partnership Director', department: 'Franchise' },
+  { id: 7, email: 'priya.sales@etaxwala.com', name: 'Priya Sharma (Sales Exec)', role_id: 7, role_name: 'sales_employee', position: 'Senior Sales Executive', department: 'Sales' },
+  { id: 8, email: 'rahul.ops@etaxwala.com', name: 'Rahul Verma (Operations)', role_id: 8, role_name: 'operations_employee', position: 'Operations Specialist', department: 'Operations' },
+  { id: 9, email: 'seo.content@etaxwala.com', name: 'Marketing Content & SEO', role_id: 9, role_name: 'marketing_employee', position: 'Content Lead', department: 'Marketing' },
+  { id: 10, email: 'field.partner@etaxwala.com', name: 'Franchise Field Agent', role_id: 10, role_name: 'franchise_partner', position: 'Field Partner', department: 'Franchise' },
+  { id: 11, email: 'ca.expert@etaxwala.com', name: 'CA Tax Expert', role_id: 11, role_name: 'consultation', position: 'Chartered Accountant', department: 'Consultation' },
+  { id: 12, email: 'qc.reviewer@etaxwala.com', name: 'QC & Document Reviewer', role_id: 12, role_name: 'operations_assistant', position: 'Quality Control Lead', department: 'Operations' },
+  { id: 13, email: 'assistant.sales@etaxwala.com', name: 'Sales Assistant', role_id: 13, role_name: 'sales_assistant', position: 'Lead Qualifier', department: 'Sales' },
+  { id: 14, email: 'hr@etaxwala.com', name: 'HR Manager', role_id: 14, role_name: 'hr', position: 'People Operations', department: 'Human Resources' },
+  { id: 15, email: 'subbrands@etaxwala.com', name: 'Sub-Brands Manager', role_id: 15, role_name: 'website_manager', position: 'Agri & Rural Lead', department: 'Digital Brands' },
+  { id: 16, email: 'support@etaxwala.com', name: 'Support Executive', role_id: 16, role_name: 'staff', position: 'Client Helpdesk', department: 'Customer Support' },
+];
+
 const ROLE_COLORS: Record<number, string> = {
   1: '#003A66', // Super Admin
   2: '#004d87', // Admin
@@ -57,12 +76,12 @@ const ROLE_COLORS: Record<number, string> = {
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 export default function CrmLoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@etaxwala.com');
+  const [password, setPassword] = useState('Password@123');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [dbStaff, setDbStaff] = useState<DbStaffUser[]>([]);
-  const [loadingStaff, setLoadingStaff] = useState(true);
+  const [dbStaff, setDbStaff] = useState<DbStaffUser[]>(DEFAULT_STAFF_USERS);
+  const [loadingStaff, setLoadingStaff] = useState(false);
   const navigate = useNavigate();
   const { loginStaff } = useAuthStore();
 
@@ -70,7 +89,7 @@ export default function CrmLoginPage() {
     fetch(`${API_BASE}/v1/crm/users`)
       .then((res) => res.json())
       .then((data) => {
-        if (data?.success && Array.isArray(data?.data)) {
+        if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
           setDbStaff(data.data);
         }
       })
@@ -223,14 +242,64 @@ export default function CrmLoginPage() {
 
           {/* Manual Login Form */}
           <div className="w-full max-w-lg bg-white rounded-3xl border border-[#EAE6DD] shadow-xl p-7 sm:p-8 space-y-5">
-            {/* Dev bypass notification */}
-            <div className="flex items-start gap-3 p-3 bg-amber-50/90 border border-amber-200/80 rounded-2xl text-xs text-amber-900">
-              <KeyRound className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <div className="space-y-0.5">
-                <span className="font-bold text-amber-950 block">Password Verification Reset</span>
-                <span className="text-amber-800/90">
-                  Password check is currently unlocked. Enter any password (or leave blank for default), or tap any staff account below for 1-click login.
-                </span>
+            {/* ⚡ 1-Click Quick Role Logins */}
+            <div className="bg-amber-50/90 border border-amber-200/90 p-4 rounded-2xl space-y-2.5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="text-xs font-bold text-amber-950 uppercase tracking-wider">⚡ 1-Click Demo Logins</span>
+                </div>
+                <span className="text-[10px] text-amber-800 bg-amber-200/70 px-2 py-0.5 rounded-full font-bold">Demo Mode Active</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('admin@etaxwala.com');
+                    setPassword('Password@123');
+                    doLogin('admin@etaxwala.com', 'Password@123');
+                  }}
+                  className="p-2.5 bg-white hover:bg-amber-100/60 border border-amber-300/80 rounded-xl text-left transition-all text-xs font-semibold text-slate-800 shadow-xs cursor-pointer hover:border-amber-400"
+                >
+                  <div className="text-[10px] text-[#003A66] font-bold uppercase">👑 Super Admin</div>
+                  <div className="text-[11px] truncate text-slate-600 font-mono">admin@...</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('sales.manager@etaxwala.com');
+                    setPassword('Password@123');
+                    doLogin('sales.manager@etaxwala.com', 'Password@123');
+                  }}
+                  className="p-2.5 bg-white hover:bg-amber-100/60 border border-amber-300/80 rounded-xl text-left transition-all text-xs font-semibold text-slate-800 shadow-xs cursor-pointer hover:border-amber-400"
+                >
+                  <div className="text-[10px] text-emerald-800 font-bold uppercase">📈 Sales Mgr</div>
+                  <div className="text-[11px] truncate text-slate-600 font-mono">sales.manager@...</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('ops.manager@etaxwala.com');
+                    setPassword('Password@123');
+                    doLogin('ops.manager@etaxwala.com', 'Password@123');
+                  }}
+                  className="p-2.5 bg-white hover:bg-amber-100/60 border border-amber-300/80 rounded-xl text-left transition-all text-xs font-semibold text-slate-800 shadow-xs cursor-pointer hover:border-amber-400"
+                >
+                  <div className="text-[10px] text-purple-800 font-bold uppercase">⚙️ Ops Mgr</div>
+                  <div className="text-[11px] truncate text-slate-600 font-mono">ops.manager@...</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('ca.expert@etaxwala.com');
+                    setPassword('Password@123');
+                    doLogin('ca.expert@etaxwala.com', 'Password@123');
+                  }}
+                  className="p-2.5 bg-white hover:bg-amber-100/60 border border-amber-300/80 rounded-xl text-left transition-all text-xs font-semibold text-slate-800 shadow-xs cursor-pointer hover:border-amber-400"
+                >
+                  <div className="text-[10px] text-amber-800 font-bold uppercase">💼 CA Expert</div>
+                  <div className="text-[11px] truncate text-slate-600 font-mono">ca.expert@...</div>
+                </button>
               </div>
             </div>
 

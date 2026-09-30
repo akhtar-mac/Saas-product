@@ -127,6 +127,7 @@ export default function App() {
         </Route>
 
         {/* ── 3. Staff CRM — JWT Protected ────────────────────────── */}
+        <Route path="/login" element={<Navigate to="/crm/login" replace />} />
         <Route path="/crm/login" element={<CrmLoginPage />} />
         <Route
           path="/crm"

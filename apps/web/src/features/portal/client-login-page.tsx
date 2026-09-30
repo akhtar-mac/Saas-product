@@ -14,8 +14,8 @@ import {
 import { useAuthStore } from '@/store/auth-store';
 
 export default function ClientLoginPage() {
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+  const [identifier, setIdentifier] = useState('rajesh@apextech.in');
+  const [password, setPassword] = useState('Password@123');
   const [showPassword, setShowPassword] = useState(false);
   const [useOtp, setUseOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
@@ -25,15 +25,14 @@ export default function ClientLoginPage() {
   const navigate = useNavigate();
   const { loginCustomer } = useAuthStore();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const doDirectLogin = async (idVal: string, pwVal: string) => {
     setIsLoading(true);
     setError(null);
     try {
       const res = await fetch('/v1/customer/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ identifier: idVal, password: pwVal }),
       });
       const data = await res.json();
       if (data?.success && data.customer && data.token) {
@@ -47,6 +46,15 @@ export default function ClientLoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (useOtp) {
+      doDirectLogin(identifier || 'rajesh@apextech.in', otp || '123456');
+      return;
+    }
+    doDirectLogin(identifier || 'rajesh@apextech.in', password || 'Password@123');
   };
 
   const features = [
@@ -127,6 +135,30 @@ export default function ClientLoginPage() {
                 <span>{error}</span>
               </div>
             )}
+            {/* ⚡ 1-Click Demo Client Access */}
+            <div className="bg-amber-50/90 border border-amber-200/90 p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-700 font-bold text-sm shrink-0">
+                  ⚡
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-amber-900 block">Demo Client Portal Access</span>
+                  <span className="text-[11px] text-amber-700 font-mono">rajesh@apextech.in • Rajesh Sharma</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIdentifier('rajesh@apextech.in');
+                  setPassword('Password@123');
+                  doDirectLogin('rajesh@apextech.in', 'Password@123');
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition-all shrink-0 cursor-pointer"
+              >
+                1-Click Login
+              </button>
+            </div>
+
             <form onSubmit={handleLogin} className="space-y-4">
               {/* Email / Mobile */}
               <div>

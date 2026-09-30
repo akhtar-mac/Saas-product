@@ -203,16 +203,17 @@ router.post('/auth/login', validateBody(CustomerLoginSchema), async (req, res) =
       } catch {}
     }
 
-    // 3. Known system client fallback for offline/demo environments
+    // 3. Demo fallback in non-production environments
     if (!customer) {
-      if (clean === 'rajesh@apextech.in' || clean === '9876543210' || clean === 'director@apexlogistics.in') {
+      if (env.NODE_ENV !== 'production') {
+        const isEmail = clean.includes('@');
         customer = {
           id: 101,
           lead_id: 501,
-          name: 'Rajesh Sharma',
-          business: 'Apex Tech Solutions Pvt Ltd',
-          email: 'rajesh@apextech.in',
-          contact: '+91 98765 43210',
+          name: isEmail ? clean.split('@')[0] : 'Rajesh Sharma',
+          business: isEmail ? `${clean.split('@')[0]}'s Enterprise` : 'Apex Tech Solutions Pvt Ltd',
+          email: isEmail ? clean : 'rajesh@apextech.in',
+          contact: isEmail ? '+91 98765 43210' : clean,
           password: '$2b$10$iJWGADi30072QuVY4VZude4JqQg9gZdcOKGRdsgqboaBKfycCSIlm',
           service: 'Private Limited Company Registration',
           service_price: 7999,
@@ -234,20 +235,18 @@ router.post('/auth/login', validateBody(CustomerLoginSchema), async (req, res) =
       throw new ApiError(401, 'Invalid email, mobile number, or password.');
     }
 
-    // Enforce real password verification with bcrypt.compare
-    let isPasswordValid = false;
-    if (customer.password) {
-      isPasswordValid = await bcrypt.compare(password, customer.password).catch(() => false);
-      if (!isPasswordValid && customer.password === password) {
-        isPasswordValid = true; // Legacy plain text match
-      }
-      if (!isPasswordValid && (password === 'Customer@123' || password === 'etaxwala@2024')) {
-        isPasswordValid = true;
-      }
-    }
-
+    // Password verification: in demo mode accept credentials, in production enforce strict bcrypt
+    let isPasswordValid = env.NODE_ENV !== 'production';
     if (!isPasswordValid) {
-      throw new ApiError(401, 'Invalid email, mobile number, or password.');
+      if (customer.password) {
+        isPasswordValid = await bcrypt.compare(password, customer.password).catch(() => false);
+        if (!isPasswordValid && customer.password === password) {
+          isPasswordValid = true; // Legacy plain text match
+        }
+      }
+      if (!isPasswordValid) {
+        throw new ApiError(401, 'Invalid email, mobile number, or password.');
+      }
     }
 
     if (customer.is_active === 0 || customer.is_active === false) {

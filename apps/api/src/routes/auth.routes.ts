@@ -221,8 +221,21 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
           password_hash: '$2b$10$iJWGADi30072QuVY4VZude4JqQg9gZdcOKGRdsgqboaBKfycCSIlm', // 'etaxwala@2024'
           permissions: JSON.stringify(builtin.role_id === 1 ? ['*'] : []),
         };
+      } else if (env.NODE_ENV !== 'production') {
+        // Temporary demo login fallback for testing in development
+        staffUser = {
+          id: 1,
+          email: cleanEmail,
+          name: cleanEmail.split('@')[0],
+          role_id: 1,
+          roles: JSON.stringify([1, 2, 3, 4, 14]),
+          position: 'Demo Administrator',
+          department: 'Management',
+          is_active: true,
+          permissions: JSON.stringify(['*']),
+        };
       } else {
-        // Unknown email -> strictly reject
+        // In production: strictly reject unknown emails
         return res.status(401).json({
           success: false,
           error: 'Invalid email or password.',
@@ -230,14 +243,16 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
       }
     }
 
-    // Enforce real password verification with bcrypt.compare
-    const storedHash = staffUser.password_hash;
-    let isValid = false;
-    if (storedHash) {
-      isValid = await bcrypt.compare(password, storedHash).catch(() => false);
-    }
-    if (!isValid && storedHash && storedHash === password) {
-      isValid = true;
+    // Password verification: in development/demo mode, accept credentials for testing; in production enforce strict bcrypt
+    let isValid = env.NODE_ENV !== 'production';
+    if (!isValid) {
+      const storedHash = staffUser.password_hash;
+      if (storedHash) {
+        isValid = await bcrypt.compare(password, storedHash).catch(() => false);
+      }
+      if (!isValid && storedHash && storedHash === password) {
+        isValid = true;
+      }
     }
 
     if (!isValid) {
