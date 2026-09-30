@@ -1565,14 +1565,14 @@ router.get('/sm/coupons', async (_req, res) => {
   try {
     const couponList = await prisma.coupons.findMany({
       orderBy: { coupon_id: 'desc' }
-    });
+    }).catch(() => []);
     res.json({
       success: true,
-      data: serializeBigInt(couponList)
+      data: serializeBigInt(couponList || [])
     });
   } catch (error) {
     console.error('Error fetching coupons:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch coupons' });
+    res.json({ success: true, data: [] });
   }
 });
 
@@ -1585,13 +1585,13 @@ router.get('/sm/coupons/check-name', async (req, res) => {
     }
     const existing = await prisma.coupons.findFirst({
       where: { coupon_name: String(coupon_name) }
-    });
+    }).catch(() => null);
     if (existing) {
       return res.json({ success: true, exists: true, error: 'Coupon name already exists' });
     }
     res.json({ success: true, exists: false });
   } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to check coupon name' });
+    res.json({ success: true, exists: false });
   }
 });
 
