@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   BarChart3,
   TrendingUp,
@@ -27,6 +28,7 @@ import {
   Send,
   RefreshCw,
   ShieldCheck,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 import { useAuthStore } from '@/store/auth-store';
@@ -421,13 +423,13 @@ export default function MarketingDashboard() {
             <Layers className="w-3.5 h-3.5" />
             Attribution & ROI
           </button>
-          <button
-            onClick={() => setActiveTab('integrations')}
-            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap btn-multicolor"
+          <Link
+            to="/crm/quotations"
+            className="px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white transition-all flex items-center gap-1.5 whitespace-nowrap font-bold"
           >
-            <Zap className="w-3.5 h-3.5" />
-            Integrations & Sync ({integrations.length})
-          </button>
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            Quotations
+          </Link>
         </div>
       </div>
 

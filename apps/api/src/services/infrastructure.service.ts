@@ -25,7 +25,7 @@ export class InfrastructureService {
     const mem = process.memoryUsage();
     const cpus = os.cpus();
     const cpuCount = cpus.length || 1;
-    
+
     // CPU load percentage calculation
     const loadAvg = os.loadavg();
     let cpuPercent = Math.min(100, Math.round(((loadAvg[0] || 0.1) / cpuCount) * 100));
@@ -78,11 +78,11 @@ export class InfrastructureService {
             db_pool_idle: metrics.db_pool_idle,
             db_latency_ms: metrics.db_latency_ms,
             system_status: metrics.system_status,
-            metadata: {
+            metadata: JSON.stringify({
               uptime_seconds: metrics.uptime_seconds,
               node_version: metrics.node_version,
               platform: metrics.platform,
-            },
+            }),
           },
         });
       } catch (err: any) {

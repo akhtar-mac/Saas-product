@@ -44,7 +44,8 @@ interface CallHistoryRow {
 }
 
 export default function SalesAgentDashboard() {
-  const { staffToken } = useAuthStore();
+  const { staffToken, staffUser } = useAuthStore();
+  const staffDisplayName = staffUser?.username || (staffUser as any)?.name || 'Sales Executive';
 
   // Stats State
   const [totalStats, setTotalStats] = useState<CallSummaryStats>({
@@ -89,13 +90,78 @@ export default function SalesAgentDashboard() {
   const [callRemarks, setCallRemarks] = useState('');
   const [callStatus, setCallStatus] = useState('INTERESTED');
 
+  // Assigned Leads Queue State
+  const [assignedLeads, setAssignedLeads] = useState<any[]>([]);
+  const [isLoadingAssigned, setIsLoadingAssigned] = useState(false);
+
   // Dummy Priority Assigned Queue (fallback)
   const myAssignedLeads = [
-    { id: 541, name: 'Ramesh Patel', phone: '+91 98220 11223', service: 'Private Limited Company Incorporation', source: 'ETaxwala', status: 'Assigned', city: 'Ahmedabad' },
-    { id: 542, name: 'Siddharth Roy', phone: '+91 97112 33445', service: 'FSSAI Food License + GST', source: 'Udyami Kisan', status: 'Follow Up', city: 'Kolkata' },
-    { id: 543, name: 'Kavita Sundaram', phone: '+91 94440 55667', service: 'Trademark Registration & Search', source: 'Sahakar', status: 'Quote Sent', city: 'Chennai' },
-    { id: 544, name: 'Gaurav Jain', phone: '+91 98100 77889', service: 'Income Tax Return (ITR-3)', source: 'ETaxwala', status: 'Assigned', city: 'Delhi' },
+    {
+      id: 541,
+      name: 'Ramesh Patel',
+      phone: '+91 98220 11223',
+      service: 'Private Limited Company Incorporation',
+      source: 'ETaxwala',
+      status: 'Assigned',
+      city: 'Ahmedabad',
+    },
+    {
+      id: 542,
+      name: 'Siddharth Roy',
+      phone: '+91 97112 33445',
+      service: 'FSSAI Food License + GST',
+      source: 'Udyami Kisan',
+      status: 'Follow Up',
+      city: 'Kolkata',
+    },
+    {
+      id: 543,
+      name: 'Kavita Sundaram',
+      phone: '+91 94440 55667',
+      service: 'Trademark Registration & Search',
+      source: 'Sahakar',
+      status: 'Quote Sent',
+      city: 'Chennai',
+    },
+    {
+      id: 544,
+      name: 'Gaurav Jain',
+      phone: '+91 98100 77889',
+      service: 'Income Tax Return (ITR-3)',
+      source: 'ETaxwala',
+      status: 'Assigned',
+      city: 'Delhi',
+    },
   ];
+
+  // Fetch real assigned leads for logged in agent
+  const fetchAssignedLeads = async () => {
+    const activeUserId = staffUser?.id;
+    if (!activeUserId) return;
+    setIsLoadingAssigned(true);
+    try {
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const res = await fetch(`${API_BASE}/v1/crm/leads?assigned_to=${activeUserId}&limit=10`);
+      const data = await res.json();
+      if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+        setAssignedLeads(
+          data.data.map((l: any) => ({
+            id: l.id,
+            name: l.name || 'Client Lead',
+            phone: l.contact || '9876543210',
+            service: l.service || 'Tax Service',
+            source: l.source || 'ETaxwala',
+            status: l.status || l.lead_status_name || 'Assigned',
+            city: l.city || 'Maharashtra',
+          }))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to fetch assigned leads:', err);
+    } finally {
+      setIsLoadingAssigned(false);
+    }
+  };
 
   // Fetch Stats
   const fetchStats = async () => {
@@ -147,7 +213,8 @@ export default function SalesAgentDashboard() {
   useEffect(() => {
     fetchStats();
     fetchHistory(1);
-  }, []);
+    fetchAssignedLeads();
+  }, [staffUser?.id]);
 
   const handleFilterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,12 +272,13 @@ export default function SalesAgentDashboard() {
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-display font-bold text-brand-navy">
-              Sales Employee Workstation
+              Sales Workstation — {staffDisplayName}
             </h1>
             <span className="badge badge-gold">User Type 6 (SED)</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Track daily calls, view call history summary, log outcomes and manage your assigned leads.
+            Track daily calls, view call history summary, log outcomes and manage your assigned
+            leads.
           </p>
         </div>
 
@@ -229,7 +297,9 @@ export default function SalesAgentDashboard() {
         {/* Total Calls */}
         <div className="bg-emerald-700 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-emerald-100 uppercase tracking-wider">Total Calls</span>
+            <span className="text-[11px] font-semibold text-emerald-100 uppercase tracking-wider">
+              Total Calls
+            </span>
             <PhoneCall className="w-4 h-4 text-emerald-200" />
           </div>
           <p className="text-2xl font-display font-bold mt-2">{totalStats.total_calls}</p>
@@ -238,7 +308,9 @@ export default function SalesAgentDashboard() {
         {/* Incoming */}
         <div className="bg-sky-600 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-sky-100 uppercase tracking-wider">Incoming</span>
+            <span className="text-[11px] font-semibold text-sky-100 uppercase tracking-wider">
+              Incoming
+            </span>
             <PhoneIncoming className="w-4 h-4 text-sky-200" />
           </div>
           <p className="text-2xl font-display font-bold mt-2">{totalStats.incoming_calls}</p>
@@ -247,7 +319,9 @@ export default function SalesAgentDashboard() {
         {/* Outgoing */}
         <div className="bg-amber-600 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-amber-100 uppercase tracking-wider">Outgoing</span>
+            <span className="text-[11px] font-semibold text-amber-100 uppercase tracking-wider">
+              Outgoing
+            </span>
             <PhoneOutgoing className="w-4 h-4 text-amber-200" />
           </div>
           <p className="text-2xl font-display font-bold mt-2">{totalStats.outgoing_calls}</p>
@@ -256,7 +330,9 @@ export default function SalesAgentDashboard() {
         {/* Missed */}
         <div className="bg-rose-600 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-rose-100 uppercase tracking-wider">Missed</span>
+            <span className="text-[11px] font-semibold text-rose-100 uppercase tracking-wider">
+              Missed
+            </span>
             <PhoneMissed className="w-4 h-4 text-rose-200" />
           </div>
           <p className="text-2xl font-display font-bold mt-2">{totalStats.missed_calls}</p>
@@ -265,16 +341,22 @@ export default function SalesAgentDashboard() {
         {/* Total Duration */}
         <div className="bg-slate-700 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-slate-200 uppercase tracking-wider">Total Duration</span>
+            <span className="text-[11px] font-semibold text-slate-200 uppercase tracking-wider">
+              Total Duration
+            </span>
             <Clock className="w-4 h-4 text-slate-300" />
           </div>
-          <p className="text-xl font-display font-bold mt-2">{formatDuration(totalStats.total_duration)}</p>
+          <p className="text-xl font-display font-bold mt-2">
+            {formatDuration(totalStats.total_duration)}
+          </p>
         </div>
 
         {/* Answered */}
         <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">Answered</span>
+            <span className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
+              Answered
+            </span>
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
           <p className="text-2xl font-display font-bold mt-2">{totalStats.answered_calls}</p>
@@ -287,7 +369,13 @@ export default function SalesAgentDashboard() {
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-brand-navy" />
             <h3 className="font-display font-bold text-sm text-slate-800">
-              Today's Summary ({new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })})
+              Today's Summary (
+              {new Date().toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+              })}
+              )
             </h3>
           </div>
           <span className="badge badge-navy text-[10px]">Real-time Updates</span>
@@ -321,7 +409,9 @@ export default function SalesAgentDashboard() {
           {/* Today Duration */}
           <div className="bg-purple-50 border border-purple-100 p-3.5 rounded-xl text-center">
             <p className="text-[11px] font-semibold text-purple-800">Today Duration</p>
-            <p className="text-lg font-bold text-purple-900 mt-1">{formatDuration(todayStats.total_duration)}</p>
+            <p className="text-lg font-bold text-purple-900 mt-1">
+              {formatDuration(todayStats.total_duration)}
+            </p>
           </div>
 
           {/* Today Answered */}
@@ -336,10 +426,10 @@ export default function SalesAgentDashboard() {
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
           <div>
-            <h3 className="font-display font-bold text-base text-slate-800">
-              My Call History
-            </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Full audit log of incoming, outgoing and missed call records</p>
+            <h3 className="font-display font-bold text-base text-slate-800">My Call History</h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Full audit log of incoming, outgoing and missed call records
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -357,7 +447,10 @@ export default function SalesAgentDashboard() {
         </div>
 
         {/* Filter Form */}
-        <form onSubmit={handleFilterSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <form
+          onSubmit={handleFilterSubmit}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200"
+        >
           <div>
             <label className="block text-[11px] font-semibold text-slate-600 mb-1">From Date</label>
             <input
@@ -393,7 +486,9 @@ export default function SalesAgentDashboard() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-slate-600 mb-1">Search Lead</label>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+              Search Lead
+            </label>
             <input
               type="text"
               placeholder="Lead name or phone..."
@@ -453,11 +548,15 @@ export default function SalesAgentDashboard() {
                           row.call_type === 'outgoing'
                             ? 'bg-sky-100 text-sky-800'
                             : row.call_type === 'incoming'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-rose-100 text-rose-800'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-rose-100 text-rose-800'
                         }`}
                       >
-                        {row.call_type === 'outgoing' ? 'Outgoing' : row.call_type === 'incoming' ? 'Incoming' : 'Missed'}
+                        {row.call_type === 'outgoing'
+                          ? 'Outgoing'
+                          : row.call_type === 'incoming'
+                            ? 'Incoming'
+                            : 'Missed'}
                       </span>
                     </td>
                     <td className="text-xs text-slate-600 font-medium">
@@ -497,7 +596,9 @@ export default function SalesAgentDashboard() {
             <h3 className="font-display font-bold text-base text-slate-800">
               My Assigned Priority Queue
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Click call to dial lead and log conversation outcomes</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Click call to dial lead and log conversation outcomes
+            </p>
           </div>
           <span className="badge badge-navy">Direct Telecalling</span>
         </div>
@@ -515,30 +616,31 @@ export default function SalesAgentDashboard() {
               </tr>
             </thead>
             <tbody>
-              {myAssignedLeads.map((lead) => (
+              {(assignedLeads.length > 0 ? assignedLeads : myAssignedLeads).map((lead) => (
                 <tr key={lead.id}>
                   <td>
                     <p className="font-bold text-slate-800 text-xs">{lead.name}</p>
-                    <p className="text-[10px] text-slate-400">{lead.city} • Lead #{lead.id}</p>
+                    <p className="text-[10px] text-slate-400">
+                      {lead.city} • Lead #{lead.id}
+                    </p>
                   </td>
-                  <td className="text-xs font-mono text-brand-navy font-bold">
-                    {lead.phone}
-                  </td>
-                  <td className="text-xs text-slate-700 font-medium">
-                    {lead.service}
-                  </td>
+                  <td className="text-xs font-mono text-brand-navy font-bold">{lead.phone}</td>
+                  <td className="text-xs text-slate-700 font-medium">{lead.service}</td>
                   <td>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
-                      lead.source === 'ETaxwala' ? 'bg-blue-100 text-blue-800' :
-                      lead.source === 'Udyami Kisan' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
-                    }`}>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                        lead.source === 'ETaxwala'
+                          ? 'bg-blue-100 text-blue-800'
+                          : lead.source === 'Udyami Kisan'
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-emerald-100 text-emerald-800'
+                      }`}
+                    >
                       {lead.source}
                     </span>
                   </td>
                   <td>
-                    <span className="badge badge-gold text-[10px]">
-                      {lead.status}
-                    </span>
+                    <span className="badge badge-gold text-[10px]">{lead.status}</span>
                   </td>
                   <td className="text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -574,7 +676,7 @@ export default function SalesAgentDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-3xl p-6 w-full max-w-2xl shadow-xl border border-slate-200 space-y-4 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-multicolor" />
-            
+
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-brand-navy" />
@@ -604,11 +706,15 @@ export default function SalesAgentDashboard() {
                   </div>
                   <div>
                     <span className="text-slate-400 font-semibold block">Contact Number</span>
-                    <span className="font-bold font-mono text-brand-navy">{selectedLeadModal.lead.contact}</span>
+                    <span className="font-bold font-mono text-brand-navy">
+                      {selectedLeadModal.lead.contact}
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-400 font-semibold block">Email Address</span>
-                    <span className="font-medium text-slate-700">{selectedLeadModal.lead.email || 'N/A'}</span>
+                    <span className="font-medium text-slate-700">
+                      {selectedLeadModal.lead.email || 'N/A'}
+                    </span>
                   </div>
                 </div>
 
@@ -626,24 +732,37 @@ export default function SalesAgentDashboard() {
                         selectedLeadModal.calls.map((c: any) => (
                           <tr key={c.id}>
                             <td>
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
-                                c.call_type === 'Outgoing' ? 'bg-sky-100 text-sky-800' :
-                                c.call_type === 'Incoming' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                              }`}>
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  c.call_type === 'Outgoing'
+                                    ? 'bg-sky-100 text-sky-800'
+                                    : c.call_type === 'Incoming'
+                                      ? 'bg-emerald-100 text-emerald-800'
+                                      : 'bg-rose-100 text-rose-800'
+                                }`}
+                              >
                                 {c.call_type}
                               </span>
                             </td>
-                            <td className="font-semibold text-slate-700">{formatDuration(c.duration)}</td>
+                            <td className="font-semibold text-slate-700">
+                              {formatDuration(c.duration)}
+                            </td>
                             <td className="text-slate-500">
                               {new Date(c.call_timestamp).toLocaleString('en-IN', {
-                                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
                               })}
                             </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={3} className="text-center py-4 text-slate-400">No recorded calls for this lead yet.</td>
+                          <td colSpan={3} className="text-center py-4 text-slate-400">
+                            No recorded calls for this lead yet.
+                          </td>
                         </tr>
                       )}
                     </tbody>
@@ -651,7 +770,10 @@ export default function SalesAgentDashboard() {
                 </div>
 
                 <div className="flex justify-end pt-3 border-t border-slate-100">
-                  <button onClick={() => setIsLeadDetailsOpen(false)} className="btn btn-primary btn-sm">
+                  <button
+                    onClick={() => setIsLeadDetailsOpen(false)}
+                    className="btn btn-primary btn-sm"
+                  >
                     Close
                   </button>
                 </div>
@@ -723,11 +845,15 @@ export default function SalesAgentDashboard() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Next Follow-up Date</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Next Follow-up Date
+                  </label>
                   <input type="date" className="input text-xs" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">Next Follow-up Time</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Next Follow-up Time
+                  </label>
                   <input type="time" className="input text-xs" />
                 </div>
               </div>

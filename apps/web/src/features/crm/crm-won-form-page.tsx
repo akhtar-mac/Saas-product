@@ -146,6 +146,28 @@ export default function CrmWonFormPage() {
   const paid = parseFloat(form.paid_amount) || 0;
   const unpaid = Math.max(0, total - discount - paid);
 
+  // Fetch lead details to pre-fill form
+  useEffect(() => {
+    if (!leadId) return;
+    fetch(`${API_BASE}/v1/crm/leads/${leadId}`, { headers: authHeaders })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.data) {
+          const l = d.data;
+          setForm((f) => ({
+            ...f,
+            name: l.name || f.name,
+            mobile: l.contact || f.mobile,
+            email: l.email || f.email,
+            company_name: l.company_name || f.company_name,
+            state: l.state || f.state,
+            city: l.city || f.city,
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [leadId]);
+
   // Fetch categories on mount
   useEffect(() => {
     fetch(`${API_BASE}/v1/crm/categories`, { headers: authHeaders })

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   Calendar,
   Clock,
@@ -8,6 +9,7 @@ import {
   CheckCircle2,
   Users,
   Building,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 export default function ConsultationDashboard() {
@@ -63,9 +65,14 @@ export default function ConsultationDashboard() {
           </p>
         </div>
 
-        <span className="badge badge-green text-xs py-1.5 px-3">
-          Google Meet & Telephony Synced
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="badge badge-green text-xs py-1.5 px-3">
+            Google Meet & Telephony Synced
+          </span>
+          <Link to="/crm/quotations" className="btn btn-gold btn-sm">
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Quotations
+          </Link>
+        </div>
       </div>
 
       {/* KPI Stats */}

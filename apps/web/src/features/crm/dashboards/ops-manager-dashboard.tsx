@@ -71,9 +71,11 @@ export default function OpsManagerDashboard() {
           </p>
         </div>
 
-        <Link to="/crm/tasks" className="btn btn-primary btn-sm">
-          <ClipboardList className="w-3.5 h-3.5" /> 10-Stage Task Board
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/crm/tasks" className="btn btn-primary btn-sm">
+            <ClipboardList className="w-3.5 h-3.5" /> 10-Stage Task Board
+          </Link>
+        </div>
       </div>
 
       {/* KPI Stats Grid */}

@@ -152,6 +152,9 @@ function CrmLayoutContent() {
   const currentRoleInfo =
     ALL_ROLE_OPTIONS.find((r) => r.role === activeRole) || ALL_ROLE_OPTIONS[0];
 
+  const displayStaffName =
+    staffUser?.username || (staffUser as any)?.name || currentRoleInfo.staffName;
+
   const handleLogout = () => {
     logoutStaff();
     navigate('/crm/login');
@@ -227,10 +230,7 @@ function CrmLayoutContent() {
       can('workforce:view'));
 
   const showSalesEmployeeSection =
-    isSalesEmployee &&
-    (can('leads:view') ||
-      can('quotations:view') ||
-      can('tasks:view'));
+    isSalesEmployee && (can('leads:view') || can('quotations:view') || can('tasks:view'));
 
   const showAdminSection =
     isSuperAdmin ||
@@ -290,12 +290,10 @@ function CrmLayoutContent() {
           <div className="p-3 m-3 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DD]">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#1B365D] via-[#0084D1] to-[#00A896] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
-                {currentRoleInfo.staffName.charAt(0).toUpperCase()}
+                {displayStaffName.charAt(0).toUpperCase()}
               </div>
               <div className="overflow-hidden min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">
-                  {currentRoleInfo.staffName}
-                </p>
+                <p className="text-xs font-bold text-slate-900 truncate">{displayStaffName}</p>
                 <p className="text-[10px] text-slate-500 truncate font-medium">
                   {currentRoleInfo.label}
                 </p>
@@ -374,6 +372,27 @@ function CrmLayoutContent() {
             <div className="pt-2 pb-1 px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
               Department Hubs
             </div>
+
+            {/* Super Admin / Admin — Manage All Employees */}
+            {isSuperAdmin && (
+              <Link
+                to="/crm/workforce"
+                onClick={handleNavClick}
+                className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                  location.pathname === '/crm/workforce'
+                    ? 'bg-[#1B365D] text-white shadow-sm'
+                    : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Users
+                    className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/workforce' ? 'text-white' : 'text-emerald-600'}`}
+                  />
+                  <span>Manage Employees</span>
+                </div>
+                <span className="badge badge-green text-[9px] px-1.5 py-0.2">All Staff</span>
+              </Link>
+            )}
 
             <Link
               to="/crm/hr"
@@ -577,6 +596,19 @@ function CrmLayoutContent() {
 
                 {openSections.franchise && (
                   <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
+                    {/* Manage Employees — Franchise Manager sees franchise partners */}
+                    <Link
+                      to="/crm/workforce"
+                      onClick={handleNavClick}
+                      className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                        location.pathname === '/crm/workforce'
+                          ? 'bg-blue-50 text-[#1B365D] font-bold'
+                          : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>Manage Employees</span>
+                    </Link>
+
                     {can('franchise:partners') && (
                       <>
                         <Link
@@ -659,7 +691,6 @@ function CrmLayoutContent() {
 
                 {openSections.sales && (
                   <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
-
                     {/* Call Report */}
                     {can('call_analytics:view') && (
                       <Link
@@ -718,8 +749,6 @@ function CrmLayoutContent() {
                       <span>Service Questions</span>
                     </Link>
 
-
-
                     {/* Manage Leads Dropdown Subgroup */}
                     {can('leads:view') && (
                       <div className="space-y-0.5">
@@ -731,7 +760,11 @@ function CrmLayoutContent() {
                             <Users className="w-3.5 h-3.5 text-slate-400" />
                             <span>Manage Leads</span>
                           </div>
-                          {openSections.leadsSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          {openSections.leadsSub ? (
+                            <ChevronDown className="w-3 h-3" />
+                          ) : (
+                            <ChevronRight className="w-3 h-3" />
+                          )}
                         </button>
 
                         {openSections.leadsSub && (
@@ -740,7 +773,10 @@ function CrmLayoutContent() {
                               to="/crm/leads"
                               onClick={handleNavClick}
                               className={`block py-1 px-2 rounded-md ${
-                                location.pathname === '/crm/leads'
+                                location.pathname === '/crm/leads' &&
+                                (!location.search ||
+                                  !location.search.includes('source=') ||
+                                  location.search.includes('source=etaxwala'))
                                   ? 'bg-[#1B365D] text-white font-bold'
                                   : 'text-slate-600 hover:text-[#1B365D]'
                               }`}
@@ -750,14 +786,24 @@ function CrmLayoutContent() {
                             <Link
                               to="/crm/leads?source=udyamikisan"
                               onClick={handleNavClick}
-                              className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/leads' &&
+                                location.search.includes('source=udyamikisan')
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
                             >
                               Udyomi Leads List
                             </Link>
                             <Link
                               to="/crm/leads?source=sahakar"
                               onClick={handleNavClick}
-                              className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/leads' &&
+                                location.search.includes('source=sahakar')
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
                             >
                               Sahakar Leads List
                             </Link>
@@ -777,7 +823,11 @@ function CrmLayoutContent() {
                             <FileCheck2 className="w-3.5 h-3.5 text-slate-400" />
                             <span>Quotations</span>
                           </div>
-                          {openSections.quotationsSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          {openSections.quotationsSub ? (
+                            <ChevronDown className="w-3 h-3" />
+                          ) : (
+                            <ChevronRight className="w-3 h-3" />
+                          )}
                         </button>
 
                         {openSections.quotationsSub && (
@@ -816,7 +866,11 @@ function CrmLayoutContent() {
                             <ClipboardList className="w-3.5 h-3.5 text-slate-400" />
                             <span>Tasks</span>
                           </div>
-                          {openSections.tasksSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          {openSections.tasksSub ? (
+                            <ChevronDown className="w-3 h-3" />
+                          ) : (
+                            <ChevronRight className="w-3 h-3" />
+                          )}
                         </button>
 
                         {openSections.tasksSub && (
@@ -843,7 +897,6 @@ function CrmLayoutContent() {
                         )}
                       </div>
                     )}
-
                   </div>
                 )}
               </div>
@@ -875,7 +928,8 @@ function CrmLayoutContent() {
                         to="/crm/leads"
                         onClick={handleNavClick}
                         className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname === '/crm/leads' || location.pathname === '/crm/sales-manage-leads'
+                          location.pathname === '/crm/leads' ||
+                          location.pathname === '/crm/sales-manage-leads'
                             ? 'bg-blue-50 text-[#1B365D] font-bold'
                             : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
                         }`}
@@ -910,7 +964,11 @@ function CrmLayoutContent() {
                             <FileCheck2 className="w-3.5 h-3.5 text-slate-400" />
                             <span>Quotations</span>
                           </div>
-                          {openSections.quotationsSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          {openSections.quotationsSub ? (
+                            <ChevronDown className="w-3 h-3" />
+                          ) : (
+                            <ChevronRight className="w-3 h-3" />
+                          )}
                         </button>
 
                         {openSections.quotationsSub && (
@@ -953,7 +1011,11 @@ function CrmLayoutContent() {
                             <ClipboardList className="w-3.5 h-3.5 text-slate-400" />
                             <span>Tasks</span>
                           </div>
-                          {openSections.tasksSub ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          {openSections.tasksSub ? (
+                            <ChevronDown className="w-3 h-3" />
+                          ) : (
+                            <ChevronRight className="w-3 h-3" />
+                          )}
                         </button>
 
                         {openSections.tasksSub && (
@@ -1093,7 +1155,6 @@ function CrmLayoutContent() {
                       </Link>
                     )}
 
-
                     {can('appointments:manage') && (
                       <Link
                         to="/crm/appointments"
@@ -1170,7 +1231,7 @@ function CrmLayoutContent() {
               </span>
               <span className="text-slate-300 hidden lg:inline">|</span>
               <span className="text-xs font-semibold text-slate-500 whitespace-nowrap hidden lg:inline max-w-[220px] truncate">
-                {currentRoleInfo.staffName} ({currentRoleInfo.label})
+                {displayStaffName} ({currentRoleInfo.label})
               </span>
             </div>
           </div>
@@ -1225,7 +1286,9 @@ function CrmLayoutContent() {
                 <MessageSquare className="w-2.5 h-2.5 fill-white stroke-none" />
                 <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
               </div>
-              <span className="text-[11px] font-bold text-[#1B365D] whitespace-nowrap">Staff Alerts</span>
+              <span className="text-[11px] font-bold text-[#1B365D] whitespace-nowrap">
+                Staff Alerts
+              </span>
               <span className="px-1.5 py-0.2 rounded-full bg-[#0084D1] text-white text-[10px] font-black group-hover:scale-110 transition-transform shrink-0">
                 {unreadChatCount}
               </span>
@@ -1266,8 +1329,11 @@ function CrmLayoutContent() {
             </div>
 
             {/* Profile Avatar */}
-            <div className="w-8 h-8 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
-              {currentRoleInfo.staffName.charAt(0)}
+            <div
+              className="w-8 h-8 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0"
+              title={displayStaffName}
+            >
+              {displayStaffName.charAt(0).toUpperCase()}
             </div>
           </div>
         </header>

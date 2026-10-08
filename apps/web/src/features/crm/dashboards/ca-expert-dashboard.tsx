@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   ShieldCheck,
   FileCheck2,
@@ -64,7 +65,9 @@ export default function CaExpertDashboard() {
           </p>
         </div>
 
-        <span className="badge badge-green text-xs py-1.5 px-3">CA License & DSC Active</span>
+        <div className="flex items-center gap-2">
+          <span className="badge badge-green text-xs py-1.5 px-3">CA License & DSC Active</span>
+        </div>
       </div>
 
       {/* KPI Stats */}

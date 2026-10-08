@@ -193,21 +193,77 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // 1. Try DB lookup first
+    // 1. Try DB lookup in staff_users table first
     let staffUser: any = null;
     try {
-      staffUser = await (prisma as any).staff_users.findUnique({
-        where: { email: cleanEmail },
+      staffUser = await (prisma as any).staff_users.findFirst({
+        where: {
+          OR: [{ email: cleanEmail }, { name: cleanEmail }],
+        },
       });
     } catch {
       staffUser = null;
     }
 
-    // 2. Builtin account fallback if user is not in database
     if (!staffUser) {
-      const builtin = BUILTIN_ACCOUNTS.find(
-        (a) => a.email.toLowerCase() === cleanEmail
-      );
+      try {
+        const rawRes: any[] = await prisma.$queryRaw`
+          SELECT * FROM staff_users 
+          WHERE LOWER(email) = ${cleanEmail} OR LOWER(name) = ${cleanEmail}
+          LIMIT 1
+        `;
+        if (rawRes && rawRes[0]) {
+          staffUser = rawRes[0];
+        }
+      } catch {}
+    }
+
+    // 2. Try DB lookup in users table if not in staff_users
+    if (!staffUser) {
+      try {
+        const uRes: any[] = await prisma.$queryRaw`
+          SELECT * FROM users 
+          WHERE LOWER(email) = ${cleanEmail} OR LOWER(username) = ${cleanEmail}
+          LIMIT 1
+        `;
+        if (uRes && uRes[0]) {
+          const u = uRes[0];
+          const userTypeToRoleIdMap: Record<number, number> = {
+            1: 1, // Super Admin
+            2: 2, // Admin
+            3: 4, // Sales Manager
+            4: 3, // Ops Manager
+            5: 6, // Franchise Manager
+            6: 7, // Sales Employee
+            7: 8, // Ops Employee
+            8: 10, // Franchise Partner
+            9: 12, // Ops Assistant
+            10: 11, // Consultation
+          };
+          const resolvedRoleId = userTypeToRoleIdMap[u.user_type] || 7;
+          staffUser = {
+            id: Number(u.id),
+            email: u.email || cleanEmail,
+            name: u.username || cleanEmail.split('@')[0],
+            role_id: resolvedRoleId,
+            roles: JSON.stringify([resolvedRoleId]),
+            is_active: u.status === 1,
+            password_hash: u.password,
+            permissions: JSON.stringify(
+              resolvedRoleId === 1
+                ? ['*']
+                : ['dashboard:view', 'sales:view', 'leads:view', 'quotations:view', 'tasks:view']
+            ),
+          };
+        }
+      } catch {
+        staffUser = null;
+      }
+    }
+
+    // 3. Builtin account fallback if user is not in database
+    if (!staffUser) {
+      const builtin = BUILTIN_ACCOUNTS.find((a) => a.email.toLowerCase() === cleanEmail);
       if (builtin) {
         staffUser = {
           id: builtin.id,
@@ -222,17 +278,22 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
           permissions: JSON.stringify(builtin.role_id === 1 ? ['*'] : []),
         };
       } else if (env.NODE_ENV !== 'production') {
-        // Temporary demo login fallback for testing in development
+        // Unrecognized email in dev mode -> default to Sales Employee (role 7) with input email
         staffUser = {
-          id: 1,
+          id: 999,
           email: cleanEmail,
           name: cleanEmail.split('@')[0],
-          role_id: 1,
-          roles: JSON.stringify([1, 2, 3, 4, 14]),
-          position: 'Demo Administrator',
-          department: 'Management',
+          role_id: 7,
+          roles: JSON.stringify([7]),
+          position: 'Staff Employee',
+          department: 'Sales',
           is_active: true,
-          permissions: JSON.stringify(['*']),
+          permissions: JSON.stringify([
+            'dashboard:view',
+            'sales:view',
+            'leads:view',
+            'quotations:view',
+          ]),
         };
       } else {
         // In production: strictly reject unknown emails

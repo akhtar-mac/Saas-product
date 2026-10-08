@@ -77,7 +77,9 @@ export default function QcReviewerDashboard() {
           </p>
         </div>
 
-        <span className="badge badge-green text-xs py-1.5 px-3">Pass Rate: 96.4%</span>
+        <div className="flex items-center gap-2">
+          <span className="badge badge-green text-xs py-1.5 px-3">Pass Rate: 96.4%</span>
+        </div>
       </div>
 
       {/* KPI Stats */}

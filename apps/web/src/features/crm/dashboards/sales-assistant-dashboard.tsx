@@ -10,6 +10,7 @@ import {
   Sparkles,
   PhoneCall,
   MessageCircle,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 export default function SalesAssistantDashboard() {
@@ -47,6 +48,9 @@ export default function SalesAssistantDashboard() {
         <div className="flex gap-2">
           <Link to="/crm/leads" className="btn btn-primary btn-sm">
             <Users className="w-3.5 h-3.5" /> Full Leads Pipeline (17k+)
+          </Link>
+          <Link to="/crm/quotations" className="btn btn-gold btn-sm">
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Quotations
           </Link>
         </div>
       </div>

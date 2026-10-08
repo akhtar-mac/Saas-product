@@ -66,7 +66,9 @@ export default function SubBrandsDashboard() {
           </p>
         </div>
 
-        <span className="badge badge-green text-xs py-1.5 px-3">Multi-Tenant Engine Active</span>
+        <div className="flex items-center gap-2">
+          <span className="badge badge-green text-xs py-1.5 px-3">Multi-Tenant Engine Active</span>
+        </div>
       </div>
 
       {/* Brand Switcher Tabs */}

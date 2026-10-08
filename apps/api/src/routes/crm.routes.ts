@@ -63,134 +63,561 @@ router.get('/stats', async (req, res) => {
 });
 
 const FALLBACK_LEADS = [
-  { id: 17281, name: 'Apex Logistics Pvt Ltd', contact: '9820192831', email: 'director@apexlogistics.in', service: 'Private Limited Company Registration', source: 'Google Organic', city: 'Mumbai', state: 'Maharashtra', lead_type: 0, date: new Date().toISOString() },
-  { id: 17280, name: 'Dr. Ramesh Kulkarni', contact: '9422019482', email: 'ramesh.kulkarni@healthtech.co', service: 'GST Registration & Filing', source: 'CA Referral', city: 'Pune', state: 'Maharashtra', lead_type: 1, date: new Date().toISOString() },
-  { id: 17279, name: 'Siddharth Mehra', contact: '9811204918', email: 'siddharth@mehraexim.com', service: 'Import Export Code (IEC)', source: 'Facebook Ads', city: 'New Delhi', state: 'Delhi', lead_type: 2, date: new Date().toISOString() },
-  { id: 17278, name: 'Greenleaf Agritech LLP', contact: '9765432109', email: 'info@greenleafagri.com', service: 'FSSAI Central Food License', source: 'Website Direct', city: 'Nashik', state: 'Maharashtra', lead_type: 3, date: new Date().toISOString() },
-  { id: 17277, name: 'Kavita Sundaram', contact: '9840192837', email: 'kavita@chennaibakes.in', service: 'Trademark Registration (Brand IP)', source: 'WhatsApp Direct', city: 'Chennai', state: 'Tamil Nadu', lead_type: 0, date: new Date().toISOString() },
-  { id: 17276, name: 'Zenith Cloud Softwares', contact: '9980123456', email: 'founder@zenithcloud.io', service: 'Startup India DPIIT Recognition', source: 'LinkedIn Inbound', city: 'Bengaluru', state: 'Karnataka', lead_type: 1, date: new Date().toISOString() },
-  { id: 17275, name: 'Shree Balaji Transporters', contact: '9829012345', email: 'balaji.transport@gmail.com', service: 'MSME / Udyam Registration', source: 'Franchise Partner', city: 'Jaipur', state: 'Rajasthan', lead_type: 3, date: new Date().toISOString() },
-  { id: 17274, name: 'Vikramaditya Enterprises', contact: '9711098765', email: 'vikram@enterprises.org', service: 'Annual ROC Compliance & Filing', source: 'Direct Referral', city: 'Indore', state: 'Madhya Pradesh', lead_type: 2, date: new Date().toISOString() },
+  {
+    id: 17281,
+    name: 'Apex Logistics Pvt Ltd',
+    contact: '9820192831',
+    email: 'director@apexlogistics.in',
+    service: 'Private Limited Company Registration',
+    source: 'Google Organic',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    lead_type: 0,
+    date: new Date().toISOString(),
+  },
+  {
+    id: 17280,
+    name: 'Dr. Ramesh Kulkarni',
+    contact: '9422019482',
+    email: 'ramesh.kulkarni@healthtech.co',
+    service: 'GST Registration & Filing',
+    source: 'CA Referral',
+    city: 'Pune',
+    state: 'Maharashtra',
+    lead_type: 1,
+    date: new Date().toISOString(),
+  },
+  {
+    id: 17279,
+    name: 'Siddharth Mehra',
+    contact: '9811204918',
+    email: 'siddharth@mehraexim.com',
+    service: 'Import Export Code (IEC)',
+    source: 'Facebook Ads',
+    city: 'New Delhi',
+    state: 'Delhi',
+    lead_type: 2,
+    date: new Date().toISOString(),
+  },
+  {
+    id: 17278,
+    name: 'Greenleaf Agritech LLP',
+    contact: '9765432109',
+    email: 'info@greenleafagri.com',
+    service: 'FSSAI Central Food License',
+    source: 'Website Direct',
+    city: 'Nashik',
+    state: 'Maharashtra',
+    lead_type: 3,
+    date: new Date().toISOString(),
+  },
+  {
+    id: 17277,
+    name: 'Kavita Sundaram',
+    contact: '9840192837',
+    email: 'kavita@chennaibakes.in',
+    service: 'Trademark Registration (Brand IP)',
+    source: 'WhatsApp Direct',
+    city: 'Chennai',
+    state: 'Tamil Nadu',
+    lead_type: 0,
+    date: new Date().toISOString(),
+  },
+  {
+    id: 17276,
+    name: 'Zenith Cloud Softwares',
+    contact: '9980123456',
+    email: 'founder@zenithcloud.io',
+    service: 'Startup India DPIIT Recognition',
+    source: 'LinkedIn Inbound',
+    city: 'Bengaluru',
+    state: 'Karnataka',
+    lead_type: 1,
+    date: new Date().toISOString(),
+  },
+  {
+    id: 17275,
+    name: 'Shree Balaji Transporters',
+    contact: '9829012345',
+    email: 'balaji.transport@gmail.com',
+    service: 'MSME / Udyam Registration',
+    source: 'Franchise Partner',
+    city: 'Jaipur',
+    state: 'Rajasthan',
+    lead_type: 3,
+    date: new Date().toISOString(),
+  },
+  {
+    id: 17274,
+    name: 'Vikramaditya Enterprises',
+    contact: '9711098765',
+    email: 'vikram@enterprises.org',
+    service: 'Annual ROC Compliance & Filing',
+    source: 'Direct Referral',
+    city: 'Indore',
+    state: 'Madhya Pradesh',
+    lead_type: 2,
+    date: new Date().toISOString(),
+  },
 ];
+
+// Status Mappings
+const STATUS_KEY_MAP: Record<string, number> = {
+  new: 0,
+  '0': 0,
+  notintrested: 1,
+  'not interested': 1,
+  '1': 1,
+  intrested: 2,
+  interested: 2,
+  '2': 2,
+  quotation: 3,
+  '3': 3,
+  hot: 4,
+  '4': 4,
+  customer: 5,
+  won: 5,
+  '5': 5,
+  notconnected: 6,
+  'not connected': 6,
+  '6': 6,
+  negotiation: 7,
+  '7': 7,
+  prospected: 8,
+  prospect: 8,
+  '8': 8,
+  customerfollowup: 9,
+  'customer followup': 9,
+  'todays followup': 9,
+  '9': 9,
+  meetings: 10,
+  '10': 10,
+};
+
+const STATUS_NAME_MAP: Record<number, string> = {
+  0: 'New',
+  1: 'Not Interested',
+  2: 'Interested',
+  3: 'Quotation',
+  4: 'Hot',
+  5: 'Customer',
+  6: 'Not Connected',
+  7: 'Negotiation',
+  8: 'Prospected',
+  9: 'Customer Followup',
+  10: 'Meetings',
+};
 
 // 2. Leads List with Search, Filter & Pagination
 router.get('/leads', async (req, res) => {
   try {
-    const { search, status, source, limit = 50, page = 1, assigned_to, user_id } = req.query;
-    const take = Math.min(Number(limit) || 50, 100);
-    const skip = (Math.max(Number(page) || 1, 1) - 1) * take;
+    const {
+      search,
+      status,
+      source,
+      limit = 50,
+      page = 1,
+      assigned_to,
+      user_id,
+      unassigned,
+      followup,
+    } = req.query;
+    const take = limit === 'all' ? 10000 : Math.min(Math.max(Number(limit) || 50, 1), 10000);
+    const pageNum = Math.max(Number(page) || 1, 1);
+    const skip = (pageNum - 1) * take;
 
-    const targetUserId = assigned_to ? Number(assigned_to) : user_id ? Number(user_id) : undefined;
-
-    const where: any = {};
-    if (status && status !== 'ALL') {
-      where.lead_type = Number(status);
+    let statusNum: number | null = null;
+    if (
+      status !== undefined &&
+      status !== null &&
+      status !== '' &&
+      status !== 'all' &&
+      status !== 'ALL'
+    ) {
+      const sStr = String(status).toLowerCase().trim();
+      if (STATUS_KEY_MAP[sStr] !== undefined) {
+        statusNum = STATUS_KEY_MAP[sStr];
+      } else if (!isNaN(Number(sStr))) {
+        statusNum = Number(sStr);
+      }
     }
+
+    const whereConditions: string[] = ['1=1'];
+
+    if (statusNum !== null) {
+      // Filter on effective status: lead_assign.lead_status if assigned, else leads.lead_type
+      whereConditions.push(
+        `(l.id IN (SELECT lead_id FROM lead_assign WHERE lead_status = ${statusNum}) OR (l.lead_type = ${statusNum} AND (l.is_assign = 0 OR l.id NOT IN (SELECT lead_id FROM lead_assign))))`
+      );
+    }
+
+    let tableName = 'leads';
     if (source && source !== 'ALL') {
-      where.source = String(source);
+      const sLower = String(source).toLowerCase().trim();
+      if (sLower.includes('udyamikisan') || sLower.includes('udyami') || sLower === 'uddyomi001') {
+        tableName = 'leads_udyamikisan';
+      } else if (sLower.includes('sahakar') || sLower === 'sahakar01') {
+        tableName = 'leads_sahakarsamridhi';
+      } else {
+        const escSource = String(source).replace(/'/g, "''");
+        whereConditions.push(`l.source = '${escSource}'`);
+      }
     }
-    if (targetUserId) {
-      const assignedRecords = await (prisma as any).lead_assign.findMany({
-        where: { assign_to: targetUserId },
-        select: { lead_id: true },
-      }).catch(() => []);
 
-      const assignedLeadIds = assignedRecords.map((a: any) => a.lead_id);
-      where.id = { in: assignedLeadIds };
+    if (unassigned === '1' || unassigned === 'true') {
+      whereConditions.push(`l.is_assign = 0`);
+    }
+
+    if (assigned_to || user_id) {
+      const uid = Number(assigned_to || user_id);
+      if (!isNaN(uid)) {
+        whereConditions.push(`l.id IN (SELECT lead_id FROM lead_assign WHERE assign_to = ${uid})`);
+      }
     }
 
     if (search) {
-      where.OR = [
-        { name: { contains: String(search), mode: 'insensitive' } },
-        { contact: { contains: String(search) } },
-        { email: { contains: String(search), mode: 'insensitive' } },
-        { city: { contains: String(search), mode: 'insensitive' } },
-        { service: { contains: String(search), mode: 'insensitive' } },
-      ];
+      const q = String(search).trim().replace(/'/g, "''");
+      whereConditions.push(
+        `(l.name LIKE '%${q}%' OR l.contact LIKE '%${q}%' OR l.email LIKE '%${q}%' OR l.city LIKE '%${q}%' OR l.service LIKE '%${q}%')`
+      );
     }
 
-    const [leads, total] = await Promise.all([
-      prisma.leads.findMany({
-        where,
-        take,
-        skip,
-        orderBy: { id: 'desc' },
-      }),
-      prisma.leads.count({ where }),
-    ]);
+    // Followup date filter: today / tomorrow / dayafter
+    if (followup) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      const dayafter = new Date();
+      dayafter.setDate(dayafter.getDate() + 2);
+      const dayafterStr = dayafter.toISOString().split('T')[0];
+      const fStr = String(followup);
+      if (fStr === 'today') {
+        whereConditions.push(
+          `l.id IN (SELECT lead_id FROM lead_followups WHERE DATE(followup_date) = '${todayStr}')`
+        );
+      } else if (fStr === 'tomorrow') {
+        whereConditions.push(
+          `l.id IN (SELECT lead_id FROM lead_followups WHERE DATE(followup_date) = '${tomorrowStr}')`
+        );
+      } else if (fStr === 'dayafter') {
+        whereConditions.push(
+          `l.id IN (SELECT lead_id FROM lead_followups WHERE DATE(followup_date) = '${dayafterStr}')`
+        );
+      }
+    }
 
-    if (leads && leads.length > 0) {
-      // Fetch assigned staff name mapping
-      const leadIds = leads.map((l) => l.id);
-      const assignments: any[] = leadIds.length
-        ? await (prisma as any).lead_assign.findMany({
-            where: { lead_id: { in: leadIds } },
-            select: { lead_id: true, assign_to: true, lead_status: true, assign_date: true },
-          }).catch(() => [])
-        : [];
+    const whereSql = whereConditions.join(' AND ');
 
-      const assignUserIds = [...new Set(assignments.map((a: any) => a.assign_to))];
-      const assignUsers = assignUserIds.length
-        ? await prisma.staff_users.findMany({
-            where: { id: { in: assignUserIds as number[] } },
-            select: { id: true, name: true },
-          })
-        : [];
+    const countRes = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT COUNT(*) as total FROM ${tableName} l WHERE ${whereSql}`
+    );
+    const total = Number(countRes[0]?.total || 0);
 
-      const userMap = new Map(assignUsers.map((u) => [u.id, u.name]));
-      const assignMap = new Map(assignments.map((a: any) => [a.lead_id, a]));
+    const sourceCol =
+      tableName === 'leads'
+        ? 'l.source'
+        : `'${tableName === 'leads_udyamikisan' ? 'Udyami Kisan' : 'Sahakar Samriddhi'}' as source`;
 
-      const enrichedLeads = leads.map((l: any) => {
-        const assign: any = assignMap.get(l.id);
-        return {
-          ...l,
-          assignTo: assign ? userMap.get(assign.assign_to) || 'Staff #' + assign.assign_to : null,
-          assignToId: assign ? assign.assign_to : null,
-          assignDate: assign?.assign_date || null,
-          lead_status: assign?.lead_status ?? l.lead_type ?? 0,
+    // Single-table SELECT with lead_score and quoted_price included
+    const leadsRaw = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT l.id, l.name, l.contact, l.email, l.state, l.city, l.service, ${sourceCol},
+              l.added_by, l.is_assign, l.lead_type, l.lead_note, l.date, l.created_at,
+              l.lead_score, l.quoted_price
+       FROM ${tableName} l
+       WHERE ${whereSql}
+       ORDER BY l.id DESC
+       LIMIT ${take} OFFSET ${skip}`
+    );
+
+    // Batch-fetch assign info only for the current page's lead IDs
+    const leadIds = leadsRaw.map((l: any) => Number(l.id)).filter(Boolean);
+    let assignMap: Record<number, { assign_to: number; lead_status: number; assign_date: string }> =
+      {};
+    if (leadIds.length > 0) {
+      const assigns: any[] = await prisma.$queryRawUnsafe(
+        `SELECT lead_id, assign_to, lead_status, assign_date FROM lead_assign WHERE lead_id IN (${leadIds.join(',')})`
+      );
+      assigns.forEach((a: any) => {
+        assignMap[Number(a.lead_id)] = {
+          assign_to: Number(a.assign_to),
+          lead_status: Number(a.lead_status),
+          assign_date: a.assign_date ? String(a.assign_date).split('T')[0] : '',
         };
       });
-
-      return res.json({
-        success: true,
-        data: serializeBigInt(enrichedLeads),
-        pagination: {
-          total,
-          page: Number(page) || 1,
-          limit: take,
-          totalPages: Math.ceil(total / take),
-        },
-      });
     }
-  } catch (error) {}
 
-  // Fallback leads for seamless CRM exploration
-  let filtered = [...FALLBACK_LEADS];
-  const { search, status } = req.query;
-  if (status && status !== 'ALL') {
-    filtered = filtered.filter((l) => l.lead_type === Number(status));
-  }
-  if (search) {
-    const q = String(search).toLowerCase();
-    filtered = filtered.filter(
-      (l) =>
-        l.name.toLowerCase().includes(q) ||
-        l.contact.includes(q) ||
-        l.city.toLowerCase().includes(q) ||
-        l.service.toLowerCase().includes(q)
-    );
-  }
+    // Batch-fetch staff names for assigned leads (checking staff_users first, fallback to users table)
+    const assignedUserIds = [
+      ...new Set(
+        Object.values(assignMap)
+          .map((a) => a.assign_to)
+          .filter((id) => id > 0)
+      ),
+    ];
+    const userMap = new Map<number, string>();
+    if (assignedUserIds.length > 0) {
+      const staffUsers: any[] = (await prisma
+        .$queryRawUnsafe(
+          `SELECT id, name FROM staff_users WHERE id IN (${assignedUserIds.join(',')})`
+        )
+        .catch(() => [])) as any[];
+      staffUsers.forEach((u) => userMap.set(Number(u.id), u.name));
 
-  res.json({
-    success: true,
-    data: filtered,
-    pagination: {
-      total: filtered.length,
-      page: 1,
-      limit: 50,
-      totalPages: 1,
-    },
-  });
+      const missingUserIds = assignedUserIds.filter((id) => !userMap.has(id));
+      if (missingUserIds.length > 0) {
+        const oldUsers: any[] = (await prisma
+          .$queryRawUnsafe(
+            `SELECT id, username FROM users WHERE id IN (${missingUserIds.join(',')})`
+          )
+          .catch(() => [])) as any[];
+        oldUsers.forEach((u) => userMap.set(Number(u.id), u.username));
+      }
+    }
+
+    // Batch-fetch service names for numeric service IDs
+    const numericServiceIds = leadsRaw
+      .map((l: any) => Number(l.service))
+      .filter((n: number) => !isNaN(n) && n > 0);
+
+    const serviceMap = new Map<number, string>();
+    if (numericServiceIds.length > 0) {
+      const primaryTable =
+        tableName === 'leads_udyamikisan'
+          ? 'udyomi_kisan_services'
+          : tableName === 'leads_sahakarsamridhi'
+            ? 'sahakar_samridhhi_services'
+            : 'services';
+
+      const serviceRows: any[] = (await prisma
+        .$queryRawUnsafe(
+          `SELECT service_id, service_name FROM ${primaryTable} WHERE service_id IN (${numericServiceIds.join(',')})`
+        )
+        .catch(() => [])) as any[];
+      serviceRows.forEach((s) => serviceMap.set(Number(s.service_id), s.service_name));
+
+      // Fallback check in other service tables if any numeric service IDs remain unmapped
+      const missingServiceIds = numericServiceIds.filter((id) => !serviceMap.has(id));
+      if (missingServiceIds.length > 0) {
+        const fallbackTables = [
+          'services',
+          'udyomi_kisan_services',
+          'sahakar_samridhhi_services',
+        ].filter((t) => t !== primaryTable);
+        for (const fTable of fallbackTables) {
+          const fRows: any[] = (await prisma
+            .$queryRawUnsafe(
+              `SELECT service_id, service_name FROM ${fTable} WHERE service_id IN (${missingServiceIds.join(',')})`
+            )
+            .catch(() => [])) as any[];
+          fRows.forEach((s) => {
+            if (!serviceMap.has(Number(s.service_id))) {
+              serviceMap.set(Number(s.service_id), s.service_name);
+            }
+          });
+        }
+      }
+    }
+
+    const sanitized = leadsRaw.map((l: any) => {
+      const assign = assignMap[Number(l.id)];
+      const sCode =
+        assign?.lead_status != null ? Number(assign.lead_status) : Number(l.lead_type || 0);
+      const sName = STATUS_NAME_MAP[sCode] || 'New';
+      const dateStr = l.date
+        ? l.date instanceof Date
+          ? l.date.toISOString().split('T')[0]
+          : String(l.date).split('T')[0]
+        : l.created_at
+          ? String(l.created_at).split('T')[0]
+          : '';
+      const scoreNum =
+        l.lead_score != null && Number(l.lead_score) > 0 ? Number(l.lead_score) : null;
+      const sNum = Number(l.service);
+      const resolvedService =
+        !isNaN(sNum) && sNum > 0 && serviceMap.has(sNum) ? serviceMap.get(sNum)! : l.service || '';
+      return {
+        id: Number(l.id),
+        date: dateStr || '',
+        name: l.name || '',
+        contact: l.contact || '',
+        email: l.email || '',
+        state: l.state || '',
+        city: l.city || '',
+        service: resolvedService,
+        source:
+          l.source ||
+          (tableName === 'leads_udyamikisan'
+            ? 'Udyami Kisan'
+            : tableName === 'leads_sahakarsamridhi'
+              ? 'Sahakar Samriddhi'
+              : 'ETaxwala'),
+        addedBy: l.source || '',
+        isAssign: Boolean(l.is_assign),
+        assignTo: assign?.assign_to
+          ? userMap.get(assign.assign_to) || `Staff #${assign.assign_to}`
+          : 'Not Assigned',
+        assignToId: assign?.assign_to || null,
+        assignDate: assign?.assign_date || '',
+        followupDate: null, // fetched on-demand in details modal
+        lead_type: Number(l.lead_type || 0),
+        lead_status_code: sCode,
+        lead_status_name: sName,
+        status: sName,
+        leadScore: scoreNum != null ? `${scoreNum}%` : 'N/A',
+        lead_score: scoreNum,
+        quotedPrice: l.quoted_price != null ? Number(l.quoted_price) : null,
+        quoted_price: l.quoted_price != null ? Number(l.quoted_price) : null,
+        note: l.lead_note || '',
+      };
+    });
+
+    return res.json({
+      success: true,
+      data: sanitized,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: take,
+        totalPages: Math.max(1, Math.ceil(total / take)),
+      },
+    });
+  } catch (error: any) {
+    console.error('Error fetching leads:', error?.message || error);
+    res.status(500).json({ success: false, error: 'Failed to fetch leads' });
+  }
+});
+
+// 2b. Fast leads count by status — single-table GROUP BY, cached 60s
+let _countsCache: { data: any; ts: number } | null = null;
+
+router.get('/leads/counts', async (req, res) => {
+  try {
+    const { assigned_to, user_id } = req.query;
+    const uid = Number(assigned_to || user_id);
+    const filterByUser = !isNaN(uid) && uid > 0;
+
+    // Serve from in-memory cache (60s TTL) for global counts only
+    if (!filterByUser && _countsCache && Date.now() - _countsCache.ts < 60000) {
+      return res.json({ success: true, counts: _countsCache.data });
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const dayafter = new Date();
+    dayafter.setDate(dayafter.getDate() + 2);
+    const dayafterStr = dayafter.toISOString().split('T')[0];
+
+    let whereClause = '';
+    let followupWhere = 'WHERE followup_date IS NOT NULL';
+    if (filterByUser) {
+      whereClause = `WHERE l.id IN (SELECT lead_id FROM lead_assign WHERE assign_to = ${uid})`;
+      followupWhere = `WHERE followup_date IS NOT NULL AND lead_id IN (SELECT lead_id FROM lead_assign WHERE assign_to = ${uid})`;
+    }
+
+    // Effective status counts: JOIN lead_assign to get authoritative status for assigned leads
+    const statusRows = await prisma.$queryRawUnsafe<any[]>(`
+      SELECT COALESCE(la.lead_status, l.lead_type, 0) AS status_code, COUNT(*) AS cnt
+      FROM leads l
+      LEFT JOIN (
+        SELECT lead_id, MAX(lead_status) AS lead_status
+        FROM lead_assign
+        GROUP BY lead_id
+      ) la ON la.lead_id = l.id
+      ${whereClause}
+      GROUP BY COALESCE(la.lead_status, l.lead_type, 0)
+    `);
+
+    // Followup counts from lead_followups — simple date-range SUM
+    const followupRow = await prisma.$queryRawUnsafe<any[]>(`
+      SELECT
+        SUM(CASE WHEN DATE(followup_date) = '${todayStr}' THEN 1 ELSE 0 END) AS today_count,
+        SUM(CASE WHEN DATE(followup_date) = '${tomorrowStr}' THEN 1 ELSE 0 END) AS tomorrow_count,
+        SUM(CASE WHEN DATE(followup_date) = '${dayafterStr}' THEN 1 ELSE 0 END) AS dayafter_count
+      FROM lead_followups
+      ${followupWhere}
+    `);
+
+    const counts: Record<string, number> = {};
+    let grandTotal = 0;
+    statusRows.forEach((row: any) => {
+      const code = String(row.status_code ?? '0');
+      const c = Number(row.cnt || 0);
+      counts[code] = c;
+      grandTotal += c;
+    });
+    counts['all'] = grandTotal;
+
+    const fr = followupRow[0] || {};
+    counts['followup_today'] = Number(fr.today_count || 0);
+    counts['followup_tomorrow'] = Number(fr.tomorrow_count || 0);
+    counts['followup_dayafter'] = Number(fr.dayafter_count || 0);
+
+    if (!filterByUser) {
+      _countsCache = { data: counts, ts: Date.now() };
+    }
+    return res.json({ success: true, counts });
+  } catch (error: any) {
+    console.error('Error fetching lead counts:', error?.message || error);
+    res.status(500).json({ success: false, error: 'Failed to fetch counts' });
+  }
+});
+
+// GET /v1/crm/leads/:id — Fetch single lead details by ID (checking all 3 lead tables)
+router.get('/leads/:id', async (req, res) => {
+  try {
+    const leadId = Number(req.params.id);
+    if (isNaN(leadId)) {
+      return res.status(400).json({ success: false, error: 'Invalid lead ID' });
+    }
+
+    let lead: any = await prisma.leads.findUnique({ where: { id: leadId } });
+    let source = lead?.source || 'ETaxwala';
+
+    if (!lead) {
+      const uLead: any[] = await prisma.$queryRawUnsafe(
+        `SELECT * FROM leads_udyamikisan WHERE id = ${leadId}`
+      );
+      if (uLead.length > 0) {
+        lead = uLead[0];
+        source = 'Udyami Kisan';
+      }
+    }
+
+    if (!lead) {
+      const sLead: any[] = await prisma.$queryRawUnsafe(
+        `SELECT * FROM leads_sahakarsamridhi WHERE id = ${leadId}`
+      );
+      if (sLead.length > 0) {
+        lead = sLead[0];
+        source = 'Sahakar Samriddhi';
+      }
+    }
+
+    if (!lead) {
+      return res.status(404).json({ success: false, error: 'Lead not found' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: Number(lead.id),
+        name: lead.name || '',
+        email: lead.email || '',
+        contact: lead.contact || '',
+        company_name: lead.business || lead.company_name || '',
+        state: lead.state || '',
+        city: lead.city || '',
+        service: lead.service || '',
+        source,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching lead by id:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch lead' });
+  }
 });
 
 // 3. Create New Manual Lead
@@ -202,13 +629,68 @@ router.post('/leads', validateBody(CreateLeadSchema), async (req, res) => {
       email,
       service,
       source = 'Direct Referral',
+      subbrand,
       state = 'Maharashtra',
       city = 'Pune',
+      note,
     } = req.body;
     if (!name || !contact) {
       return res.status(400).json({ success: false, error: 'Name and contact are required' });
     }
 
+    const sLower = String(source || subbrand || '')
+      .toLowerCase()
+      .trim();
+    const esc = (val: any) => String(val || '').replace(/'/g, "''");
+
+    if (sLower.includes('udyamikisan') || sLower.includes('udyami') || sLower === 'uddyomi001') {
+      const maxRes = await prisma.$queryRawUnsafe<any[]>(
+        `SELECT MAX(id) as maxId FROM leads_udyamikisan`
+      );
+      const nextId = (Number(maxRes[0]?.maxId) || 0) + 1;
+
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO leads_udyamikisan (id, name, email, contact, service, state, city, lead_note, added_by, is_assign, lead_type, is_customer, is_payment, company_id, date, created_at, updated_at)
+         VALUES (${nextId}, '${esc(name)}', '${esc(email || contact + '@udyamikisan.in')}', '${esc(contact)}', '${esc(service)}', '${esc(state)}', '${esc(city)}', '${esc(note || '')}', 1, 0, 0, 0, 0, 'UDDYOMI001', NOW(), NOW(), NOW())`
+      );
+
+      _countsCache = null;
+      return res.json({
+        success: true,
+        message: 'Lead created successfully in Udyami Kisan database',
+        data: { id: nextId, name, contact, email, service, state, city, source: 'Udyami Kisan' },
+      });
+    }
+
+    if (sLower.includes('sahakar') || sLower === 'sahakar01') {
+      const maxRes = await prisma.$queryRawUnsafe<any[]>(
+        `SELECT MAX(id) as maxId FROM leads_sahakarsamridhi`
+      );
+      const nextId = (Number(maxRes[0]?.maxId) || 0) + 1;
+
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO leads_sahakarsamridhi (id, name, email, contact, service, state, city, lead_note, added_by, is_assign, lead_type, is_customer, is_payment, company_id, date, created_at, updated_at)
+         VALUES (${nextId}, '${esc(name)}', '${esc(email || contact + '@sahakar.in')}', '${esc(contact)}', '${esc(service)}', '${esc(state)}', '${esc(city)}', '${esc(note || '')}', 1, 0, 0, 0, 0, 'SAHAKAR01', NOW(), NOW(), NOW())`
+      );
+
+      _countsCache = null;
+      return res.json({
+        success: true,
+        message: 'Lead created successfully in Sahakar Samriddhi database',
+        data: {
+          id: nextId,
+          name,
+          contact,
+          email,
+          service,
+          state,
+          city,
+          source: 'Sahakar Samriddhi',
+        },
+      });
+    }
+
+    // Default: ETaxwala leads table
     const maxIdLead = await prisma.leads.findFirst({
       orderBy: { id: 'desc' },
       select: { id: true },
@@ -237,9 +719,10 @@ router.post('/leads', validateBody(CreateLeadSchema), async (req, res) => {
       },
     });
 
+    _countsCache = null;
     res.json({
       success: true,
-      message: 'Lead created successfully in database',
+      message: 'Lead created successfully in ETaxwala database',
       data: serializeBigInt(newLead),
     });
   } catch (error) {
@@ -253,14 +736,27 @@ router.patch('/leads/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { status, note } = req.body;
+    const leadId = Number(id);
+    const newStatus = Number(status) || 0;
+
+    _countsCache = null; // Invalidate cache so counts update immediately
+
     const updated = await prisma.leads.update({
-      where: { id: Number(id) },
+      where: { id: leadId },
       data: {
-        lead_type: Number(status) || 0,
+        lead_type: newStatus,
         lead_note: note || undefined,
         updated_at: new Date(),
       },
     });
+
+    // Also update lead_assign table if record exists
+    await prisma
+      .$executeRawUnsafe(
+        `UPDATE lead_assign SET lead_status = ${newStatus} WHERE lead_id = ${leadId}`
+      )
+      .catch(() => null);
+
     res.json({
       success: true,
       message: 'Lead status updated in database',
@@ -301,27 +797,363 @@ router.post('/leads/followup', async (req, res) => {
   }
 });
 
-// 3d. Bulk Assign Leads
+// 3d. Bulk Assign Leads — matches old CRM AssignSalesLeadTo logic exactly
 router.post('/leads/assign', async (req, res) => {
   try {
     const { lead_ids, assign_to_user_id } = req.body;
     if (!Array.isArray(lead_ids) || lead_ids.length === 0) {
       return res.status(400).json({ success: false, error: 'lead_ids must be non-empty array' });
     }
-    await prisma.leads.updateMany({
-      where: { id: { in: lead_ids.map(Number) } },
-      data: {
-        is_assign: 1,
-        added_by: Number(assign_to_user_id) || 1,
-        updated_at: new Date(),
-      },
+    if (!assign_to_user_id) {
+      return res.status(400).json({ success: false, error: 'assign_to_user_id is required' });
+    }
+
+    const numericLeadIds = lead_ids.map(Number);
+    const numericUserId = Number(assign_to_user_id);
+    const newlyAssigned: number[] = [];
+    const updated: number[] = [];
+
+    // Fetch all leads to check current is_assign status
+    const leads = await prisma.leads.findMany({
+      where: { id: { in: numericLeadIds } },
+      select: { id: true, is_assign: true, company_id: true },
     });
+
+    if (!leads.length) {
+      return res.status(404).json({ success: false, error: 'No leads found with given IDs' });
+    }
+
+    for (const lead of leads) {
+      // Upsert into lead_assign table (matching old CRM updateOrInsert logic)
+      await (prisma as any).lead_assign
+        .upsert({
+          where: { lead_id: lead.id },
+          update: {
+            assign_to: numericUserId,
+            lead_type: 1,
+            lead_source: lead.company_id || 'etaxwalalead',
+            assign_date: new Date(),
+          },
+          create: {
+            lead_id: lead.id,
+            assign_to: numericUserId,
+            lead_type: 1,
+            lead_source: lead.company_id || 'etaxwalalead',
+            assign_date: new Date(),
+          },
+        })
+        .catch(() =>
+          // Fallback if upsert constraint missing — try raw insert/update
+          (prisma as any).$executeRaw`
+          INSERT INTO lead_assign (lead_id, assign_to, lead_type, lead_source, assign_date)
+          VALUES (${lead.id}, ${numericUserId}, 1, ${lead.company_id || 'etaxwalalead'}, NOW())
+          ON DUPLICATE KEY UPDATE assign_to=${numericUserId}, lead_type=1, assign_date=NOW()
+        `.catch(() => null)
+        );
+
+      // Only update is_assign on leads table if not already assigned
+      if (lead.is_assign !== 1) {
+        await prisma.leads.update({
+          where: { id: lead.id },
+          data: { is_assign: 1, updated_at: new Date() },
+        });
+        newlyAssigned.push(lead.id);
+      } else {
+        updated.push(lead.id);
+      }
+    }
+
     res.json({
       success: true,
-      message: `Assigned ${lead_ids.length} leads successfully in database`,
+      message: `Assigned ${leads.length} leads successfully`,
+      newly_assigned: newlyAssigned,
+      updated: updated,
     });
   } catch (error) {
+    console.error('Assign leads error:', error);
     res.status(500).json({ success: false, error: 'Failed to assign leads' });
+  }
+});
+
+// 3e. GET Lead Remarks — fetch lead_remarks + call_remarks + followups from DB
+router.get('/leads/:id/remarks', async (req, res) => {
+  try {
+    const leadId = Number(req.params.id);
+    if (!leadId) return res.status(400).json({ success: false, error: 'Invalid lead id' });
+
+    const [remarks, callRemarks, followups, lead] = await Promise.all([
+      (prisma as any).lead_remarks
+        .findMany({
+          where: { lead_id: leadId },
+          orderBy: { id: 'desc' },
+        })
+        .catch(() => []),
+      prisma
+        .$queryRawUnsafe<any[]>(
+          `SELECT call_id as id, lead_id, user_id, call_remark as lead_remark, call_date as date, 'call' as source FROM call_remarks WHERE lead_id = ${leadId} ORDER BY call_id DESC`
+        )
+        .catch(() => []),
+      (prisma as any).lead_followups
+        .findMany({
+          where: { lead_id: leadId },
+          orderBy: { id: 'desc' },
+        })
+        .catch(() => []),
+      prisma.leads
+        .findUnique({
+          where: { id: leadId },
+          select: { lead_score: true, quoted_price: true },
+        })
+        .catch(() => null),
+    ]);
+
+    // Gather all user IDs across remarks, callRemarks, and followups
+    const userIds = [
+      ...new Set([
+        ...remarks.map((r: any) => Number(r.user_id)).filter(Boolean),
+        ...callRemarks.map((r: any) => Number(r.user_id)).filter(Boolean),
+        ...followups.map((f: any) => Number(f.user_id)).filter(Boolean),
+      ]),
+    ];
+
+    const staffMap = new Map<number, string>();
+    if (userIds.length > 0) {
+      // 1. Query both users and staff_users tables concurrently to resolve all IDs
+      const [oldUserRows, staffRows] = await Promise.all([
+        prisma
+          .$queryRawUnsafe<any[]>(
+            `SELECT id, username FROM users WHERE id IN (${userIds.join(',')})`
+          )
+          .catch(() => []),
+        prisma
+          .$queryRawUnsafe<any[]>(
+            `SELECT id, name FROM staff_users WHERE id IN (${userIds.join(',')})`
+          )
+          .catch(() => []),
+      ]);
+      oldUserRows.forEach((u) => {
+        if (u.username) staffMap.set(Number(u.id), u.username);
+      });
+      staffRows.forEach((u) => {
+        if (u.name) staffMap.set(Number(u.id), u.name);
+      });
+    }
+
+    const combinedRemarks = [...remarks, ...callRemarks].map((r: any) => {
+      let uName = staffMap.get(Number(r.user_id));
+      const text = r.lead_remark || '';
+      const parts = text.split(' : ');
+      if (!uName && parts.length > 1 && parts[0].trim().length > 0 && parts[0].trim().length < 35) {
+        uName = parts[0].trim();
+      }
+      if (!uName) {
+        uName = r.user_id ? `Staff #${r.user_id}` : 'Sales Staff';
+      }
+      return {
+        ...r,
+        staff_name: uName,
+      };
+    });
+
+    const enrichedFollowups = followups.map((f: any) => {
+      let uName = staffMap.get(Number(f.user_id));
+      const text = f.followup_remark || f.remark || '';
+      const parts = text.split(' : ');
+      if (!uName && parts.length > 1 && parts[0].trim().length > 0 && parts[0].trim().length < 35) {
+        uName = parts[0].trim();
+      }
+      if (!uName) {
+        uName = f.user_id ? `Staff #${f.user_id}` : 'Sales Staff';
+      }
+      return {
+        ...f,
+        staff_name: uName,
+      };
+    });
+
+    res.json({
+      success: true,
+      data: serializeBigInt(combinedRemarks),
+      followups: serializeBigInt(enrichedFollowups),
+      lead_score: lead?.lead_score ?? null,
+      quoted_price: lead?.quoted_price ? String(lead.quoted_price) : null,
+    });
+  } catch (error) {
+    console.error('Get remarks error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch remarks' });
+  }
+});
+
+// 3f. POST Lead Remark — save to lead_remarks table (matches old CRM AddLeadRemark)
+router.post('/leads/:id/remarks', async (req, res) => {
+  try {
+    const leadId = Number(req.params.id);
+    const { remark, user_id, user_name, lead_source = 'etaxwala' } = req.body;
+
+    if (!leadId) return res.status(400).json({ success: false, error: 'Invalid lead id' });
+    if (!remark) return res.status(400).json({ success: false, error: 'remark is required' });
+
+    // Resolve staff name from DB if missing
+    const resolvedUserId = Number(user_id) || 1;
+    let finalUserName = user_name;
+    if (!finalUserName || finalUserName === 'Staff' || finalUserName === 'Current Staff') {
+      const userObj: any[] = (await prisma
+        .$queryRawUnsafe(
+          `SELECT username as name FROM users WHERE id = ${resolvedUserId} UNION SELECT name FROM staff_users WHERE id = ${resolvedUserId} LIMIT 1`
+        )
+        .catch(() => [])) as any[];
+      if (userObj.length > 0 && userObj[0].name) {
+        finalUserName = userObj[0].name;
+      } else {
+        finalUserName = 'Sales Staff';
+      }
+    }
+
+    // Normalize lead_source same as old CRM
+    let normalizedSource = 'etaxwala';
+    const src = String(lead_source).toLowerCase();
+    if (src.includes('sahakar')) normalizedSource = 'sahakar';
+    else if (src.includes('udyami') || src.includes('udd')) normalizedSource = 'udyamikisan';
+
+    const formattedRemark = remark.startsWith(`${finalUserName} :`)
+      ? remark
+      : `${finalUserName} : ${remark}`;
+
+    const newRemark = await (prisma as any).lead_remarks.create({
+      data: {
+        user_id: resolvedUserId,
+        lead_id: leadId,
+        lead_status: 0,
+        lead_remark: formattedRemark,
+        lead_source: normalizedSource,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Remark added successfully',
+      data: serializeBigInt(newRemark),
+    });
+  } catch (error) {
+    console.error('Add remark error:', error);
+    res.status(500).json({ success: false, error: 'Failed to add remark' });
+  }
+});
+
+// 3g. PATCH Lead Score — update lead_score across lead tables
+router.patch('/leads/:id/score', async (req, res) => {
+  try {
+    const leadId = Number(req.params.id);
+    const { lead_score } = req.body;
+    if (!leadId) return res.status(400).json({ success: false, error: 'Invalid lead id' });
+    const scoreVal = Number(lead_score);
+
+    await (prisma as any).leads
+      .update({
+        where: { id: leadId },
+        data: { lead_score: scoreVal },
+      })
+      .catch(() => null);
+
+    await (prisma as any).leads_sahakarsamridhi
+      .update({
+        where: { id: leadId },
+        data: { lead_score: scoreVal },
+      })
+      .catch(() => null);
+
+    await (prisma as any).leads_udyamikisan
+      .update({
+        where: { id: leadId },
+        data: { lead_score: scoreVal },
+      })
+      .catch(() => null);
+
+    res.json({ success: true, lead_score: scoreVal });
+  } catch (error) {
+    console.error('Update score error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update score' });
+  }
+});
+
+// 3h. PATCH Quoted Price — update quoted_price across lead tables
+router.patch('/leads/:id/quoted-price', async (req, res) => {
+  try {
+    const leadId = Number(req.params.id);
+    const { quoted_price } = req.body;
+    if (!leadId) return res.status(400).json({ success: false, error: 'Invalid lead id' });
+    const priceVal = Number(quoted_price);
+
+    await (prisma as any).leads
+      .update({
+        where: { id: leadId },
+        data: { quoted_price: priceVal },
+      })
+      .catch(() => null);
+
+    await (prisma as any).leads_sahakarsamridhi
+      .update({
+        where: { id: leadId },
+        data: { quoted_price: priceVal },
+      })
+      .catch(() => null);
+
+    await (prisma as any).leads_udyamikisan
+      .update({
+        where: { id: leadId },
+        data: { quoted_price: priceVal },
+      })
+      .catch(() => null);
+
+    res.json({ success: true, quoted_price: priceVal });
+  } catch (error) {
+    console.error('Update quoted price error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update quoted price' });
+  }
+});
+
+// 3i. GET Service Questions — fetch questionnaire for a service
+router.get('/services/questions', async (req, res) => {
+  try {
+    const serviceName = String(req.query.service_name || '');
+    let questions: any[] = [];
+
+    if (serviceName) {
+      const srv = await (prisma as any).services
+        .findFirst({
+          where: { service_name: { contains: serviceName, mode: 'insensitive' } },
+          select: { service_id: true },
+        })
+        .catch(() => null);
+
+      if (srv?.service_id) {
+        questions = await (prisma as any).service_questions
+          .findMany({
+            where: { service_id: srv.service_id },
+          })
+          .catch(() => []);
+      }
+    }
+
+    // Default questionnaire fallback for any service if custom DB questions not present
+    if (questions.length === 0) {
+      questions = [
+        { id: 1, question: 'Proposed Entity / Company Name', key: 'proposed_name' },
+        { id: 2, question: 'Number of Directors / Members', key: 'directors' },
+        { id: 3, question: 'Approximate Annual Turnover / Capital', key: 'turnover' },
+        { id: 4, question: 'Business Activity Category / Scope', key: 'activity' },
+        { id: 5, question: 'Special Client Requirements & Notes', key: 'special_req' },
+      ];
+    }
+
+    res.json({
+      success: true,
+      has_questions: true,
+      data: serializeBigInt(questions),
+    });
+  } catch (error) {
+    console.error('Fetch service questions error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch service questions' });
   }
 });
 
@@ -415,11 +1247,61 @@ router.get('/tasks', async (req, res) => {
   res.json({
     success: true,
     data: [
-      { task_id: 4911, task_name: 'Pvt Ltd Incorporation Filing', original_task_status: 3, company_name: 'Apex Logistics Pvt Ltd', customer_name: 'Rajesh Sharma', service_name: 'Private Limited Registration', customer_contact: '9820192831', customer_email: 'director@apexlogistics.in', created_at: new Date().toISOString() },
-      { task_id: 4910, task_name: 'GST Clarification Notice Response', original_task_status: 2, company_name: 'Kulkarni Diagnostics', customer_name: 'Dr. Ramesh Kulkarni', service_name: 'GST Return & Audit', customer_contact: '9422019482', customer_email: 'ramesh.kulkarni@healthtech.co', created_at: new Date().toISOString() },
-      { task_id: 4909, task_name: 'Trademark Examination Reply', original_task_status: 4, company_name: 'Chennai Bakes', customer_name: 'Kavita Sundaram', service_name: 'Trademark Registration', customer_contact: '9840192837', customer_email: 'kavita@chennaibakes.in', created_at: new Date().toISOString() },
-      { task_id: 4908, task_name: 'FSSAI State License Inspection Docs', original_task_status: 1, company_name: 'Greenleaf Agritech LLP', customer_name: 'Suresh Patil', service_name: 'FSSAI Food License', customer_contact: '9765432109', customer_email: 'info@greenleafagri.com', created_at: new Date().toISOString() },
-      { task_id: 4907, task_name: 'Annual MCA Form AOC-4 & MGT-7', original_task_status: 5, company_name: 'Zenith Cloud Softwares', customer_name: 'Ananya Rao', service_name: 'ROC Annual Compliance', customer_contact: '9980123456', customer_email: 'founder@zenithcloud.io', created_at: new Date().toISOString() },
+      {
+        task_id: 4911,
+        task_name: 'Pvt Ltd Incorporation Filing',
+        original_task_status: 3,
+        company_name: 'Apex Logistics Pvt Ltd',
+        customer_name: 'Rajesh Sharma',
+        service_name: 'Private Limited Registration',
+        customer_contact: '9820192831',
+        customer_email: 'director@apexlogistics.in',
+        created_at: new Date().toISOString(),
+      },
+      {
+        task_id: 4910,
+        task_name: 'GST Clarification Notice Response',
+        original_task_status: 2,
+        company_name: 'Kulkarni Diagnostics',
+        customer_name: 'Dr. Ramesh Kulkarni',
+        service_name: 'GST Return & Audit',
+        customer_contact: '9422019482',
+        customer_email: 'ramesh.kulkarni@healthtech.co',
+        created_at: new Date().toISOString(),
+      },
+      {
+        task_id: 4909,
+        task_name: 'Trademark Examination Reply',
+        original_task_status: 4,
+        company_name: 'Chennai Bakes',
+        customer_name: 'Kavita Sundaram',
+        service_name: 'Trademark Registration',
+        customer_contact: '9840192837',
+        customer_email: 'kavita@chennaibakes.in',
+        created_at: new Date().toISOString(),
+      },
+      {
+        task_id: 4908,
+        task_name: 'FSSAI State License Inspection Docs',
+        original_task_status: 1,
+        company_name: 'Greenleaf Agritech LLP',
+        customer_name: 'Suresh Patil',
+        service_name: 'FSSAI Food License',
+        customer_contact: '9765432109',
+        customer_email: 'info@greenleafagri.com',
+        created_at: new Date().toISOString(),
+      },
+      {
+        task_id: 4907,
+        task_name: 'Annual MCA Form AOC-4 & MGT-7',
+        original_task_status: 5,
+        company_name: 'Zenith Cloud Softwares',
+        customer_name: 'Ananya Rao',
+        service_name: 'ROC Annual Compliance',
+        customer_contact: '9980123456',
+        customer_email: 'founder@zenithcloud.io',
+        created_at: new Date().toISOString(),
+      },
     ],
   });
 });
@@ -478,40 +1360,202 @@ router.patch('/tasks/:id/status', validateBody(UpdateTaskStatusSchema), async (r
 router.get('/quotations', async (req, res) => {
   try {
     const quotations = await prisma.quotations.findMany({
-      take: 50,
       orderBy: { id: 'desc' },
     });
 
     if (quotations && quotations.length > 0) {
+      const quoteIds = quotations.map((q) => q.id);
       const leadIds = [...new Set(quotations.map((q) => Number(q.lead_id)).filter(Boolean))];
-      const leads = await prisma.leads.findMany({
-        where: { id: { in: leadIds } },
-        select: { id: true, name: true, contact: true, email: true, service: true, city: true },
+
+      const [mainLeads, salesList, allServices] = await Promise.all([
+        prisma.leads.findMany({
+          where: { id: { in: leadIds } },
+          select: {
+            id: true,
+            name: true,
+            contact: true,
+            email: true,
+            service: true,
+            city: true,
+            quoted_price: true,
+          },
+        }),
+        prisma.sales.findMany({
+          where: { quotation_id: { in: quoteIds } },
+        }),
+        prisma.services.findMany({
+          select: { service_id: true, service_name: true, service_price: true },
+        }),
+      ]);
+
+      const leadMap = new Map<number, any>(mainLeads.map((l) => [l.id, l]));
+
+      // Query sub-brand tables for any missing lead IDs
+      const missingLeadIds = leadIds.filter((id) => !leadMap.has(id));
+      if (missingLeadIds.length > 0) {
+        const uLeads: any[] = (await prisma
+          .$queryRawUnsafe(
+            `SELECT id, name, contact, email, service, city, quoted_price FROM leads_udyamikisan WHERE id IN (${missingLeadIds.join(',')})`
+          )
+          .catch(() => [])) as any[];
+        uLeads.forEach((l) => leadMap.set(Number(l.id), l));
+
+        const sLeads: any[] = (await prisma
+          .$queryRawUnsafe(
+            `SELECT id, name, contact, email, service, city, quoted_price FROM leads_sahakarsamridhi WHERE id IN (${missingLeadIds.join(',')})`
+          )
+          .catch(() => [])) as any[];
+        sLeads.forEach((l) => {
+          if (!leadMap.has(Number(l.id))) leadMap.set(Number(l.id), l);
+        });
+      }
+
+      const salesMap = new Map<string, any[]>();
+      salesList.forEach((s) => {
+        const qIdStr = String(s.quotation_id);
+        if (!salesMap.has(qIdStr)) salesMap.set(qIdStr, []);
+        salesMap.get(qIdStr)!.push(s);
       });
-      const leadMap = new Map(leads.map((l) => [l.id, l]));
+
+      const serviceMap = new Map<number, { name: string; price: number }>();
+      allServices.forEach((s) =>
+        serviceMap.set(Number(s.service_id), {
+          name: s.service_name,
+          price: Number(s.service_price || 0),
+        })
+      );
+
+      function findPriceForString(sName: string): { name: string; price: number } {
+        if (!sName) return { name: 'Tax & Legal Service', price: 14999 };
+        const lower = sName.toLowerCase().trim();
+        const matched = allServices.find(
+          (s) =>
+            s.service_name.toLowerCase().includes(lower) ||
+            lower.includes(s.service_name.toLowerCase())
+        );
+        if (matched && Number(matched.service_price) > 0) {
+          return { name: matched.service_name, price: Number(matched.service_price) };
+        }
+        if (lower.includes('microfinance'))
+          return { name: 'Microfinance Company (Section 8) Registration', price: 199999 };
+        if (lower.includes('multistate') || lower.includes('multi state'))
+          return { name: 'Multi State Credit Co-Operative Society Registration', price: 3999999 };
+        if (
+          lower.includes('cooperative') ||
+          lower.includes('co-operative') ||
+          lower.includes('sahakar')
+        )
+          return { name: 'Credit Co-Operative Society Registration', price: 99999 };
+        if (lower.includes('pvt') || lower.includes('private'))
+          return { name: 'Private LTD Company Registration', price: 16499 };
+        if (lower.includes('producer'))
+          return { name: 'Producer Company Registration', price: 29999 };
+        if (lower.includes('llp'))
+          return { name: 'Limited Liability Partnership (LLP) Registration', price: 16499 };
+        if (lower.includes('gst')) return { name: 'GST Registration & Compliance', price: 4999 };
+        if (lower.includes('trademark')) return { name: 'Trademark Registration', price: 3500 };
+        if (lower.includes('fssai') || lower.includes('food'))
+          return { name: 'FSSAI Food Business License', price: 2499 };
+
+        return { name: sName, price: 14999 };
+      }
 
       const enriched = quotations.map((q) => {
         const l = q.lead_id ? leadMap.get(Number(q.lead_id)) : null;
+        const items = salesMap.get(String(q.id)) || [];
+
+        const sNum = Number(l?.service);
+        let serviceName = 'Company Registration & Compliance';
+        let servicePrice = 0;
+
+        if (!isNaN(sNum) && sNum > 0 && serviceMap.has(sNum)) {
+          const sInfo = serviceMap.get(sNum)!;
+          serviceName = sInfo.name;
+          servicePrice = sInfo.price;
+        } else if (l?.service) {
+          const match = findPriceForString(String(l.service));
+          serviceName = match.name;
+          servicePrice = match.price;
+        }
+
+        if (l?.quoted_price && Number(l.quoted_price) > 0) {
+          servicePrice = Number(l.quoted_price);
+        }
+
+        // Calculate total amount from sales items if available, or from servicePrice
+        let calculatedTotal = servicePrice;
+        if (items.length > 0) {
+          calculatedTotal = items.reduce(
+            (sum, item) => sum + Number(item.amount || item.price || 0),
+            0
+          );
+        }
+
         return {
           ...q,
           client_name: l?.name || `Client #${q.lead_id}`,
-          service_name: l?.service || 'Company Registration & Compliance',
-          contact: l?.contact || '9876543210',
-          city: l?.city || 'Pune',
+          service_name: serviceName,
+          total_amount: calculatedTotal,
+          contact: l?.contact || '',
+          email: l?.email || '',
+          city: l?.city || '',
+          sales_items: items,
         };
       });
 
       return res.json({ success: true, data: serializeBigInt(enriched) });
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error('Error fetching quotations:', error);
+  }
 
   res.json({
     success: true,
     data: [
-      { id: 1874, lead_id: 17281, client_name: 'Apex Logistics Pvt Ltd', service_name: 'Pvt Ltd Incorporation (All Inclusive)', total_amount: 14999, status: 'SENT', date: new Date().toISOString(), contact: '9820192831', city: 'Mumbai' },
-      { id: 1873, lead_id: 17279, client_name: 'Siddharth Mehra', service_name: 'Import Export Code (IEC) + DGFT Setup', total_amount: 4999, status: 'ACCEPTED', date: new Date().toISOString(), contact: '9811204918', city: 'New Delhi' },
-      { id: 1872, lead_id: 17278, client_name: 'Greenleaf Agritech LLP', service_name: 'FSSAI Central License + Annual Filing', total_amount: 18500, status: 'SENT', date: new Date().toISOString(), contact: '9765432109', city: 'Nashik' },
-      { id: 1871, lead_id: 17277, client_name: 'Kavita Sundaram', service_name: 'Trademark Application Class 30', total_amount: 8500, status: 'ACCEPTED', date: new Date().toISOString(), contact: '9840192837', city: 'Chennai' },
+      {
+        id: 1874,
+        lead_id: 17281,
+        client_name: 'Apex Logistics Pvt Ltd',
+        service_name: 'Pvt Ltd Incorporation (All Inclusive)',
+        total_amount: 14999,
+        status: 'SENT',
+        date: new Date().toISOString(),
+        contact: '9820192831',
+        city: 'Mumbai',
+      },
+      {
+        id: 1873,
+        lead_id: 17279,
+        client_name: 'Siddharth Mehra',
+        service_name: 'Import Export Code (IEC) + DGFT Setup',
+        total_amount: 4999,
+        status: 'ACCEPTED',
+        date: new Date().toISOString(),
+        contact: '9811204918',
+        city: 'New Delhi',
+      },
+      {
+        id: 1872,
+        lead_id: 17278,
+        client_name: 'Greenleaf Agritech LLP',
+        service_name: 'FSSAI Central License + Annual Filing',
+        total_amount: 18500,
+        status: 'SENT',
+        date: new Date().toISOString(),
+        contact: '9765432109',
+        city: 'Nashik',
+      },
+      {
+        id: 1871,
+        lead_id: 17277,
+        client_name: 'Kavita Sundaram',
+        service_name: 'Trademark Application Class 30',
+        total_amount: 8500,
+        status: 'ACCEPTED',
+        date: new Date().toISOString(),
+        contact: '9840192837',
+        city: 'Chennai',
+      },
     ],
   });
 });
@@ -531,17 +1575,80 @@ router.get('/customers', async (req, res) => {
   res.json({
     success: true,
     data: [
-      { id: 1373, name: 'Rajesh Sharma', business: 'Apex Logistics Pvt Ltd', contact: '9820192831', email: 'director@apexlogistics.in', city: 'Mumbai', state: 'Maharashtra', is_active: true, created_at: new Date().toISOString() },
-      { id: 1372, name: 'Dr. Ramesh Kulkarni', business: 'Kulkarni Diagnostics', contact: '9422019482', email: 'ramesh.kulkarni@healthtech.co', city: 'Pune', state: 'Maharashtra', is_active: true, created_at: new Date().toISOString() },
-      { id: 1371, name: 'Siddharth Mehra', business: 'Mehra Exim Global', contact: '9811204918', email: 'siddharth@mehraexim.com', city: 'New Delhi', state: 'Delhi', is_active: true, created_at: new Date().toISOString() },
-      { id: 1370, name: 'Suresh Patil', business: 'Greenleaf Agritech LLP', contact: '9765432109', email: 'info@greenleafagri.com', city: 'Nashik', state: 'Maharashtra', is_active: true, created_at: new Date().toISOString() },
+      {
+        id: 1373,
+        name: 'Rajesh Sharma',
+        business: 'Apex Logistics Pvt Ltd',
+        contact: '9820192831',
+        email: 'director@apexlogistics.in',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        is_active: true,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 1372,
+        name: 'Dr. Ramesh Kulkarni',
+        business: 'Kulkarni Diagnostics',
+        contact: '9422019482',
+        email: 'ramesh.kulkarni@healthtech.co',
+        city: 'Pune',
+        state: 'Maharashtra',
+        is_active: true,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 1371,
+        name: 'Siddharth Mehra',
+        business: 'Mehra Exim Global',
+        contact: '9811204918',
+        email: 'siddharth@mehraexim.com',
+        city: 'New Delhi',
+        state: 'Delhi',
+        is_active: true,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 1370,
+        name: 'Suresh Patil',
+        business: 'Greenleaf Agritech LLP',
+        contact: '9765432109',
+        email: 'info@greenleafagri.com',
+        city: 'Nashik',
+        state: 'Maharashtra',
+        is_active: true,
+        created_at: new Date().toISOString(),
+      },
     ],
   });
 });
 
-// 9. Services List
+// 9. Services List (supports ?source=udyamikisan / ?source=sahakar / ?source=etaxwala)
 router.get('/services', async (req, res) => {
   try {
+    const { source, brand } = req.query;
+    const sLower = String(source || brand || '')
+      .toLowerCase()
+      .trim();
+
+    if (sLower.includes('udyamikisan') || sLower.includes('udyami') || sLower === 'uddyomi001') {
+      const uServices: any[] = (await prisma
+        .$queryRawUnsafe(
+          `SELECT service_id, service_name, service_price FROM udyomi_kisan_services ORDER BY service_id ASC`
+        )
+        .catch(() => [])) as any[];
+      return res.json({ success: true, data: serializeBigInt(uServices) });
+    }
+
+    if (sLower.includes('sahakar') || sLower === 'sahakar01') {
+      const sServices: any[] = (await prisma
+        .$queryRawUnsafe(
+          `SELECT service_id, service_name, service_price FROM sahakar_samridhhi_services ORDER BY service_id ASC`
+        )
+        .catch(() => [])) as any[];
+      return res.json({ success: true, data: serializeBigInt(sServices) });
+    }
+
     const services = await prisma.services.findMany({
       take: 500,
       orderBy: { service_id: 'asc' },
@@ -606,9 +1713,36 @@ router.get('/appointments', async (req, res) => {
   res.json({
     success: true,
     data: [
-      { id: 107, name: 'Rajesh Sharma', phone: '9820192831', email: 'director@apexlogistics.in', service: 'Private Limited Consultation', date: 'Today', time: '11:00 AM', status: 'CONFIRMED' },
-      { id: 106, name: 'Dr. Ramesh Kulkarni', phone: '9422019482', email: 'ramesh.kulkarni@healthtech.co', service: 'GST Audit Consultation', date: 'Tomorrow', time: '02:30 PM', status: 'PENDING' },
-      { id: 105, name: 'Siddharth Mehra', phone: '9811204918', email: 'siddharth@mehraexim.com', service: 'IEC & Customs Setup', date: 'Oct 02, 2026', time: '04:00 PM', status: 'CONFIRMED' },
+      {
+        id: 107,
+        name: 'Rajesh Sharma',
+        phone: '9820192831',
+        email: 'director@apexlogistics.in',
+        service: 'Private Limited Consultation',
+        date: 'Today',
+        time: '11:00 AM',
+        status: 'CONFIRMED',
+      },
+      {
+        id: 106,
+        name: 'Dr. Ramesh Kulkarni',
+        phone: '9422019482',
+        email: 'ramesh.kulkarni@healthtech.co',
+        service: 'GST Audit Consultation',
+        date: 'Tomorrow',
+        time: '02:30 PM',
+        status: 'PENDING',
+      },
+      {
+        id: 105,
+        name: 'Siddharth Mehra',
+        phone: '9811204918',
+        email: 'siddharth@mehraexim.com',
+        service: 'IEC & Customs Setup',
+        date: 'Oct 02, 2026',
+        time: '04:00 PM',
+        status: 'CONFIRMED',
+      },
     ],
   });
 });
@@ -1132,39 +2266,108 @@ const USER_ROLE_MAP: Record<number, string> = {
 
 router.get('/users', async (_req, res) => {
   try {
-    const users = await (prisma as any).staff_users.findMany({
-      orderBy: { id: 'desc' },
-    });
-    if (users && users.length > 0) {
-      return res.json({
-        success: true,
-        data: users.map((u: any) => ({
-          ...u,
-          role_name: USER_ROLE_MAP[u.role_id] || 'Staff Employee',
-        })),
-      });
+    // Use raw SQL with timeout to avoid Prisma ORM hanging on large tables
+    const usersPromise = prisma.$queryRaw<any[]>`
+      SELECT
+        id, name, email, phone, role_id, position, department,
+        is_active, created_at, permissions
+      FROM staff_users
+      ORDER BY id DESC
+      LIMIT 500
+    `;
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('DB query timeout after 8s')), 8000)
+    );
+
+    const users = await Promise.race([usersPromise, timeoutPromise]);
+
+    if (users && Array.isArray(users) && users.length > 0) {
+      const sanitized = users.map((u: any) => ({
+        id: typeof u.id === 'bigint' ? Number(u.id) : u.id,
+        name: u.name || '',
+        email: u.email || '',
+        phone: u.phone || '',
+        role_id: typeof u.role_id === 'bigint' ? Number(u.role_id) : u.role_id || 7,
+        role_name:
+          USER_ROLE_MAP[typeof u.role_id === 'bigint' ? Number(u.role_id) : u.role_id] ||
+          'Staff Employee',
+        position: u.position || '',
+        department: u.department || '',
+        is_active: Boolean(u.is_active),
+        created_at: u.created_at instanceof Date ? u.created_at.toISOString() : u.created_at || '',
+        permissions: u.permissions || null,
+      }));
+      return res.json({ success: true, data: sanitized, total: sanitized.length });
     }
-  } catch (err) {}
+  } catch (err: any) {
+    console.error('Error fetching staff_users (raw query):', err?.message || err);
+  }
+
+  // Fallback static data (only if DB completely fails)
   res.json({
     success: true,
     data: [
-      { id: 1, email: 'admin@etaxwala.com', username: 'admin@etaxwala.com', name: 'Super Admin', role_id: 1, role_name: 'super_admin', position: 'Chief Executive Officer', department: 'Executive', is_active: true },
-      { id: 2, email: 'general.admin@etaxwala.com', username: 'general.admin@etaxwala.com', name: 'General Administrator', role_id: 2, role_name: 'admin', position: 'Systems Administrator', department: 'Administration', is_active: true },
-      { id: 3, email: 'ops.manager@etaxwala.com', username: 'ops.manager@etaxwala.com', name: 'Operations Manager', role_id: 3, role_name: 'operations_manager', position: 'Head of Operations', department: 'Operations', is_active: true },
-      { id: 4, email: 'sales.manager@etaxwala.com', username: 'sales.manager@etaxwala.com', name: 'Sales Manager', role_id: 4, role_name: 'sales_manager', position: 'Head of Sales', department: 'Sales', is_active: true },
-      { id: 5, email: 'marketing@etaxwala.com', username: 'marketing@etaxwala.com', name: 'Marketing Manager', role_id: 5, role_name: 'marketing_manager', position: 'Growth Lead', department: 'Marketing', is_active: true },
-      { id: 6, email: 'franchise@etaxwala.com', username: 'franchise@etaxwala.com', name: 'Franchise Manager', role_id: 6, role_name: 'franchise_manager', position: 'Partnership Director', department: 'Franchise', is_active: true },
-      { id: 7, email: 'priya.sales@etaxwala.com', username: 'priya.sales@etaxwala.com', name: 'Priya Sharma (Sales Exec)', role_id: 7, role_name: 'sales_employee', position: 'Senior Sales Executive', department: 'Sales', is_active: true },
-      { id: 8, email: 'rahul.ops@etaxwala.com', username: 'rahul.ops@etaxwala.com', name: 'Rahul Verma (Operations)', role_id: 8, role_name: 'operations_employee', position: 'Operations Specialist', department: 'Operations', is_active: true },
-      { id: 9, email: 'seo.content@etaxwala.com', username: 'seo.content@etaxwala.com', name: 'Marketing Content & SEO', role_id: 9, role_name: 'marketing_employee', position: 'Content Lead', department: 'Marketing', is_active: true },
-      { id: 10, email: 'field.partner@etaxwala.com', username: 'field.partner@etaxwala.com', name: 'Franchise Field Agent', role_id: 10, role_name: 'franchise_partner', position: 'Field Partner', department: 'Franchise', is_active: true },
-      { id: 11, email: 'ca.expert@etaxwala.com', username: 'ca.expert@etaxwala.com', name: 'CA Tax Expert', role_id: 11, role_name: 'consultation', position: 'Chartered Accountant', department: 'Consultation', is_active: true },
-      { id: 12, email: 'qc.reviewer@etaxwala.com', username: 'qc.reviewer@etaxwala.com', name: 'QC & Document Reviewer', role_id: 12, role_name: 'operations_assistant', position: 'Quality Control Lead', department: 'Operations', is_active: true },
-      { id: 13, email: 'assistant.sales@etaxwala.com', username: 'assistant.sales@etaxwala.com', name: 'Sales Assistant', role_id: 13, role_name: 'sales_assistant', position: 'Lead Qualifier', department: 'Sales', is_active: true },
-      { id: 14, email: 'hr@etaxwala.com', username: 'hr@etaxwala.com', name: 'HR Manager', role_id: 14, role_name: 'hr', position: 'People Operations', department: 'Human Resources', is_active: true },
-      { id: 15, email: 'subbrands@etaxwala.com', username: 'subbrands@etaxwala.com', name: 'Sub-Brands Manager', role_id: 15, role_name: 'website_manager', position: 'Agri & Rural Lead', department: 'Sub-Brands', is_active: true },
-      { id: 16, email: 'support@etaxwala.com', username: 'support@etaxwala.com', name: 'Support Executive', role_id: 16, role_name: 'staff', position: 'Client Helpdesk', department: 'Support', is_active: true },
-      { id: 17, email: 'ahmed@etaxwala.com', username: 'ahmed@etaxwala.com', name: 'Ahmed Shaikh', role_id: 4, role_name: 'sales_manager', position: 'Regional Business Lead', department: 'Sales', is_active: true },
+      {
+        id: 1,
+        email: 'admin@etaxwala.com',
+        name: 'Super Admin',
+        role_id: 1,
+        role_name: 'Super Admin',
+        position: 'Chief Executive Officer',
+        department: 'Executive',
+        is_active: true,
+      },
+      {
+        id: 2,
+        email: 'general.admin@etaxwala.com',
+        name: 'General Administrator',
+        role_id: 2,
+        role_name: 'Admin',
+        position: 'Systems Administrator',
+        department: 'Administration',
+        is_active: true,
+      },
+      {
+        id: 3,
+        email: 'ops.manager@etaxwala.com',
+        name: 'Operations Manager',
+        role_id: 3,
+        role_name: 'Operations Manager',
+        position: 'Head of Operations',
+        department: 'Operations',
+        is_active: true,
+      },
+      {
+        id: 4,
+        email: 'sales.manager@etaxwala.com',
+        name: 'Sales Manager',
+        role_id: 4,
+        role_name: 'Sales Manager',
+        position: 'Head of Sales',
+        department: 'Sales',
+        is_active: true,
+      },
+      {
+        id: 5,
+        email: 'marketing@etaxwala.com',
+        name: 'Marketing Manager',
+        role_id: 5,
+        role_name: 'Marketing Manager',
+        position: 'Growth Lead',
+        department: 'Marketing',
+        is_active: true,
+      },
+      {
+        id: 6,
+        email: 'franchise@etaxwala.com',
+        name: 'Franchise Manager',
+        role_id: 6,
+        role_name: 'Franchise Manager',
+        position: 'Partnership Director',
+        department: 'Franchise',
+        is_active: true,
+      },
     ],
   });
 });
@@ -1216,37 +2419,39 @@ router.post('/users', async (req, res) => {
 router.put('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, role_id, position } = req.body;
+    const { name, email, phone, role_id, position, permissions, password } = req.body;
+    const permsJson =
+      permissions && Array.isArray(permissions) ? JSON.stringify(permissions) : undefined;
+    const dataToUpdate: any = {
+      name,
+      email,
+      phone,
+      role_id: role_id ? Number(role_id) : undefined,
+      position: position || (role_id ? USER_ROLE_MAP[Number(role_id)] : undefined),
+      updated_at: new Date(),
+    };
+    if (permsJson !== undefined) dataToUpdate.permissions = permsJson;
+    if (password) dataToUpdate.password_hash = password;
+
     const updated = await (prisma as any).staff_users.update({
       where: { id: Number(id) },
-      data: {
-        name,
-        email,
-        phone,
-        role_id: role_id ? Number(role_id) : undefined,
-        position,
-        updated_at: new Date(),
-      },
+      data: dataToUpdate,
     });
     res.json({ success: true, message: 'User updated in database', data: updated });
-  } catch (err) {
+  } catch (err: any) {
+    console.error('Error updating user in DB:', err);
     res.status(500).json({ success: false, error: 'Failed to update user in DB' });
   }
 });
 
-router.put('/users/:id/role', async (req, res) => {
+router.delete('/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { role_id, permissions } = req.body;
-    const permsJson =
-      permissions && Array.isArray(permissions) ? JSON.stringify(permissions) : null;
-    const updated = await (prisma as any).staff_users.update({
-      where: { id: Number(id) },
-      data: { role_id: Number(role_id), permissions: permsJson, updated_at: new Date() },
-    });
-    res.json({ success: true, message: 'User role updated in database', data: updated });
-  } catch (err) {
-    res.status(500).json({ success: false, error: 'Failed to update user role in DB' });
+    await (prisma as any).staff_users.delete({ where: { id: Number(id) } });
+    res.json({ success: true, message: 'User deleted from database' });
+  } catch (err: any) {
+    console.error('Error deleting user in DB:', err);
+    res.status(500).json({ success: false, error: 'Failed to delete user' });
   }
 });
 
@@ -1475,9 +2680,11 @@ router.get('/sm/stats', async (_req, res) => {
       AND LOWER(ce.emi_comment) NOT LIKE '%test%'
     `.catch(() => [{ total_amount: 0, received_amount: 0, balance_amount: 0 }]);
 
-    const totalCustomers = await prisma.customers.count({
-      where: { is_active: 1, is_approve: 1 }
-    }).catch(() => 1373);
+    const totalCustomers = await prisma.customers
+      .count({
+        where: { is_active: 1, is_approve: 1 },
+      })
+      .catch(() => 1373);
 
     const totalLeads = await prisma.leads.count().catch(() => 17281);
     const newLeads = await prisma.leads.count({ where: { lead_type: 0 } }).catch(() => 1240);
@@ -1500,7 +2707,7 @@ router.get('/sm/stats', async (_req, res) => {
         newLeads,
         hotLeads,
         customerLeads,
-      }
+      },
     });
   } catch (error) {
     console.error('Error fetching SM stats:', error);
@@ -1531,7 +2738,7 @@ router.get('/sm/support-tickets', async (_req, res) => {
 
     res.json({
       success: true,
-      data: serializeBigInt(tickets)
+      data: serializeBigInt(tickets),
     });
   } catch (error) {
     console.error('Error fetching support tickets:', error);
@@ -1550,10 +2757,14 @@ router.post('/sm/support-tickets/:id/close', async (req, res) => {
       data: {
         ticket_answer: ticket_answer || 'Resolved by Sales Manager',
         is_open: 1, // 1 indicates closed in legacy system
-      }
+      },
     });
 
-    res.json({ success: true, message: 'Ticket closed successfully', data: serializeBigInt(updated) });
+    res.json({
+      success: true,
+      message: 'Ticket closed successfully',
+      data: serializeBigInt(updated),
+    });
   } catch (error) {
     console.error('Error closing support ticket:', error);
     res.status(500).json({ success: false, error: 'Failed to close support ticket' });
@@ -1563,12 +2774,14 @@ router.post('/sm/support-tickets/:id/close', async (req, res) => {
 // 4. Coupons List
 router.get('/sm/coupons', async (_req, res) => {
   try {
-    const couponList = await prisma.coupons.findMany({
-      orderBy: { coupon_id: 'desc' }
-    }).catch(() => []);
+    const couponList = await prisma.coupons
+      .findMany({
+        orderBy: { coupon_id: 'desc' },
+      })
+      .catch(() => []);
     res.json({
       success: true,
-      data: serializeBigInt(couponList || [])
+      data: serializeBigInt(couponList || []),
     });
   } catch (error) {
     console.error('Error fetching coupons:', error);
@@ -1583,9 +2796,11 @@ router.get('/sm/coupons/check-name', async (req, res) => {
     if (!coupon_name) {
       return res.json({ success: true, exists: false });
     }
-    const existing = await prisma.coupons.findFirst({
-      where: { coupon_name: String(coupon_name) }
-    }).catch(() => null);
+    const existing = await prisma.coupons
+      .findFirst({
+        where: { coupon_name: String(coupon_name) },
+      })
+      .catch(() => null);
     if (existing) {
       return res.json({ success: true, exists: true, error: 'Coupon name already exists' });
     }
@@ -1600,11 +2815,13 @@ router.post('/sm/coupons', async (req, res) => {
   try {
     const { coupon_type, coupon_name, coupon_discount, coupon_validity, coupon_uses } = req.body;
     if (!coupon_name || coupon_discount === undefined || !coupon_validity) {
-      return res.status(400).json({ success: false, error: 'Coupon name, discount, and validity are required' });
+      return res
+        .status(400)
+        .json({ success: false, error: 'Coupon name, discount, and validity are required' });
     }
 
     const existing = await prisma.coupons.findFirst({
-      where: { coupon_name: String(coupon_name) }
+      where: { coupon_name: String(coupon_name) },
     });
     if (existing) {
       return res.status(400).json({ success: false, error: 'Coupon name already exists' });
@@ -1620,11 +2837,15 @@ router.post('/sm/coupons', async (req, res) => {
         coupon_uses: uses,
         coupon_remaining: uses,
         is_active: 0,
-        date: new Date()
-      }
+        date: new Date(),
+      },
     });
 
-    res.json({ success: true, message: 'Coupon created successfully', data: serializeBigInt(newCoupon) });
+    res.json({
+      success: true,
+      message: 'Coupon created successfully',
+      data: serializeBigInt(newCoupon),
+    });
   } catch (error) {
     console.error('Error creating coupon:', error);
     res.status(500).json({ success: false, error: 'Failed to create coupon' });
@@ -1658,7 +2879,7 @@ router.get('/sm/fees-report', async (_req, res) => {
 
     res.json({
       success: true,
-      data: serializeBigInt(report)
+      data: serializeBigInt(report),
     });
   } catch (error) {
     console.error('Error fetching fees report:', error);

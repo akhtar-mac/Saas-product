@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   UserCheck,
   Users,
@@ -13,6 +14,7 @@ import {
   ExternalLink,
   Mail,
   Phone,
+  FileSpreadsheet,
   MessageCircle,
   DollarSign,
   TrendingUp,
@@ -242,6 +244,13 @@ export default function HrDashboard() {
             <Receipt className="w-3.5 h-3.5" />
             Accounts & Payroll
           </button>
+          <Link
+            to="/crm/quotations"
+            className="px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white transition-all flex items-center gap-1.5 font-bold"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            Quotations
+          </Link>
         </div>
       </div>
 

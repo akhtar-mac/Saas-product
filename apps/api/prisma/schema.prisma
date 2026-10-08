@@ -7,28 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── NEW MODELS for ETaxwala 2.0 CRM ─────────────────────────────────────────
-
 /// Staff user accounts — authentication table for all 16 roles
 model staff_users {
-  id              Int       @id @default(autoincrement())
-  name            String    @db.VarChar(100)
-  email           String    @unique @db.VarChar(150)
-  password_hash   String    @db.VarChar(255)
-  phone           String?   @db.VarChar(20)
-  role_id         Int       // Primary role: 1=super_admin … 16=staff
-  roles           String?   // JSON array of all assigned role IDs, e.g. [1, 4, 14]
-  permissions     String?   // JSON array of permission keys (e.g. ["dashboard:view", "sales:view"])
-  profile_photo   String?   @db.VarChar(500)
-  position        String?   @db.VarChar(100)
-  department      String?   @db.VarChar(100)
-  is_active       Boolean   @default(true)
-  is_online       Boolean   @default(false)
-  last_login_at   DateTime?
-  last_seen_at    DateTime?
-  created_by      Int?      // user_id of admin who created this account
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
+  id            Int       @id @default(autoincrement())
+  name          String    @db.VarChar(100)
+  email         String    @unique @db.VarChar(150)
+  password_hash String    @db.VarChar(255)
+  phone         String?   @db.VarChar(20)
+  role_id       Int
+  roles         String?
+  permissions   String?
+  profile_photo String?   @db.VarChar(500)
+  position      String?   @db.VarChar(100)
+  department    String?   @db.VarChar(100)
+  is_active     Boolean   @default(true)
+  is_online     Boolean   @default(false)
+  last_login_at DateTime?
+  last_seen_at  DateTime?
+  created_by    Int?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
 }
 
 model staff_user_roles {
@@ -62,35 +60,32 @@ model audit_logs {
   @@index([created_at])
 }
 
-// ─── ATS & RECRUITMENT MODELS (Phase 1) ──────────────────────────────────────
-
 model job_applications {
-  id                 Int       @id @default(autoincrement())
+  id                 Int                   @id @default(autoincrement())
   job_id             Int?
-  first_name         String    @db.VarChar(100)
-  last_name          String?   @db.VarChar(100)
-  email              String    @db.VarChar(150)
-  phone              String    @db.VarChar(30)
-  role_applied       String    @db.VarChar(150)
-  department         String?   @default("General") @db.VarChar(100)
-  current_company    String?   @db.VarChar(150)
-  current_title      String?   @db.VarChar(150)
-  experience_years   String?   @db.VarChar(50)
-  expected_ctc       String?   @db.VarChar(50)
-  notice_period_days String?   @db.VarChar(50)
-  linkedin_url       String?   @db.VarChar(500)
-  portfolio_url      String?   @db.VarChar(500)
-  source             String?   @default("Careers Page") @db.VarChar(100)
-  status             String    @default("APPLIED") @db.VarChar(50)
-  rating             Int?      @default(0) @db.SmallInt
-  created_at         DateTime  @default(now()) @db.Timestamp(6)
-  updated_at         DateTime  @default(now()) @db.Timestamp(6)
-
-  documents          candidate_documents[]
+  first_name         String                @db.VarChar(100)
+  last_name          String?               @db.VarChar(100)
+  email              String                @db.VarChar(150)
+  phone              String                @db.VarChar(30)
+  role_applied       String                @db.VarChar(150)
+  department         String?               @default("General") @db.VarChar(100)
+  current_company    String?               @db.VarChar(150)
+  current_title      String?               @db.VarChar(150)
+  experience_years   String?               @db.VarChar(50)
+  expected_ctc       String?               @db.VarChar(50)
+  notice_period_days String?               @db.VarChar(50)
+  linkedin_url       String?               @db.VarChar(500)
+  portfolio_url      String?               @db.VarChar(500)
+  source             String?               @default("Careers Page") @db.VarChar(100)
+  status             String                @default("APPLIED") @db.VarChar(50)
+  rating             Int?                  @default(0) @db.SmallInt
+  created_at         DateTime              @default(now()) @db.Timestamp(6)
+  updated_at         DateTime              @default(now()) @db.Timestamp(6)
+  events             application_events[]
   notes              application_notes[]
+  documents          candidate_documents[]
   interviews         interviews[]
   offers             job_offers[]
-  events             application_events[]
 
   @@index([status])
   @@index([email])
@@ -106,7 +101,6 @@ model candidate_documents {
   file_size      Int?
   mime_type      String?          @db.VarChar(100)
   uploaded_at    DateTime         @default(now()) @db.Timestamp(6)
-
   application    job_applications @relation(fields: [application_id], references: [id], onDelete: Cascade)
 
   @@index([application_id])
@@ -120,7 +114,6 @@ model application_notes {
   note_content   String           @db.Text
   is_private     Boolean          @default(false)
   created_at     DateTime         @default(now()) @db.Timestamp(6)
-
   application    job_applications @relation(fields: [application_id], references: [id], onDelete: Cascade)
 
   @@index([application_id])
@@ -132,16 +125,15 @@ model interviews {
   round_number     Int                  @default(1) @db.SmallInt
   round_name       String               @default("Technical Round") @db.VarChar(100)
   interview_type   String               @default("GOOGLE_MEET") @db.VarChar(50)
-  scheduled_at     DateTime             @db.Timestamp(6)
+  scheduled_at     DateTime             @default(now()) @db.Timestamp(6)
   duration_minutes Int                  @default(45)
   meeting_link     String?              @db.VarChar(500)
   interviewer_id   Int?
   interviewer_name String?              @db.VarChar(150)
   status           String               @default("SCHEDULED") @db.VarChar(50)
   created_at       DateTime             @default(now()) @db.Timestamp(6)
-
-  application      job_applications     @relation(fields: [application_id], references: [id], onDelete: Cascade)
   feedback         interview_feedback[]
+  application      job_applications     @relation(fields: [application_id], references: [id], onDelete: Cascade)
 
   @@index([application_id])
 }
@@ -157,8 +149,9 @@ model interview_feedback {
   recommendation   String     @default("HIRE") @db.VarChar(50)
   notes            String?    @db.Text
   submitted_at     DateTime   @default(now()) @db.Timestamp(6)
-
   interview        interviews @relation(fields: [interview_id], references: [id], onDelete: Cascade)
+
+  @@index([interview_id], map: "interview_feedback_interview_id_fkey")
 }
 
 model job_offers {
@@ -171,8 +164,9 @@ model job_offers {
   status           String           @default("DRAFT") @db.VarChar(50)
   approved_by      Int?
   created_at       DateTime         @default(now()) @db.Timestamp(6)
-
   application      job_applications @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  @@index([application_id], map: "job_offers_application_id_fkey")
 }
 
 model application_events {
@@ -184,7 +178,6 @@ model application_events {
   to_status      String           @db.VarChar(50)
   reason         String?          @db.Text
   created_at     DateTime         @default(now()) @db.Timestamp(6)
-
   application    job_applications @relation(fields: [application_id], references: [id], onDelete: Cascade)
 
   @@index([application_id])
@@ -192,7 +185,7 @@ model application_events {
 
 model chat_conversations {
   id              Int       @id @default(autoincrement())
-  type            String    @default("direct") @db.VarChar(20) // "direct" | "group"
+  type            String    @default("direct") @db.VarChar(20)
   title           String?   @db.VarChar(150)
   created_by      Int?
   created_at      DateTime  @default(now())
@@ -214,12 +207,12 @@ model chat_members {
 }
 
 model chat_messages {
-  id              Int       @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   conversation_id Int
   sender_id       Int
-  content         String    @db.Text
-  message_type    String    @default("text") @db.VarChar(20) // "text" | "file" | "system"
-  created_at      DateTime  @default(now())
+  content         String   @db.Text
+  message_type    String   @default("text") @db.VarChar(20)
+  created_at      DateTime @default(now())
 
   @@index([conversation_id, created_at])
   @@index([sender_id])
@@ -240,7 +233,7 @@ model chat_attachments {
 model user_presence {
   id           Int      @id @default(autoincrement())
   user_id      Int      @unique
-  status       String   @default("offline") @db.VarChar(20) // "online" | "away" | "offline"
+  status       String   @default("offline") @db.VarChar(20)
   socket_id    String?  @db.VarChar(100)
   last_seen_at DateTime @default(now())
   updated_at   DateTime @default(now()) @updatedAt
@@ -248,116 +241,49 @@ model user_presence {
   @@index([user_id])
 }
 
-// ─── DISBURSEMENT & MONEY REQUEST MODELS ────────────────────────────────────
-
-model disbursement_wallets {
-  id                    Int       @id @default(autoincrement())
-  officer_id            Int       @unique
-  balance               Decimal   @default(0.00) @db.Decimal(14, 2)
-  total_funded          Decimal   @default(0.00) @db.Decimal(14, 2)
-  total_disbursed       Decimal   @default(0.00) @db.Decimal(14, 2)
-  low_balance_threshold Decimal   @default(5000.00) @db.Decimal(14, 2)
-  is_active             Boolean   @default(true)
-  created_at            DateTime  @default(now()) @db.Timestamp(0)
-  updated_at            DateTime  @default(now()) @updatedAt @db.Timestamp(0)
-
-  topups                disbursement_topups[]
-
-  @@index([officer_id])
-  @@index([is_active])
-}
-
-model disbursement_topups {
-  id           Int                  @id @default(autoincrement())
-  wallet_id    Int
-  officer_id   Int
-  admin_id     Int
-  amount       Decimal              @db.Decimal(14, 2)
-  payment_mode String               @default("BANK_TRANSFER") @db.VarChar(50)
-  reference_no String?              @db.VarChar(100)
-  notes        String?              @db.Text
-  created_at   DateTime             @default(now()) @db.Timestamp(0)
-
-  wallet       disbursement_wallets @relation(fields: [wallet_id], references: [id], onDelete: Cascade)
-
-  @@index([wallet_id])
-  @@index([officer_id])
-  @@index([created_at(sort: Desc)])
-}
-
-model disbursement_requests {
-  id                  Int       @id @default(autoincrement())
-  request_code        String    @unique @db.VarChar(50)
-  requester_id        Int
-  officer_id          Int?
-  conversation_id     Int?
-  message_id          Int?
-  amount              Decimal   @db.Decimal(14, 2)
-  purpose_category    String    @db.VarChar(100)
-  purpose_description String    @db.Text
-  client_ref          String?   @db.VarChar(150)
-  upi_id              String?   @db.VarChar(100)
-  qr_code_url         String?   @db.VarChar(500)
-  status              String    @default("PENDING") @db.VarChar(30)
-  rejection_reason    String?   @db.Text
-  payment_proof_url   String?   @db.VarChar(500)
-  utr_number          String?   @db.VarChar(100)
-  paid_at             DateTime? @db.Timestamp(0)
-  created_at          DateTime  @default(now()) @db.Timestamp(0)
-  updated_at          DateTime  @default(now()) @updatedAt @db.Timestamp(0)
-
-  @@index([requester_id])
-  @@index([officer_id])
-  @@index([conversation_id])
-  @@index([status])
-  @@index([created_at(sort: Desc)])
-}
-
-
 /// Android call log entries synced from Flutter sales app
 model call_logs {
   id               Int      @id @default(autoincrement())
-  user_id          Int      // staff_users.id
-  lead_id          Int?     // matched lead (nullable if number not in system)
+  user_id          Int
+  lead_id          Int?
   phone_number     String   @db.VarChar(20)
-  direction        String   @db.VarChar(20)  // "outgoing" | "incoming"
-  status           String   @db.VarChar(20)  // "answered" | "missed" | "rejected"
+  direction        String   @db.VarChar(20)
+  status           String   @db.VarChar(20)
   duration_seconds Int      @default(0)
   called_at        DateTime
   synced_at        DateTime @default(now())
-  device_call_id   String?  @db.VarChar(100) // native Android call log ID for dedup
+  device_call_id   String?  @db.VarChar(100)
   created_at       DateTime @default(now())
 
-  @@unique([user_id, device_call_id]) // prevent duplicate syncs
+  @@unique([user_id, device_call_id])
   @@index([user_id, called_at])
   @@index([lead_id])
 }
 
 /// Orders created from the Won Conversion Form (v2 CRM — not the legacy orders table)
 model crm_orders {
-  id                     Int      @id @default(autoincrement())
+  id                     Int       @id @default(autoincrement())
   customer_id            Int
   lead_id                Int
   category_id            Int
   service_id             Int
-  total_amount           Decimal  @db.Decimal(10, 2)
-  coupon_code            String?  @db.VarChar(50)
-  discount_amount        Decimal  @default(0) @db.Decimal(10, 2)
-  paid_amount            Decimal  @db.Decimal(10, 2)
-  unpaid_amount          Decimal  @db.Decimal(10, 2)
-  payment_mode           String   @db.VarChar(50)
+  total_amount           Decimal   @db.Decimal(10, 2)
+  coupon_code            String?   @db.VarChar(50)
+  discount_amount        Decimal   @default(0.00) @db.Decimal(10, 2)
+  paid_amount            Decimal   @db.Decimal(10, 2)
+  unpaid_amount          Decimal   @db.Decimal(10, 2)
+  payment_mode           String    @db.VarChar(50)
   next_due_date          DateTime? @db.Date
   comment                String?
-  payment_screenshot_url String?  @db.VarChar(500)
+  payment_screenshot_url String?   @db.VarChar(500)
   sales_employee_id      Int
-  payment_status         String   @default("advance_paid") // advance_paid | fully_paid
-  created_at             DateTime @default(now())
-  updated_at             DateTime @updatedAt
+  payment_status         String    @default("advance_paid")
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
 
   @@index([customer_id])
   @@index([lead_id])
 }
-
 
 model ads {
   id            Int      @id @default(autoincrement())
@@ -458,7 +384,7 @@ model call_history {
   name           String?   @db.VarChar(255)
   call_type      String    @db.VarChar(20)
   duration       Int?
-  call_timestamp DateTime  @db.Timestamp(6)
+  call_timestamp DateTime  @default(now()) @db.Timestamp(6)
   call_date      DateTime  @db.Date
   created_at     DateTime? @default(now()) @db.Timestamp(6)
   updated_at     DateTime? @default(now()) @db.Timestamp(6)
@@ -614,8 +540,6 @@ model customer_chatting {
   chat_to    Int
   chat_msg   String?  @db.VarChar(1000)
   date       DateTime @default(now()) @db.Timestamp(6)
-
-  @@index([chat_from, chat_to, date])
 }
 
 model customer_documents {
@@ -626,8 +550,6 @@ model customer_documents {
   cd_name    String   @db.VarChar(100)
   cd_doc     String   @db.VarChar(100)
   date       DateTime @default(now()) @db.Timestamp(6)
-
-  @@index([cd_from, date])
 }
 
 model customer_dues {
@@ -860,10 +782,6 @@ model leads {
   created_at   DateTime @default(now()) @db.Timestamp(6)
   lead_score   Int?
   quoted_price Decimal? @db.Decimal(12, 2)
-
-  @@index([contact, email])
-  @@index([is_assign, is_customer, date])
-  @@index([added_by])
 }
 
 model leads_sahakarsamridhi {
@@ -919,7 +837,7 @@ model meetings {
   city          String   @db.VarChar(50)
   hostedby      String?  @db.VarChar(50)
   date          DateTime @db.Date
-  time          DateTime @default(dbgenerated("CURRENT_TIMESTAMP(6)")) @db.Timestamp(6)
+  time          DateTime @default(now()) @db.Timestamp(6)
   status        Int      @default(0)
 }
 
@@ -951,9 +869,6 @@ model operation_tasks {
   created_at           DateTime @default(now()) @db.Timestamp(6)
   sub_customer_name    String?  @db.VarChar(255)
   order_id             Int?
-
-  @@index([cust_id, original_task_status])
-  @@index([added_by, is_assign])
 }
 
 model orders {
@@ -980,7 +895,7 @@ model otps {
   id         Int      @id @default(autoincrement())
   email      String   @db.VarChar(100)
   otp        String   @db.VarChar(20)
-  expires_at DateTime @db.Timestamp(6)
+  expires_at DateTime @default(now()) @db.Timestamp(6)
   created_at DateTime @default(now()) @db.Timestamp(6)
   updated_at DateTime @default(now()) @db.Timestamp(6)
 }
@@ -1074,7 +989,7 @@ model service_docs {
   sd_id      BigInt   @id @default(autoincrement())
   s_id       Int
   company_id String   @db.VarChar(10)
-  sd_name    String   @db.Text
+  sd_name    String   @db.VarChar(10000)
   added_by   Int
   date       DateTime @default(now()) @db.Timestamp(6)
 }
@@ -1179,8 +1094,6 @@ model users {
   @@index([user_type])
 }
 
-// ─── Phase 2: Super-Advanced IT & Solutions Command Center Models ────────────
-
 model it_tech_leads {
   id                 Int                     @id @default(autoincrement())
   lead_id            BigInt?
@@ -1207,7 +1120,7 @@ model it_discovery_meetings {
   tech_lead_id     Int?
   client_name      String         @db.VarChar(150)
   meeting_title    String         @db.VarChar(200)
-  scheduled_at     DateTime       @db.Timestamp(6)
+  scheduled_at     DateTime       @default(now()) @db.Timestamp(6)
   duration_minutes Int            @default(45)
   meet_url         String         @db.VarChar(500)
   platform         String         @default("Google Meet") @db.VarChar(50)
@@ -1216,7 +1129,7 @@ model it_discovery_meetings {
   client_notes     String?
   recording_url    String?        @db.VarChar(500)
   created_at       DateTime       @default(now()) @db.Timestamp(6)
-  tech_lead        it_tech_leads? @relation(fields: [tech_lead_id], references: [id], onDelete: SetNull)
+  tech_lead        it_tech_leads? @relation(fields: [tech_lead_id], references: [id])
 
   @@index([tech_lead_id])
   @@index([scheduled_at])
@@ -1236,10 +1149,10 @@ model quotation_versions {
   tech_stack          String?
   currency            String    @default("INR") @db.VarChar(10)
   line_items          String
-  subtotal            Decimal   @default(0) @db.Decimal(12, 2)
-  tax_amount          Decimal   @default(0) @db.Decimal(12, 2)
-  discount_amount     Decimal   @default(0) @db.Decimal(12, 2)
-  grand_total         Decimal   @default(0) @db.Decimal(12, 2)
+  subtotal            Decimal   @default(0.00) @db.Decimal(12, 2)
+  tax_amount          Decimal   @default(0.00) @db.Decimal(12, 2)
+  discount_amount     Decimal   @default(0.00) @db.Decimal(12, 2)
+  grand_total         Decimal   @default(0.00) @db.Decimal(12, 2)
   valid_until         DateTime? @db.Date
   terms               String?
   status              String    @default("DRAFT") @db.VarChar(50)
@@ -1253,24 +1166,24 @@ model quotation_versions {
 }
 
 model it_projects {
-  id                 Int                        @id @default(autoincrement())
-  project_code       String                     @unique @db.VarChar(50)
-  client_id          Int?
-  title              String                     @db.VarChar(250)
-  client_name        String                     @db.VarChar(150)
-  lead_engineer      String                     @default("Lead Architect") @db.VarChar(150)
-  stage              String                     @default("Discovery") @db.VarChar(50)
-  progress_percent   Int                        @default(0)
-  tech_stack         String?
-  repo_url           String?                    @db.VarChar(500)
-  staging_url        String?                    @db.VarChar(500)
-  production_url     String?                    @db.VarChar(500)
-  deadline           DateTime?                  @db.Date
-  status             String                     @default("ON_TRACK") @db.VarChar(50)
-  created_at         DateTime                   @default(now()) @db.Timestamp(6)
-  updated_at         DateTime                   @default(now()) @db.Timestamp(6)
-  milestones         it_project_milestones[]
-  credentials        client_credentials_vault[]
+  id               Int                        @id @default(autoincrement())
+  project_code     String                     @unique @db.VarChar(50)
+  client_id        Int?
+  title            String                     @db.VarChar(250)
+  client_name      String                     @db.VarChar(150)
+  lead_engineer    String                     @default("Lead Architect") @db.VarChar(150)
+  stage            String                     @default("Discovery") @db.VarChar(50)
+  progress_percent Int                        @default(0)
+  tech_stack       String?
+  repo_url         String?                    @db.VarChar(500)
+  staging_url      String?                    @db.VarChar(500)
+  production_url   String?                    @db.VarChar(500)
+  deadline         DateTime?                  @db.Date
+  status           String                     @default("ON_TRACK") @db.VarChar(50)
+  created_at       DateTime                   @default(now()) @db.Timestamp(6)
+  updated_at       DateTime                   @default(now()) @db.Timestamp(6)
+  credentials      client_credentials_vault[]
+  milestones       it_project_milestones[]
 
   @@index([status])
 }
@@ -1281,8 +1194,8 @@ model it_project_milestones {
   milestone_order Int         @default(1) @db.SmallInt
   title           String      @db.VarChar(200)
   description     String?
-  percentage      Decimal     @default(0) @db.Decimal(5, 2)
-  amount          Decimal     @default(0) @db.Decimal(12, 2)
+  percentage      Decimal     @default(0.00) @db.Decimal(5, 2)
+  amount          Decimal     @default(0.00) @db.Decimal(12, 2)
   estimated_weeks Int?        @default(2) @db.SmallInt
   due_date        DateTime?   @db.Date
   status          String      @default("PENDING") @db.VarChar(50)
@@ -1307,7 +1220,7 @@ model client_credentials_vault {
   last_accessed_by Int?
   last_accessed_at DateTime?    @db.Timestamp(6)
   created_at       DateTime     @default(now()) @db.Timestamp(6)
-  project          it_projects? @relation(fields: [project_id], references: [id], onDelete: SetNull)
+  project          it_projects? @relation(fields: [project_id], references: [id])
 
   @@index([project_id])
 }
@@ -1323,8 +1236,6 @@ model it_telemetry_logs {
   @@index([created_at])
 }
 
-// ─── PHASE 3: MARKETING, SOCIAL MEDIA PLANNER & PAID ADS DESK ────────────────
-
 model social_channel_accounts {
   id                     Int               @id @default(autoincrement())
   platform               String            @db.VarChar(50)
@@ -1332,7 +1243,7 @@ model social_channel_accounts {
   account_handle         String            @db.VarChar(100)
   profile_url            String?           @db.VarChar(500)
   followers_count        Int?              @default(0)
-  engagement_rate        Decimal?          @default(0) @db.Decimal(5, 2)
+  engagement_rate        Decimal?          @default(0.00) @db.Decimal(5, 2)
   is_connected           Boolean           @default(true)
   access_token_encrypted String?
   created_at             DateTime          @default(now()) @db.Timestamp(6)
@@ -1362,34 +1273,35 @@ model marketing_posts {
   published_at   DateTime?                @db.Timestamp(6)
   created_at     DateTime                 @default(now()) @db.Timestamp(6)
   updated_at     DateTime                 @default(now()) @db.Timestamp(6)
-  channel        social_channel_accounts? @relation(fields: [channel_id], references: [id], onDelete: SetNull)
+  channel        social_channel_accounts? @relation(fields: [channel_id], references: [id])
 
   @@index([platform])
   @@index([status])
   @@index([scheduled_date])
+  @@index([channel_id], map: "marketing_posts_channel_id_fkey")
 }
 
 model ad_campaigns {
-  id               Int                             @id @default(autoincrement())
-  campaign_code    String                          @unique @db.VarChar(50)
-  name             String                          @db.VarChar(200)
-  platform         String                          @db.VarChar(50)
-  objective        String?                         @default("LEAD_GENERATION") @db.VarChar(100)
-  daily_budget     Decimal                         @default(0) @db.Decimal(12, 2)
-  total_spent      Decimal                         @default(0) @db.Decimal(12, 2)
-  impressions      Int                             @default(0)
-  clicks           Int                             @default(0)
-  leads_generated  Int                             @default(0)
-  conversions      Int                             @default(0)
-  cpl              Decimal                         @default(0) @db.Decimal(10, 2)
-  roas             Decimal                         @default(0) @db.Decimal(6, 2)
-  status           String                          @default("ACTIVE") @db.VarChar(50)
-  start_date       DateTime?                       @db.Date
-  end_date         DateTime?                       @db.Date
+  id               Int                            @id @default(autoincrement())
+  campaign_code    String                         @unique @db.VarChar(50)
+  name             String                         @db.VarChar(200)
+  platform         String                         @db.VarChar(50)
+  objective        String?                        @default("LEAD_GENERATION") @db.VarChar(100)
+  daily_budget     Decimal                        @default(0.00) @db.Decimal(12, 2)
+  total_spent      Decimal                        @default(0.00) @db.Decimal(12, 2)
+  impressions      Int                            @default(0)
+  clicks           Int                            @default(0)
+  leads_generated  Int                            @default(0)
+  conversions      Int                            @default(0)
+  cpl              Decimal                        @default(0.00) @db.Decimal(10, 2)
+  roas             Decimal                        @default(0.00) @db.Decimal(6, 2)
+  status           String                         @default("ACTIVE") @db.VarChar(50)
+  start_date       DateTime?                      @db.Date
+  end_date         DateTime?                      @db.Date
   target_audience  String?
-  landing_page_url String?                         @db.VarChar(500)
-  created_at       DateTime                        @default(now()) @db.Timestamp(6)
-  updated_at       DateTime                        @default(now()) @db.Timestamp(6)
+  landing_page_url String?                        @db.VarChar(500)
+  created_at       DateTime                       @default(now()) @db.Timestamp(6)
+  updated_at       DateTime                       @default(now()) @db.Timestamp(6)
   snapshots        ad_metrics_snapshots[]
   attributions     marketing_attribution_events[]
 
@@ -1401,15 +1313,16 @@ model ad_metrics_snapshots {
   id            Int          @id @default(autoincrement())
   campaign_id   Int
   snapshot_date DateTime     @db.Date
-  spend_amount  Decimal      @default(0) @db.Decimal(12, 2)
+  spend_amount  Decimal      @default(0.00) @db.Decimal(12, 2)
   impressions   Int          @default(0)
   clicks        Int          @default(0)
   leads_count   Int          @default(0)
-  cpl           Decimal      @default(0) @db.Decimal(10, 2)
+  cpl           Decimal      @default(0.00) @db.Decimal(10, 2)
   created_at    DateTime     @default(now()) @db.Timestamp(6)
   campaign      ad_campaigns @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
 
   @@index([snapshot_date])
+  @@index([campaign_id], map: "ad_metrics_snapshots_campaign_id_fkey")
 }
 
 model marketing_attribution_events {
@@ -1427,15 +1340,14 @@ model marketing_attribution_events {
   device_type         String?       @db.VarChar(50)
   touchpoint_sequence Int?          @default(1) @db.SmallInt
   converted_to_order  Boolean       @default(false)
-  attributed_revenue  Decimal?      @default(0) @db.Decimal(12, 2)
+  attributed_revenue  Decimal?      @default(0.00) @db.Decimal(12, 2)
   created_at          DateTime      @default(now()) @db.Timestamp(6)
-  campaign            ad_campaigns? @relation(fields: [campaign_id], references: [id], onDelete: SetNull)
+  campaign            ad_campaigns? @relation(fields: [campaign_id], references: [id])
 
   @@index([lead_id])
   @@index([utm_source])
+  @@index([campaign_id], map: "marketing_attribution_events_campaign_id_fkey")
 }
-
-// ─── PHASE 4: EXTERNAL MARKETING INTEGRATIONS, OAUTH VAULT & WEBHOOKS ────────
 
 model integration_credentials {
   id                       Int                     @id @default(autoincrement())
@@ -1496,40 +1408,37 @@ model integration_webhooks {
   @@index([processed])
 }
 
-// ─── PHASE 5: ISOLATED INFRASTRUCTURE TELEMETRY & AI AUTOMATION ─────────────
-
 model system_health_snapshots {
-  id                  Int      @id @default(autoincrement())
-  cpu_load_percent    Float
-  memory_rss_mb       Float
-  memory_heap_used_mb Float
+  id                   Int      @id @default(autoincrement())
+  cpu_load_percent     Float
+  memory_rss_mb        Float
+  memory_heap_used_mb  Float
   memory_heap_total_mb Float
-  db_pool_active      Int      @default(0)
-  db_pool_idle        Int      @default(0)
-  db_latency_ms       Float    @default(0.0)
-  system_status       String   @default("HEALTHY") @db.VarChar(30)
-  metadata            Json?
-  created_at          DateTime @default(now()) @db.Timestamp(6)
+  db_pool_active       Int      @default(0)
+  db_pool_idle         Int      @default(0)
+  db_latency_ms        Float    @default(0)
+  system_status        String   @default("HEALTHY") @db.VarChar(30)
+  metadata             String?  @db.LongText
+  created_at           DateTime @default(now()) @db.Timestamp(6)
 
-  @@index([created_at(sort: Desc)])
+  @@index([created_at])
   @@index([system_status])
 }
 
 model ai_automation_tasks {
-  id            Int         @id @default(autoincrement())
-  task_code     String      @unique @db.VarChar(50)
-  task_type     String      @db.VarChar(50)
-  input_payload Json
-  output_result Json
-  tokens_used   Int         @default(0)
-  latency_ms    Int         @default(0)
-  status        String      @default("COMPLETED") @db.VarChar(30)
+  id            Int      @id @default(autoincrement())
+  task_code     String   @unique @db.VarChar(50)
+  task_type     String   @db.VarChar(50)
+  input_payload String   @db.LongText
+  output_result String   @db.LongText
+  tokens_used   Int      @default(0)
+  latency_ms    Int      @default(0)
+  status        String   @default("COMPLETED") @db.VarChar(30)
   error_message String?
   created_by    Int?
-  created_at    DateTime    @default(now()) @db.Timestamp(6)
+  created_at    DateTime @default(now()) @db.Timestamp(6)
 
   @@index([task_type])
-  @@index([created_at(sort: Desc)])
+  @@index([created_at])
   @@index([status])
 }
-

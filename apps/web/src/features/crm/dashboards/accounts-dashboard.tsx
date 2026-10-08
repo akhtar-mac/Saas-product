@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   CreditCard,
   DollarSign,
@@ -68,9 +69,11 @@ export default function AccountsDashboard() {
           </p>
         </div>
 
-        <button className="btn btn-primary btn-sm">
-          <FileSpreadsheet className="w-3.5 h-3.5" /> Export Tally / Excel
-        </button>
+        <div className="flex gap-2">
+          <button className="btn btn-primary btn-sm">
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Export Tally / Excel
+          </button>
+        </div>
       </div>
 
       {/* KPI Stats */}

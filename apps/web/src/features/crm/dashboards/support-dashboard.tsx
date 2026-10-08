@@ -63,7 +63,9 @@ export default function SupportDashboard() {
           </p>
         </div>
 
-        <span className="badge badge-green text-xs py-1.5 px-3">Avg Resolution: 2.4 Hours</span>
+        <div className="flex items-center gap-2">
+          <span className="badge badge-green text-xs py-1.5 px-3">Avg Resolution: 2.4 Hours</span>
+        </div>
       </div>
 
       {/* KPI Stats */}

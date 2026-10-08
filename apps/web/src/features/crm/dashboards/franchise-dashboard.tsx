@@ -64,9 +64,11 @@ export default function FranchiseDashboard() {
           </p>
         </div>
 
-        <button className="btn btn-primary btn-sm">
-          <Plus className="w-3.5 h-3.5" /> + Onboard Franchise Partner
-        </button>
+        <div className="flex gap-2">
+          <button className="btn btn-primary btn-sm">
+            <Plus className="w-3.5 h-3.5" /> + Onboard Franchise Partner
+          </button>
+        </div>
       </div>
 
       {/* KPI Stats */}
