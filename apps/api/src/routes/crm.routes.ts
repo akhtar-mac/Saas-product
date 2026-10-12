@@ -2221,7 +2221,7 @@ router.post('/customers/add-offline', async (req, res) => {
           where: { coupon_id: coupon.coupon_id },
           data: {
             coupon_remaining: remaining,
-            is_active: remaining === 0 ? 0 : coupon.is_active,
+            is_active: remaining === 0 ? 1 : coupon.is_active,
           },
         });
       }
@@ -3390,8 +3390,8 @@ router.post('/sm/support-tickets/:id/close', async (req, res) => {
   }
 });
 
-// 4. Coupons List
-router.get('/sm/coupons', async (_req, res) => {
+// 4. Coupons List (Supported for OM, SM, and generic CRM callers)
+router.get(['/sm/coupons', '/om/coupons', '/coupons'], async (_req, res) => {
   try {
     const couponList = await prisma.coupons
       .findMany({
@@ -3409,28 +3409,31 @@ router.get('/sm/coupons', async (_req, res) => {
 });
 
 // 5. Check Coupon Name Availability
-router.get('/sm/coupons/check-name', async (req, res) => {
-  try {
-    const { coupon_name } = req.query;
-    if (!coupon_name) {
-      return res.json({ success: true, exists: false });
+router.get(
+  ['/sm/coupons/check-name', '/om/coupons/check-name', '/coupons/check-name'],
+  async (req, res) => {
+    try {
+      const { coupon_name } = req.query;
+      if (!coupon_name) {
+        return res.json({ success: true, exists: false });
+      }
+      const existing = await prisma.coupons
+        .findFirst({
+          where: { coupon_name: String(coupon_name) },
+        })
+        .catch(() => null);
+      if (existing) {
+        return res.json({ success: true, exists: true, error: 'Coupon name already exists' });
+      }
+      res.json({ success: true, exists: false });
+    } catch (error) {
+      res.json({ success: true, exists: false });
     }
-    const existing = await prisma.coupons
-      .findFirst({
-        where: { coupon_name: String(coupon_name) },
-      })
-      .catch(() => null);
-    if (existing) {
-      return res.json({ success: true, exists: true, error: 'Coupon name already exists' });
-    }
-    res.json({ success: true, exists: false });
-  } catch (error) {
-    res.json({ success: true, exists: false });
   }
-});
+);
 
 // 6. Create Coupon Code
-router.post('/sm/coupons', async (req, res) => {
+router.post(['/sm/coupons', '/om/coupons', '/coupons'], async (req, res) => {
   try {
     const { coupon_type, coupon_name, coupon_discount, coupon_validity, coupon_uses } = req.body;
     if (!coupon_name || coupon_discount === undefined || !coupon_validity) {

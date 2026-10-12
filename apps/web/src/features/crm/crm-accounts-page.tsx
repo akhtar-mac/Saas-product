@@ -17,6 +17,8 @@ import {
   FileCheck,
   Clock,
   ChevronDown,
+  CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface CustomerItem {
@@ -190,6 +192,11 @@ export default function CrmAccountsPage() {
   const [selectedCustomServiceIds, setSelectedCustomServiceIds] = useState<number[]>([]);
   const [isCustomDropdownOpen, setIsCustomDropdownOpen] = useState(false);
   const [couponCode, setCouponCode] = useState('');
+  const [couponMessage, setCouponMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [actualPrice, setActualPrice] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [paymentMode, setPaymentMode] = useState('1'); // 1: No EMI, 2: 2 EMI, 3: 3 EMI
@@ -297,23 +304,44 @@ export default function CrmAccountsPage() {
 
   const emi2Amount = paymentMode === '3' ? remainingUnpaid - emi1Amount : 0;
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) return;
+  const handleApplyCoupon = async (codeToUse?: string) => {
+    const code = (codeToUse !== undefined ? codeToUse : couponCode).trim();
+    if (!code) {
+      setDiscountAmount(0);
+      setCouponMessage(null);
+      return;
+    }
+    if (basePriceTotal <= 0) {
+      setCouponMessage({ type: 'error', text: 'Please select category and service first' });
+      return;
+    }
+    setIsValidatingCoupon(true);
+    setCouponMessage(null);
     try {
       const res = await fetch(`${API_BASE}/v1/crm/coupons/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponCode, total_amount: basePriceTotal }),
+        body: JSON.stringify({ code, total_amount: basePriceTotal }),
       });
       const data = await res.json();
       if (data.success && data.data?.discount_amount !== undefined) {
         setDiscountAmount(data.data.discount_amount);
-        alert(data.data.message || `Coupon Applied! Saved ₹${data.data.discount_amount}`);
+        setCouponMessage({
+          type: 'success',
+          text: data.data.message || `Coupon Applied! Saved ₹${data.data.discount_amount}`,
+        });
       } else {
-        alert(data.error || 'Invalid or expired coupon code');
+        setDiscountAmount(0);
+        setCouponMessage({
+          type: 'error',
+          text: data.error || 'Invalid or expired coupon code',
+        });
       }
     } catch (err) {
-      alert('Failed to validate coupon code');
+      setDiscountAmount(0);
+      setCouponMessage({ type: 'error', text: 'Failed to validate coupon code' });
+    } finally {
+      setIsValidatingCoupon(false);
     }
   };
 
@@ -380,6 +408,7 @@ export default function CrmAccountsPage() {
         setSelectedCustomServiceIds([]);
         setDiscountAmount(0);
         setCouponCode('');
+        setCouponMessage(null);
         setIsCustomPkg('0');
         setPaymentMode('1');
       } else {
@@ -964,17 +993,45 @@ export default function CrmAccountsPage() {
                       type="text"
                       placeholder="enter coupon code if any"
                       value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value.toUpperCase();
+                        setCouponCode(val);
+                        if (!val.trim()) {
+                          setDiscountAmount(0);
+                          setCouponMessage(null);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleApplyCoupon();
+                        }
+                      }}
                       className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 uppercase focus:outline-none text-xs font-semibold"
                     />
                     <button
                       type="button"
-                      onClick={handleApplyCoupon}
-                      className="bg-[#003A66] hover:bg-[#002B4D] text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors shrink-0"
+                      onClick={() => handleApplyCoupon()}
+                      disabled={isValidatingCoupon}
+                      className="bg-[#003A66] hover:bg-[#002B4D] text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors shrink-0 disabled:opacity-50 cursor-pointer"
                     >
-                      Apply
+                      {isValidatingCoupon ? 'Checking...' : 'Apply'}
                     </button>
                   </div>
+                  {couponMessage && (
+                    <div
+                      className={`text-[11px] font-semibold mt-1.5 flex items-center gap-1 ${
+                        couponMessage.type === 'success' ? 'text-emerald-600' : 'text-rose-600'
+                      }`}
+                    >
+                      {couponMessage.type === 'success' ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      ) : (
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      )}
+                      <span>{couponMessage.text}</span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1">
@@ -986,6 +1043,11 @@ export default function CrmAccountsPage() {
                     onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
                     className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
                   />
+                  {discountAmount > 0 && (
+                    <span className="text-[10px] text-emerald-600 font-semibold mt-1 block">
+                      Final Payable: ₹{finalTotalAmount.toLocaleString('en-IN')}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1">
@@ -1113,6 +1175,7 @@ export default function CrmAccountsPage() {
                     setSelectedCustomServiceIds([]);
                     setDiscountAmount(0);
                     setCouponCode('');
+                    setCouponMessage(null);
                     setIsCustomPkg('0');
                     setPaymentMode('1');
                   }}

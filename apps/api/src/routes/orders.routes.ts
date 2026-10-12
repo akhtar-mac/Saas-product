@@ -197,20 +197,33 @@ router.post(
       });
       const taskId = (maxTask?.task_id || 4911) + 1;
 
-      await prisma.operation_tasks
-        .create({
-          data: {
-            task_id: taskId,
-            cust_id: custId,
-            service_id: Number(service_id),
-            task_name: `Service ${service_id} - ${name}`,
-            original_task_status: 1, // Pending (stage 1)
-            added_by: req.user!.user_id,
-            assign_date: new Date(),
-            updated_at: new Date(),
-          },
-        })
-        .catch((e: any) => console.warn('Task creation skipped:', e.message));
+      await prisma.operation_tasks.create({
+        data: {
+          task_id: taskId,
+          cust_id: custId,
+          service_id: Number(service_id),
+          task_name: `Service ${service_id} - ${name}`,
+          original_task_status: 1, // Pending (stage 1)
+          added_by: req.user!.user_id,
+          assign_date: new Date(),
+          updated_at: new Date(),
+        },
+      });
+      // 5. Decrement coupon remaining count if coupon was applied
+      if (coupon_code) {
+        const cName = String(coupon_code).trim().toUpperCase();
+        const coupon = await prisma.coupons.findFirst({ where: { coupon_name: cName } });
+        if (coupon) {
+          const remaining = Math.max(0, coupon.coupon_remaining - 1);
+          await prisma.coupons.update({
+            where: { coupon_id: coupon.coupon_id },
+            data: {
+              coupon_remaining: remaining,
+              is_active: remaining === 0 ? 1 : coupon.is_active,
+            },
+          });
+        }
+      }
 
       res.status(201).json({
         success: true,
@@ -356,31 +369,56 @@ router.post('/coupons/validate', async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Invalid coupon code.' });
     }
 
+    // In legacy DB, is_active: 0 means Open/Active, 1 means Expired/Closed
+    if (Number(coupon.is_active) !== 0) {
+      return res.status(400).json({ success: false, error: 'This coupon is expired or inactive.' });
+    }
+
     if (Number(coupon.coupon_remaining) <= 0) {
       return res.status(400).json({ success: false, error: 'This coupon has been fully used.' });
     }
 
+    // Check validity expiration date if set
+    if (coupon.coupon_validity) {
+      const validDate = new Date(coupon.coupon_validity);
+      validDate.setHours(23, 59, 59, 999);
+      if (!isNaN(validDate.getTime()) && new Date() > validDate) {
+        return res.status(400).json({ success: false, error: 'Coupon validity has expired.' });
+      }
+    }
+
     // Calculate discount
+    // Database & Old CRM:
+    // coupon_type: 0 = Amount Wise (Flat ₹ discount)
+    // coupon_type: 1 = % Wise (Percentage % discount)
     let discount = 0;
     const amt = Number(total_amount) || 0;
     const couponType = Number(coupon.coupon_type);
     const couponDiscount = Number(coupon.coupon_discount) || 0;
 
-    if (couponType === 1) {
-      // Flat discount
+    if (couponType === 0) {
+      // Amount Wise (Flat ₹ discount)
       discount = couponDiscount;
     } else {
-      // Percentage discount
+      // Percentage Wise (% discount)
       discount = Math.round((amt * couponDiscount) / 100);
+    }
+
+    // Ensure discount cannot exceed the service price
+    if (discount > amt) {
+      discount = amt;
     }
 
     res.json({
       success: true,
       data: {
         coupon_id: Number(coupon.coupon_id),
-        discount_type: couponType === 1 ? 'flat' : 'percentage',
+        coupon_name: coupon.coupon_name,
+        coupon_type: couponType,
+        discount_type: couponType === 0 ? 'flat' : 'percentage',
         discount_value: couponDiscount,
         discount_amount: discount,
+        final_amount: Math.max(0, amt - discount),
         message: `Coupon "${coupon.coupon_name}" applied! Saved ₹${discount.toLocaleString('en-IN')}.`,
       },
     });
