@@ -19,10 +19,18 @@ import {
   ChevronDown,
   CheckCircle2,
   AlertTriangle,
+  ListTodo,
+  PlusCircle,
+  Tag,
+  Check,
+  Loader2,
 } from 'lucide-react';
 
 interface CustomerItem {
   id: number;
+  orderId?: number | null;
+  packageId?: string | null;
+  serviceId?: number;
   name: string;
   company: string;
   subCustomer?: string;
@@ -83,6 +91,9 @@ export default function CrmAccountsPage() {
         if (data?.success && Array.isArray(data?.data)) {
           const mapped: CustomerItem[] = data.data.map((c: any, i: number) => ({
             id: c.id || i + 1,
+            orderId: c.orderId || null,
+            packageId: c.packageId || null,
+            serviceId: c.serviceId || 1,
             name: c.name || 'Client',
             company: c.business || c.company || 'Company',
             subCustomer: c.subCustomer || '',
@@ -436,26 +447,547 @@ export default function CrmAccountsPage() {
       c.service.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleUpdateSubCustomer = () => {
-    if (activeCustomer) {
-      setCustomers((prev) =>
-        prev.map((c) => (c.id === activeCustomer.id ? { ...c, subCustomer: subCustomerName } : c))
-      );
-      setIsEditSubCustomerOpen(false);
-      alert('Sub Customer updated!');
+  // Staff users list for assigning tasks
+  const [staffUsers, setStaffUsers] = useState<any[]>([]);
+  useEffect(() => {
+    fetch(`${API_BASE}/v1/crm/users`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data)) {
+          setStaffUsers(data.data);
+        }
+      })
+      .catch(() => {});
+  }, [API_BASE]);
+
+  // Notification Toast State
+  const [toastMessage, setToastMessage] = useState<{
+    text: string;
+    type: 'success' | 'error';
+  } | null>(null);
+  const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // 1. Manage Tasks State (Action: Manage Tasks)
+  const [customerTasks, setCustomerTasks] = useState<any[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(false);
+  const [newCustomerTaskTitle, setNewCustomerTaskTitle] = useState('');
+  const [selectedTaskToAssign, setSelectedTaskToAssign] = useState<number | null>(null);
+  const [assigneeId, setAssigneeId] = useState('');
+  const [assignDueDate, setAssignDueDate] = useState('');
+
+  // 2. Edit Customer Modal State (Action: Edit Customer)
+  const [editName, setEditName] = useState('');
+  const [editBusiness, setEditBusiness] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editMobile, setEditMobile] = useState('');
+  const [editState, setEditState] = useState('');
+  const [editCity, setEditCity] = useState('');
+  const [editTotal, setEditTotal] = useState(0);
+  const [editPaid, setEditPaid] = useState(0);
+  const [editUnpaid, setEditUnpaid] = useState(0);
+  const [isUpdatingCustomer, setIsUpdatingCustomer] = useState(false);
+
+  // 3. Add New Order Modal State (Action: Add New Order)
+  const [orderSubCustomer, setOrderSubCustomer] = useState('');
+  const [orderCatId, setOrderCatId] = useState(0);
+  const [orderServId, setOrderServId] = useState(0);
+  const [orderServPrice, setOrderServPrice] = useState(0);
+  const [orderPaymentMode, setOrderPaymentMode] = useState('1');
+  const [orderPaidAmount, setOrderPaidAmount] = useState(0);
+  const [orderDueDate1, setOrderDueDate1] = useState(
+    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+  const [orderDueDate2, setOrderDueDate2] = useState(
+    new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+  const [orderCoupon, setOrderCoupon] = useState('');
+  const [orderDiscount, setOrderDiscount] = useState(0);
+  const [orderCouponMsg, setOrderCouponMsg] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+  const [isValidatingOrderCoupon, setIsValidatingOrderCoupon] = useState(false);
+  const [orderComment, setOrderComment] = useState('');
+  const [isAddingOrder, setIsAddingOrder] = useState(false);
+
+  // 4. Create Customer Modal State (Action: Create Customer - Key User Request)
+  const [isCreateCustomerOpen, setIsCreateCustomerOpen] = useState(false);
+  const [createCustName, setCreateCustName] = useState('');
+  const [createCustBusiness, setCreateCustBusiness] = useState('');
+  const [createCustSubCustomer, setCreateCustSubCustomer] = useState('');
+  const [createCustEmail, setCreateCustEmail] = useState('');
+  const [createCustMobile, setCreateCustMobile] = useState('');
+  const [createCustState, setCreateCustState] = useState('Maharashtra');
+  const [createCustCity, setCreateCustCity] = useState('Pune');
+  const [createCustCatId, setCreateCustCatId] = useState(0);
+  const [createCustServId, setCreateCustServId] = useState(0);
+  const [createCustPrice, setCreateCustPrice] = useState(0);
+  const [createCustCoupon, setCreateCustCoupon] = useState('');
+  const [createCustDiscount, setCreateCustDiscount] = useState(0);
+  const [createCustCouponMsg, setCreateCustCouponMsg] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+  const [isValidatingCreateCoupon, setIsValidatingCreateCoupon] = useState(false);
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
+
+  // 5. Delete Order Confirmation Modal State (Action: Delete Order)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeletingOrder, setIsDeletingOrder] = useState(false);
+
+  // 6. Appointment Form State (Action: Add Appointment)
+  const [apptName, setApptName] = useState('');
+  const [apptEmail, setApptEmail] = useState('');
+  const [apptMobile, setApptMobile] = useState('');
+  const [apptCity, setApptCity] = useState('');
+  const [isBookingAppt, setIsBookingAppt] = useState(false);
+
+  // ─── ACTION OPENERS ───
+  const openManageTasks = (item: CustomerItem) => {
+    setActiveCustomer(item);
+    setIsTasksDrawerOpen(true);
+    setLoadingTasks(true);
+    fetch(`${API_BASE}/v1/crm/customers/${item.id}/tasks`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data)) {
+          setCustomerTasks(data.data);
+        } else {
+          setCustomerTasks([]);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching tasks:', err);
+        setCustomerTasks([]);
+      })
+      .finally(() => setLoadingTasks(false));
+  };
+
+  const openEditCustomer = (item: CustomerItem) => {
+    setActiveCustomer(item);
+    setEditName(item.name);
+    setEditBusiness(item.company === '—' ? '' : item.company);
+    setEditEmail(item.email);
+    setEditMobile(item.mobile);
+    setEditState(item.state);
+    setEditCity(item.city === '—' ? '' : item.city);
+    setEditTotal(item.total);
+    setEditPaid(item.paid);
+    setEditUnpaid(item.unpaid);
+    setIsUpdateCustomerOpen(true);
+  };
+
+  const openAddOrder = (item: CustomerItem) => {
+    setActiveCustomer(item);
+    setOrderSubCustomer(item.subCustomer || '');
+    setOrderCoupon('');
+    setOrderDiscount(0);
+    setOrderCouponMsg(null);
+    setOrderComment('');
+    const firstCat = dbCategories[0];
+    if (firstCat) {
+      setOrderCatId(firstCat.category_id);
+      fetchServicesForCategory(firstCat.category_id);
+    }
+    setOrderPaymentMode('1');
+    setOrderPaidAmount(item.total || 1499);
+    setOrderServPrice(item.total || 1499);
+    setIsAddOrderOpen(true);
+  };
+
+  const openCreateCustomer = (item: CustomerItem) => {
+    setActiveCustomer(item);
+    setCreateCustName(item.name);
+    setCreateCustBusiness(item.company === '—' ? '' : item.company);
+    setCreateCustSubCustomer(item.subCustomer ? `${item.subCustomer} (New Entity)` : 'OPC Branch');
+    setCreateCustEmail(item.email);
+    setCreateCustMobile(item.mobile);
+    setCreateCustState(item.state);
+    setCreateCustCity(item.city === '—' ? '' : item.city);
+    setCreateCustPrice(item.total || 1999);
+    setCreateCustCoupon('');
+    setCreateCustDiscount(0);
+    setCreateCustCouponMsg(null);
+    const firstCat = dbCategories[0];
+    if (firstCat) {
+      setCreateCustCatId(firstCat.category_id);
+      fetchServicesForCategory(firstCat.category_id);
+    }
+    setIsCreateCustomerOpen(true);
+  };
+
+  const openEditSubCustomer = (item: CustomerItem) => {
+    setActiveCustomer(item);
+    setSubCustomerName(item.subCustomer || '');
+    setIsEditSubCustomerOpen(true);
+  };
+
+  const openAddAppointment = (item: CustomerItem) => {
+    setActiveCustomer(item);
+    setApptName(item.name);
+    setApptEmail(item.email);
+    setApptMobile(item.mobile);
+    setApptCity(item.city === '—' ? '' : item.city);
+    setAppointmentDesc('');
+    setIsAddAppointmentOpen(true);
+  };
+
+  const openDeleteConfirm = (item: CustomerItem) => {
+    setActiveCustomer(item);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  // ─── ACTION HANDLERS ───
+  const handleUpdateCustomerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeCustomer) return;
+    setIsUpdatingCustomer(true);
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/customers/${activeCustomer.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editName,
+          business: editBusiness,
+          email: editEmail,
+          contact: editMobile,
+          state: editState,
+          city: editCity,
+          total_amount: Number(editTotal),
+          paid_amount: Number(editPaid),
+          unpaid_amount: Number(editUnpaid),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Customer profile & EMI amounts updated successfully!');
+        setIsUpdateCustomerOpen(false);
+        fetchCustomers();
+      } else {
+        alert(data.message || 'Failed to update customer');
+      }
+    } catch (err) {
+      alert('Network error updating customer');
+    } finally {
+      setIsUpdatingCustomer(false);
     }
   };
 
-  const handleBookAppointment = (e: React.FormEvent) => {
+  const handleAddNewOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Appointment booked with ${appointmentAdvisor} for ${activeCustomer?.name}`);
-    setIsAddAppointmentOpen(false);
+    if (!activeCustomer) return;
+    setIsAddingOrder(true);
+    try {
+      const selectedServ = dbServicesByCategory.find((s) => s.service_id === orderServId);
+      const servName = selectedServ?.service_name || activeCustomer.service || 'Business Service';
+      const netTotal = Math.max((selectedServ?.service_price || orderServPrice) - orderDiscount, 0);
+      const paidAmt = orderPaymentMode === '1' ? netTotal : orderPaidAmount;
+      const unpaidAmt = Math.max(netTotal - paidAmt, 0);
+
+      const res = await fetch(`${API_BASE}/v1/crm/customers/${activeCustomer.id}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sub_customer_name: orderSubCustomer,
+          customer_service: servName,
+          customer_service_id: orderServId || 1,
+          customer_category_id: orderCatId || 1,
+          customer_total_service_price: netTotal,
+          customer_paid_amount: paidAmt,
+          customer_unpaid_amount: unpaidAmt,
+          customer_due_date: orderDueDate1,
+          customer_payment_mode: Number(orderPaymentMode),
+          customer_unpaid_amount2: orderPaymentMode === '3' ? Math.round(unpaidAmt / 2) : 0,
+          customer_due_date2: orderPaymentMode === '3' ? orderDueDate2 : undefined,
+          customer_comment: orderComment,
+          coupon_code: orderCoupon,
+          discount_amount: orderDiscount,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('New order created & tasks spawned successfully!');
+        setIsAddOrderOpen(false);
+        fetchCustomers();
+      } else {
+        alert(data.message || 'Failed to add order');
+      }
+    } catch (err) {
+      alert('Network error adding order');
+    } finally {
+      setIsAddingOrder(false);
+    }
   };
 
-  const handleCreateNewTask = () => {
-    if (newTaskTitle.trim()) {
-      setTasksList([newTaskTitle.trim(), ...tasksList]);
-      setNewTaskTitle('');
+  const handleCreateCustomerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeCustomer) return;
+    if (!createCustName.trim() || !createCustEmail.trim() || !createCustMobile.trim()) {
+      alert('Customer Name, Email, and Mobile are required');
+      return;
+    }
+    setIsCreatingCustomer(true);
+    try {
+      const selectedServ = dbServicesByCategory.find((s) => s.service_id === createCustServId);
+      const servName = selectedServ?.service_name || activeCustomer.service || 'General Advisory';
+      const netTotal = Math.max(
+        (selectedServ?.service_price || createCustPrice) - createCustDiscount,
+        0
+      );
+
+      const res = await fetch(`${API_BASE}/v1/crm/customers/create-from-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          old_customer_id: activeCustomer.id,
+          order_id: activeCustomer.orderId || null,
+          customer_name: createCustName.trim(),
+          customer_businessName: createCustBusiness.trim(),
+          sub_customer_name: createCustSubCustomer.trim(),
+          customer_email: createCustEmail.trim(),
+          customer_mobile: createCustMobile.trim(),
+          customer_state: createCustState,
+          customer_city: createCustCity,
+          customer_service: servName,
+          customer_total_service_price: netTotal,
+          apply_coupon: createCustCoupon.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('New Customer Account created & Order transferred successfully!');
+        setIsCreateCustomerOpen(false);
+        fetchCustomers();
+      } else {
+        alert(data.message || 'Failed to create customer');
+      }
+    } catch (err) {
+      alert('Network error creating customer');
+    } finally {
+      setIsCreatingCustomer(false);
+    }
+  };
+
+  const handleUpdateSubCustomer = async () => {
+    if (!activeCustomer) return;
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/customers/${activeCustomer.id}/sub-customer`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_id: activeCustomer.orderId,
+          sub_customer_name: subCustomerName,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Sub Customer updated successfully!');
+        setIsEditSubCustomerOpen(false);
+        fetchCustomers();
+      } else {
+        alert(data.message || 'Failed to update sub customer');
+      }
+    } catch (err) {
+      alert('Network error updating sub customer');
+    }
+  };
+
+  const handleBookAppointment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeCustomer) return;
+    setIsBookingAppt(true);
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/appointments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: apptName,
+          email: apptEmail,
+          mobile: apptMobile,
+          city: apptCity,
+          date: appointmentDate,
+          time: appointmentTime,
+          conduct_by: appointmentAdvisor,
+          message: appointmentDesc,
+          order_id: activeCustomer.orderId ? String(activeCustomer.orderId) : null,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Appointment booked successfully with ${appointmentAdvisor}!`);
+        setIsAddAppointmentOpen(false);
+      } else {
+        alert(data.message || 'Failed to book appointment');
+      }
+    } catch (err) {
+      alert('Network error booking appointment');
+    } finally {
+      setIsBookingAppt(false);
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!activeCustomer) return;
+    setIsDeletingOrder(true);
+    try {
+      const query = activeCustomer.orderId ? `?order_id=${activeCustomer.orderId}` : '';
+      const res = await fetch(`${API_BASE}/v1/crm/customers/${activeCustomer.id}${query}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Order / Customer deleted successfully!');
+        setIsDeleteConfirmOpen(false);
+        fetchCustomers();
+      } else {
+        alert(data.message || 'Failed to delete order');
+      }
+    } catch (err) {
+      alert('Network error deleting order');
+    } finally {
+      setIsDeletingOrder(false);
+    }
+  };
+
+  const handleAssignTask = async (taskId: number) => {
+    if (!assigneeId) {
+      alert('Please select an employee to assign task to');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/tasks/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task_id: taskId,
+          employee_id: Number(assigneeId),
+          due_date: assignDueDate || null,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Task assigned successfully!');
+        setSelectedTaskToAssign(null);
+        if (activeCustomer) openManageTasks(activeCustomer);
+      } else {
+        alert(data.message || 'Failed to assign task');
+      }
+    } catch (err) {
+      alert('Network error assigning task');
+    }
+  };
+
+  const handleAddCustomerTask = async () => {
+    if (!newCustomerTaskTitle.trim() || !activeCustomer) return;
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/customers/${activeCustomer.id}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task_name: newCustomerTaskTitle.trim(),
+          service_id: activeCustomer.serviceId || 1,
+          order_id: activeCustomer.orderId || null,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNewCustomerTaskTitle('');
+        showToast('Task added successfully!');
+        openManageTasks(activeCustomer);
+      } else {
+        alert(data.message || 'Failed to add task');
+      }
+    } catch (err) {
+      alert('Network error adding task');
+    }
+  };
+
+  const handleDeleteTask = async (taskId: number) => {
+    if (!confirm('Are you sure you want to delete this task?')) return;
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/tasks/${taskId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Task deleted successfully!');
+        if (activeCustomer) openManageTasks(activeCustomer);
+      } else {
+        alert(data.message || 'Failed to delete task');
+      }
+    } catch (err) {
+      alert('Network error deleting task');
+    }
+  };
+
+  const handleValidateOrderCoupon = async () => {
+    const code = orderCoupon.trim();
+    if (!code) {
+      setOrderDiscount(0);
+      setOrderCouponMsg(null);
+      return;
+    }
+    setIsValidatingOrderCoupon(true);
+    setOrderCouponMsg(null);
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, total_amount: orderServPrice || 1499 }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.discount_amount !== undefined) {
+        setOrderDiscount(data.data.discount_amount);
+        setOrderCouponMsg({
+          type: 'success',
+          text: data.data.message || `Coupon Applied! Saved ₹${data.data.discount_amount}`,
+        });
+      } else {
+        setOrderDiscount(0);
+        setOrderCouponMsg({ type: 'error', text: data.error || 'Invalid or expired coupon' });
+      }
+    } catch (err) {
+      setOrderDiscount(0);
+      setOrderCouponMsg({ type: 'error', text: 'Failed to validate coupon' });
+    } finally {
+      setIsValidatingOrderCoupon(false);
+    }
+  };
+
+  const handleValidateCreateCoupon = async () => {
+    const code = createCustCoupon.trim();
+    if (!code) {
+      setCreateCustDiscount(0);
+      setCreateCustCouponMsg(null);
+      return;
+    }
+    setIsValidatingCreateCoupon(true);
+    setCreateCustCouponMsg(null);
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, total_amount: createCustPrice || 1999 }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.discount_amount !== undefined) {
+        setCreateCustDiscount(data.data.discount_amount);
+        setCreateCustCouponMsg({
+          type: 'success',
+          text: data.data.message || `Coupon Applied! Saved ₹${data.data.discount_amount}`,
+        });
+      } else {
+        setCreateCustDiscount(0);
+        setCreateCustCouponMsg({ type: 'error', text: data.error || 'Invalid or expired coupon' });
+      }
+    } catch (err) {
+      setCreateCustDiscount(0);
+      setCreateCustCouponMsg({ type: 'error', text: 'Failed to validate coupon' });
+    } finally {
+      setIsValidatingCreateCoupon(false);
     }
   };
 
@@ -605,60 +1137,96 @@ export default function CrmAccountsPage() {
                         <MoreVertical className="w-4 h-4" />
                       </button>
 
-                      {/* 3-Dot Dropdown Action Menu */}
+                      {/* 3-Dot Dropdown Action Menu (Exact Replica of Old CRM OMController) */}
                       {activeMenuId === item.id && (
-                        <div className="absolute right-4 top-8 z-30 w-44 bg-white rounded-lg shadow-xl border border-slate-200 py-1 text-left text-xs">
-                          <button
-                            onClick={() => {
-                              setActiveCustomer(item);
-                              setIsAddOrderOpen(true);
-                              setActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
-                          >
-                            Add New Order
-                          </button>
-                          <button
-                            onClick={() => {
-                              setActiveCustomer(item);
-                              setIsUpdateCustomerOpen(true);
-                              setActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
-                          >
-                            Update Customer
-                          </button>
-                          <button
-                            onClick={() => {
-                              setActiveCustomer(item);
-                              setSubCustomerName(item.subCustomer || '');
-                              setIsEditSubCustomerOpen(true);
-                              setActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
-                          >
-                            Edit Sub Customer
-                          </button>
-                          <button
-                            onClick={() => {
-                              setActiveCustomer(item);
-                              setIsAddAppointmentOpen(true);
-                              setActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
-                          >
-                            Add Appointment
-                          </button>
-                          <button
-                            onClick={() => {
-                              setActiveCustomer(item);
-                              setIsTasksDrawerOpen(true);
-                              setActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium block"
-                          >
-                            Add Tasks Drawer
-                          </button>
+                        <div className="absolute right-4 top-8 z-30 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 text-left text-xs divide-y divide-slate-100 animate-scale-in">
+                          <div className="py-1">
+                            {/* 1. Manage Tasks (AddWorkEffort) */}
+                            <button
+                              onClick={() => {
+                                openManageTasks(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                            >
+                              <ListTodo className="w-3.5 h-3.5 text-blue-600" />
+                              Manage Tasks
+                            </button>
+
+                            {/* 2. Edit Customer (EditCustomer) */}
+                            <button
+                              onClick={() => {
+                                openEditCustomer(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                            >
+                              <Edit3 className="w-3.5 h-3.5 text-amber-600" />
+                              Edit Customer
+                            </button>
+
+                            {/* 3. Add New Order (addNewOrder) */}
+                            <button
+                              onClick={() => {
+                                openAddOrder(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                            >
+                              <PlusCircle className="w-3.5 h-3.5 text-emerald-600" />
+                              Add New Order
+                            </button>
+
+                            {/* 4. Create Customer (createCustomer - Requested by User) */}
+                            <button
+                              onClick={() => {
+                                openCreateCustomer(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-1.5 hover:bg-purple-50 text-purple-700 font-semibold flex items-center gap-2 cursor-pointer"
+                            >
+                              <UserPlus className="w-3.5 h-3.5 text-purple-600" />
+                              Create Customer
+                            </button>
+                          </div>
+
+                          <div className="py-1">
+                            {/* 5. Edit Sub Customer (EditSubCustomer) */}
+                            <button
+                              onClick={() => {
+                                openEditSubCustomer(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                            >
+                              <Tag className="w-3.5 h-3.5 text-indigo-600" />
+                              Edit Sub Customer
+                            </button>
+
+                            {/* 6. Add Appointment (AddAppointment) */}
+                            <button
+                              onClick={() => {
+                                openAddAppointment(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                            >
+                              <Calendar className="w-3.5 h-3.5 text-teal-600" />
+                              Add Appointment
+                            </button>
+
+                            {/* 7. Delete Order (DeleteCustomer) */}
+                            <button
+                              onClick={() => {
+                                openDeleteConfirm(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-1.5 hover:bg-red-50 text-red-600 font-medium flex items-center gap-2 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                              Delete Order
+                            </button>
+                          </div>
                         </div>
                       )}
                     </td>
@@ -1189,7 +1757,7 @@ export default function CrmAccountsPage() {
         </div>
       )}
 
-      {/* ─── ADD NEW ORDER MODAL (Website Clean UI Style) ─── */}
+      {/* ─── 1. ADD NEW ORDER MODAL (addNewOrder) ─── */}
       {isAddOrderOpen && activeCustomer && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-2xl w-full animate-scale-in">
@@ -1211,20 +1779,26 @@ export default function CrmAccountsPage() {
               </div>
               <button
                 onClick={() => setIsAddOrderOpen(false)}
-                className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
+                className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-xs max-h-[82vh] overflow-y-auto">
+            <form
+              onSubmit={handleAddNewOrderSubmit}
+              className="p-6 space-y-4 text-xs max-h-[82vh] overflow-y-auto"
+            >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Name</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Customer Name
+                  </label>
                   <input
                     type="text"
-                    defaultValue={activeCustomer.name}
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    disabled
+                    value={activeCustomer.name}
+                    className="w-full bg-slate-100 border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 font-semibold cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -1233,8 +1807,9 @@ export default function CrmAccountsPage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue={activeCustomer.company}
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    disabled
+                    value={activeCustomer.company}
+                    className="w-full bg-slate-100 border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -1243,116 +1818,115 @@ export default function CrmAccountsPage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Enter Sub Customer Name (e.g. OPC1, OPC2)"
+                    value={orderSubCustomer}
+                    onChange={(e) => setOrderSubCustomer(e.target.value)}
+                    placeholder="e.g. Branch 2 or OPC1"
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Category *
+                  </label>
+                  <select
+                    value={orderCatId}
+                    onChange={(e) => {
+                      const catId = Number(e.target.value);
+                      setOrderCatId(catId);
+                      fetchServicesForCategory(catId);
+                    }}
+                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  >
+                    {dbCategories.map((cat) => (
+                      <option key={cat.category_id} value={cat.category_id}>
+                        {cat.category_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Service *
+                  </label>
+                  <select
+                    value={orderServId}
+                    onChange={(e) => {
+                      const servId = Number(e.target.value);
+                      setOrderServId(servId);
+                      const s = dbServicesByCategory.find((item) => item.service_id === servId);
+                      if (s) setOrderServPrice(s.service_price);
+                    }}
+                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  >
+                    <option value={0}>Select Service</option>
+                    {dbServicesByCategory.map((serv) => (
+                      <option key={serv.service_id} value={serv.service_id}>
+                        {serv.service_name} (₹{serv.service_price})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Email</label>
-                  <input
-                    type="email"
-                    defaultValue={activeCustomer.email}
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">State</label>
-                  <input
-                    type="text"
-                    defaultValue={activeCustomer.state}
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">City</label>
-                  <input
-                    type="text"
-                    defaultValue={activeCustomer.city}
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Mobile No
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={activeCustomer.mobile}
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-mono focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Custom Package
-                  </label>
-                  <select className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]">
-                    <option value="No">No</option>
-                    <option value="Yes">Yes</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Category
-                  </label>
-                  <select className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]">
-                    <option value="Taxation and Return Filing">Taxation and Return Filing</option>
-                    <option value="Business Registration">Business Registration</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Service</label>
-                  <select className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]">
-                    <option value="Select Service">Select Service</option>
-                    <option value="Income Tax Return">Income Tax Return</option>
-                    <option value="GST Return">GST Return</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">
                     Apply Coupon
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Coupon code..."
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                  />
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      placeholder="Coupon code..."
+                      value={orderCoupon}
+                      onChange={(e) => setOrderCoupon(e.target.value.toUpperCase())}
+                      className="flex-1 bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 uppercase focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleValidateOrderCoupon}
+                      disabled={isValidatingOrderCoupon}
+                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold cursor-pointer transition-colors text-xs"
+                    >
+                      {isValidatingOrderCoupon ? '...' : 'Apply'}
+                    </button>
+                  </div>
+                  {orderCouponMsg && (
+                    <p
+                      className={`text-[10px] mt-1 font-semibold ${
+                        orderCouponMsg.type === 'success' ? 'text-emerald-600' : 'text-red-500'
+                      }`}
+                    >
+                      {orderCouponMsg.text}
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Discount Amount
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue={0}
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                  />
-                </div>
+
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">
                     Payment Mode
                   </label>
-                  <select className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]">
-                    <option value="Select EMI">Select EMI</option>
-                    <option value="Full Payment">Full Payment</option>
+                  <select
+                    value={orderPaymentMode}
+                    onChange={(e) => setOrderPaymentMode(e.target.value)}
+                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  >
+                    <option value="1">Full Payment (No EMI)</option>
+                    <option value="2">2 EMIs</option>
+                    <option value="3">3 EMIs</option>
                   </select>
                 </div>
+
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Total Amount
+                    Total Service Price
                   </label>
                   <input
                     type="number"
+                    value={Math.max(orderServPrice - orderDiscount, 0)}
                     readOnly
-                    defaultValue={1999}
                     className="w-full bg-slate-100 border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-bold"
                   />
                 </div>
@@ -1361,20 +1935,18 @@ export default function CrmAccountsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Paid Amount
+                    Paid Amount (₹)
                   </label>
                   <input
                     type="number"
-                    defaultValue={1000}
+                    value={
+                      orderPaymentMode === '1'
+                        ? Math.max(orderServPrice - orderDiscount, 0)
+                        : orderPaidAmount
+                    }
+                    onChange={(e) => setOrderPaidAmount(Number(e.target.value))}
+                    disabled={orderPaymentMode === '1'}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-bold text-emerald-600 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">1st EMI</label>
-                  <input
-                    type="number"
-                    defaultValue={999}
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
                 <div>
@@ -1383,16 +1955,24 @@ export default function CrmAccountsPage() {
                   </label>
                   <input
                     type="date"
+                    value={orderDueDate1}
+                    onChange={(e) => setOrderDueDate1(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  Payment Screenshot
-                </label>
-                <input type="file" className="text-xs text-slate-500" />
+                {orderPaymentMode === '3' && (
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      2nd Due Date
+                    </label>
+                    <input
+                      type="date"
+                      value={orderDueDate2}
+                      onChange={(e) => setOrderDueDate2(e.target.value)}
+                      className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
@@ -1401,18 +1981,18 @@ export default function CrmAccountsPage() {
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Order notes and comments..."
+                  value={orderComment}
+                  onChange={(e) => setOrderComment(e.target.value)}
+                  placeholder="Order notes, client instructions..."
                   className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl p-3 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                 />
               </div>
 
               <div className="flex items-center gap-2.5 pt-2">
                 <button
-                  onClick={() => {
-                    alert('Order added successfully!');
-                    setIsAddOrderOpen(false);
-                  }}
-                  className="btn-single-moving btn-single-moving-solid px-6 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer"
+                  type="submit"
+                  disabled={isAddingOrder}
+                  className="btn-single-moving btn-single-moving-solid px-8 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer"
                   style={
                     {
                       '--c-base': '#06B6D4',
@@ -1421,31 +2001,24 @@ export default function CrmAccountsPage() {
                     } as React.CSSProperties
                   }
                 >
-                  <span>Add</span>
+                  <span>{isAddingOrder ? 'Creating Order...' : 'Add Order'}</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => setIsAddOrderOpen(false)}
-                  className="btn-single-moving btn-single-moving-solid px-6 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer"
-                  style={
-                    {
-                      '--c-base': '#EF4444',
-                      '--c-light': '#FCA5A5',
-                      '--c-dark': '#B91C1C',
-                    } as React.CSSProperties
-                  }
+                  className="px-6 py-2.5 rounded-full font-bold text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer"
                 >
-                  <span>Reset</span>
+                  Cancel
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
-      {/* ─── UPDATE CUSTOMER MODAL (Website Clean UI Style) ─── */}
+      {/* ─── 1. UPDATE CUSTOMER MODAL (Website Clean UI Style) ─── */}
       {isUpdateCustomerOpen && activeCustomer && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-xl w-full animate-scale-in">
-            {/* Signature Top Multicolor Strip */}
             <div className="h-1 bg-multicolor" />
 
             <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
@@ -1454,7 +2027,9 @@ export default function CrmAccountsPage() {
                   <Edit3 className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-[#1B365D]">Update Customer</h3>
+                  <h3 className="font-extrabold text-sm text-[#1B365D]">
+                    Update Customer Profile & EMI
+                  </h3>
                   <p className="text-[10px] text-slate-500 font-medium">
                     {activeCustomer.name} • {activeCustomer.company}
                   </p>
@@ -1468,31 +2043,43 @@ export default function CrmAccountsPage() {
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-xs max-h-[82vh] overflow-y-auto">
+            <form
+              onSubmit={handleUpdateCustomerSubmit}
+              className="p-6 space-y-4 text-xs max-h-[82vh] overflow-y-auto"
+            >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Name</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Customer Name *
+                  </label>
                   <input
                     type="text"
-                    defaultValue={activeCustomer.name}
+                    required
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Company/Shop Name
+                    Company / Shop Name
                   </label>
                   <input
                     type="text"
-                    defaultValue={activeCustomer.company}
+                    value={editBusiness}
+                    onChange={(e) => setEditBusiness(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Email</label>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Email Address *
+                  </label>
                   <input
                     type="email"
-                    defaultValue={activeCustomer.email}
+                    required
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
@@ -1501,11 +2088,13 @@ export default function CrmAccountsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Mobile No
+                    Mobile No *
                   </label>
                   <input
                     type="text"
-                    defaultValue={activeCustomer.mobile}
+                    required
+                    value={editMobile}
+                    onChange={(e) => setEditMobile(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-mono focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
@@ -1513,7 +2102,8 @@ export default function CrmAccountsPage() {
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">State</label>
                   <input
                     type="text"
-                    defaultValue={activeCustomer.state}
+                    value={editState}
+                    onChange={(e) => setEditState(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
@@ -1521,52 +2111,66 @@ export default function CrmAccountsPage() {
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">City</label>
                   <input
                     type="text"
-                    defaultValue={activeCustomer.city}
+                    value={editCity}
+                    onChange={(e) => setEditCity(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Total Amount
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue={activeCustomer.total}
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-bold focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Paid Amount
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue={activeCustomer.paid}
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-bold text-emerald-600 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                    Unpaid Amount
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue={activeCustomer.unpaid}
-                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-bold text-red-600 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                  />
+              <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl">
+                <p className="text-[11px] font-bold text-amber-900 mb-2">
+                  Customer Account Financials (EMI / Dues)
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                      Total Amount (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={editTotal}
+                      onChange={(e) => setEditTotal(Number(e.target.value))}
+                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-1.5 text-slate-800 font-bold focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                      Paid Amount (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={editPaid}
+                      onChange={(e) => setEditPaid(Number(e.target.value))}
+                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-1.5 text-emerald-700 font-bold focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                      Unpaid Balance (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={editUnpaid}
+                      onChange={(e) => setEditUnpaid(Number(e.target.value))}
+                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-1.5 text-rose-700 font-bold focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="pt-2">
+              <div className="flex items-center justify-end gap-2.5 pt-2">
                 <button
-                  onClick={() => {
-                    alert('Customer info updated successfully!');
-                    setIsUpdateCustomerOpen(false);
-                  }}
-                  className="btn-single-moving btn-single-moving-solid px-6 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer"
+                  type="button"
+                  onClick={() => setIsUpdateCustomerOpen(false)}
+                  className="px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdatingCustomer}
+                  className="btn-single-moving btn-single-moving-solid px-6 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer flex items-center gap-1.5"
                   style={
                     {
                       '--c-base': '#06B6D4',
@@ -1575,23 +2179,293 @@ export default function CrmAccountsPage() {
                     } as React.CSSProperties
                   }
                 >
-                  <span>Update</span>
+                  {isUpdatingCustomer ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    <span>Update Customer</span>
+                  )}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
 
-      {/* ─── EDIT SUB CUSTOMER MODAL (Website Clean UI Style) ─── */}
-      {isEditSubCustomerOpen && activeCustomer && (
+      {/* ─── 2. CREATE CUSTOMER MODAL (Website Clean UI Style) ─── */}
+      {isCreateCustomerOpen && activeCustomer && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-sm w-full animate-scale-in">
-            {/* Signature Top Multicolor Strip */}
+          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-xl w-full animate-scale-in">
             <div className="h-1 bg-multicolor" />
 
             <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
-              <h3 className="font-extrabold text-sm text-[#1B365D]">Edit Sub Customer</h3>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                  <UserPlus className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-[#1B365D]">Create Customer</h3>
+                  <p className="text-[10px] text-slate-500 font-medium">
+                    Convert Order #{activeCustomer.orderId || activeCustomer.id} to an Independent
+                    Customer Account
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsCreateCustomerOpen(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleCreateCustomerSubmit}
+              className="p-6 space-y-4 text-xs max-h-[82vh] overflow-y-auto"
+            >
+              {/* Feature Explanation Banner */}
+              <div className="p-3.5 bg-blue-50/80 border border-blue-200/90 rounded-2xl flex items-start gap-3">
+                <AlertTriangle className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+                <div className="text-[11px] text-blue-900 leading-relaxed">
+                  <strong className="font-bold">Old CRM Create Customer Feature:</strong> When a
+                  client branch, sub-entity, or franchisee requires their own separate account, this
+                  action registers a brand new Customer & Lead and automatically{' '}
+                  <strong className="underline">transfers</strong> order #
+                  {activeCustomer.orderId || activeCustomer.id} along with its tasks to the new
+                  customer profile.
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    New Customer Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={createCustName}
+                    onChange={(e) => setCreateCustName(e.target.value)}
+                    placeholder="Full name of customer"
+                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Company / Business Name
+                  </label>
+                  <input
+                    type="text"
+                    value={createCustBusiness}
+                    onChange={(e) => setCreateCustBusiness(e.target.value)}
+                    placeholder="Company or Enterprise"
+                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Sub Customer / Branch Tag
+                  </label>
+                  <input
+                    type="text"
+                    value={createCustSubCustomer}
+                    onChange={(e) => setCreateCustSubCustomer(e.target.value)}
+                    placeholder="e.g. Pune Branch"
+                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Mobile No *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={createCustMobile}
+                    onChange={(e) => setCreateCustMobile(e.target.value)}
+                    placeholder="10-digit phone"
+                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-mono focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                    Email ID *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={createCustEmail}
+                    onChange={(e) => setCreateCustEmail(e.target.value)}
+                    placeholder="email@example.com"
+                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">State</label>
+                  <input
+                    type="text"
+                    value={createCustState}
+                    onChange={(e) => setCreateCustState(e.target.value)}
+                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={createCustCity}
+                    onChange={(e) => setCreateCustCity(e.target.value)}
+                    className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 border border-[#EAE6DD] rounded-2xl space-y-3">
+                <p className="text-[11px] font-bold text-slate-700">Assigned Service & Pricing</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      Service Category
+                    </label>
+                    <select
+                      value={createCustCatId}
+                      onChange={(e) => {
+                        const catId = Number(e.target.value);
+                        setCreateCustCatId(catId);
+                        fetchServicesForCategory(catId);
+                      }}
+                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    >
+                      {dbCategories.map((c) => (
+                        <option key={c.category_id} value={c.category_id}>
+                          {c.category_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      Select Service
+                    </label>
+                    <select
+                      value={createCustServId}
+                      onChange={(e) => {
+                        const sId = Number(e.target.value);
+                        setCreateCustServId(sId);
+                        const found = dbServicesByCategory.find((s) => s.service_id === sId);
+                        if (found) setCreateCustPrice(found.service_price);
+                      }}
+                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    >
+                      {dbServicesByCategory.map((s) => (
+                        <option key={s.service_id} value={s.service_id}>
+                          {s.service_name} (₹{s.service_price})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      Service Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={createCustPrice}
+                      onChange={(e) => setCreateCustPrice(Number(e.target.value))}
+                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-1.5 text-slate-800 font-bold focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                      Coupon Code
+                    </label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        value={createCustCoupon}
+                        onChange={(e) => setCreateCustCoupon(e.target.value.toUpperCase())}
+                        placeholder="e.g. DISCOUNT10"
+                        className="flex-1 bg-white border border-[#EAE6DD] rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleValidateCreateCoupon}
+                        disabled={isValidatingCreateCoupon}
+                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-[11px]"
+                      >
+                        {isValidatingCreateCoupon ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          'Apply'
+                        )}
+                      </button>
+                    </div>
+                    {createCustCouponMsg && (
+                      <p
+                        className={`text-[10px] mt-1 font-semibold ${createCustCouponMsg.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}
+                      >
+                        {createCustCouponMsg.text}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-2.5 bg-emerald-50/70 border border-emerald-200/60 rounded-xl mt-2 text-xs">
+                  <span className="font-bold text-emerald-950">Transferred Order Net Amount:</span>
+                  <span className="font-extrabold text-emerald-700 text-sm">
+                    ₹{Math.max(createCustPrice - createCustDiscount, 0)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateCustomerOpen(false)}
+                  className="px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingCustomer}
+                  className="btn-single-moving btn-single-moving-solid px-6 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer flex items-center gap-1.5"
+                  style={
+                    {
+                      '--c-base': '#1B365D',
+                      '--c-light': '#3B82F6',
+                      '--c-dark': '#0F1E36',
+                    } as React.CSSProperties
+                  }
+                >
+                  {isCreatingCustomer ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    <span>Create & Transfer Customer</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── 3. EDIT SUB CUSTOMER MODAL (Website Clean UI Style) ─── */}
+      {isEditSubCustomerOpen && activeCustomer && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-sm w-full animate-scale-in">
+            <div className="h-1 bg-multicolor" />
+
+            <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
+              <h3 className="font-extrabold text-sm text-[#1B365D]">Edit Sub Customer Name</h3>
               <button
                 onClick={() => setIsEditSubCustomerOpen(false)}
                 className="w-7 h-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
@@ -1603,7 +2477,7 @@ export default function CrmAccountsPage() {
             <div className="p-5 space-y-4 text-xs">
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  Sub Customer Name
+                  Sub Customer Name / Branch Name
                 </label>
                 <input
                   type="text"
@@ -1613,7 +2487,14 @@ export default function CrmAccountsPage() {
                   className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                 />
               </div>
-              <div className="flex justify-end pt-1">
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsEditSubCustomerOpen(false)}
+                  className="px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs"
+                >
+                  Cancel
+                </button>
                 <button
                   onClick={handleUpdateSubCustomer}
                   className="btn-single-moving btn-single-moving-solid px-5 py-2 rounded-full text-white font-bold text-xs shadow-xs cursor-pointer"
@@ -1633,11 +2514,10 @@ export default function CrmAccountsPage() {
         </div>
       )}
 
-      {/* ─── ADD NEW APPOINTMENT MODAL (Website Clean UI Style) ─── */}
+      {/* ─── 4. ADD NEW APPOINTMENT MODAL (Website Clean UI Style) ─── */}
       {isAddAppointmentOpen && activeCustomer && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-md w-full animate-scale-in">
-            {/* Signature Top Multicolor Strip */}
             <div className="h-1 bg-multicolor" />
 
             <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
@@ -1670,7 +2550,8 @@ export default function CrmAccountsPage() {
                   <input
                     type="text"
                     required
-                    defaultValue={activeCustomer.name}
+                    value={apptName}
+                    onChange={(e) => setApptName(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
@@ -1679,7 +2560,8 @@ export default function CrmAccountsPage() {
                   <input
                     type="email"
                     required
-                    defaultValue={activeCustomer.email}
+                    value={apptEmail}
+                    onChange={(e) => setApptEmail(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
@@ -1693,7 +2575,8 @@ export default function CrmAccountsPage() {
                   <input
                     type="text"
                     required
-                    defaultValue={activeCustomer.mobile}
+                    value={apptMobile}
+                    onChange={(e) => setApptMobile(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-mono focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
@@ -1702,7 +2585,8 @@ export default function CrmAccountsPage() {
                   <input
                     type="text"
                     required
-                    defaultValue={activeCustomer.city}
+                    value={apptCity}
+                    onChange={(e) => setApptCity(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
                 </div>
@@ -1748,7 +2632,7 @@ export default function CrmAccountsPage() {
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  Description *
+                  Description / Agenda *
                 </label>
                 <textarea
                   rows={2}
@@ -1764,20 +2648,14 @@ export default function CrmAccountsPage() {
                 <button
                   type="button"
                   onClick={() => setIsAddAppointmentOpen(false)}
-                  className="btn-single-moving btn-single-moving-solid flex-1 py-2.5 rounded-full font-bold text-xs text-white cursor-pointer"
-                  style={
-                    {
-                      '--c-base': '#1F2937',
-                      '--c-light': '#4B5563',
-                      '--c-dark': '#111827',
-                    } as React.CSSProperties
-                  }
+                  className="flex-1 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs"
                 >
-                  <span>Cancel</span>
+                  Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn-single-moving btn-single-moving-solid flex-1 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer"
+                  disabled={isBookingAppt}
+                  className="btn-single-moving btn-single-moving-solid flex-1 py-2.5 rounded-full font-bold text-xs text-white shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
                   style={
                     {
                       '--c-base': '#1E3A8A',
@@ -1786,7 +2664,11 @@ export default function CrmAccountsPage() {
                     } as React.CSSProperties
                   }
                 >
-                  <span>Book</span>
+                  {isBookingAppt ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    <span>Book Appointment</span>
+                  )}
                 </button>
               </div>
             </form>
@@ -1794,20 +2676,93 @@ export default function CrmAccountsPage() {
         </div>
       )}
 
-      {/* ─── ADD TASKS SLIDE-OVER DRAWER (Website Clean UI Style) ─── */}
-      {isTasksDrawerOpen && (
+      {/* ─── 5. DELETE ORDER CONFIRMATION MODAL ─── */}
+      {isDeleteConfirmOpen && activeCustomer && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-md w-full animate-scale-in">
+            <div className="h-1 bg-red-500" />
+
+            <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
+              <div className="flex items-center gap-2.5 text-red-600">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center font-bold text-xs">
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                </div>
+                <h3 className="font-extrabold text-sm text-slate-800">Delete Order & Tasks</h3>
+              </div>
+              <button
+                onClick={() => setIsDeleteConfirmOpen(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-xs">
+              <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <div className="text-red-900 leading-relaxed">
+                  <p className="font-bold mb-1">Permanent Deletion Warning</p>
+                  <p>
+                    Are you sure you want to delete order #
+                    {activeCustomer.orderId || activeCustomer.id} for{' '}
+                    <strong>{activeCustomer.name}</strong>?
+                  </p>
+                  <p className="mt-2 text-[11px] text-red-700">
+                    This will permanently remove the order record, customer EMI schedule, customer
+                    dues, and all operations tasks created under this order.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteConfirmOpen(false)}
+                  className="px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteOrder}
+                  disabled={isDeletingOrder}
+                  className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-xs flex items-center gap-1.5"
+                >
+                  {isDeletingOrder ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    <span>Delete Permanently</span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── 6. MANAGE TASKS SLIDE-OVER DRAWER (Action: Manage Tasks) ─── */}
+      {isTasksDrawerOpen && activeCustomer && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div
             className="absolute inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
             onClick={() => setIsTasksDrawerOpen(false)}
           />
-          <div className="fixed inset-y-0 right-0 max-w-sm w-full bg-white shadow-2xl flex flex-col">
-            {/* Signature Top Multicolor Strip */}
+          <div className="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl flex flex-col">
             <div className="h-1 bg-multicolor" />
 
             {/* Drawer Header */}
             <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
-              <h3 className="font-extrabold text-sm text-[#1B365D]">Add Tasks</h3>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                  <ListTodo className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-[#1B365D]">Manage Customer Tasks</h3>
+                  <p className="text-[10px] text-slate-500 font-medium">
+                    {activeCustomer.name} • {activeCustomer.service}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setIsTasksDrawerOpen(false)}
                 className="w-7 h-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
@@ -1818,57 +2773,196 @@ export default function CrmAccountsPage() {
 
             {/* Drawer Content */}
             <div className="p-5 space-y-4 flex-1 overflow-y-auto text-xs">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Create New Task..."
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  className="flex-1 bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-xs focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                />
-                <button
-                  onClick={handleCreateNewTask}
-                  className="btn-single-moving btn-single-moving-solid px-4 py-2 rounded-full text-white font-bold text-xs shadow-xs cursor-pointer"
-                  style={
-                    {
-                      '--c-base': '#1E3A8A',
-                      '--c-light': '#3B82F6',
-                      '--c-dark': '#172554',
-                    } as React.CSSProperties
-                  }
-                >
-                  <span>Add</span>
-                </button>
+              {/* Add New Task Form */}
+              <div className="p-3 bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl space-y-2">
+                <label className="block text-[11px] font-bold text-slate-700">
+                  Add New Operations Task
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. GST Registration Filing..."
+                    value={newCustomerTaskTitle}
+                    onChange={(e) => setNewCustomerTaskTitle(e.target.value)}
+                    className="flex-1 bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  />
+                  <button
+                    onClick={handleAddCustomerTask}
+                    className="btn-single-moving btn-single-moving-solid px-4 py-2 rounded-full text-white font-bold text-xs shadow-xs cursor-pointer flex items-center gap-1"
+                    style={
+                      {
+                        '--c-base': '#1E3A8A',
+                        '--c-light': '#3B82F6',
+                        '--c-dark': '#172554',
+                      } as React.CSSProperties
+                    }
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-2 pt-2">
-                {tasksList.map((t, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-2 p-1.5 bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl"
-                  >
-                    <button className="flex-1 bg-white hover:bg-slate-50 text-slate-800 font-semibold py-2 px-3 rounded-xl border border-[#EAE6DD] flex items-center justify-between shadow-2xs">
-                      <span>{t}</span>
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                    </button>
-                    <button
-                      onClick={() => alert(`Task "${t}" assigned to operations specialist.`)}
-                      className="w-8 h-8 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 transition-colors"
-                      title="Send Task"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setTasksList(tasksList.filter((_, idx) => idx !== i))}
-                      className="w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 border border-red-200 flex items-center justify-center text-red-600 transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
+              {/* Task List Header */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  Active Tasks ({customerTasks.length})
+                </span>
               </div>
+
+              {/* Tasks List */}
+              {loadingTasks ? (
+                <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
+                  <Loader2 className="w-6 h-6 animate-spin text-[#1B365D]" />
+                  <span className="text-xs font-medium">Loading customer tasks...</span>
+                </div>
+              ) : customerTasks.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 bg-slate-50/70 rounded-2xl border border-dashed border-[#EAE6DD]">
+                  <p className="font-semibold text-xs text-slate-600">No tasks generated yet</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Use the box above to add a new task for this order.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {customerTasks.map((t) => {
+                    const isAssigningThis = selectedTaskToAssign === t.id;
+                    const assignedName = t.assigned_to_name || t.employee_name;
+                    return (
+                      <div
+                        key={t.id}
+                        className="p-3 bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl space-y-2.5 transition-all hover:border-slate-300"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <h4 className="font-bold text-slate-800 text-xs">{t.task_name}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  t.task_status === 'completed'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : t.task_status === 'in_progress'
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : 'bg-amber-100 text-amber-800'
+                                }`}
+                              >
+                                {t.task_status || 'Pending'}
+                              </span>
+                              {assignedName ? (
+                                <span className="text-[10px] font-semibold text-slate-600 bg-white border border-[#EAE6DD] px-2 py-0.5 rounded-full flex items-center gap-1">
+                                  <UserPlus className="w-3 h-3 text-emerald-600" />
+                                  {assignedName}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                                  Unassigned
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setSelectedTaskToAssign(isAssigningThis ? null : t.id)}
+                              className={`p-1.5 rounded-lg border text-xs font-semibold transition-colors flex items-center gap-1 ${
+                                isAssigningThis
+                                  ? 'bg-[#1B365D] text-white border-[#1B365D]'
+                                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                              }`}
+                              title="Assign Staff"
+                            >
+                              <Send className="w-3 h-3" />
+                              <span className="text-[10px]">Assign</span>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTask(t.id)}
+                              className="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 flex items-center justify-center text-red-600 transition-colors"
+                              title="Delete Task"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Inline Staff Assignment Controls */}
+                        {isAssigningThis && (
+                          <div className="p-2.5 bg-white border border-blue-200 rounded-xl space-y-2 animate-scale-in">
+                            <p className="text-[10px] font-bold text-blue-900">
+                              Assign Task to Specialist:
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[9px] font-bold text-slate-500 mb-0.5">
+                                  Staff Member
+                                </label>
+                                <select
+                                  value={assigneeId}
+                                  onChange={(e) => setAssigneeId(e.target.value)}
+                                  className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-lg px-2 py-1 text-[11px] font-semibold"
+                                >
+                                  <option value="">-- Select Specialist --</option>
+                                  {staffUsers.map((u) => (
+                                    <option key={u.id} value={u.id}>
+                                      {u.name || u.email}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[9px] font-bold text-slate-500 mb-0.5">
+                                  Target Due Date
+                                </label>
+                                <input
+                                  type="date"
+                                  value={assignDueDate}
+                                  onChange={(e) => setAssignDueDate(e.target.value)}
+                                  className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-lg px-2 py-1 text-[11px]"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-1.5 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedTaskToAssign(null)}
+                                className="px-2.5 py-1 rounded-lg border border-slate-200 text-slate-600 text-[10px] font-bold"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleAssignTask(t.id)}
+                                className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-xs"
+                              >
+                                Confirm Assignment
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── 7. FLOATING TOAST NOTIFICATION BANNER ─── */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 animate-scale-in">
+          <div
+            className={`px-5 py-3 rounded-2xl shadow-2xl border flex items-center gap-3 text-xs font-bold text-white ${
+              toastMessage.type === 'success'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-700 border-emerald-400/30'
+                : 'bg-gradient-to-r from-rose-600 to-red-700 border-rose-400/30'
+            }`}
+          >
+            {toastMessage.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-100" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-rose-100" />
+            )}
+            <span>{toastMessage.text}</span>
           </div>
         </div>
       )}

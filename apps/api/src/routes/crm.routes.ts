@@ -1875,7 +1875,7 @@ router.get('/customers', async (req, res) => {
       `SELECT 
         c.id, c.name, c.business, c.email, c.contact, c.state, c.city, c.service,
         c.service_price, c.added_by, c.date, c.is_payment,
-        s.service_name, cat.category_name, su.name AS added_by_name
+        s.service_id, s.service_name, cat.category_name, su.name AS added_by_name
        FROM customers c 
        LEFT JOIN services s ON (c.service = CAST(s.service_id AS CHAR) OR c.service = s.service_name) 
        LEFT JOIN categories cat ON s.category_id = cat.category_id 
@@ -1887,22 +1887,45 @@ router.get('/customers', async (req, res) => {
 
     const ids = custsRaw.map((c) => Number(c.id)).filter(Boolean);
     let emiMap: Record<number, any> = {};
+    let orderMap: Record<number, any> = {};
+
     if (ids.length > 0) {
-      const emis: any[] = await prisma.$queryRawUnsafe(
-        `SELECT customer_id, emi_total_amount, emi_paid_amount, emi_unpaid_amount, emi_due_date 
-         FROM customer_emi WHERE customer_id IN (${ids.join(',')}) ORDER BY emi_id DESC`
-      );
-      emis.forEach((e: any) => {
-        const cid = Number(e.customer_id);
-        if (!emiMap[cid]) {
-          emiMap[cid] = e;
-        }
-      });
+      try {
+        const emis: any[] = await prisma.$queryRawUnsafe(
+          `SELECT customer_id, emi_total_amount, emi_paid_amount, emi_unpaid_amount, emi_due_date 
+           FROM customer_emi WHERE customer_id IN (${ids.join(',')}) ORDER BY emi_id DESC`
+        );
+        emis.forEach((e: any) => {
+          const cid = Number(e.customer_id);
+          if (!emiMap[cid]) {
+            emiMap[cid] = e;
+          }
+        });
+      } catch (err) {
+        console.error('Error fetching customer EMIs:', err);
+      }
+
+      try {
+        const idStrings = ids.map((id) => `'${id}'`).join(',');
+        const ordersList: any[] = await prisma.$queryRawUnsafe(
+          `SELECT id, customer_id, package_id, sub_customer_name 
+           FROM orders WHERE customer_id IN (${idStrings}) ORDER BY id DESC`
+        );
+        ordersList.forEach((o: any) => {
+          const cid = Number(o.customer_id);
+          if (!orderMap[cid]) {
+            orderMap[cid] = o;
+          }
+        });
+      } catch (err) {
+        console.error('Error fetching customer orders:', err);
+      }
     }
 
     const mapped = custsRaw.map((c: any) => {
       const cid = Number(c.id);
       const emi = emiMap[cid];
+      const ord = orderMap[cid];
       const totalAmt = emi ? Number(emi.emi_total_amount) : Number(c.service_price) || 0;
       const paidAmt = emi
         ? Number(emi.emi_paid_amount)
@@ -1914,6 +1937,10 @@ router.get('/customers', async (req, res) => {
 
       return {
         id: cid,
+        orderId: ord ? Number(ord.id) : null,
+        packageId: ord?.package_id || null,
+        subCustomer: ord?.sub_customer_name || '',
+        serviceId: c.service_id ? Number(c.service_id) : Number(c.service) || 1,
         name: c.name || 'Client',
         business: c.business || '',
         company: c.business || '—',
@@ -2409,16 +2436,615 @@ router.get('/staff', async (req, res) => {
   });
 });
 
-// 13. Customer by ID (for task detail name lookup)
+// 13. Customer by ID (with full profile & latest order/emi info)
 router.get('/customers/:id', async (req, res) => {
   try {
+    const custId = Number(req.params.id);
     const customer = await prisma.customers.findFirst({
-      where: { id: Number(req.params.id) },
-      select: { id: true, name: true, email: true, contact: true, service: true },
+      where: { id: custId },
     });
-    res.json({ success: true, data: customer });
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const latestOrder = await prisma.orders.findFirst({
+      where: { customer_id: String(custId) },
+      orderBy: { id: 'desc' },
+    });
+
+    const latestEmi = await prisma.customer_emi.findFirst({
+      where: { customer_id: custId },
+      orderBy: { emi_id: 'desc' },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        ...customer,
+        order_id: latestOrder?.id || null,
+        sub_customer_name: latestOrder?.sub_customer_name || '',
+        emi_total_amount: latestEmi?.emi_total_amount ?? customer.service_price,
+        emi_paid_amount: latestEmi?.emi_paid_amount ?? 0,
+        emi_unpaid_amount: latestEmi?.emi_unpaid_amount ?? customer.service_price,
+        emi_due_date: latestEmi?.emi_due_date || null,
+      },
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch customer' });
+  }
+});
+
+// 13a. Manage Customer Action: Update Customer Profile & EMI
+router.put('/customers/:id', async (req, res) => {
+  try {
+    const custId = Number(req.params.id);
+    const {
+      name,
+      business,
+      email,
+      contact,
+      state,
+      city,
+      total_amount,
+      paid_amount,
+      unpaid_amount,
+    } = req.body;
+
+    await prisma.customers.update({
+      where: { id: custId },
+      data: {
+        ...(name ? { name } : {}),
+        ...(business !== undefined ? { business } : {}),
+        ...(email ? { email } : {}),
+        ...(contact ? { contact } : {}),
+        ...(state ? { state } : {}),
+        ...(city ? { city } : {}),
+        ...(total_amount !== undefined ? { service_price: Number(total_amount) } : {}),
+      },
+    });
+
+    if (total_amount !== undefined || paid_amount !== undefined || unpaid_amount !== undefined) {
+      const existingEmi = await prisma.customer_emi.findFirst({
+        where: { customer_id: custId },
+        orderBy: { emi_id: 'desc' },
+      });
+
+      if (existingEmi) {
+        await prisma.customer_emi.update({
+          where: { emi_id: existingEmi.emi_id },
+          data: {
+            ...(total_amount !== undefined ? { emi_total_amount: Number(total_amount) } : {}),
+            ...(paid_amount !== undefined ? { emi_paid_amount: Number(paid_amount) } : {}),
+            ...(unpaid_amount !== undefined ? { emi_unpaid_amount: Number(unpaid_amount) } : {}),
+          },
+        });
+      } else {
+        const maxEmi = await prisma.customer_emi.findFirst({
+          orderBy: { emi_id: 'desc' },
+          select: { emi_id: true },
+        });
+        const latestOrder = await prisma.orders.findFirst({
+          where: { customer_id: String(custId) },
+          orderBy: { id: 'desc' },
+        });
+        await prisma.customer_emi.create({
+          data: {
+            emi_id: (maxEmi?.emi_id || 0) + 1,
+            customer_id: custId,
+            order_id: latestOrder?.id || 0,
+            emi_total_amount: Number(total_amount || 0),
+            emi_paid_amount: Number(paid_amount || 0),
+            emi_unpaid_amount: Number(unpaid_amount || 0),
+            emi_type: 1,
+            emi_comment: '',
+            date: new Date(),
+          },
+        });
+      }
+    }
+
+    res.json({ success: true, message: 'Customer updated successfully' });
+  } catch (error: any) {
+    console.error('Error updating customer:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to update customer' });
+  }
+});
+
+// 13b. Manage Customer Action: Get Customer Tasks (AddWorkEffort)
+router.get('/customers/:id/tasks', async (req, res) => {
+  try {
+    const custId = Number(req.params.id);
+    const tasks: any[] = await prisma.$queryRawUnsafe(
+      `SELECT ot.*, ta.assign_to, ta.due_date, ta.task_status, u.username as assigned_user_name, u.name as employee_name
+       FROM operation_tasks ot
+       LEFT JOIN task_assign ta ON ta.task_id = ot.task_id
+       LEFT JOIN users u ON u.id = ta.assign_to
+       WHERE ot.cust_id = ?
+       ORDER BY ot.task_id DESC`,
+      custId
+    );
+    res.json({ success: true, data: serializeBigInt(tasks) });
+  } catch (error: any) {
+    console.error('Error fetching customer tasks:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch customer tasks' });
+  }
+});
+
+// 13c. Manage Customer Action: Add New Task for Customer
+router.post('/customers/:id/tasks', async (req, res) => {
+  try {
+    const custId = Number(req.params.id);
+    const { task_name, service_id = 1, order_id } = req.body;
+    if (!task_name) {
+      return res.status(400).json({ success: false, message: 'Task name is required' });
+    }
+
+    const maxTask = await prisma.operation_tasks.findFirst({
+      orderBy: { task_id: 'desc' },
+      select: { task_id: true },
+    });
+    const newTaskId = (maxTask?.task_id || 4911) + 1;
+
+    const newTask = await prisma.operation_tasks.create({
+      data: {
+        task_id: newTaskId,
+        cust_id: custId,
+        service_id: Number(service_id) || 1,
+        order_id: order_id ? Number(order_id) : null,
+        task_name: String(task_name).trim(),
+        added_by: 1,
+        is_assign: 0,
+        is_return: 0,
+        original_task_status: 1,
+        assign_date: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Task created successfully',
+      data: serializeBigInt(newTask),
+    });
+  } catch (error: any) {
+    console.error('Error adding customer task:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to add task' });
+  }
+});
+
+// 13d. Manage Customer Action: Delete Task
+router.delete('/tasks/:id', async (req, res) => {
+  try {
+    const taskId = Number(req.params.id);
+    await prisma.$executeRawUnsafe(`DELETE FROM task_assign WHERE task_id = ?`, taskId);
+    await prisma.operation_tasks.deleteMany({ where: { task_id: taskId } });
+    res.json({ success: true, message: 'Task deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting task:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to delete task' });
+  }
+});
+
+// 13e. Manage Customer Action: Add New Order (addNewOrder)
+router.post('/customers/:id/orders', async (req, res) => {
+  try {
+    const custId = Number(req.params.id);
+    const {
+      sub_customer_name,
+      customer_service,
+      customer_service_id,
+      customer_category_id,
+      customer_total_service_price,
+      customer_paid_amount,
+      customer_unpaid_amount,
+      customer_due_date,
+      customer_payment_mode = 1,
+      customer_unpaid_amount2,
+      customer_due_date2,
+      customer_comment,
+      coupon_code,
+      discount_amount,
+      is_custom,
+      custom_package_services,
+    } = req.body;
+
+    const customer = await prisma.customers.findFirst({ where: { id: custId } });
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const totalAmt = Number(customer_total_service_price) || 0;
+    const paidAmt = Number(customer_paid_amount) || 0;
+    const newOrder = await prisma.orders.create({
+      data: {
+        customer_id: String(custId),
+        package_id: String(customer_service_id || '1'),
+        company_name: customer.business || customer.name || 'NA',
+        total_amount: totalAmt,
+        payment_status: 1,
+        order_date: new Date(),
+        sub_customer_name: sub_customer_name || null,
+      },
+    });
+
+    const maxEmi = await prisma.customer_emi.findFirst({
+      orderBy: { emi_id: 'desc' },
+      select: { emi_id: true },
+    });
+    const emiId = (maxEmi?.emi_id || 0) + 1;
+    await prisma.customer_emi.create({
+      data: {
+        emi_id: emiId,
+        customer_id: custId,
+        order_id: newOrder.id,
+        emi_type: Number(customer_payment_mode) || 1,
+        emi_total_amount: totalAmt,
+        emi_paid_amount: paidAmt,
+        emi_unpaid_amount: Number(customer_unpaid_amount) || Math.max(totalAmt - paidAmt, 0),
+        emi_due_date: customer_due_date ? new Date(customer_due_date) : null,
+        second_emi: customer_unpaid_amount2 ? Number(customer_unpaid_amount2) : null,
+        second_emi_due_date: customer_due_date2 ? new Date(customer_due_date2) : null,
+        emi_comment: customer_comment || '',
+        date: new Date(),
+      },
+    });
+
+    if (coupon_code) {
+      const couponRecord = await prisma.coupons.findFirst({
+        where: { coupon_name: coupon_code },
+      });
+      if (couponRecord) {
+        const remaining = Math.max(couponRecord.coupon_remaining - 1, 0);
+        await prisma.coupons.update({
+          where: { coupon_id: couponRecord.coupon_id },
+          data: {
+            coupon_remaining: remaining,
+            is_active: remaining === 0 ? 1 : couponRecord.is_active,
+          },
+        });
+      }
+    }
+
+    const maxTask = await prisma.operation_tasks.findFirst({
+      orderBy: { task_id: 'desc' },
+      select: { task_id: true },
+    });
+    let currentTaskId = (maxTask?.task_id || 4911) + 1;
+
+    let targetServices: { service_id: number; service_name: string; category_id: number }[] = [];
+    if (
+      is_custom === '1' &&
+      Array.isArray(custom_package_services) &&
+      custom_package_services.length > 0
+    ) {
+      const sIds = custom_package_services
+        .map((id: any) => Number(id))
+        .filter((n: number) => !isNaN(n) && n > 0);
+      if (sIds.length > 0) {
+        targetServices = await prisma.services.findMany({
+          where: { service_id: { in: sIds } },
+          select: { service_id: true, service_name: true, category_id: true },
+        });
+      }
+    } else {
+      const sId = Number(customer_service_id);
+      if (!isNaN(sId) && sId > 0) {
+        const s = await prisma.services.findFirst({
+          where: { service_id: sId },
+          select: { service_id: true, service_name: true, category_id: true },
+        });
+        if (s) targetServices = [s];
+      }
+    }
+
+    if (targetServices.length === 0) {
+      targetServices = [
+        {
+          service_id: Number(customer_service_id) || 1,
+          service_name: String(customer_service || 'Business Service'),
+          category_id: Number(customer_category_id) || 1,
+        },
+      ];
+    }
+
+    const no_customer_support_task_service_ids = [
+      22, 23, 33, 61, 62, 64, 65, 66, 67, 68, 69, 70, 72,
+    ];
+    for (const serv of targetServices) {
+      await prisma.operation_tasks.create({
+        data: {
+          task_id: currentTaskId++,
+          cust_id: custId,
+          service_id: serv.service_id,
+          order_id: newOrder.id,
+          sub_customer_name: sub_customer_name || null,
+          task_name: serv.service_name,
+          added_by: 1,
+          is_assign: 0,
+          is_return: 0,
+          original_task_status: 1,
+          assign_date: new Date(),
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+
+      if (!no_customer_support_task_service_ids.includes(serv.service_id)) {
+        await prisma.operation_tasks.create({
+          data: {
+            task_id: currentTaskId++,
+            cust_id: custId,
+            service_id: serv.service_id,
+            order_id: newOrder.id,
+            sub_customer_name: sub_customer_name || null,
+            task_name: 'Customer Support',
+            added_by: 1,
+            is_assign: 0,
+            is_return: 0,
+            original_task_status: 1,
+            assign_date: new Date(),
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'New order added successfully',
+      data: { orderId: newOrder.id },
+    });
+  } catch (error: any) {
+    console.error('Error adding new order:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to add order' });
+  }
+});
+
+// 13f. Manage Customer Action: Create Customer from Existing Order (createCustomer)
+// Creates a new Customer account and transfers the existing order & its operation tasks
+router.post('/customers/create-from-order', async (req, res) => {
+  try {
+    const {
+      old_customer_id,
+      order_id,
+      customer_name,
+      customer_businessName,
+      sub_customer_name,
+      customer_email,
+      customer_mobile,
+      customer_state,
+      customer_city,
+      customer_service,
+      customer_total_service_price,
+      apply_coupon,
+    } = req.body;
+
+    if (!customer_name || !customer_email || !customer_mobile) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Customer name, email, and mobile are required' });
+    }
+
+    const oldCustId = Number(old_customer_id);
+    const orderIdNum = Number(order_id);
+
+    // 1. Create Lead in leads table
+    const lead = await prisma.leads.create({
+      data: {
+        name: customer_name,
+        email: customer_email,
+        contact: customer_mobile,
+        service: customer_service || '1',
+        state: customer_state || '',
+        city: customer_city || '',
+        added_by: 1,
+        lead_type: 1,
+        is_customer: 1,
+        company_id: 'ETax1',
+      },
+    });
+
+    // 2. Create New Customer
+    const newCustomer = await prisma.customers.create({
+      data: {
+        lead_id: lead.id,
+        name: customer_name,
+        business: customer_businessName || '',
+        email: customer_email,
+        contact: customer_mobile,
+        service: customer_service || '1',
+        service_price: Number(customer_total_service_price) || 0,
+        state: customer_state || '',
+        city: customer_city || '',
+        password: '123456',
+        company_id: 'ETax1',
+        customer_token: 'cust_' + Date.now(),
+        added_by: 1,
+        is_approve: 1,
+        date: new Date(),
+      },
+    });
+
+    const newCustId = newCustomer.id;
+
+    // 3. TRANSFER EXISTING ORDER: update orders set customer_id = newCustId
+    if (orderIdNum) {
+      await prisma.orders.updateMany({
+        where: { id: orderIdNum },
+        data: {
+          customer_id: String(newCustId),
+          company_name: customer_businessName || customer_name,
+          ...(sub_customer_name ? { sub_customer_name } : {}),
+        },
+      });
+
+      // 4. TRANSFER OPERATION TASKS for this order
+      await prisma.operation_tasks.updateMany({
+        where: { order_id: orderIdNum },
+        data: {
+          cust_id: newCustId,
+          ...(sub_customer_name ? { sub_customer_name } : {}),
+        },
+      });
+
+      // 5. TRANSFER EMI for this order
+      await prisma.customer_emi.updateMany({
+        where: { order_id: orderIdNum },
+        data: {
+          customer_id: newCustId,
+        },
+      });
+    }
+
+    // 6. Handle Coupon if applied
+    if (apply_coupon) {
+      const couponRecord = await prisma.coupons.findFirst({
+        where: { coupon_name: apply_coupon },
+      });
+      if (couponRecord) {
+        const remaining = Math.max(couponRecord.coupon_remaining - 1, 0);
+        await prisma.coupons.update({
+          where: { coupon_id: couponRecord.coupon_id },
+          data: {
+            coupon_remaining: remaining,
+            is_active: remaining === 0 ? 1 : couponRecord.is_active,
+          },
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'New Customer account created and order transferred successfully!',
+      data: {
+        new_customer_id: newCustId,
+        lead_id: lead.id,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error creating customer from order:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to create customer' });
+  }
+});
+
+// 13g. Manage Customer Action: Edit Sub Customer (EditSubCustomer)
+router.patch('/customers/:id/sub-customer', async (req, res) => {
+  try {
+    const custId = Number(req.params.id);
+    const { order_id, sub_customer_name } = req.body;
+
+    if (order_id) {
+      await prisma.orders.updateMany({
+        where: { id: Number(order_id) },
+        data: { sub_customer_name: sub_customer_name || null },
+      });
+
+      await prisma.operation_tasks.updateMany({
+        where: { order_id: Number(order_id) },
+        data: { sub_customer_name: sub_customer_name || null },
+      });
+    } else {
+      await prisma.orders.updateMany({
+        where: { customer_id: String(custId) },
+        data: { sub_customer_name: sub_customer_name || null },
+      });
+      await prisma.operation_tasks.updateMany({
+        where: { cust_id: custId },
+        data: { sub_customer_name: sub_customer_name || null },
+      });
+    }
+
+    res.json({ success: true, message: 'Sub customer updated successfully' });
+  } catch (error: any) {
+    console.error('Error updating sub customer:', error);
+    res
+      .status(500)
+      .json({ success: false, message: error.message || 'Failed to update sub customer' });
+  }
+});
+
+// 13h. Manage Customer Action: Delete Order / Customer (DeleteCustomer)
+router.delete('/customers/:id', async (req, res) => {
+  try {
+    const custId = Number(req.params.id);
+    const { order_id, package_id } = req.query;
+
+    const orderIdNum = order_id ? Number(order_id) : undefined;
+    const pkgIdStr = package_id ? String(package_id) : undefined;
+
+    let ordersToDelete: any[] = [];
+    if (orderIdNum) {
+      ordersToDelete = await prisma.orders.findMany({ where: { id: orderIdNum } });
+    } else if (pkgIdStr) {
+      ordersToDelete = await prisma.orders.findMany({
+        where: { customer_id: String(custId), package_id: pkgIdStr },
+      });
+    } else {
+      ordersToDelete = await prisma.orders.findMany({
+        where: { customer_id: String(custId) },
+      });
+    }
+
+    if (ordersToDelete.length > 0) {
+      const orderIds = ordersToDelete.map((o) => o.id);
+      await prisma.customer_emi.deleteMany({
+        where: { order_id: { in: orderIds } },
+      });
+      await prisma.operation_tasks.deleteMany({
+        where: { order_id: { in: orderIds } },
+      });
+      await prisma.orders.deleteMany({
+        where: { id: { in: orderIds } },
+      });
+    } else {
+      await prisma.operation_tasks.deleteMany({ where: { cust_id: custId } });
+      await prisma.customer_emi.deleteMany({ where: { customer_id: custId } });
+      await prisma.customers.deleteMany({ where: { id: custId } });
+    }
+
+    res.json({ success: true, message: 'Order / Customer deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting customer/order:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to delete customer' });
+  }
+});
+
+// 13i. Manage Customer Action: Add Appointment (AddAppointment)
+router.post('/appointments', async (req, res) => {
+  try {
+    const { name, email, mobile, city, date, time, conduct_by, message, order_id } = req.body;
+    if (!name || !email || !mobile) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Name, email, and mobile are required' });
+    }
+
+    const appt = await prisma.appointments.create({
+      data: {
+        name,
+        email,
+        mobile,
+        city: city || '',
+        message: message || '',
+        ap_date: date ? String(date) : '',
+        ap_time: time ? String(time) : '',
+        conduct_by: conduct_by || 'Mr. Vaijnath Sir',
+        order_id: order_id ? String(order_id) : null,
+        added_by: 'Operation Manager',
+        is_complete: 0,
+        payment_status: 0,
+        date: new Date(),
+      },
+    });
+
+    res.json({ success: true, message: 'Appointment booked successfully', data: appt });
+  } catch (error: any) {
+    console.error('Error booking appointment:', error);
+    res
+      .status(500)
+      .json({ success: false, message: error.message || 'Failed to book appointment' });
   }
 });
 
