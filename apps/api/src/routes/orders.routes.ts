@@ -314,7 +314,7 @@ router.patch(
 );
 
 // ─── GET /v1/crm/categories ──────────────────────────────────────────────────
-router.get('/categories', verifyJWT, async (_req: Request, res: Response) => {
+router.get('/categories', async (_req: Request, res: Response) => {
   try {
     const cats = await prisma.categories.findMany({ orderBy: { category_id: 'asc' } });
     res.json({ success: true, data: cats });
@@ -324,19 +324,13 @@ router.get('/categories', verifyJWT, async (_req: Request, res: Response) => {
 });
 
 // ─── GET /v1/crm/categories/:id/services ────────────────────────────────────
-router.get('/categories/:id/services', verifyJWT, async (req: Request, res: Response) => {
+router.get('/categories/:id/services', async (req: Request, res: Response) => {
   try {
     const category_id = Number(req.params.id);
-    const services = await (prisma as any).services
-      .findMany({
-        where: { cat_id: category_id },
-        select: { service_id: true, service_name: true, price: true },
-        orderBy: { service_name: 'asc' },
-      })
-      .catch(() =>
-        // Fallback: services table uses different column name
-        prisma.services.findMany({ take: 50 })
-      );
+    const services = await prisma.services.findMany({
+      where: { category_id },
+      orderBy: { service_id: 'asc' },
+    });
     res.json({ success: true, data: services });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to fetch services.' });
@@ -344,53 +338,54 @@ router.get('/categories/:id/services', verifyJWT, async (req: Request, res: Resp
 });
 
 // ─── POST /v1/crm/coupons/validate ──────────────────────────────────────────
-router.post('/coupons/validate', verifyJWT, async (req: Request, res: Response) => {
+router.post('/coupons/validate', async (req: Request, res: Response) => {
   try {
     const { code, total_amount } = req.body;
     if (!code) return res.status(400).json({ success: false, error: 'Coupon code required.' });
 
-    const coupon = await prisma.coupons.findFirst({
-      where: { coupon_name: code.trim().toUpperCase(), is_active: 1 },
-    });
+    const cleanCode = String(code).trim().replace(/'/g, "''").toUpperCase();
+    const coupons: any[] = (await prisma
+      .$queryRawUnsafe(
+        `SELECT coupon_id, coupon_type, coupon_name, coupon_discount, coupon_validity, coupon_uses, coupon_remaining, is_active 
+       FROM coupons WHERE UPPER(coupon_name) = '${cleanCode}' LIMIT 1`
+      )
+      .catch(() => [])) as any[];
 
+    const coupon = coupons[0];
     if (!coupon) {
-      return res.status(404).json({ success: false, error: 'Invalid or expired coupon code.' });
+      return res.status(404).json({ success: false, error: 'Invalid coupon code.' });
     }
 
-    // Check validity date
-    const now = new Date();
-    const validUntil = new Date(coupon.coupon_validity);
-    if (validUntil < now) {
-      return res.status(400).json({ success: false, error: 'This coupon has expired.' });
-    }
-
-    // Check remaining uses
-    if (coupon.coupon_remaining <= 0) {
+    if (Number(coupon.coupon_remaining) <= 0) {
       return res.status(400).json({ success: false, error: 'This coupon has been fully used.' });
     }
 
     // Calculate discount
     let discount = 0;
     const amt = Number(total_amount) || 0;
-    if (coupon.coupon_type === 1) {
+    const couponType = Number(coupon.coupon_type);
+    const couponDiscount = Number(coupon.coupon_discount) || 0;
+
+    if (couponType === 1) {
       // Flat discount
-      discount = coupon.coupon_discount;
+      discount = couponDiscount;
     } else {
       // Percentage discount
-      discount = Math.round((amt * coupon.coupon_discount) / 100);
+      discount = Math.round((amt * couponDiscount) / 100);
     }
 
     res.json({
       success: true,
       data: {
-        coupon_id: coupon.coupon_id,
-        discount_type: coupon.coupon_type === 1 ? 'flat' : 'percentage',
-        discount_value: coupon.coupon_discount,
+        coupon_id: Number(coupon.coupon_id),
+        discount_type: couponType === 1 ? 'flat' : 'percentage',
+        discount_value: couponDiscount,
         discount_amount: discount,
-        message: `Coupon applied! You save ₹${discount.toLocaleString('en-IN')}.`,
+        message: `Coupon "${coupon.coupon_name}" applied! Saved ₹${discount.toLocaleString('en-IN')}.`,
       },
     });
   } catch (err) {
+    console.error('Coupon validation error:', err);
     res.status(500).json({ success: false, error: 'Coupon validation failed.' });
   }
 });

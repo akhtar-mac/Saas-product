@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Search,
@@ -38,6 +38,20 @@ interface CustomerItem {
   dueDate: string;
 }
 
+// DB category type
+interface CategoryItem {
+  category_id: number;
+  category_name: string;
+}
+// DB service type
+interface ServiceItem {
+  service_id: number;
+  service_name: string;
+  service_price: number;
+  category_id?: number;
+  category_name?: string;
+}
+
 export default function CrmAccountsPage() {
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,39 +59,94 @@ export default function CrmAccountsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
 
+  // Dynamic categories & services from DB
+  const [dbCategories, setDbCategories] = useState<CategoryItem[]>([]);
+  const [dbServicesByCategory, setDbServicesByCategory] = useState<ServiceItem[]>([]);
+  const [allDbServices, setAllDbServices] = useState<ServiceItem[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [loadingServices, setLoadingServices] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const customDropdownRef = React.useRef<HTMLDivElement>(null);
+
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
   // Fetch real customers from database
-  React.useEffect(() => {
+  const fetchCustomers = useCallback(() => {
     setLoading(true);
-    fetch(`${API_BASE}/v1/crm/customers`)
+    const limitParam = pageSize === -1 ? 'all' : pageSize;
+    fetch(`${API_BASE}/v1/crm/customers?limit=${limitParam}`)
       .then((res) => res.json())
       .then((data) => {
         if (data?.success && Array.isArray(data?.data)) {
           const mapped: CustomerItem[] = data.data.map((c: any, i: number) => ({
             id: c.id || i + 1,
             name: c.name || 'Client',
-            company: c.business || 'Company',
-            subCustomer: '',
-            mobile: c.contact || '9876543210',
+            company: c.business || c.company || 'Company',
+            subCustomer: c.subCustomer || '',
+            mobile: c.mobile || c.contact || '9876543210',
             email: c.email || 'client@etaxwala.in',
             state: c.state || 'Maharashtra',
             city: c.city || 'Pune',
-            category: 'Taxation & Filing',
+            category: c.category || 'Taxation & Return Filing',
             service: c.service || 'Advisory',
-            type: 'Basic',
-            addedBy: `Staff #${c.added_by || 1}`,
-            total: c.service_price || 1499,
-            paid: c.is_payment ? c.service_price || 1499 : 0,
-            unpaid: c.is_payment ? 0 : c.service_price || 1499,
-            dueDate: '—',
+            type: c.type || 'Basic',
+            addedBy: c.addedBy || `Staff #${c.added_by || 1}`,
+            total: c.total !== undefined ? c.total : 1499,
+            paid: c.paid !== undefined ? c.paid : 0,
+            unpaid: c.unpaid !== undefined ? c.unpaid : 1499,
+            dueDate: c.dueDate || '—',
           }));
           setCustomers(mapped);
+          if (data.total) setTotalCount(data.total);
         }
       })
       .catch((err) => console.error('Failed to fetch customers', err))
       .finally(() => setLoading(false));
+  }, [API_BASE, pageSize]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
+
+  // Click outside to close custom package dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (customDropdownRef.current && !customDropdownRef.current.contains(event.target as Node)) {
+        setIsCustomDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
+
+  // Fetch categories from DB on mount
+  useEffect(() => {
+    setLoadingCategories(true);
+    fetch(`${API_BASE}/v1/crm/categories`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+          setDbCategories(data.data);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingCategories(false));
+  }, [API_BASE]);
+
+  // Fetch all services for custom package multi-select
+  useEffect(() => {
+    fetch(`${API_BASE}/v1/crm/all-services`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+          setAllDbServices(data.data);
+        }
+      })
+      .catch(() => {});
+  }, [API_BASE]);
 
   const location = useLocation();
 
@@ -104,6 +173,223 @@ export default function CrmAccountsPage() {
   const [appointmentDate, setAppointmentDate] = useState('2026-09-06');
   const [appointmentTime, setAppointmentTime] = useState('14:30');
   const [appointmentDesc, setAppointmentDesc] = useState('');
+
+  // Add Customer Form State (Old CRM Wizard Replica)
+  const [addCustomerName, setAddCustomerName] = useState('');
+  const [addBusinessName, setAddBusinessName] = useState('');
+  const [addEmail, setAddEmail] = useState('');
+  const [addMobile, setAddMobile] = useState('');
+  const [addState, setAddState] = useState('Maharashtra');
+  const [addCity, setAddCity] = useState('Chhatrapati Sambhajinagar');
+  const [isCustomPkg, setIsCustomPkg] = useState('0'); // '0' = No, '1' = Yes
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0);
+  const [selectedCategoryName, setSelectedCategoryName] = useState('');
+  const [selectedServiceId, setSelectedServiceId] = useState<number>(0);
+  const [selectedServiceName, setSelectedServiceName] = useState('');
+  const [customPkgName, setCustomPkgName] = useState('');
+  const [selectedCustomServiceIds, setSelectedCustomServiceIds] = useState<number[]>([]);
+  const [isCustomDropdownOpen, setIsCustomDropdownOpen] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [actualPrice, setActualPrice] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [paymentMode, setPaymentMode] = useState('1'); // 1: No EMI, 2: 2 EMI, 3: 3 EMI
+  const [paidAmount, setPaidAmount] = useState(0);
+  const [dueDate1, setDueDate1] = useState(
+    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+  const [dueDate2, setDueDate2] = useState(
+    new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+  const [comment, setComment] = useState('');
+
+  // Fetch services when category changes
+  const fetchServicesForCategory = useCallback(
+    (catId: number) => {
+      if (!catId) return;
+      setLoadingServices(true);
+      fetch(`${API_BASE}/v1/crm/services-by-category/${catId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+            setDbServicesByCategory(data.data);
+            // Auto-select first service
+            const first = data.data[0] as ServiceItem;
+            setSelectedServiceId(first.service_id);
+            setSelectedServiceName(first.service_name);
+            setActualPrice(first.service_price);
+            setPaidAmount(first.service_price);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingServices(false));
+    },
+    [API_BASE]
+  );
+
+  // When categories load, auto-select first category and fetch its services
+  useEffect(() => {
+    if (dbCategories.length > 0 && selectedCategoryId === 0) {
+      const firstCat = dbCategories[0];
+      setSelectedCategoryId(firstCat.category_id);
+      setSelectedCategoryName(firstCat.category_name);
+      fetchServicesForCategory(firstCat.category_id);
+    }
+  }, [dbCategories, selectedCategoryId, fetchServicesForCategory]);
+
+  const handleCategoryChange = (catIdStr: string) => {
+    const catId = Number(catIdStr);
+    const cat = dbCategories.find((c) => c.category_id === catId);
+    setSelectedCategoryId(catId);
+    setSelectedCategoryName(cat?.category_name || '');
+    setDbServicesByCategory([]);
+    setSelectedServiceId(0);
+    setSelectedServiceName('');
+    setActualPrice(0);
+    setPaidAmount(0);
+    fetchServicesForCategory(catId);
+  };
+
+  const handleServiceChange = (servIdStr: string) => {
+    const servId = Number(servIdStr);
+    const serv = dbServicesByCategory.find((s) => s.service_id === servId);
+    if (serv) {
+      setSelectedServiceId(serv.service_id);
+      setSelectedServiceName(serv.service_name);
+      setActualPrice(serv.service_price);
+      setPaidAmount(serv.service_price);
+    }
+  };
+
+  const toggleCustomService = (servId: number) => {
+    if (selectedCustomServiceIds.includes(servId)) {
+      setSelectedCustomServiceIds(selectedCustomServiceIds.filter((id) => id !== servId));
+    } else {
+      setSelectedCustomServiceIds([...selectedCustomServiceIds, servId]);
+    }
+  };
+
+  // Calculation logic matching old CRM
+  const basePriceTotal =
+    isCustomPkg === '1'
+      ? selectedCustomServiceIds.reduce(
+          (acc, id) => acc + (allDbServices.find((s) => s.service_id === id)?.service_price || 0),
+          0
+        )
+      : actualPrice;
+
+  const finalTotalAmount = Math.max(basePriceTotal - discountAmount, 0);
+
+  // When Payment Mode is No EMI ('1'), paidAmount defaults automatically to finalTotalAmount
+  useEffect(() => {
+    if (paymentMode === '1') {
+      setPaidAmount(finalTotalAmount);
+    }
+  }, [paymentMode, finalTotalAmount]);
+
+  const remainingUnpaid = Math.max(finalTotalAmount - paidAmount, 0);
+
+  const emi1Amount =
+    paymentMode === '1'
+      ? 0
+      : paymentMode === '3'
+        ? Math.round(remainingUnpaid / 2)
+        : remainingUnpaid;
+
+  const emi2Amount = paymentMode === '3' ? remainingUnpaid - emi1Amount : 0;
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode, total_amount: basePriceTotal }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.discount_amount !== undefined) {
+        setDiscountAmount(data.data.discount_amount);
+        alert(data.data.message || `Coupon Applied! Saved ₹${data.data.discount_amount}`);
+      } else {
+        alert(data.error || 'Invalid or expired coupon code');
+      }
+    } catch (err) {
+      alert('Failed to validate coupon code');
+    }
+  };
+
+  const handleAddOfflineCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addCustomerName.trim()) {
+      alert('Please enter customer name');
+      return;
+    }
+    if (!addMobile.trim()) {
+      alert('Please enter customer mobile number');
+      return;
+    }
+
+    const serviceLabel =
+      isCustomPkg === '1' ? customPkgName || 'Custom Package' : selectedServiceName;
+
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/customers/add-offline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_name: addCustomerName,
+          customer_businessName: addBusinessName,
+          customer_email: addEmail,
+          customer_mobile: addMobile,
+          customer_state: addState,
+          customer_city: addCity,
+          customer_category_id: selectedCategoryId,
+          customer_service_id: selectedServiceId,
+          customer_service: serviceLabel,
+          customer_total_service_price: finalTotalAmount,
+          customer_paid_amount: paidAmount,
+          customer_unpaid_amount: remainingUnpaid,
+          customer_due_date: dueDate1,
+          customer_payment_mode: paymentMode,
+          customer_unpaid_amount2: emi2Amount,
+          customer_due_date2: dueDate2,
+          customer_comment: comment,
+          coupon_code: couponCode,
+          discount_amount: discountAmount,
+          is_custom: isCustomPkg,
+          custom_package_name: customPkgName,
+          custom_package_services: selectedCustomServiceIds,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert(
+          `Customer "${addCustomerName}" added successfully to database! ${data.data?.total_tasks_created || 0} operations tasks generated.`
+        );
+        setIsAddCustomerOpen(false);
+
+        // Reload fresh customer list from DB
+        fetchCustomers();
+
+        // Reset form
+        setAddCustomerName('');
+        setAddBusinessName('');
+        setAddEmail('');
+        setAddMobile('');
+        setComment('');
+        setSelectedCustomServiceIds([]);
+        setDiscountAmount(0);
+        setCouponCode('');
+        setIsCustomPkg('0');
+        setPaymentMode('1');
+      } else {
+        alert(data.error || 'Failed to add customer');
+      }
+    } catch (err) {
+      console.error('API Error adding customer:', err);
+      alert('Error connecting to server. Please try again.');
+    }
+  };
 
   // Add tasks drawer state
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -178,6 +464,9 @@ export default function CrmAccountsPage() {
                 <option value={10}>10</option>
                 <option value={25}>25</option>
                 <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={500}>500</option>
+                <option value={-1}>All ({totalCount || 1421})</option>
               </select>
             </div>
 
@@ -353,7 +642,9 @@ export default function CrmAccountsPage() {
 
         {/* Pagination Bar */}
         <div className="p-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Showing 1 to {filtered.length} of 2,069 entries</span>
+          <span>
+            Showing 1 to {filtered.length} of {totalCount || customers.length} entries
+          </span>
           <div className="flex items-center gap-1">
             <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
               Previous
@@ -375,6 +666,465 @@ export default function CrmAccountsPage() {
           </div>
         </div>
       </div>
+
+      {/* ─── ADD NEW CUSTOMER MODAL (Old CRM Replica matching Screenshots 1 & 2) ─── */}
+      {isAddCustomerOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="rounded-2xl border border-slate-200 bg-[#FAF9F5] shadow-2xl overflow-hidden max-w-3xl w-full my-6 animate-scale-in">
+            {/* Red Gradient Banner Header (matching Screenshots) */}
+            <div className="bg-gradient-to-r from-[#E14D43] to-[#DC2626] px-6 py-4 flex items-center justify-between text-white">
+              <h2 className="font-extrabold text-lg tracking-wide text-white">Add New Customer</h2>
+              <button
+                onClick={() => setIsAddCustomerOpen(false)}
+                className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleAddOfflineCustomer}
+              className="p-6 space-y-4 text-xs max-h-[82vh] overflow-y-auto"
+            >
+              {/* Row 1: Name, Company/Shop Name, Email */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Customer Name"
+                    value={addCustomerName}
+                    onChange={(e) => setAddCustomerName(e.target.value)}
+                    className="w-full bg-[#EBF3FF] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Company/Shop Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Company/Shop Name"
+                    value={addBusinessName}
+                    onChange={(e) => setAddBusinessName(e.target.value)}
+                    className="w-full bg-[#EBF3FF] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="madhurchoudhari10@gmail.com"
+                    value={addEmail}
+                    onChange={(e) => setAddEmail(e.target.value)}
+                    className="w-full bg-[#EBF3FF] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                  />
+                  {addEmail && (
+                    <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
+                      true
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Row 2: Mobile No, State, City */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Mobile No
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Mobile No"
+                    value={addMobile}
+                    onChange={(e) => setAddMobile(e.target.value)}
+                    className="w-full bg-[#EBF3FF] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-mono focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                  />
+                  {addMobile && (
+                    <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
+                      true
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="State"
+                    value={addState}
+                    onChange={(e) => setAddState(e.target.value)}
+                    className="w-full bg-[#EBF3FF] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="City"
+                    value={addCity}
+                    onChange={(e) => setAddCity(e.target.value)}
+                    className="w-full bg-[#EBF3FF] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-medium focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Custom Package toggle, Category/Package Name, Service/Multi-select, Total Amount */}
+              {isCustomPkg === '0' ? (
+                /* SINGLE SERVICE FLOW (no custom package) */
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Custom Package
+                    </label>
+                    <select
+                      value={isCustomPkg}
+                      onChange={(e) => setIsCustomPkg(e.target.value)}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                    >
+                      <option value="0">No</option>
+                      <option value="1">Yes</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Category{' '}
+                      {loadingCategories && (
+                        <span className="text-[9px] text-slate-400">(Loading...)</span>
+                      )}
+                    </label>
+                    <select
+                      value={selectedCategoryId}
+                      onChange={(e) => handleCategoryChange(e.target.value)}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                    >
+                      {dbCategories.length === 0 && <option value="">Loading categories...</option>}
+                      {dbCategories.map((cat) => (
+                        <option key={cat.category_id} value={cat.category_id}>
+                          {cat.category_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Service{' '}
+                      {loadingServices && (
+                        <span className="text-[9px] text-slate-400">(Loading...)</span>
+                      )}
+                    </label>
+                    <select
+                      value={selectedServiceId}
+                      onChange={(e) => handleServiceChange(e.target.value)}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                    >
+                      {dbServicesByCategory.length === 0 && (
+                        <option value="">Select category first...</option>
+                      )}
+                      {dbServicesByCategory.map((s) => (
+                        <option key={s.service_id} value={s.service_id}>
+                          {s.service_name} = ₹{s.service_price}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Total Amount
+                    </label>
+                    <input
+                      type="number"
+                      readOnly
+                      value={basePriceTotal}
+                      className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* CUSTOM PACKAGE FLOW */
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Custom Package
+                    </label>
+                    <select
+                      value={isCustomPkg}
+                      onChange={(e) => setIsCustomPkg(e.target.value)}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                    >
+                      <option value="0">No</option>
+                      <option value="1">Yes</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Package Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. pvt ltd"
+                      value={customPkgName}
+                      onChange={(e) => setCustomPkgName(e.target.value)}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none"
+                    />
+                  </div>
+                  <div className="relative" ref={customDropdownRef}>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Select Custom Services
+                    </label>
+                    <div
+                      onClick={() => setIsCustomDropdownOpen(!isCustomDropdownOpen)}
+                      className="w-full min-h-[38px] bg-white border border-[#CBD5E1] rounded-xl px-2 py-1.5 flex flex-wrap gap-1 items-center cursor-pointer"
+                    >
+                      {selectedCustomServiceIds.length === 0 && (
+                        <span className="text-[10px] text-slate-400">
+                          Click to select services...
+                        </span>
+                      )}
+                      {selectedCustomServiceIds.map((id) => {
+                        const serv = allDbServices.find((s) => s.service_id === id);
+                        return serv ? (
+                          <span
+                            key={id}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-slate-300 flex items-center gap-1"
+                          >
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCustomService(id);
+                              }}
+                            >
+                              ×
+                            </span>
+                            {serv.service_name}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+
+                    {isCustomDropdownOpen && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto p-1">
+                        {allDbServices.length === 0 && (
+                          <div className="p-3 text-xs text-slate-400 text-center">
+                            Loading services...
+                          </div>
+                        )}
+                        {allDbServices.map((s) => (
+                          <div
+                            key={s.service_id}
+                            onClick={() => toggleCustomService(s.service_id)}
+                            className={`p-2 rounded-lg text-xs cursor-pointer font-medium flex items-center justify-between ${
+                              selectedCustomServiceIds.includes(s.service_id)
+                                ? 'bg-sky-100 text-sky-900 font-bold'
+                                : 'hover:bg-slate-50 text-slate-700'
+                            }`}
+                          >
+                            <span>{s.service_name}</span>
+                            <span className="text-[10px] text-slate-500">₹{s.service_price}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Total Amount
+                    </label>
+                    <input
+                      type="number"
+                      readOnly
+                      value={basePriceTotal}
+                      className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Row 4: Apply Coupon, Discount Amount, Payment Mode */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Apply Coupon
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="enter coupon code if any"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 uppercase focus:outline-none text-xs font-semibold"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      className="bg-[#003A66] hover:bg-[#002B4D] text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors shrink-0"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Discount Amount
+                  </label>
+                  <input
+                    type="number"
+                    value={discountAmount}
+                    onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
+                    className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Payment Mode
+                  </label>
+                  <select
+                    value={paymentMode}
+                    onChange={(e) => setPaymentMode(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                  >
+                    <option value="1">No EMI</option>
+                    <option value="2">2 EMI</option>
+                    <option value="3">3 EMI</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 5: Paid Amount, 1st EMI, 1st Due Date (and 2nd EMI if 3 EMI) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Paid Amount
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="Paid Amount"
+                    value={paidAmount}
+                    onChange={(e) => setPaidAmount(Number(e.target.value) || 0)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    1st EMI
+                  </label>
+                  <input
+                    type="number"
+                    readOnly
+                    value={emi1Amount}
+                    className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    1st Due Date
+                  </label>
+                  <input
+                    type="date"
+                    value={dueDate1}
+                    onChange={(e) => setDueDate1(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Additional EMI Row if 3 EMI */}
+              {paymentMode === '3' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sky-50/50 p-3 rounded-xl border border-sky-100">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      2nd EMI
+                    </label>
+                    <input
+                      type="number"
+                      readOnly
+                      value={emi2Amount}
+                      className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      2nd Due Date
+                    </label>
+                    <input
+                      type="date"
+                      value={dueDate2}
+                      onChange={(e) => setDueDate2(e.target.value)}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Row 6: Comment Box & Payment Screenshot */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Comment Box
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Comment ..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl p-3 text-slate-900 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Payment Screenshot
+                  </label>
+                  <div className="bg-white border border-[#CBD5E1] rounded-xl p-2 flex items-center gap-2">
+                    <input type="file" className="text-xs text-slate-600 w-full" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Buttons (matching Screenshot 1 & 2 Cyan Add button + Red Reset button) */}
+              <div className="flex items-center gap-4 pt-2">
+                <button
+                  type="submit"
+                  className="bg-[#00A896] hover:bg-[#0084D1] text-white font-bold py-2.5 px-10 rounded-xl shadow-md transition-colors text-xs cursor-pointer"
+                >
+                  Add
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddCustomerName('');
+                    setAddBusinessName('');
+                    setAddEmail('');
+                    setAddMobile('');
+                    setComment('');
+                    setSelectedCustomServiceIds([]);
+                    setDiscountAmount(0);
+                    setCouponCode('');
+                    setIsCustomPkg('0');
+                    setPaymentMode('1');
+                  }}
+                  className="bg-[#DC2626] hover:bg-red-700 text-white font-bold py-2.5 px-8 rounded-xl shadow-md transition-colors text-xs cursor-pointer"
+                >
+                  Reset
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ─── ADD NEW ORDER MODAL (Website Clean UI Style) ─── */}
       {isAddOrderOpen && activeCustomer && (

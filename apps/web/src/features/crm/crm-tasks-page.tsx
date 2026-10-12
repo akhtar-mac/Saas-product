@@ -35,6 +35,8 @@ interface OperationTask {
   companyName: string;
   service: string;
   assignTo: string;
+  assignedToId?: number | null;
+  isAssign: number;
   addedBy: string;
   assignDate: string;
   dueDate: string;
@@ -53,64 +55,11 @@ export default function CrmTasksPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10);
+  const [opsStaff, setOpsStaff] = useState<
+    { id: number; name: string; email: string; role_id: number }[]
+  >([]);
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-
-  // Fetch real tasks from backend DB
-  useEffect(() => {
-    setLoading(true);
-    fetch(`${API_BASE}/v1/crm/tasks?limit=100`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.success && Array.isArray(data?.data)) {
-          const mapped: OperationTask[] = data.data.map((t: any, i: number) => ({
-            id: t.task_id || t.id || i + 1,
-            taskName: t.task_name || `Milestone Task #${t.task_id || i + 1}`,
-            customerName: t.customer_name || t.sub_customer_name || `Customer #${t.cust_id}`,
-            companyName: t.company_name || 'ETaxwala Client Enterprise',
-            service: t.service_name || `Corporate Compliance #${t.service_id}`,
-            assignTo: t.added_by ? `Officer #${t.added_by}` : 'Operations Desk',
-            addedBy: 'Super Admin',
-            assignDate: t.assign_date ? t.assign_date.split('T')[0] : '2026-09-03',
-            dueDate: t.due_date ? t.due_date.split('T')[0] : '2026-09-30',
-            status:
-              t.original_task_status === 10
-                ? 'completed'
-                : t.original_task_status > 1
-                  ? 'wip'
-                  : 'not-started',
-            email:
-              t.customer_email && t.customer_email !== 'N/A'
-                ? t.customer_email
-                : 'client@etaxwala.in',
-            phone:
-              t.customer_contact && t.customer_contact !== 'N/A'
-                ? t.customer_contact
-                : '9876543210',
-            state: 'Maharashtra',
-            city: 'Pune',
-            timeline: [
-              {
-                id: 1,
-                dateTime: t.updated_at
-                  ? new Date(t.updated_at).toLocaleString()
-                  : '2026-09-03 13:50',
-                timeSpent: '00:00:00',
-                staff: `Officer #${t.added_by || 1}`,
-                status: t.original_task_status === 10 ? 'Completed' : 'In Progress',
-                comment: `Current Milestone Stage: ${t.original_task_status || 1}`,
-              },
-            ],
-          }));
-          setTasks(mapped);
-          if (mapped.length > 0) {
-            setExpandedId(mapped[0].id);
-          }
-        }
-      })
-      .catch((err) => console.error('Failed to fetch tasks', err))
-      .finally(() => setLoading(false));
-  }, []);
 
   // Filters
   const [taskFilter, setTaskFilter] = useState('Tasks');
@@ -127,8 +76,8 @@ export default function CrmTasksPage() {
     new URLSearchParams(location.search).get('assign') === '1'
   );
   const [assignTargetTask, setAssignTargetTask] = useState<OperationTask | null>(null);
-  const [assignUser, setAssignUser] = useState('Avinash Mate');
-  const [assignDueDate, setAssignDueDate] = useState('2026-09-06');
+  const [assignUser, setAssignUser] = useState('');
+  const [assignDueDate, setAssignDueDate] = useState('');
 
   // Effort Modal Timer state
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -195,38 +144,145 @@ export default function CrmTasksPage() {
     setSearchTerm('');
   };
 
-  const handleAssignSave = () => {
-    if (assignTargetTask) {
-      setTasks((prev) =>
-        prev.map((t) =>
-          t.id === assignTargetTask.id
-            ? {
-                ...t,
-                assignTo: assignUser,
-                dueDate: assignDueDate,
-                assignDate: new Date().toLocaleDateString(),
-              }
-            : t
-        )
-      );
-    } else if (selectedIds.size > 0) {
-      setTasks((prev) =>
-        prev.map((t) =>
-          selectedIds.has(t.id)
-            ? {
-                ...t,
-                assignTo: assignUser,
-                dueDate: assignDueDate,
-                assignDate: new Date().toLocaleDateString(),
-              }
-            : t
-        )
-      );
-      setSelectedIds(new Set());
+  // Fetch real tasks from backend DB
+  const loadTasksFromApi = () => {
+    setLoading(true);
+    let url = `${API_BASE}/v1/crm/tasks?limit=100`;
+    if (taskFilter && taskFilter !== 'Tasks') {
+      url += `&status=${encodeURIComponent(taskFilter)}`;
     }
-    setAssignModalOpen(false);
-    setAssignTargetTask(null);
-    alert('Task assigned successfully!');
+    if (staffFilter && staffFilter !== 'Staff') {
+      const selectedStaff = opsStaff.find((s) => s.name === staffFilter);
+      if (selectedStaff) {
+        url += `&employee_id=${selectedStaff.id}`;
+      }
+    }
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data)) {
+          const mapped: OperationTask[] = data.data.map((t: any, i: number) => ({
+            id: t.task_id || t.id || i + 1,
+            taskName: t.task_name || `Milestone Task #${t.task_id || i + 1}`,
+            customerName: t.customer_name || t.sub_customer_name || `Customer #${t.cust_id}`,
+            companyName: t.company_name || 'ETaxwala Client Enterprise',
+            service: t.service_name || `Corporate Compliance #${t.service_id}`,
+            assignTo: t.assigned_to_name || (t.is_assign === 1 ? 'Assigned' : 'Un-Assign'),
+            assignedToId: t.assign_to || null,
+            isAssign: t.is_assign ?? (t.assign_to ? 1 : 0),
+            addedBy: t.added_by_name || 'Super Admin',
+            assignDate: t.assign_date ? t.assign_date.split('T')[0] : 'N/A',
+            dueDate: t.due_date ? t.due_date.split('T')[0] : 'N/A',
+            status:
+              t.actual_task_status === 5 || t.original_task_status === 5
+                ? 'completed'
+                : t.actual_task_status === 2 || t.original_task_status === 2
+                  ? 'wip'
+                  : 'not-started',
+            email:
+              t.customer_email && t.customer_email !== 'N/A'
+                ? t.customer_email
+                : 'client@etaxwala.in',
+            phone:
+              t.customer_contact && t.customer_contact !== 'N/A'
+                ? t.customer_contact
+                : '9876543210',
+            state: 'Maharashtra',
+            city: 'Pune',
+            timeline: [
+              {
+                id: 1,
+                dateTime: t.updated_at
+                  ? new Date(t.updated_at).toLocaleString()
+                  : '2026-09-03 13:50',
+                timeSpent: '00:00:00',
+                staff: t.assigned_to_name || `Officer #${t.added_by || 1}`,
+                status: t.actual_task_status === 5 ? 'Completed' : 'In Progress',
+                comment: `Current Milestone Stage: ${t.actual_task_status || t.original_task_status || 1}`,
+              },
+            ],
+          }));
+          setTasks(mapped);
+          if (mapped.length > 0 && !expandedId) {
+            setExpandedId(mapped[0].id);
+          }
+        }
+      })
+      .catch((err) => console.error('Failed to fetch tasks', err))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadTasksFromApi();
+  }, [API_BASE, taskFilter, staffFilter]);
+
+  // Fetch Operations Staff (Managers, Employees, Assistants) from DB
+  useEffect(() => {
+    fetch(`${API_BASE}/v1/crm/operation-staff`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data)) {
+          setOpsStaff(data.data);
+          if (data.data.length > 0) {
+            setAssignUser(data.data[0].name);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [API_BASE]);
+
+  const handleAssignSave = async () => {
+    const selectedStaff = opsStaff.find((s) => s.name === assignUser) || opsStaff[0];
+    if (!selectedStaff) {
+      alert('Please select an employee');
+      return;
+    }
+
+    try {
+      if (assignTargetTask) {
+        const res = await fetch(`${API_BASE}/v1/crm/tasks/assign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            task_id: assignTargetTask.id,
+            employee_id: selectedStaff.id,
+            due_date: assignDueDate || null,
+          }),
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert('Task assigned successfully!');
+          loadTasksFromApi();
+        } else {
+          alert(result.message || 'Failed to assign task');
+        }
+      } else if (selectedIds.size > 0) {
+        const res = await fetch(`${API_BASE}/v1/crm/tasks/bulk-assign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            task_ids: Array.from(selectedIds),
+            employee_id: selectedStaff.id,
+            due_date: assignDueDate || null,
+          }),
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert(`Successfully assigned ${selectedIds.size} tasks to ${selectedStaff.name}!`);
+          setSelectedIds(new Set());
+          loadTasksFromApi();
+        } else {
+          alert(result.message || 'Failed to bulk assign tasks');
+        }
+      }
+    } catch (err) {
+      console.error('Task assignment failed', err);
+      alert('Network error while assigning task.');
+    } finally {
+      setAssignModalOpen(false);
+      setAssignTargetTask(null);
+    }
   };
 
   const handleSaveEffort = async () => {
@@ -335,10 +391,12 @@ export default function CrmTasksPage() {
             onChange={(e) => setTaskFilter(e.target.value)}
             className="text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
           >
-            <option value="Tasks">Tasks</option>
-            <option value="PAN Registration">PAN Registration</option>
-            <option value="TAN Registration">TAN Registration</option>
-            <option value="Income Tax Return">Income Tax Return</option>
+            <option value="Tasks">All Tasks</option>
+            <option value="123">Not Assign</option>
+            <option value="1">Not Started</option>
+            <option value="2">Work In Progress (WIP)</option>
+            <option value="3">Pending From Client</option>
+            <option value="5">Completed</option>
           </select>
 
           <select
@@ -357,11 +415,17 @@ export default function CrmTasksPage() {
             onChange={(e) => setStaffFilter(e.target.value)}
             className="text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
           >
-            <option value="Staff">Staff</option>
-            <option value="Avinash Mate">Avinash Mate</option>
-            <option value="Swarupa Patwardhan">Swarupa Patwardhan</option>
-            <option value="Ganesh Nikam">Ganesh Nikam</option>
-            <option value="Kailas Gadekar">Kailas Gadekar</option>
+            <option value="Staff">Staff (All 39)</option>
+            {opsStaff.map((staff) => (
+              <option key={staff.id} value={staff.name}>
+                {staff.name}{' '}
+                {staff.role_id === 12
+                  ? '(Assistant)'
+                  : staff.role_id === 3
+                    ? '(Manager)'
+                    : '(Employee)'}
+              </option>
+            ))}
           </select>
 
           <input
@@ -381,7 +445,7 @@ export default function CrmTasksPage() {
           />
 
           <button
-            onClick={() => alert('Filtered tasks.')}
+            onClick={() => loadTasksFromApi()}
             className="btn-multicolor px-4 py-2 rounded-full text-xs font-bold shadow-2xs cursor-pointer"
           >
             <span>Filter</span>
@@ -404,13 +468,33 @@ export default function CrmTasksPage() {
 
         <div className="flex items-center gap-2.5 pt-1">
           <button
-            onClick={() => {
+            onClick={async () => {
+              if (selectedIds.size === 0) {
+                alert('Please select at least one task to update due date.');
+                return;
+              }
               const nd = prompt('Enter new due date (YYYY-MM-DD):');
-              if (nd && selectedIds.size > 0) {
-                setTasks((prev) =>
-                  prev.map((t) => (selectedIds.has(t.id) ? { ...t, dueDate: nd } : t))
-                );
-                alert(`Due date updated for ${selectedIds.size} tasks.`);
+              if (nd) {
+                try {
+                  const res = await fetch(`${API_BASE}/v1/crm/tasks/update-due-date`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      task_ids: Array.from(selectedIds),
+                      due_date: nd,
+                    }),
+                  });
+                  const result = await res.json();
+                  if (result.success) {
+                    alert(`Due date updated for ${selectedIds.size} tasks.`);
+                    setSelectedIds(new Set());
+                    loadTasksFromApi();
+                  } else {
+                    alert(result.message || 'Failed to update due dates');
+                  }
+                } catch {
+                  alert('Network error while updating due dates.');
+                }
               }
             }}
             className="btn-multicolor px-5 py-2 rounded-full text-xs font-bold shadow-2xs cursor-pointer"
@@ -550,7 +634,17 @@ export default function CrmTasksPage() {
                       <td className="py-2.5 px-3 text-slate-800">{task.customerName}</td>
                       <td className="py-2.5 px-3 text-slate-600">{task.companyName}</td>
                       <td className="py-2.5 px-3 text-slate-700 font-medium">{task.service}</td>
-                      <td className="py-2.5 px-3 text-slate-800 font-medium">{task.assignTo}</td>
+                      <td className="py-2.5 px-3 font-medium">
+                        {task.assignTo === 'Un-Assign' ||
+                        task.isAssign === 0 ||
+                        !task.assignedToId ? (
+                          <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs">
+                            Un-Assign
+                          </span>
+                        ) : (
+                          <span className="text-slate-800 font-semibold">{task.assignTo}</span>
+                        )}
+                      </td>
                       <td className="py-2.5 px-3 text-slate-600">{task.addedBy}</td>
                       <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
                         {task.assignDate}
@@ -994,11 +1088,16 @@ export default function CrmTasksPage() {
                   onChange={(e) => setAssignUser(e.target.value)}
                   className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                 >
-                  <option value="Avinash Mate">Avinash Mate</option>
-                  <option value="Swarupa Patwardhan">Swarupa Patwardhan</option>
-                  <option value="Ganesh Nikam">Ganesh Nikam</option>
-                  <option value="Kailas Gadekar">Kailas Gadekar</option>
-                  <option value="Netra Divekar">Netra Divekar</option>
+                  {opsStaff.map((staff) => (
+                    <option key={staff.id} value={staff.name}>
+                      {staff.name}{' '}
+                      {staff.role_id === 12
+                        ? '(Assistant)'
+                        : staff.role_id === 3
+                          ? '(Manager)'
+                          : '(Employee)'}
+                    </option>
+                  ))}
                 </select>
               </div>
 

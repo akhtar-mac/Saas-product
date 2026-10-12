@@ -152,6 +152,7 @@ export default function App() {
           <Route path="quotation" element={<CrmQuotationsPage />} />
           <Route path="accounts" element={<CrmAccountsPage />} />
           <Route path="operation-manage-customer" element={<CrmAccountsPage />} />
+          <Route path="locations" element={<CrmAccountsPage />} />
           <Route path="desktop-report" element={<CrmDesktopTrackingPage />} />
           <Route path="desktop-report-idle" element={<CrmDesktopTrackingPage />} />
           <Route path="operation-manage-employee" element={<HrWorkforcePage />} />

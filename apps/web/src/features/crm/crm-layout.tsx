@@ -46,6 +46,7 @@ import {
   MessageCircle,
   Target,
   Terminal,
+  MapPin,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
@@ -62,6 +63,7 @@ function CrmLayoutContent() {
     franchise: false,
     admin: false,
     desktop: false,
+    opsReports: false,
     leadsSub: true,
     salesEmployee: true,
     quotationsSub: false,
@@ -468,7 +470,23 @@ function CrmLayoutContent() {
 
                 {openSections.operations && (
                   <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
-                    {/* Manage Desktop Sub-menu */}
+                    {/* 1. Call Report */}
+                    <Link
+                      to="/crm/call-analytics"
+                      onClick={handleNavClick}
+                      className={`flex items-center justify-between py-1.5 px-2 rounded-lg text-xs font-medium ${
+                        location.pathname === '/crm/call-analytics'
+                          ? 'bg-blue-50 text-[#1B365D] font-bold'
+                          : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <PhoneCall className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Call Report</span>
+                      </div>
+                    </Link>
+
+                    {/* 2. Manage Desktrack Sub-menu */}
                     {can('desktop_tracking:view') && (
                       <div className="space-y-0.5">
                         <button
@@ -477,7 +495,7 @@ function CrmLayoutContent() {
                         >
                           <div className="flex items-center gap-1.5">
                             <Monitor className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Manage Desktop</span>
+                            <span>Manage Desktrack</span>
                           </div>
                           {openSections.desktop ? (
                             <ChevronDown className="w-3 h-3" />
@@ -510,67 +528,182 @@ function CrmLayoutContent() {
                             >
                               Session Report
                             </Link>
-                            <span className="block py-1 px-2 text-slate-400 cursor-not-allowed">
+                            <Link
+                              to="/crm/desktop-report"
+                              onClick={handleNavClick}
+                              className="block py-1 px-2 text-slate-600 hover:text-[#1B365D]"
+                            >
                               Block Website
-                            </span>
+                            </Link>
                           </div>
                         )}
                       </div>
                     )}
 
+                    {/* 3. Manage Employee */}
                     {can('operations:employees') && (
                       <Link
                         to="/crm/operation-manage-employee"
                         onClick={handleNavClick}
-                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg text-xs font-medium ${
+                          location.pathname === '/crm/operation-manage-employee'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
                       >
-                        <span>Manage Employee</span>
+                        <div className="flex items-center gap-1.5">
+                          <Users className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Manage Employee</span>
+                        </div>
                       </Link>
                     )}
 
+                    {/* 4. Manage Customer */}
                     {can('operations:customers') && (
                       <Link
                         to="/crm/operation-manage-customer"
                         onClick={handleNavClick}
-                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname === '/crm/operation-manage-customer' ||
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg text-xs font-medium ${
+                          location.pathname === '/crm/operation-manage-customer'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <UserCheck className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Manage Customer</span>
+                        </div>
+                      </Link>
+                    )}
+
+                    {/* 5. Manage Tasks */}
+                    {can('operations:tasks') && (
+                      <Link
+                        to="/crm/operation-manage-tasks"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg text-xs font-medium ${
+                          location.pathname === '/crm/operation-manage-tasks'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <ClipboardList className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Manage Tasks</span>
+                        </div>
+                        <span className="badge badge-green text-[9px] px-1 py-0.2">Live</span>
+                      </Link>
+                    )}
+
+                    {/* 6. Internal Task */}
+                    <Link
+                      to="/crm/tasks"
+                      onClick={handleNavClick}
+                      className={`flex items-center justify-between py-1.5 px-2 rounded-lg text-xs font-medium ${
+                        location.pathname === '/crm/tasks'
+                          ? 'bg-blue-50 text-[#1B365D] font-bold'
+                          : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Internal Task</span>
+                      </div>
+                    </Link>
+
+                    {/* 7. Customers Details */}
+                    {can('accounts:view') && (
+                      <Link
+                        to="/crm/accounts"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg text-xs font-medium ${
                           location.pathname === '/crm/accounts'
                             ? 'bg-blue-50 text-[#1B365D] font-bold'
                             : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
                         }`}
                       >
-                        <span>Manage Customer</span>
+                        <div className="flex items-center gap-1.5">
+                          <Building className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Customers Details</span>
+                        </div>
                       </Link>
                     )}
 
-                    {can('operations:tasks') && (
-                      <Link
-                        to="/crm/operation-manage-tasks"
-                        onClick={handleNavClick}
-                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
-                          location.pathname === '/crm/operation-manage-tasks' ||
-                          location.pathname === '/crm/tasks'
-                            ? 'bg-blue-50 text-[#1B365D] font-bold'
-                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
-                        }`}
-                      >
-                        <span>Manage Tasks</span>
-                        <span className="badge badge-green text-[9px] px-1 py-0.2">Live</span>
-                      </Link>
-                    )}
+                    {/* 8. Appointments */}
+                    <Link
+                      to="/crm/appointments"
+                      onClick={handleNavClick}
+                      className={`flex items-center justify-between py-1.5 px-2 rounded-lg text-xs font-medium ${
+                        location.pathname === '/crm/appointments'
+                          ? 'bg-blue-50 text-[#1B365D] font-bold'
+                          : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Appointments</span>
+                      </div>
+                    </Link>
 
-                    {can('accounts:view') && (
-                      <Link
-                        to="/crm/accounts"
-                        onClick={handleNavClick}
-                        className="flex items-center justify-between py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
+                    {/* 9. Locations */}
+                    <Link
+                      to="/crm/locations"
+                      onClick={handleNavClick}
+                      className={`flex items-center justify-between py-1.5 px-2 rounded-lg text-xs font-medium ${
+                        location.pathname === '/crm/locations'
+                          ? 'bg-blue-50 text-[#1B365D] font-bold'
+                          : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Locations</span>
+                      </div>
+                    </Link>
+
+                    {/* 10. Reports Sub-menu */}
+                    <div className="space-y-0.5">
+                      <button
+                        onClick={() => toggleSection('opsReports')}
+                        className="w-full flex items-center justify-between text-xs py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#1B365D] hover:bg-slate-50 font-medium"
                       >
-                        <span>Customers Details</span>
-                      </Link>
-                    )}
-                    <span className="block py-1.5 px-2 text-slate-400 cursor-not-allowed">
-                      Locations
-                    </span>
+                        <div className="flex items-center gap-1.5">
+                          <BarChart3 className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Reports</span>
+                        </div>
+                        {openSections.opsReports ? (
+                          <ChevronDown className="w-3 h-3" />
+                        ) : (
+                          <ChevronRight className="w-3 h-3" />
+                        )}
+                      </button>
+
+                      {openSections.opsReports && (
+                        <div className="pl-5 space-y-1 py-1 text-[11px]">
+                          <Link
+                            to="/crm/operation-manage-tasks"
+                            onClick={handleNavClick}
+                            className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
+                          >
+                            Task Comment Report
+                          </Link>
+                          <Link
+                            to="/crm/accounts"
+                            onClick={handleNavClick}
+                            className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
+                          >
+                            Collection Report
+                          </Link>
+                          <Link
+                            to="/crm/call-analytics"
+                            onClick={handleNavClick}
+                            className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
+                          >
+                            Total Sales
+                          </Link>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

@@ -1197,113 +1197,219 @@ router.post('/calls/log', async (req, res) => {
 // 5. Tasks & 10-Stage Milestone Workflow
 router.get('/tasks', async (req, res) => {
   try {
-    const { status, limit = 50 } = req.query;
-    const where: any = {};
-    if (status && status !== 'ALL') {
-      where.original_task_status = Number(status);
+    const { status, limit = 100, employee_id, search } = req.query;
+
+    let whereClause = 'WHERE 1=1';
+    const params: any[] = [];
+
+    if (status === '123' || status === 'unassigned') {
+      whereClause += ' AND (ta.task_id IS NULL OR ot.is_assign = 0 OR ta.assign_to IS NULL)';
+    } else if (status && status !== 'ALL' && status !== 'Tasks') {
+      whereClause += ' AND (ot.original_task_status = ? OR ta.actual_task_status = ?)';
+      params.push(Number(status), Number(status));
     }
 
-    const tasks = await prisma.operation_tasks.findMany({
-      where,
-      take: Math.min(Number(limit) || 50, 100),
-      orderBy: { task_id: 'desc' },
-    });
-
-    const custIds = [...new Set(tasks.map((t) => t.cust_id).filter(Boolean))];
-    const srvIds = [...new Set(tasks.map((t) => t.service_id).filter(Boolean))];
-
-    const [customers, services] = await Promise.all([
-      prisma.customers.findMany({
-        where: { id: { in: custIds as number[] } },
-        select: { id: true, name: true, contact: true, email: true, business: true },
-      }),
-      prisma.services.findMany({
-        where: { service_id: { in: srvIds as number[] } },
-        select: { service_id: true, service_name: true },
-      }),
-    ]);
-
-    const custMap = new Map(customers.map((c) => [c.id, c]));
-    const srvMap = new Map(services.map((s) => [s.service_id, s.service_name]));
-
-    const enriched = tasks.map((t) => {
-      const c = t.cust_id ? custMap.get(t.cust_id) : null;
-      const sName = t.service_id ? srvMap.get(t.service_id) : null;
-      return {
-        ...t,
-        company_name: c?.business || c?.name || t.task_name || `Company #${t.cust_id}`,
-        customer_name: c?.name || `Customer #${t.cust_id}`,
-        customer_contact: c?.contact || 'N/A',
-        customer_email: c?.email || 'N/A',
-        service_name: sName || t.task_name || 'Corporate Legal Filing',
-      };
-    });
-
-    if (enriched && enriched.length > 0) {
-      return res.json({ success: true, data: serializeBigInt(enriched) });
+    if (employee_id) {
+      whereClause += ' AND ta.assign_to = ?';
+      params.push(Number(employee_id));
     }
-  } catch (error) {}
 
-  res.json({
-    success: true,
-    data: [
-      {
-        task_id: 4911,
-        task_name: 'Pvt Ltd Incorporation Filing',
-        original_task_status: 3,
-        company_name: 'Apex Logistics Pvt Ltd',
-        customer_name: 'Rajesh Sharma',
-        service_name: 'Private Limited Registration',
-        customer_contact: '9820192831',
-        customer_email: 'director@apexlogistics.in',
-        created_at: new Date().toISOString(),
-      },
-      {
-        task_id: 4910,
-        task_name: 'GST Clarification Notice Response',
-        original_task_status: 2,
-        company_name: 'Kulkarni Diagnostics',
-        customer_name: 'Dr. Ramesh Kulkarni',
-        service_name: 'GST Return & Audit',
-        customer_contact: '9422019482',
-        customer_email: 'ramesh.kulkarni@healthtech.co',
-        created_at: new Date().toISOString(),
-      },
-      {
-        task_id: 4909,
-        task_name: 'Trademark Examination Reply',
-        original_task_status: 4,
-        company_name: 'Chennai Bakes',
-        customer_name: 'Kavita Sundaram',
-        service_name: 'Trademark Registration',
-        customer_contact: '9840192837',
-        customer_email: 'kavita@chennaibakes.in',
-        created_at: new Date().toISOString(),
-      },
-      {
-        task_id: 4908,
-        task_name: 'FSSAI State License Inspection Docs',
-        original_task_status: 1,
-        company_name: 'Greenleaf Agritech LLP',
-        customer_name: 'Suresh Patil',
-        service_name: 'FSSAI Food License',
-        customer_contact: '9765432109',
-        customer_email: 'info@greenleafagri.com',
-        created_at: new Date().toISOString(),
-      },
-      {
-        task_id: 4907,
-        task_name: 'Annual MCA Form AOC-4 & MGT-7',
-        original_task_status: 5,
-        company_name: 'Zenith Cloud Softwares',
-        customer_name: 'Ananya Rao',
-        service_name: 'ROC Annual Compliance',
-        customer_contact: '9980123456',
-        customer_email: 'founder@zenithcloud.io',
-        created_at: new Date().toISOString(),
-      },
-    ],
-  });
+    if (search) {
+      whereClause +=
+        ' AND (ot.task_name LIKE ? OR c.name LIKE ? OR c.business LIKE ? OR s.service_name LIKE ?)';
+      const searchParam = `%${search}%`;
+      params.push(searchParam, searchParam, searchParam, searchParam);
+    }
+
+    const query = `
+      SELECT 
+        ot.task_id, 
+        ot.task_name, 
+        ot.is_assign,
+        ot.cust_id,
+        ot.service_id,
+        ot.original_task_status,
+        ta.assign_to,
+        ta.assign_date, 
+        ta.due_date, 
+        ta.actual_task_status,
+        u.username as assigned_to_name, 
+        c.name as customer_name, 
+        c.business as company_name,
+        c.contact as customer_contact,
+        c.email as customer_email,
+        s.service_name, 
+        ub.username as added_by_name
+      FROM operation_tasks ot
+      LEFT JOIN customers c ON c.id = ot.cust_id
+      LEFT JOIN services s ON s.service_id = ot.service_id
+      LEFT JOIN task_assign ta ON ta.task_id = ot.task_id
+      LEFT JOIN users u ON u.id = ta.assign_to
+      LEFT JOIN users ub ON ub.id = ot.added_by
+      ${whereClause}
+      ORDER BY ot.task_id DESC
+      LIMIT ${Math.min(Number(limit) || 100, 500)}
+    `;
+
+    const tasks: any[] = (await prisma.$queryRawUnsafe(query, ...params)) as any[];
+    return res.json({ success: true, data: serializeBigInt(tasks) });
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch tasks' });
+  }
+});
+
+// Single Task Assign
+router.post('/tasks/assign', async (req, res) => {
+  try {
+    const { task_id, employee_id, due_date, assign_by = 1 } = req.body;
+    if (!task_id || !employee_id) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'task_id and employee_id are required' });
+    }
+
+    const taskIdNum = Number(task_id);
+    const empIdNum = Number(employee_id);
+    const assignByNum = Number(assign_by);
+
+    const existing: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT task_id FROM task_assign WHERE task_id = ?`,
+      taskIdNum
+    )) as any[];
+
+    if (existing && existing.length > 0) {
+      await prisma.$executeRawUnsafe(
+        `UPDATE task_assign SET assign_to = ?, assign_by = ?, due_date = ?, task_status = 0 WHERE task_id = ?`,
+        empIdNum,
+        assignByNum,
+        due_date || null,
+        taskIdNum
+      );
+    } else {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO task_assign (task_id, assign_to, assign_by, due_date, assign_date) VALUES (?, ?, ?, ?, NOW())`,
+        taskIdNum,
+        empIdNum,
+        assignByNum,
+        due_date || null
+      );
+    }
+
+    await prisma.$executeRawUnsafe(
+      `UPDATE operation_tasks SET is_assign = 1, is_return = 0 WHERE task_id = ?`,
+      taskIdNum
+    );
+
+    return res.json({ success: true, message: 'Task assigned successfully' });
+  } catch (error: any) {
+    console.error('Task assign error:', error);
+    return res
+      .status(500)
+      .json({ success: false, message: error.message || 'Failed to assign task' });
+  }
+});
+
+// Bulk Task Assign
+router.post('/tasks/bulk-assign', async (req, res) => {
+  try {
+    const { task_ids, employee_id, due_date, assign_by = 1 } = req.body;
+    if (!Array.isArray(task_ids) || task_ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'task_ids array is required' });
+    }
+
+    const empIdNum = employee_id ? Number(employee_id) : null;
+    const assignByNum = Number(assign_by);
+
+    for (const tid of task_ids) {
+      const taskIdNum = Number(tid);
+      const existing: any[] = (await prisma.$queryRawUnsafe(
+        `SELECT task_id FROM task_assign WHERE task_id = ?`,
+        taskIdNum
+      )) as any[];
+
+      if (existing && existing.length > 0) {
+        let updateSql = 'UPDATE task_assign SET assign_by = ?';
+        const updateParams: any[] = [assignByNum];
+        if (empIdNum) {
+          updateSql += ', assign_to = ?';
+          updateParams.push(empIdNum);
+        }
+        if (due_date) {
+          updateSql += ', due_date = ?';
+          updateParams.push(due_date);
+        }
+        updateSql += ' WHERE task_id = ?';
+        updateParams.push(taskIdNum);
+        await prisma.$executeRawUnsafe(updateSql, ...updateParams);
+      } else {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO task_assign (task_id, assign_to, assign_by, due_date, assign_date) VALUES (?, ?, ?, ?, NOW())`,
+          taskIdNum,
+          empIdNum,
+          assignByNum,
+          due_date || null
+        );
+      }
+    }
+
+    const taskIdsStr = task_ids.map((id) => Number(id)).join(',');
+    await prisma.$executeRawUnsafe(
+      `UPDATE operation_tasks SET is_assign = 1, is_return = 0 WHERE task_id IN (${taskIdsStr})`
+    );
+
+    return res.json({ success: true, message: 'Tasks bulk assigned successfully' });
+  } catch (error: any) {
+    console.error('Bulk assign error:', error);
+    return res
+      .status(500)
+      .json({ success: false, message: error.message || 'Failed to bulk assign tasks' });
+  }
+});
+
+// Update Task Due Date
+router.post('/tasks/update-due-date', async (req, res) => {
+  try {
+    const { task_ids, due_date, assign_by = 1 } = req.body;
+    if (!Array.isArray(task_ids) || task_ids.length === 0 || !due_date) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'task_ids array and due_date are required' });
+    }
+
+    const assignByNum = Number(assign_by);
+
+    for (const tid of task_ids) {
+      const taskIdNum = Number(tid);
+      const existing: any[] = (await prisma.$queryRawUnsafe(
+        `SELECT task_id FROM task_assign WHERE task_id = ?`,
+        taskIdNum
+      )) as any[];
+
+      if (existing && existing.length > 0) {
+        await prisma.$executeRawUnsafe(
+          `UPDATE task_assign SET due_date = ?, assign_by = ? WHERE task_id = ?`,
+          due_date,
+          assignByNum,
+          taskIdNum
+        );
+      } else {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO task_assign (task_id, assign_by, due_date, assign_date) VALUES (?, ?, ?, NOW())`,
+          taskIdNum,
+          assignByNum,
+          due_date
+        );
+      }
+    }
+
+    return res.json({ success: true, message: 'Due dates updated successfully' });
+  } catch (error: any) {
+    console.error('Update due date error:', error);
+    return res
+      .status(500)
+      .json({ success: false, message: error.message || 'Failed to update due dates' });
+  }
 });
 
 // 6. Advance Task Milestone Status
@@ -1560,67 +1666,580 @@ router.get('/quotations', async (req, res) => {
   });
 });
 
-// 8. Customers List
-router.get('/customers', async (req, res) => {
+// 8. Categories List
+router.get('/categories', async (req, res) => {
   try {
-    const customers = await prisma.customers.findMany({
-      take: 50,
-      orderBy: { id: 'desc' },
-    });
-    if (customers && customers.length > 0) {
-      return res.json({ success: true, data: serializeBigInt(customers) });
+    const categories: any[] = (await prisma
+      .$queryRawUnsafe(
+        `SELECT category_id, category_name FROM categories ORDER BY category_name ASC`
+      )
+      .catch(() => [])) as any[];
+    if (categories && categories.length > 0) {
+      return res.json({ success: true, data: serializeBigInt(categories) });
     }
   } catch (error) {}
 
   res.json({
     success: true,
     data: [
+      { category_id: 1, category_name: 'Taxation & Return Filing' },
+      { category_id: 2, category_name: 'Business Registration' },
+      { category_id: 3, category_name: 'Licenses & Regulatory' },
+      { category_id: 4, category_name: 'Intellectual Property (IP)' },
+    ],
+  });
+});
+
+// 8a. Services by Category
+router.get('/services-by-category/:categoryId', async (req, res) => {
+  const categoryId = Number(req.params.categoryId);
+  try {
+    const services: any[] = (await prisma
+      .$queryRawUnsafe(
+        `SELECT service_id, service_name, service_price, category_id FROM services WHERE category_id = ? ORDER BY service_name ASC`,
+        categoryId
+      )
+      .catch(() => [])) as any[];
+    if (services && services.length > 0) {
+      return res.json({ success: true, data: serializeBigInt(services) });
+    }
+  } catch (error) {}
+
+  // Fallback hardcoded data per category
+  const fallbackMap: Record<number, any[]> = {
+    1: [
+      { service_id: 3, service_name: 'GST Registration & Return Filing', service_price: 2499 },
+      { service_id: 4, service_name: 'Income Tax Return (ITR) Filing', service_price: 1499 },
+      { service_id: 9, service_name: 'Tax Audit & Advisory', service_price: 4999 },
+      { service_id: 10, service_name: 'TDS Return Filing', service_price: 1999 },
+    ],
+    2: [
+      { service_id: 1, service_name: 'Private Limited Company Registration', service_price: 16499 },
+      { service_id: 2, service_name: 'Limited Liability Partnership (LLP)', service_price: 4999 },
       {
-        id: 1373,
-        name: 'Rajesh Sharma',
-        business: 'Apex Logistics Pvt Ltd',
-        contact: '9820192831',
-        email: 'director@apexlogistics.in',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        is_active: true,
-        created_at: new Date().toISOString(),
+        service_id: 11,
+        service_name: 'One Person Company (OPC) Registration',
+        service_price: 5999,
+      },
+      { service_id: 12, service_name: 'Section 8 Company NGO Registration', service_price: 16499 },
+      { service_id: 13, service_name: 'Proprietorship Registration', service_price: 1999 },
+      { service_id: 14, service_name: 'Partnership Firm Registration', service_price: 4999 },
+    ],
+    3: [
+      { service_id: 5, service_name: 'FSSAI Food Business License', service_price: 2999 },
+      { service_id: 7, service_name: 'Import Export Code (IEC)', service_price: 2499 },
+      { service_id: 8, service_name: 'MSME / Udyam Registration', service_price: 999 },
+      { service_id: 15, service_name: 'Professional Tax Registration', service_price: 1499 },
+      { service_id: 16, service_name: 'Shop & Establishment Registration', service_price: 1299 },
+    ],
+    4: [
+      { service_id: 6, service_name: 'Trademark Filing & Registration', service_price: 5999 },
+      { service_id: 17, service_name: 'Copyright Registration', service_price: 7999 },
+      { service_id: 18, service_name: 'Patent Application Assistance', service_price: 24999 },
+    ],
+  };
+  res.json({ success: true, data: fallbackMap[categoryId] || [] });
+});
+
+// 8a2. All Services (for custom package multi-select)
+router.get('/all-services', async (req, res) => {
+  try {
+    const services: any[] = (await prisma
+      .$queryRawUnsafe(
+        `SELECT s.service_id, s.service_name, s.service_price, s.category_id, c.category_name
+       FROM services s
+       LEFT JOIN categories c ON s.category_id = c.category_id
+       ORDER BY c.category_name ASC, s.service_name ASC`
+      )
+      .catch(() => [])) as any[];
+    if (services && services.length > 0) {
+      return res.json({ success: true, data: serializeBigInt(services) });
+    }
+  } catch (error) {}
+
+  // Fallback
+  res.json({
+    success: true,
+    data: [
+      {
+        service_id: 1,
+        service_name: 'Private Limited Company Registration',
+        service_price: 16499,
+        category_id: 2,
+        category_name: 'Business Registration',
       },
       {
-        id: 1372,
-        name: 'Dr. Ramesh Kulkarni',
-        business: 'Kulkarni Diagnostics',
-        contact: '9422019482',
-        email: 'ramesh.kulkarni@healthtech.co',
-        city: 'Pune',
-        state: 'Maharashtra',
-        is_active: true,
-        created_at: new Date().toISOString(),
+        service_id: 2,
+        service_name: 'Limited Liability Partnership (LLP)',
+        service_price: 4999,
+        category_id: 2,
+        category_name: 'Business Registration',
       },
       {
-        id: 1371,
-        name: 'Siddharth Mehra',
-        business: 'Mehra Exim Global',
-        contact: '9811204918',
-        email: 'siddharth@mehraexim.com',
-        city: 'New Delhi',
-        state: 'Delhi',
-        is_active: true,
-        created_at: new Date().toISOString(),
+        service_id: 3,
+        service_name: 'GST Registration & Return Filing',
+        service_price: 2499,
+        category_id: 1,
+        category_name: 'Taxation & Return Filing',
       },
       {
-        id: 1370,
-        name: 'Suresh Patil',
-        business: 'Greenleaf Agritech LLP',
-        contact: '9765432109',
-        email: 'info@greenleafagri.com',
-        city: 'Nashik',
-        state: 'Maharashtra',
-        is_active: true,
-        created_at: new Date().toISOString(),
+        service_id: 4,
+        service_name: 'Income Tax Return (ITR) Filing',
+        service_price: 1499,
+        category_id: 1,
+        category_name: 'Taxation & Return Filing',
+      },
+      {
+        service_id: 5,
+        service_name: 'FSSAI Food Business License',
+        service_price: 2999,
+        category_id: 3,
+        category_name: 'Licenses & Regulatory',
+      },
+      {
+        service_id: 6,
+        service_name: 'Trademark Filing & Registration',
+        service_price: 5999,
+        category_id: 4,
+        category_name: 'Intellectual Property (IP)',
+      },
+      {
+        service_id: 7,
+        service_name: 'Import Export Code (IEC)',
+        service_price: 2499,
+        category_id: 3,
+        category_name: 'Licenses & Regulatory',
+      },
+      {
+        service_id: 8,
+        service_name: 'MSME / Udyam Registration',
+        service_price: 999,
+        category_id: 3,
+        category_name: 'Licenses & Regulatory',
+      },
+      {
+        service_id: 9,
+        service_name: 'Tax Audit & Advisory',
+        service_price: 4999,
+        category_id: 1,
+        category_name: 'Taxation & Return Filing',
+      },
+      {
+        service_id: 11,
+        service_name: 'One Person Company (OPC) Registration',
+        service_price: 5999,
+        category_id: 2,
+        category_name: 'Business Registration',
+      },
+      {
+        service_id: 12,
+        service_name: 'Section 8 Company NGO Registration',
+        service_price: 16499,
+        category_id: 2,
+        category_name: 'Business Registration',
+      },
+      {
+        service_id: 13,
+        service_name: 'Proprietorship Registration',
+        service_price: 1999,
+        category_id: 2,
+        category_name: 'Business Registration',
       },
     ],
   });
+});
+
+// 8b. Customers List (All 1421 DB Customers with search & pagination)
+router.get('/customers', async (req, res) => {
+  try {
+    const { search, limit = 50, page = 1 } = req.query;
+    const take = limit === 'all' ? 10000 : Math.min(Math.max(Number(limit) || 50, 1), 10000);
+    const pageNum = Math.max(Number(page) || 1, 1);
+    const skip = (pageNum - 1) * take;
+
+    const whereConditions: string[] = ['1=1'];
+    if (search) {
+      const q = String(search).trim().replace(/'/g, "''");
+      whereConditions.push(
+        `(c.name LIKE '%${q}%' OR c.business LIKE '%${q}%' OR c.contact LIKE '%${q}%' OR c.email LIKE '%${q}%' OR c.city LIKE '%${q}%' OR c.service LIKE '%${q}%')`
+      );
+    }
+    const whereSql = whereConditions.join(' AND ');
+
+    const countRes = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT COUNT(*) as total FROM customers c WHERE ${whereSql}`
+    );
+    const total = Number(countRes[0]?.total || 0);
+
+    const custsRaw = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT 
+        c.id, c.name, c.business, c.email, c.contact, c.state, c.city, c.service,
+        c.service_price, c.added_by, c.date, c.is_payment,
+        s.service_name, cat.category_name, su.name AS added_by_name
+       FROM customers c 
+       LEFT JOIN services s ON (c.service = CAST(s.service_id AS CHAR) OR c.service = s.service_name) 
+       LEFT JOIN categories cat ON s.category_id = cat.category_id 
+       LEFT JOIN staff_users su ON c.added_by = su.id
+       WHERE ${whereSql}
+       ORDER BY c.id DESC 
+       LIMIT ${take} OFFSET ${skip}`
+    );
+
+    const ids = custsRaw.map((c) => Number(c.id)).filter(Boolean);
+    let emiMap: Record<number, any> = {};
+    if (ids.length > 0) {
+      const emis: any[] = await prisma.$queryRawUnsafe(
+        `SELECT customer_id, emi_total_amount, emi_paid_amount, emi_unpaid_amount, emi_due_date 
+         FROM customer_emi WHERE customer_id IN (${ids.join(',')}) ORDER BY emi_id DESC`
+      );
+      emis.forEach((e: any) => {
+        const cid = Number(e.customer_id);
+        if (!emiMap[cid]) {
+          emiMap[cid] = e;
+        }
+      });
+    }
+
+    const mapped = custsRaw.map((c: any) => {
+      const cid = Number(c.id);
+      const emi = emiMap[cid];
+      const totalAmt = emi ? Number(emi.emi_total_amount) : Number(c.service_price) || 0;
+      const paidAmt = emi
+        ? Number(emi.emi_paid_amount)
+        : c.is_payment
+          ? Number(c.service_price) || 0
+          : 0;
+      const unpaidAmt = emi ? Number(emi.emi_unpaid_amount) : Math.max(totalAmt - paidAmt, 0);
+      const dueDate = emi?.emi_due_date ? String(emi.emi_due_date).split('T')[0] : '—';
+
+      return {
+        id: cid,
+        name: c.name || 'Client',
+        business: c.business || '',
+        company: c.business || '—',
+        mobile: c.contact || '',
+        email: c.email || '',
+        state: c.state || 'Maharashtra',
+        city: c.city || '—',
+        category: c.category_name || 'General Services',
+        service: c.service_name || c.service || 'Tax & Filing',
+        type: c.business ? 'Corporate' : 'Individual',
+        addedBy: c.added_by_name || `Staff #${c.added_by || 1}`,
+        total: totalAmt,
+        paid: paidAmt,
+        unpaid: unpaidAmt,
+        dueDate,
+        date: c.date ? String(c.date).split('T')[0] : '',
+      };
+    });
+
+    res.json({
+      success: true,
+      total,
+      data: mapped,
+    });
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch customers' });
+  }
+});
+
+// 8c. Add Offline Customer & Spawn Operations Tasks (Exact Replica of OMController.php AddOfflineCustomer)
+router.post('/customers/add-offline', async (req, res) => {
+  try {
+    const {
+      customer_name,
+      customer_businessName,
+      customer_email,
+      customer_mobile,
+      customer_state,
+      customer_city,
+      customer_category_id,
+      customer_service_id,
+      customer_service,
+      customer_total_service_price,
+      customer_paid_amount,
+      customer_unpaid_amount,
+      customer_due_date,
+      customer_payment_mode,
+      customer_unpaid_amount2,
+      customer_due_date2,
+      customer_comment,
+      coupon_code,
+      discount_amount,
+      is_custom,
+      custom_package_name,
+      custom_package_services, // Array of service IDs
+    } = req.body;
+
+    if (!customer_name || !customer_mobile) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Customer Name and Mobile number are required.' });
+    }
+
+    const staffUserId = 40; // Default logged-in staff ID
+    const companyId = 'ETax1';
+
+    // 1. Create Lead in leads table
+    const maxLead = await prisma.leads.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
+    const leadId = (maxLead?.id || 17281) + 1;
+
+    const leadService =
+      is_custom === '1'
+        ? custom_package_name || 'Custom Package'
+        : String(customer_service || customer_service_id || 'General Service');
+
+    await prisma.leads.create({
+      data: {
+        id: leadId,
+        name: String(customer_name).trim(),
+        email: customer_email || `client_${Date.now()}@etaxwala.in`,
+        contact: String(customer_mobile).trim(),
+        service: leadService,
+        state: customer_state || 'Maharashtra',
+        city: customer_city || 'Pune',
+        added_by: staffUserId,
+        lead_type: 1,
+        is_customer: 1,
+        company_id: companyId,
+        date: new Date(),
+      },
+    });
+
+    // 2. Create Customer in customers table
+    const maxCust = await prisma.customers.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
+    const custId = (maxCust?.id || 1373) + 1;
+
+    await prisma.customers.create({
+      data: {
+        id: custId,
+        lead_id: leadId,
+        name: String(customer_name).trim(),
+        business: customer_businessName || String(customer_name).trim(),
+        email: customer_email || `client_${Date.now()}@etaxwala.in`,
+        contact: String(customer_mobile).trim(),
+        password: '123456',
+        service: leadService,
+        service_price: Number(customer_total_service_price || 0),
+        state: customer_state || 'Maharashtra',
+        city: customer_city || 'Pune',
+        added_by: staffUserId,
+        company_id: companyId,
+        is_payment: Number(customer_paid_amount || 0) > 0 ? 1 : 0,
+        is_active: 1,
+        is_approve: 1,
+        is_partner: 1,
+        customer_token: `tok_${Date.now()}_${custId}`,
+        date: new Date(),
+      },
+    });
+
+    // 3. Create EMI Record in customer_emi
+    const maxEmi = await prisma.customer_emi.findFirst({
+      orderBy: { emi_id: 'desc' },
+      select: { emi_id: true },
+    });
+    const emiId = (maxEmi?.emi_id || 1000) + 1;
+    const orderDbId = custId;
+
+    await prisma.customer_emi.create({
+      data: {
+        emi_id: emiId,
+        customer_id: custId,
+        order_id: orderDbId,
+        emi_type: Number(customer_payment_mode) || 1,
+        emi_total_amount: Number(customer_total_service_price || 0),
+        emi_paid_amount: Number(customer_paid_amount || 0),
+        emi_unpaid_amount: Number(customer_unpaid_amount || 0),
+        emi_due_date: customer_due_date ? new Date(customer_due_date) : null,
+        second_emi: customer_unpaid_amount2 ? Number(customer_unpaid_amount2) : null,
+        second_emi_due_date: customer_due_date2 ? new Date(customer_due_date2) : null,
+        emi_comment: customer_comment || '',
+        date: new Date(),
+      },
+    });
+
+    // 4. Task Creation in operation_tasks table (Exact OMController.php Rules)
+    const no_customer_support_task_service_ids = [
+      22, 23, 33, 61, 62, 64, 65, 66, 67, 68, 69, 70, 72,
+    ];
+    const tasks_array = [
+      'Form INC 20A',
+      'Form ADT 1',
+      'Balance Sheet Preparation',
+      'ITR Filing',
+      'DIN KYC',
+      'Form AOC 4',
+      'Form MGT 7A',
+    ];
+
+    let targetServices: { service_id: number; service_name: string; category_id: number }[] = [];
+
+    if (
+      is_custom === '1' &&
+      Array.isArray(custom_package_services) &&
+      custom_package_services.length > 0
+    ) {
+      const sIds = custom_package_services
+        .map((id: any) => Number(id))
+        .filter((n: number) => !isNaN(n) && n > 0);
+      if (sIds.length > 0) {
+        const fetched = await prisma.services.findMany({
+          where: { service_id: { in: sIds } },
+          select: { service_id: true, service_name: true, category_id: true },
+        });
+        targetServices = fetched;
+      }
+    } else {
+      const sId = Number(customer_service_id);
+      if (!isNaN(sId) && sId > 0) {
+        const s = await prisma.services.findFirst({
+          where: { service_id: sId },
+          select: { service_id: true, service_name: true, category_id: true },
+        });
+        if (s) targetServices = [s];
+      }
+    }
+
+    if (targetServices.length === 0) {
+      targetServices = [
+        {
+          service_id: Number(customer_service_id) || 1,
+          service_name: String(customer_service || 'Business Advisory'),
+          category_id: Number(customer_category_id) || 1,
+        },
+      ];
+    }
+
+    const createdTasks: any[] = [];
+    const maxTask = await prisma.operation_tasks.findFirst({
+      orderBy: { task_id: 'desc' },
+      select: { task_id: true },
+    });
+    let currentTaskId = (maxTask?.task_id || 4911) + 1;
+
+    for (const serv of targetServices) {
+      const sid = serv.service_id;
+      const sName = serv.service_name;
+      const catId = serv.category_id;
+
+      // 1. Main Service Task (Always created)
+      const t1 = await prisma.operation_tasks.create({
+        data: {
+          task_id: currentTaskId++,
+          cust_id: custId,
+          service_id: sid,
+          order_id: orderDbId,
+          task_name: sName,
+          added_by: staffUserId,
+          is_assign: 0,
+          is_return: 0,
+          original_task_status: 1,
+          assign_date: new Date(),
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+      createdTasks.push(t1);
+
+      // 2. Customer Support Task (If allowed)
+      if (!no_customer_support_task_service_ids.includes(sid)) {
+        const t2 = await prisma.operation_tasks.create({
+          data: {
+            task_id: currentTaskId++,
+            cust_id: custId,
+            service_id: sid,
+            order_id: orderDbId,
+            task_name: 'Customer Support',
+            added_by: staffUserId,
+            is_assign: 0,
+            is_return: 0,
+            original_task_status: 1,
+            assign_date: new Date(),
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        });
+        createdTasks.push(t2);
+      }
+
+      // 3. Category Specific Extra Tasks
+      if (catId === 4) {
+        // Company Incorporation - 7 Subtasks
+        for (const tName of tasks_array) {
+          const tCat = await prisma.operation_tasks.create({
+            data: {
+              task_id: currentTaskId++,
+              cust_id: custId,
+              service_id: sid,
+              order_id: orderDbId,
+              task_name: tName,
+              added_by: staffUserId,
+              is_assign: 0,
+              is_return: 0,
+              original_task_status: 1,
+              assign_date: new Date(),
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+          });
+          createdTasks.push(tCat);
+        }
+      } else if (catId === 1) {
+        // DSC Services - 1 Extra Task
+        const tDsc = await prisma.operation_tasks.create({
+          data: {
+            task_id: currentTaskId++,
+            cust_id: custId,
+            service_id: sid,
+            order_id: orderDbId,
+            task_name: 'DSC Application',
+            added_by: staffUserId,
+            is_assign: 0,
+            is_return: 0,
+            original_task_status: 1,
+            assign_date: new Date(),
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        });
+        createdTasks.push(tDsc);
+      }
+    }
+
+    // 5. Update Coupon remaining count if applied
+    if (coupon_code) {
+      const cName = String(coupon_code).trim().toUpperCase();
+      const coupon = await prisma.coupons.findFirst({ where: { coupon_name: cName } });
+      if (coupon) {
+        const remaining = Math.max(0, coupon.coupon_remaining - 1);
+        await prisma.coupons.update({
+          where: { coupon_id: coupon.coupon_id },
+          data: {
+            coupon_remaining: remaining,
+            is_active: remaining === 0 ? 0 : coupon.is_active,
+          },
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Offline customer created successfully in database and operation tasks generated!',
+      data: {
+        customer_id: custId,
+        lead_id: leadId,
+        total_tasks_created: createdTasks.length,
+      },
+    });
+  } catch (error) {
+    console.error('Error adding offline customer:', error);
+    res.status(500).json({ success: false, error: 'Failed to add customer.' });
+  }
 });
 
 // 9. Services List (supports ?source=udyamikisan / ?source=sahakar / ?source=etaxwala)
@@ -2884,6 +3503,178 @@ router.get('/sm/fees-report', async (_req, res) => {
   } catch (error) {
     console.error('Error fetching fees report:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch fees report' });
+  }
+});
+
+// 8. Categories List
+router.get('/categories', async (_req, res) => {
+  try {
+    const cats = await prisma.categories.findMany({
+      orderBy: { category_id: 'asc' },
+    });
+    res.json({
+      success: true,
+      data: serializeBigInt(cats),
+    });
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch categories' });
+  }
+});
+
+// 9. Services by Category
+router.get('/services-by-category/:categoryId', async (req, res) => {
+  try {
+    const categoryId = Number(req.params.categoryId);
+    const servicesList = await prisma.services.findMany({
+      where: { category_id: categoryId },
+      orderBy: { service_id: 'asc' },
+    });
+    res.json({
+      success: true,
+      data: serializeBigInt(servicesList),
+    });
+  } catch (error) {
+    console.error('Error fetching services by category:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch services' });
+  }
+});
+
+// 10. All Services (for custom package)
+router.get('/all-services', async (_req, res) => {
+  try {
+    const allServices = await prisma.services.findMany({
+      orderBy: { service_name: 'asc' },
+    });
+    res.json({
+      success: true,
+      data: serializeBigInt(allServices),
+    });
+  } catch (error) {
+    console.error('Error fetching all services:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch services' });
+  }
+});
+
+// 11. Real Customers List (All 1421 from DB with search, filter & pagination)
+router.get('/customers', async (req, res) => {
+  try {
+    const { search, limit = 50, page = 1 } = req.query;
+    const take = limit === 'all' ? 10000 : Math.min(Math.max(Number(limit) || 50, 1), 10000);
+    const pageNum = Math.max(Number(page) || 1, 1);
+    const skip = (pageNum - 1) * take;
+
+    const whereConditions: string[] = ['1=1'];
+    if (search) {
+      const q = String(search).trim().replace(/'/g, "''");
+      whereConditions.push(
+        `(c.name LIKE '%${q}%' OR c.business LIKE '%${q}%' OR c.contact LIKE '%${q}%' OR c.email LIKE '%${q}%' OR c.city LIKE '%${q}%' OR c.service LIKE '%${q}%')`
+      );
+    }
+    const whereSql = whereConditions.join(' AND ');
+
+    const countRes = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT COUNT(*) as total FROM customers c WHERE ${whereSql}`
+    );
+    const total = Number(countRes[0]?.total || 0);
+
+    const custsRaw = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT 
+        c.id, c.name, c.business, c.email, c.contact, c.state, c.city, c.service,
+        c.service_price, c.added_by, c.date, c.is_payment,
+        s.service_name, cat.category_name, su.name AS added_by_name
+       FROM customers c 
+       LEFT JOIN services s ON (c.service = CAST(s.service_id AS CHAR) OR c.service = s.service_name) 
+       LEFT JOIN categories cat ON s.category_id = cat.category_id 
+       LEFT JOIN staff_users su ON c.added_by = su.id
+       WHERE ${whereSql}
+       ORDER BY c.id DESC 
+       LIMIT ${take} OFFSET ${skip}`
+    );
+
+    const ids = custsRaw.map((c) => Number(c.id)).filter(Boolean);
+    let emiMap: Record<number, any> = {};
+    if (ids.length > 0) {
+      const emis: any[] = await prisma.$queryRawUnsafe(
+        `SELECT customer_id, emi_total_amount, emi_paid_amount, emi_unpaid_amount, emi_due_date 
+         FROM customer_emi WHERE customer_id IN (${ids.join(',')}) ORDER BY emi_id DESC`
+      );
+      emis.forEach((e: any) => {
+        const cid = Number(e.customer_id);
+        if (!emiMap[cid]) {
+          emiMap[cid] = e;
+        }
+      });
+    }
+
+    const mapped = custsRaw.map((c: any) => {
+      const cid = Number(c.id);
+      const emi = emiMap[cid];
+      const totalAmt = emi ? Number(emi.emi_total_amount) : Number(c.service_price) || 0;
+      const paidAmt = emi
+        ? Number(emi.emi_paid_amount)
+        : c.is_payment
+          ? Number(c.service_price) || 0
+          : 0;
+      const unpaidAmt = emi ? Number(emi.emi_unpaid_amount) : Math.max(totalAmt - paidAmt, 0);
+      const dueDate = emi?.emi_due_date ? String(emi.emi_due_date).split('T')[0] : '—';
+
+      return {
+        id: cid,
+        name: c.name || 'Client',
+        business: c.business || '',
+        company: c.business || '—',
+        mobile: c.contact || '',
+        email: c.email || '',
+        state: c.state || 'Maharashtra',
+        city: c.city || '—',
+        category: c.category_name || 'General Services',
+        service: c.service_name || c.service || 'Tax & Filing',
+        type: c.business ? 'Corporate' : 'Individual',
+        addedBy: c.added_by_name || `Staff #${c.added_by || 1}`,
+        total: totalAmt,
+        paid: paidAmt,
+        unpaid: unpaidAmt,
+        dueDate,
+        date: c.date ? String(c.date).split('T')[0] : '',
+      };
+    });
+
+    res.json({
+      success: true,
+      total,
+      data: mapped,
+    });
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch customers' });
+  }
+});
+
+// 12. Operations Staff List (All Operations Managers, Employees, Assistants from DB)
+router.get('/operation-staff', async (_req, res) => {
+  try {
+    const opsStaff = await prisma.staff_users.findMany({
+      where: {
+        is_active: true,
+        role_id: { in: [3, 8, 12] },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role_id: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    res.json({
+      success: true,
+      data: serializeBigInt(opsStaff),
+    });
+  } catch (error) {
+    console.error('Error fetching operation staff:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch operation staff' });
   }
 });
 
