@@ -5,14 +5,12 @@ import {
   QrCode,
   AlertCircle,
   Upload,
-  Check,
-  Sparkles,
-  FileText,
   ArrowRight,
   ShieldCheck,
   ChevronDown,
   CheckCircle2,
 } from 'lucide-react';
+
 import { useAuthStore } from '@/store/auth-store';
 
 interface RequestMoneyModalProps {

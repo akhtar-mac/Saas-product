@@ -1,17 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  Mail,
-  Phone,
-  Lock,
-  ArrowLeft,
-  CheckCircle2,
-  KeyRound,
-  Loader2,
-  ShieldCheck,
-  Eye,
-  EyeOff,
-} from 'lucide-react';
+import { Mail, Lock, ArrowLeft, CheckCircle2, KeyRound, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function ClientForgotPasswordPage() {
   const [step, setStep] = useState<'request' | 'verify' | 'reset' | 'done'>('request');

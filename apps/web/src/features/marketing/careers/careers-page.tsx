@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Briefcase,
   MapPin,
-  Clock,
   ArrowRight,
   TrendingUp,
   Users,
@@ -17,7 +16,6 @@ import {
   X,
   Loader2,
   Sparkles,
-  Building2,
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';

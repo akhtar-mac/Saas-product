@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
 import {
-  Camera, MapPin, Building2, Users, Sparkles, ArrowRight,
-  ChevronLeft, ChevronRight, X, ZoomIn, Calendar, CheckCircle2,
-  Laptop, ShieldCheck
+  Camera,
+  MapPin,
+  Building2,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  ZoomIn,
+  CheckCircle2,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,7 +41,8 @@ export const DUMMY_PHOTOS: PhotoItem[] = [
     badgeColor: 'bg-blue-50 text-[#0084D1] border-blue-200',
     gradient: 'from-blue-950 via-slate-900 to-indigo-950',
     accentColor: '#0084D1',
-    description: 'Our in-house corporate secretarial and chartered accountant wing conducting end-to-end statutory review with zero mismatch guarantee before digital signature affixation.',
+    description:
+      'Our in-house corporate secretarial and chartered accountant wing conducting end-to-end statutory review with zero mismatch guarantee before digital signature affixation.',
     highlightStat: '100% In-House CAs',
     imageUrl: '/hero_corporate_ca.jpg',
   },
@@ -49,7 +57,8 @@ export const DUMMY_PHOTOS: PhotoItem[] = [
     badgeColor: 'bg-purple-50 text-[#7C3AED] border-purple-200',
     gradient: 'from-purple-950 via-slate-900 to-violet-900',
     accentColor: '#7C3AED',
-    description: 'Welcoming newly incorporated Private Limited directors with complete physical incorporation dossier, Director DIN allotments, and instant zero-fee corporate bank account kit.',
+    description:
+      'Welcoming newly incorporated Private Limited directors with complete physical incorporation dossier, Director DIN allotments, and instant zero-fee corporate bank account kit.',
     highlightStat: '7-10 Days Turnaround',
     imageUrl: '/photos/ca_client_handover.jpg',
   },
@@ -64,7 +73,8 @@ export const DUMMY_PHOTOS: PhotoItem[] = [
     badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     gradient: 'from-emerald-950 via-slate-900 to-teal-950',
     accentColor: '#059669',
-    description: 'Empowering farmer clusters and agribusiness founders with DPR drafting, smart board resolutions, and statutory compliances to unlock central and state government agri subsidies.',
+    description:
+      'Empowering farmer clusters and agribusiness founders with DPR drafting, smart board resolutions, and statutory compliances to unlock central and state government agri subsidies.',
     highlightStat: '120+ FPCs Guided',
     imageUrl: '/photos/fpc_farmer_meeting.jpg',
   },
@@ -79,7 +89,8 @@ export const DUMMY_PHOTOS: PhotoItem[] = [
     badgeColor: 'bg-cyan-50 text-cyan-700 border-cyan-200',
     gradient: 'from-cyan-950 via-slate-900 to-sky-950',
     accentColor: '#0284C7',
-    description: 'ETaxwala’s custom software development division engineering proprietary client portal tools, real-time filing trackers, and automated ITC reconciliation engines.',
+    description:
+      'ETaxwala’s custom software development division engineering proprietary client portal tools, real-time filing trackers, and automated ITC reconciliation engines.',
     highlightStat: 'Bank-Grade 256-Bit SSL',
     imageUrl: '/hero_corporate_growth.jpg',
   },
@@ -94,7 +105,8 @@ export const DUMMY_PHOTOS: PhotoItem[] = [
     badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
     gradient: 'from-amber-950 via-slate-900 to-orange-950',
     accentColor: '#D97706',
-    description: 'Ensuring manufacturing, trading, and service corporations across Maharashtra remain penalty-free and notice-proof through comprehensive statutory auditing.',
+    description:
+      'Ensuring manufacturing, trading, and service corporations across Maharashtra remain penalty-free and notice-proof through comprehensive statutory auditing.',
     highlightStat: 'Zero Notice Guarantee',
     imageUrl: '/about_team.jpg',
   },
@@ -109,7 +121,8 @@ export const DUMMY_PHOTOS: PhotoItem[] = [
     badgeColor: 'bg-rose-50 text-[#E11D48] border-rose-200',
     gradient: 'from-rose-950 via-slate-900 to-pink-950',
     accentColor: '#E11D48',
-    description: 'Helping seed-stage entrepreneurs secure DPIIT recognition, 3-year tax holidays, and cap-table structuring for venture capital and angel funding rounds.',
+    description:
+      'Helping seed-stage entrepreneurs secure DPIIT recognition, 3-year tax holidays, and cap-table structuring for venture capital and angel funding rounds.',
     highlightStat: '45+ Startups Backed',
     imageUrl: '/chooseetaxwala.jpg',
   },
@@ -124,7 +137,8 @@ export const DUMMY_PHOTOS: PhotoItem[] = [
     badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     gradient: 'from-indigo-950 via-slate-900 to-blue-950',
     accentColor: '#4F46E5',
-    description: 'Defending brand names, brand logos, and trade names across IP India classes 1 to 45 with prompt examination responses and trademark hearing representation.',
+    description:
+      'Defending brand names, brand logos, and trade names across IP India classes 1 to 45 with prompt examination responses and trademark hearing representation.',
     highlightStat: '98.5% Approval Rate',
     imageUrl: '/ofc1.jpg',
   },
@@ -139,7 +153,8 @@ export const DUMMY_PHOTOS: PhotoItem[] = [
     badgeColor: 'bg-teal-50 text-teal-700 border-teal-200',
     gradient: 'from-teal-950 via-slate-900 to-emerald-950',
     accentColor: '#0D9488',
-    description: 'Assisting small business owners, weavers, and food processors in obtaining MSME Udyam certification and unlocking government credit guarantee schemes.',
+    description:
+      'Assisting small business owners, weavers, and food processors in obtaining MSME Udyam certification and unlocking government credit guarantee schemes.',
     highlightStat: 'Same-Day Issuance',
     imageUrl: '/office-2.jpg',
   },
@@ -151,11 +166,19 @@ export default function PhotoSliderSection() {
   const [sliderMode, setSliderMode] = useState<'flow' | 'manual'>('flow');
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
-  const categories = ['All', 'Offices & CAs', 'Client Handover', 'Agri & FPC', 'Tech & Software', 'Compliance'];
+  const categories = [
+    'All',
+    'Offices & CAs',
+    'Client Handover',
+    'Agri & FPC',
+    'Tech & Software',
+    'Compliance',
+  ];
 
-  const filteredPhotos = selectedCategory === 'All'
-    ? DUMMY_PHOTOS
-    : DUMMY_PHOTOS.filter((p) => p.category === selectedCategory);
+  const filteredPhotos =
+    selectedCategory === 'All'
+      ? DUMMY_PHOTOS
+      : DUMMY_PHOTOS.filter((p) => p.category === selectedCategory);
 
   const handleNext = () => {
     setActiveSlideIndex((prev) => (prev + 1) % filteredPhotos.length);
@@ -167,13 +190,11 @@ export default function PhotoSliderSection() {
 
   return (
     <section className="py-20 bg-white border-y border-[#EAE6DD] relative overflow-hidden">
-      
       {/* ── Background Subtle Ambient Decor ── */}
       <div className="absolute top-10 left-10 w-96 h-96 bg-gradient-to-br from-blue-50/60 via-purple-50/40 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-80 h-80 bg-gradient-to-tl from-amber-50/60 via-rose-50/30 to-transparent rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-10">
-
         {/* ── Section Header (ETaxwala Cream & Clean Design) ── */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-3 max-w-2xl text-left">
@@ -193,7 +214,8 @@ export default function PhotoSliderSection() {
             </h2>
 
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-              A glimpse into our chartered accountant desks, regional offices, farmer cluster workshops, and client certification handovers across Maharashtra.
+              A glimpse into our chartered accountant desks, regional offices, farmer cluster
+              workshops, and client certification handovers across Maharashtra.
             </p>
           </div>
 
@@ -205,8 +227,10 @@ export default function PhotoSliderSection() {
                 type="button"
                 onClick={() => setSliderMode('flow')}
                 className={cn(
-                  "px-3 py-1.5 rounded-lg transition-all cursor-pointer",
-                  sliderMode === 'flow' ? "bg-white text-slate-900 shadow-xs border border-[#EAE6DD]" : "hover:text-slate-900 text-slate-500"
+                  'px-3 py-1.5 rounded-lg transition-all cursor-pointer',
+                  sliderMode === 'flow'
+                    ? 'bg-white text-slate-900 shadow-xs border border-[#EAE6DD]'
+                    : 'hover:text-slate-900 text-slate-500'
                 )}
               >
                 Continuous Flow
@@ -215,8 +239,10 @@ export default function PhotoSliderSection() {
                 type="button"
                 onClick={() => setSliderMode('manual')}
                 className={cn(
-                  "px-3 py-1.5 rounded-lg transition-all cursor-pointer",
-                  sliderMode === 'manual' ? "bg-white text-slate-900 shadow-xs border border-[#EAE6DD]" : "hover:text-slate-900 text-slate-500"
+                  'px-3 py-1.5 rounded-lg transition-all cursor-pointer',
+                  sliderMode === 'manual'
+                    ? 'bg-white text-slate-900 shadow-xs border border-[#EAE6DD]'
+                    : 'hover:text-slate-900 text-slate-500'
                 )}
               >
                 Slide by Slide
@@ -258,10 +284,10 @@ export default function PhotoSliderSection() {
                 setActiveSlideIndex(0);
               }}
               className={cn(
-                "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer',
                 selectedCategory === cat
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-[#FAF9F5] text-slate-600 hover:text-slate-900 border border-[#EAE6DD] hover:border-slate-300"
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-[#FAF9F5] text-slate-600 hover:text-slate-900 border border-[#EAE6DD] hover:border-slate-300'
               )}
             >
               {cat}
@@ -293,9 +319,11 @@ export default function PhotoSliderSection() {
                         loading="lazy"
                       />
                     ) : (
-                      <div className={`absolute inset-0 bg-gradient-to-br ${photo.gradient} transition-transform duration-700 group-hover:scale-105`} />
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br ${photo.gradient} transition-transform duration-700 group-hover:scale-105`}
+                      />
                     )}
-                    
+
                     {/* Dark gradient mask for crisp text contrast */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/50" />
 
@@ -361,7 +389,9 @@ export default function PhotoSliderSection() {
                       loading="lazy"
                     />
                   ) : (
-                    <div className={`absolute inset-0 bg-gradient-to-br ${photo.gradient} transition-transform duration-500 group-hover:scale-105`} />
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${photo.gradient} transition-transform duration-500 group-hover:scale-105`}
+                    />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/40" />
 
@@ -413,7 +443,10 @@ export default function PhotoSliderSection() {
         <div className="pt-4 border-t border-[#EAE6DD] flex flex-wrap items-center justify-between gap-4 text-xs text-slate-600">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>3 Regional Offices: <strong>Chhatrapati Sambhajinagar</strong> • <strong>Pune</strong> • <strong>Jalna</strong></span>
+            <span>
+              3 Regional Offices: <strong>Chhatrapati Sambhajinagar</strong> • <strong>Pune</strong>{' '}
+              • <strong>Jalna</strong>
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Building2 className="w-4 h-4 text-[#0084D1] shrink-0" />
@@ -427,7 +460,6 @@ export default function PhotoSliderSection() {
             <span>→</span>
           </a>
         </div>
-
       </div>
 
       {/* ═════════════════════════════════════════════════════════════════
@@ -435,7 +467,6 @@ export default function PhotoSliderSection() {
           ═════════════════════════════════════════════════════════════════ */}
       {activePhoto && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-          
           {/* Close Button */}
           <button
             type="button"
@@ -448,7 +479,6 @@ export default function PhotoSliderSection() {
 
           {/* Lightbox Modal Card */}
           <div className="relative w-full max-w-3xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-[#EAE6DD] flex flex-col md:flex-row select-none">
-            
             {/* Visual Preview Half */}
             <div className="md:w-1/2 min-h-[280px] md:min-h-[420px] relative flex flex-col justify-between p-6 text-white overflow-hidden bg-slate-900">
               {activePhoto.imageUrl ? (
@@ -487,10 +517,17 @@ export default function PhotoSliderSection() {
             <div className="md:w-1/2 p-6 sm:p-8 flex flex-col justify-between space-y-6 text-left bg-[#FFFDF9]">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className={cn("text-xs font-extrabold px-3 py-1 rounded-full border", activePhoto.badgeColor)}>
+                  <span
+                    className={cn(
+                      'text-xs font-extrabold px-3 py-1 rounded-full border',
+                      activePhoto.badgeColor
+                    )}
+                  >
                     {activePhoto.badge}
                   </span>
-                  <span className="text-xs text-slate-400 font-medium">Verified ETaxwala Event</span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    Verified ETaxwala Event
+                  </span>
                 </div>
 
                 <h4 className="text-base font-extrabold text-slate-900 leading-snug">
@@ -507,7 +544,8 @@ export default function PhotoSliderSection() {
                     <span>Practicing Professional Standard</span>
                   </p>
                   <p className="text-[11px] text-slate-500 leading-normal">
-                    All business charters and corporate filings are audited directly by practicing Chartered Accountants and Company Secretaries.
+                    All business charters and corporate filings are audited directly by practicing
+                    Chartered Accountants and Company Secretaries.
                   </p>
                 </div>
               </div>
@@ -525,12 +563,9 @@ export default function PhotoSliderSection() {
                 </a>
               </div>
             </div>
-
           </div>
-
         </div>
       )}
-
     </section>
   );
 }

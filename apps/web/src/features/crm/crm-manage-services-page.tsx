@@ -7,8 +7,6 @@ import {
   Save,
   X,
   Briefcase,
-  Tag,
-  IndianRupee,
   AlertTriangle,
   Check,
   Star,

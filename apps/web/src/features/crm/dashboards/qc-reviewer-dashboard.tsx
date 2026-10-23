@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import {
-  FileCheck2,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Eye,
-  ShieldCheck,
-  RotateCcw,
-  X,
-} from 'lucide-react';
+import { FileCheck2, CheckCircle2, XCircle, ShieldCheck, RotateCcw, X } from 'lucide-react';
 
 export default function QcReviewerDashboard() {
   const [selectedCase, setSelectedCase] = useState<any | null>(null);

@@ -1,16 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Calendar,
-  Clock,
-  PhoneCall,
-  Video,
-  UserCheck,
-  CheckCircle2,
-  Users,
-  Building,
-  FileSpreadsheet,
-} from 'lucide-react';
+import { Calendar, Clock, PhoneCall, UserCheck, CheckCircle2, FileSpreadsheet } from 'lucide-react';
 
 export default function ConsultationDashboard() {
   const appointments = [
@@ -81,7 +71,7 @@ export default function ConsultationDashboard() {
           {
             title: 'Appointments Today',
             value: '4 Calls',
-            sub: '2 Video, 2 Phone',
+            sub: '2 2 Phone',
             icon: Calendar,
             color: '#003A66',
             bg: 'rgba(0,58,102,0.08)',

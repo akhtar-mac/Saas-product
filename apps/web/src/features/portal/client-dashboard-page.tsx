@@ -3,20 +3,18 @@ import { Link } from 'react-router-dom';
 import {
   FileText,
   Clock,
-  CheckCircle2,
   AlertTriangle,
   Upload,
   CreditCard,
   ArrowRight,
   Download,
   PhoneCall,
-  UserCheck,
   Building2,
   ShieldCheck,
   Zap,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
-import { TaskStatus, TASK_STATUS_LABELS } from '@etaxwala/types';
+import { TaskStatus } from '@etaxwala/types';
 
 export default function ClientDashboardPage() {
   const { customer, customerToken } = useAuthStore();

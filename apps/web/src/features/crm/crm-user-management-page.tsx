@@ -7,19 +7,15 @@ import {
   UserCheck,
   UserX,
   Shield,
-  ChevronDown,
   X,
   Eye,
   EyeOff,
   Check,
   AlertTriangle,
-  Briefcase,
   Phone,
   Mail,
-  Clock,
-  CheckSquare,
-  Square,
   RotateCcw,
+  CheckSquare,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';

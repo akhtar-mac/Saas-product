@@ -1,25 +1,12 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Code,
   LayoutDashboard,
   Smartphone,
   Layers,
   ArrowRight,
-  CheckCircle2,
-  Sparkles,
-  Server,
-  Shield,
-  Zap,
-  Laptop,
-  Database,
-  GitBranch,
-  Terminal,
   MessageCircle,
-  Phone,
   Check,
-  Star,
-  Cpu,
   Lock,
 } from 'lucide-react';
 import SEO from '@/components/seo';

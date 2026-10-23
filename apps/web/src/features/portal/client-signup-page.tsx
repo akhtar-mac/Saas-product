@@ -4,17 +4,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
+  Shield,
   ShieldCheck,
   Lock,
   Mail,
   Phone,
   User,
-  Building,
   ArrowRight,
   Search,
-  Check,
-  Sparkles,
-  CheckCircle2,
   Loader2,
 } from 'lucide-react';
 import { services } from '@/lib/constants/services';

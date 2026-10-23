@@ -6,25 +6,18 @@ import {
   Paperclip,
   X,
   FileText,
-  Image as ImageIcon,
-  Check,
-  CheckCheck,
-  Clock,
+  Image,
   Shield,
+  CheckCheck,
   Users,
-  Phone,
   Mail,
   Building,
   AlertCircle,
   Download,
   RefreshCw,
   MessageSquare,
-  MessageCircle,
   Volume2,
   VolumeX,
-  Sparkles,
-  ChevronRight,
-  Eye,
   CreditCard,
   Wallet,
   AlertTriangle,
@@ -923,7 +916,11 @@ export default function CrmChatPage() {
                         ? 'bg-blue-50 text-[#0084D1] border-blue-200 hover:bg-blue-100 shadow-2xs'
                         : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
                     }`}
-                    title={soundEnabled ? 'Staff Chat Chimes Active (Click to mute)' : 'Muted (Click to enable audio chime)'}
+                    title={
+                      soundEnabled
+                        ? 'Staff Chat Chimes Active (Click to mute)'
+                        : 'Muted (Click to enable audio chime)'
+                    }
                   >
                     <div className="w-3.5 h-3.5 rounded-lg bg-gradient-to-tr from-[#1B365D] to-[#0084D1] flex items-center justify-center text-white">
                       <MessageSquare className="w-2 h-2 fill-white stroke-none" />

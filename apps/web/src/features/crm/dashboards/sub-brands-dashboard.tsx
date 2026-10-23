@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Layers,
-  Building,
-  Sprout,
-  Users,
-  CheckCircle2,
-  TrendingUp,
-  FileCheck,
-  ArrowRight,
-  MapPin,
-  Loader2,
-} from 'lucide-react';
+import { Building, Sprout, Users, TrendingUp, FileCheck, MapPin, Loader2 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 

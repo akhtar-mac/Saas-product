@@ -1,27 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
-import {
-  Search,
-  Plus,
-  Trash2,
-  Edit3,
-  Eye,
-  FileText,
-  Phone,
-  Calendar,
-  Check,
-  ChevronDown,
-  X,
-  HelpCircle,
-  Clock,
-  Info,
-  Building,
-  User,
-  ArrowRight,
-  Upload,
-} from 'lucide-react';
+import { Plus, Phone, ChevronDown, X, User } from 'lucide-react';
 
 interface Lead {
   id: number;

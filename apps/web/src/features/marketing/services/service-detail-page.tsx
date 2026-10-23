@@ -1,32 +1,23 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   CheckCircle2,
   ArrowRight,
   Phone,
   MessageCircle,
-  FileBadge,
-  ChevronRight,
   Star,
   Clock,
   ShieldCheck,
   FileCheck,
-  HelpCircle,
   Sparkles,
   Lock,
-  Building2,
-  UserCheck,
   AlertCircle,
   Laptop,
   Check,
   X,
   ChevronDown,
-  Award,
-  Send,
   Info,
-  Layers,
-  Zap,
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
@@ -35,14 +26,12 @@ import {
   getServiceBySlug,
   getCategoryById,
   services,
-  formatPrice,
   getServicePackages,
   getServiceProcessSteps,
   getServiceDocuments,
   getServiceComparison,
   getServiceSoftwareFeatures,
   getServiceFaqs,
-  ServicePackage,
 } from '@/lib/constants/services';
 import { cn } from '@/lib/utils';
 import LiveSocialProofGrid from '@/components/marketing/live-social-proof-grid';

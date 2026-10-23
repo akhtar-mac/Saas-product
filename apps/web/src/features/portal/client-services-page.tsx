@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileCheck, ArrowRight, Clock, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { FileCheck, ArrowRight } from 'lucide-react';
 import { TaskStatus, TASK_STATUS_LABELS } from '@etaxwala/types';
 
 export default function ClientServicesPage() {

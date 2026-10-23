@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 export interface TabItem {
   id: string;
@@ -16,7 +16,9 @@ export interface TabsProps {
 
 export function Tabs({ tabs, activeTab, onChange, className = '' }: TabsProps) {
   return (
-    <div className={`flex items-center gap-1 border-b border-slate-200 dark:border-slate-800 overflow-x-auto ${className}`}>
+    <div
+      className={`flex items-center gap-1 border-b border-slate-200 dark:border-slate-800 overflow-x-auto ${className}`}
+    >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (

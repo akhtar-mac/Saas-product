@@ -1,21 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Users,
-  Settings,
-  FolderLock,
-  Layers,
-  Calendar,
-  FileCheck2,
-  TrendingUp,
-  Activity,
-  CheckCircle2,
-  Search,
-  Plus,
-  ArrowRight,
-  Package,
-  BookOpen,
-} from 'lucide-react';
+import { Users, FolderLock, Layers, Calendar, FileCheck2, Package, BookOpen } from 'lucide-react';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -168,7 +153,9 @@ export default function AdminDashboard() {
             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <Layers className="w-5 h-5 text-[#1B365D]" />
             </div>
-            <span className="text-xs font-bold text-slate-700 group-hover:text-[#1B365D]">Categories</span>
+            <span className="text-xs font-bold text-slate-700 group-hover:text-[#1B365D]">
+              Categories
+            </span>
             <span className="text-[10px] text-slate-400">Manage categories</span>
           </Link>
           <Link
@@ -178,7 +165,9 @@ export default function AdminDashboard() {
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <Package className="w-5 h-5 text-emerald-600" />
             </div>
-            <span className="text-xs font-bold text-slate-700 group-hover:text-emerald-700">Services</span>
+            <span className="text-xs font-bold text-slate-700 group-hover:text-emerald-700">
+              Services
+            </span>
             <span className="text-[10px] text-slate-400">Manage 257 services</span>
           </Link>
           <Link
@@ -188,7 +177,9 @@ export default function AdminDashboard() {
             <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <FolderLock className="w-5 h-5 text-amber-600" />
             </div>
-            <span className="text-xs font-bold text-slate-700 group-hover:text-amber-700">Packages</span>
+            <span className="text-xs font-bold text-slate-700 group-hover:text-amber-700">
+              Packages
+            </span>
             <span className="text-[10px] text-slate-400">Bundle packages</span>
           </Link>
           <Link
@@ -198,7 +189,9 @@ export default function AdminDashboard() {
             <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <BookOpen className="w-5 h-5 text-indigo-600" />
             </div>
-            <span className="text-xs font-bold text-slate-700 group-hover:text-indigo-700">Blogs</span>
+            <span className="text-xs font-bold text-slate-700 group-hover:text-indigo-700">
+              Blogs
+            </span>
             <span className="text-[10px] text-slate-400">Manage articles</span>
           </Link>
           <Link
@@ -208,7 +201,9 @@ export default function AdminDashboard() {
             <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <Calendar className="w-5 h-5 text-purple-600" />
             </div>
-            <span className="text-xs font-bold text-slate-700 group-hover:text-purple-700">Appointments</span>
+            <span className="text-xs font-bold text-slate-700 group-hover:text-purple-700">
+              Appointments
+            </span>
             <span className="text-[10px] text-slate-400">Manage bookings</span>
           </Link>
           <Link
@@ -218,7 +213,9 @@ export default function AdminDashboard() {
             <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
               <Users className="w-5 h-5 text-rose-600" />
             </div>
-            <span className="text-xs font-bold text-slate-700 group-hover:text-rose-700">Staff / Users</span>
+            <span className="text-xs font-bold text-slate-700 group-hover:text-rose-700">
+              Staff / Users
+            </span>
             <span className="text-[10px] text-slate-400">Manage managers</span>
           </Link>
         </div>

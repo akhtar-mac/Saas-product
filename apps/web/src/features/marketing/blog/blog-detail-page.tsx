@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import {
   Calendar,
   Clock,
-  User,
   ArrowLeft,
   ArrowRight,
   Share2,

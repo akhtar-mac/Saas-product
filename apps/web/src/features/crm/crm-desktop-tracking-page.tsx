@@ -1,21 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Monitor,
-  Clock,
-  Search,
-  Filter,
-  RefreshCw,
-  Copy,
-  FileSpreadsheet,
-  FileText,
-  Printer,
-  Calendar,
-  ExternalLink,
-  Eye,
-  X,
-  Radio,
-  CheckCircle2,
-} from 'lucide-react';
+import { Monitor, Clock, Eye, X, Radio } from 'lucide-react';
 
 interface TrackingEntry {
   id: number;

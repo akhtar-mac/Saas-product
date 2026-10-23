@@ -1233,19 +1233,19 @@ router.get('/tasks', async (req, res) => {
         ta.assign_date, 
         ta.due_date, 
         ta.actual_task_status,
-        u.username as assigned_to_name, 
+        su.name as assigned_to_name, 
         c.name as customer_name, 
         c.business as company_name,
         c.contact as customer_contact,
         c.email as customer_email,
         s.service_name, 
-        ub.username as added_by_name
+        sub.name as added_by_name
       FROM operation_tasks ot
       LEFT JOIN customers c ON c.id = ot.cust_id
       LEFT JOIN services s ON s.service_id = ot.service_id
       LEFT JOIN task_assign ta ON ta.task_id = ot.task_id
-      LEFT JOIN users u ON u.id = ta.assign_to
-      LEFT JOIN users ub ON ub.id = ot.added_by
+      LEFT JOIN staff_users su ON su.id = ta.assign_to
+      LEFT JOIN staff_users sub ON sub.id = ot.added_by
       ${whereClause}
       ORDER BY ot.task_id DESC
       LIMIT ${Math.min(Number(limit) || 100, 500)}
@@ -1694,51 +1694,41 @@ router.get('/categories', async (req, res) => {
 router.get('/services-by-category/:categoryId', async (req, res) => {
   const categoryId = Number(req.params.categoryId);
   try {
-    const services: any[] = (await prisma
+    // Exact same query as old CRM FetchServices — one row per combo_package
+    // cp_title stores the FK to services.service_id
+    const servicesList = (await prisma.$queryRawUnsafe(`
+      SELECT
+        cp.cp_id,
+        s.service_id,
+        s.service_name,
+        s.service_price,
+        s.category_id,
+        cp.cp_type,
+        cp.cp_discount,
+        GREATEST(CAST(s.service_price AS SIGNED) - CAST(cp.cp_discount AS SIGNED), 0) AS effective_price
+      FROM combo_packages cp
+      LEFT JOIN services s ON cp.cp_title = s.service_id
+      WHERE s.category_id = ${categoryId}
+        AND cp.cp_type != 5
+      ORDER BY s.service_name ASC, cp.cp_type ASC
+    `)) as any[];
+
+    if (servicesList && servicesList.length > 0) {
+      return res.json({ success: true, data: serializeBigInt(servicesList) });
+    }
+
+    // Fallback: return plain services if no combo_packages match (e.g. cp_title not configured)
+    const plainServices = (await prisma
       .$queryRawUnsafe(
         `SELECT service_id, service_name, service_price, category_id FROM services WHERE category_id = ? ORDER BY service_name ASC`,
         categoryId
       )
       .catch(() => [])) as any[];
-    if (services && services.length > 0) {
-      return res.json({ success: true, data: serializeBigInt(services) });
-    }
-  } catch (error) {}
-
-  // Fallback hardcoded data per category
-  const fallbackMap: Record<number, any[]> = {
-    1: [
-      { service_id: 3, service_name: 'GST Registration & Return Filing', service_price: 2499 },
-      { service_id: 4, service_name: 'Income Tax Return (ITR) Filing', service_price: 1499 },
-      { service_id: 9, service_name: 'Tax Audit & Advisory', service_price: 4999 },
-      { service_id: 10, service_name: 'TDS Return Filing', service_price: 1999 },
-    ],
-    2: [
-      { service_id: 1, service_name: 'Private Limited Company Registration', service_price: 16499 },
-      { service_id: 2, service_name: 'Limited Liability Partnership (LLP)', service_price: 4999 },
-      {
-        service_id: 11,
-        service_name: 'One Person Company (OPC) Registration',
-        service_price: 5999,
-      },
-      { service_id: 12, service_name: 'Section 8 Company NGO Registration', service_price: 16499 },
-      { service_id: 13, service_name: 'Proprietorship Registration', service_price: 1999 },
-      { service_id: 14, service_name: 'Partnership Firm Registration', service_price: 4999 },
-    ],
-    3: [
-      { service_id: 5, service_name: 'FSSAI Food Business License', service_price: 2999 },
-      { service_id: 7, service_name: 'Import Export Code (IEC)', service_price: 2499 },
-      { service_id: 8, service_name: 'MSME / Udyam Registration', service_price: 999 },
-      { service_id: 15, service_name: 'Professional Tax Registration', service_price: 1499 },
-      { service_id: 16, service_name: 'Shop & Establishment Registration', service_price: 1299 },
-    ],
-    4: [
-      { service_id: 6, service_name: 'Trademark Filing & Registration', service_price: 5999 },
-      { service_id: 17, service_name: 'Copyright Registration', service_price: 7999 },
-      { service_id: 18, service_name: 'Patent Application Assistance', service_price: 24999 },
-    ],
-  };
-  res.json({ success: true, data: fallbackMap[categoryId] || [] });
+    return res.json({ success: true, data: serializeBigInt(plainServices) });
+  } catch (error) {
+    console.error('Error fetching services by category:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch services' });
+  }
 });
 
 // 8a2. All Services (for custom package multi-select)
@@ -4151,14 +4141,28 @@ router.get('/categories', async (_req, res) => {
   }
 });
 
-// 9. Services by Category
+// 9. Services by Category (with cp_type from combo_packages)
 router.get('/services-by-category/:categoryId', async (req, res) => {
   try {
     const categoryId = Number(req.params.categoryId);
-    const servicesList = await prisma.services.findMany({
-      where: { category_id: categoryId },
-      orderBy: { service_id: 'asc' },
-    });
+    // Exact same query as old CRM FetchServices - one row per combo_package
+    // cp_title is the FK to services.service_id (Int field)
+    const servicesList = (await prisma.$queryRawUnsafe(`
+      SELECT
+        cp.cp_id,
+        s.service_id,
+        s.service_name,
+        s.service_price,
+        s.category_id,
+        cp.cp_type,
+        cp.cp_discount,
+        GREATEST(CAST(s.service_price AS SIGNED) - CAST(cp.cp_discount AS SIGNED), 0) AS effective_price
+      FROM combo_packages cp
+      LEFT JOIN services s ON cp.cp_title = s.service_id
+      WHERE s.category_id = ${categoryId}
+        AND cp.cp_type != 5
+      ORDER BY s.service_name ASC, cp.cp_type ASC
+    `)) as any[];
     res.json({
       success: true,
       data: serializeBigInt(servicesList),
@@ -4169,12 +4173,19 @@ router.get('/services-by-category/:categoryId', async (req, res) => {
   }
 });
 
-// 10. All Services (for custom package)
+// 10. All Services (for custom package multi-select - unique services only)
 router.get('/all-services', async (_req, res) => {
   try {
-    const allServices = await prisma.services.findMany({
-      orderBy: { service_name: 'asc' },
-    });
+    // For custom package selector: unique services (no duplicate cp_type rows)
+    const allServices = (await prisma.$queryRawUnsafe(`
+      SELECT DISTINCT
+        s.service_id,
+        s.service_name,
+        s.service_price,
+        s.category_id
+      FROM services s
+      ORDER BY s.service_name ASC
+    `)) as any[];
     res.json({
       success: true,
       data: serializeBigInt(allServices),
@@ -4211,12 +4222,15 @@ router.get('/customers', async (req, res) => {
       `SELECT 
         c.id, c.name, c.business, c.email, c.contact, c.state, c.city, c.service,
         c.service_price, c.added_by, c.date, c.is_payment,
-        s.service_name, cat.category_name, su.name AS added_by_name
+        s.service_name, s.service_id AS svc_id, cat.category_name, su.name AS added_by_name,
+        COALESCE(cp.cp_type, 0) AS cp_type
        FROM customers c 
        LEFT JOIN services s ON (c.service = CAST(s.service_id AS CHAR) OR c.service = s.service_name) 
        LEFT JOIN categories cat ON s.category_id = cat.category_id 
        LEFT JOIN staff_users su ON c.added_by = su.id
+       LEFT JOIN combo_packages cp ON FIND_IN_SET(s.service_id, cp.service_id) > 0
        WHERE ${whereSql}
+       GROUP BY c.id
        ORDER BY c.id DESC 
        LIMIT ${take} OFFSET ${skip}`
     );
@@ -4259,6 +4273,7 @@ router.get('/customers', async (req, res) => {
         city: c.city || '—',
         category: c.category_name || 'General Services',
         service: c.service_name || c.service || 'Tax & Filing',
+        cp_type: Number(c.cp_type) || 0,
         type: c.business ? 'Corporate' : 'Individual',
         addedBy: c.added_by_name || `Staff #${c.added_by || 1}`,
         total: totalAmt,

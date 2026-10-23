@@ -1,17 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Video,
-  Play,
-  Lock,
-  CheckCircle2,
-  Clock,
-  BookOpen,
-  Award,
-  Sparkles,
-  AlertCircle,
-  ArrowRight,
-} from 'lucide-react';
+import { Play, Lock, Clock, Sparkles, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 
 const TRAINING_MODULES = [

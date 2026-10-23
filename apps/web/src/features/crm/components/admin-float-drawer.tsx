@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  Shield,
   Wallet,
   Plus,
   ArrowUpRight,
-  CheckCircle2,
-  Clock,
-  XCircle,
   AlertTriangle,
   Users,
   RefreshCw,
   Eye,
   Search,
-  Filter,
   CreditCard,
-  ChevronRight,
-  FileText,
 } from 'lucide-react';
+
 import { DisbursementWallet, DisbursementRequest, ChatUser } from '@etaxwala/types';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -91,7 +85,7 @@ export const AdminFloatDrawer: React.FC<AdminFloatDrawerProps> = ({
     if (isOpen && staffToken) {
       loadData();
     }
-  }, [isOpen, staffToken]);
+  }, [isOpen, staffToken, loadData]);
 
   if (!isOpen) return null;
 

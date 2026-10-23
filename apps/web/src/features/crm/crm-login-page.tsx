@@ -1,27 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  ShieldCheck,
-  Lock,
-  Mail,
-  ArrowRight,
-  UserCheck,
-  KeyRound,
-  Briefcase,
-  Headphones,
-  CheckCircle2,
-  FileSpreadsheet,
-  Award,
-  Sparkles,
-  Layers,
-  Users,
-  Building,
-  PhoneCall,
-  Settings,
-  Shield,
-  Megaphone,
-  Database,
-} from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowRight, Database } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
 
@@ -36,22 +15,150 @@ interface DbStaffUser {
 }
 
 const DEFAULT_STAFF_USERS: DbStaffUser[] = [
-  { id: 1, email: 'admin@etaxwala.com', name: 'Super Admin', role_id: 1, role_name: 'super_admin', position: 'Chief Executive Officer', department: 'Executive' },
-  { id: 2, email: 'general.admin@etaxwala.com', name: 'General Administrator', role_id: 2, role_name: 'admin', position: 'Systems Administrator', department: 'Administration' },
-  { id: 3, email: 'ops.manager@etaxwala.com', name: 'Operations Manager', role_id: 3, role_name: 'operations_manager', position: 'Head of Operations', department: 'Operations' },
-  { id: 4, email: 'sales.manager@etaxwala.com', name: 'Sales Manager', role_id: 4, role_name: 'sales_manager', position: 'Head of Sales', department: 'Sales' },
-  { id: 5, email: 'marketing@etaxwala.com', name: 'Marketing Manager', role_id: 5, role_name: 'marketing_manager', position: 'Growth Lead', department: 'Marketing' },
-  { id: 6, email: 'franchise@etaxwala.com', name: 'Franchise Manager', role_id: 6, role_name: 'franchise_manager', position: 'Partnership Director', department: 'Franchise' },
-  { id: 7, email: 'priya.sales@etaxwala.com', name: 'Priya Sharma (Sales Exec)', role_id: 7, role_name: 'sales_employee', position: 'Senior Sales Executive', department: 'Sales' },
-  { id: 8, email: 'rahul.ops@etaxwala.com', name: 'Rahul Verma (Operations)', role_id: 8, role_name: 'operations_employee', position: 'Operations Specialist', department: 'Operations' },
-  { id: 9, email: 'seo.content@etaxwala.com', name: 'Marketing Content & SEO', role_id: 9, role_name: 'marketing_employee', position: 'Content Lead', department: 'Marketing' },
-  { id: 10, email: 'field.partner@etaxwala.com', name: 'Franchise Field Agent', role_id: 10, role_name: 'franchise_partner', position: 'Field Partner', department: 'Franchise' },
-  { id: 11, email: 'ca.expert@etaxwala.com', name: 'CA Tax Expert', role_id: 11, role_name: 'consultation', position: 'Chartered Accountant', department: 'Consultation' },
-  { id: 12, email: 'qc.reviewer@etaxwala.com', name: 'QC & Document Reviewer', role_id: 12, role_name: 'operations_assistant', position: 'Quality Control Lead', department: 'Operations' },
-  { id: 13, email: 'assistant.sales@etaxwala.com', name: 'Sales Assistant', role_id: 13, role_name: 'sales_assistant', position: 'Lead Qualifier', department: 'Sales' },
-  { id: 14, email: 'hr@etaxwala.com', name: 'HR Manager', role_id: 14, role_name: 'hr', position: 'People Operations', department: 'Human Resources' },
-  { id: 15, email: 'subbrands@etaxwala.com', name: 'Sub-Brands Manager', role_id: 15, role_name: 'website_manager', position: 'Agri & Rural Lead', department: 'Digital Brands' },
-  { id: 16, email: 'support@etaxwala.com', name: 'Support Executive', role_id: 16, role_name: 'staff', position: 'Client Helpdesk', department: 'Customer Support' },
+  {
+    id: 1,
+    email: 'admin@etaxwala.com',
+    name: 'Super Admin',
+    role_id: 1,
+    role_name: 'super_admin',
+    position: 'Chief Executive Officer',
+    department: 'Executive',
+  },
+  {
+    id: 2,
+    email: 'general.admin@etaxwala.com',
+    name: 'General Administrator',
+    role_id: 2,
+    role_name: 'admin',
+    position: 'Systems Administrator',
+    department: 'Administration',
+  },
+  {
+    id: 3,
+    email: 'ops.manager@etaxwala.com',
+    name: 'Operations Manager',
+    role_id: 3,
+    role_name: 'operations_manager',
+    position: 'Head of Operations',
+    department: 'Operations',
+  },
+  {
+    id: 4,
+    email: 'sales.manager@etaxwala.com',
+    name: 'Sales Manager',
+    role_id: 4,
+    role_name: 'sales_manager',
+    position: 'Head of Sales',
+    department: 'Sales',
+  },
+  {
+    id: 5,
+    email: 'marketing@etaxwala.com',
+    name: 'Marketing Manager',
+    role_id: 5,
+    role_name: 'marketing_manager',
+    position: 'Growth Lead',
+    department: 'Marketing',
+  },
+  {
+    id: 6,
+    email: 'franchise@etaxwala.com',
+    name: 'Franchise Manager',
+    role_id: 6,
+    role_name: 'franchise_manager',
+    position: 'Partnership Director',
+    department: 'Franchise',
+  },
+  {
+    id: 7,
+    email: 'priya.sales@etaxwala.com',
+    name: 'Priya Sharma (Sales Exec)',
+    role_id: 7,
+    role_name: 'sales_employee',
+    position: 'Senior Sales Executive',
+    department: 'Sales',
+  },
+  {
+    id: 8,
+    email: 'rahul.ops@etaxwala.com',
+    name: 'Rahul Verma (Operations)',
+    role_id: 8,
+    role_name: 'operations_employee',
+    position: 'Operations Specialist',
+    department: 'Operations',
+  },
+  {
+    id: 9,
+    email: 'seo.content@etaxwala.com',
+    name: 'Marketing Content & SEO',
+    role_id: 9,
+    role_name: 'marketing_employee',
+    position: 'Content Lead',
+    department: 'Marketing',
+  },
+  {
+    id: 10,
+    email: 'field.partner@etaxwala.com',
+    name: 'Franchise Field Agent',
+    role_id: 10,
+    role_name: 'franchise_partner',
+    position: 'Field Partner',
+    department: 'Franchise',
+  },
+  {
+    id: 11,
+    email: 'ca.expert@etaxwala.com',
+    name: 'CA Tax Expert',
+    role_id: 11,
+    role_name: 'consultation',
+    position: 'Chartered Accountant',
+    department: 'Consultation',
+  },
+  {
+    id: 12,
+    email: 'qc.reviewer@etaxwala.com',
+    name: 'QC & Document Reviewer',
+    role_id: 12,
+    role_name: 'operations_assistant',
+    position: 'Quality Control Lead',
+    department: 'Operations',
+  },
+  {
+    id: 13,
+    email: 'assistant.sales@etaxwala.com',
+    name: 'Sales Assistant',
+    role_id: 13,
+    role_name: 'sales_assistant',
+    position: 'Lead Qualifier',
+    department: 'Sales',
+  },
+  {
+    id: 14,
+    email: 'hr@etaxwala.com',
+    name: 'HR Manager',
+    role_id: 14,
+    role_name: 'hr',
+    position: 'People Operations',
+    department: 'Human Resources',
+  },
+  {
+    id: 15,
+    email: 'subbrands@etaxwala.com',
+    name: 'Sub-Brands Manager',
+    role_id: 15,
+    role_name: 'website_manager',
+    position: 'Agri & Rural Lead',
+    department: 'Digital Brands',
+  },
+  {
+    id: 16,
+    email: 'support@etaxwala.com',
+    name: 'Support Executive',
+    role_id: 16,
+    role_name: 'staff',
+    position: 'Client Helpdesk',
+    department: 'Customer Support',
+  },
 ];
 
 const ROLE_COLORS: Record<number, string> = {
@@ -247,9 +354,13 @@ export default function CrmLoginPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                  <span className="text-xs font-bold text-amber-950 uppercase tracking-wider">⚡ 1-Click Demo Logins</span>
+                  <span className="text-xs font-bold text-amber-950 uppercase tracking-wider">
+                    ⚡ 1-Click Demo Logins
+                  </span>
                 </div>
-                <span className="text-[10px] text-amber-800 bg-amber-200/70 px-2 py-0.5 rounded-full font-bold">Demo Mode Active</span>
+                <span className="text-[10px] text-amber-800 bg-amber-200/70 px-2 py-0.5 rounded-full font-bold">
+                  Demo Mode Active
+                </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
@@ -261,7 +372,9 @@ export default function CrmLoginPage() {
                   }}
                   className="p-2.5 bg-white hover:bg-amber-100/60 border border-amber-300/80 rounded-xl text-left transition-all text-xs font-semibold text-slate-800 shadow-xs cursor-pointer hover:border-amber-400"
                 >
-                  <div className="text-[10px] text-[#003A66] font-bold uppercase">👑 Super Admin</div>
+                  <div className="text-[10px] text-[#003A66] font-bold uppercase">
+                    👑 Super Admin
+                  </div>
                   <div className="text-[11px] truncate text-slate-600 font-mono">admin@...</div>
                 </button>
                 <button
@@ -273,8 +386,12 @@ export default function CrmLoginPage() {
                   }}
                   className="p-2.5 bg-white hover:bg-amber-100/60 border border-amber-300/80 rounded-xl text-left transition-all text-xs font-semibold text-slate-800 shadow-xs cursor-pointer hover:border-amber-400"
                 >
-                  <div className="text-[10px] text-emerald-800 font-bold uppercase">📈 Sales Mgr</div>
-                  <div className="text-[11px] truncate text-slate-600 font-mono">sales.manager@...</div>
+                  <div className="text-[10px] text-emerald-800 font-bold uppercase">
+                    📈 Sales Mgr
+                  </div>
+                  <div className="text-[11px] truncate text-slate-600 font-mono">
+                    sales.manager@...
+                  </div>
                 </button>
                 <button
                   type="button"
@@ -286,7 +403,9 @@ export default function CrmLoginPage() {
                   className="p-2.5 bg-white hover:bg-amber-100/60 border border-amber-300/80 rounded-xl text-left transition-all text-xs font-semibold text-slate-800 shadow-xs cursor-pointer hover:border-amber-400"
                 >
                   <div className="text-[10px] text-purple-800 font-bold uppercase">⚙️ Ops Mgr</div>
-                  <div className="text-[11px] truncate text-slate-600 font-mono">ops.manager@...</div>
+                  <div className="text-[11px] truncate text-slate-600 font-mono">
+                    ops.manager@...
+                  </div>
                 </button>
                 <button
                   type="button"
@@ -323,9 +442,7 @@ export default function CrmLoginPage() {
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-semibold text-slate-600">
-                    Password
-                  </label>
+                  <label className="block text-xs font-semibold text-slate-600">Password</label>
                   <span className="text-[10px] text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded-full font-medium">
                     Any password accepted
                   </span>

@@ -1,18 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Building2,
-  QrCode,
-  CreditCard,
-  Copy,
-  Check,
-  ShieldCheck,
-  CheckCircle2,
-  FileCheck,
-  Receipt,
-  HelpCircle,
-  Phone,
-  ArrowRight,
-} from 'lucide-react';
+import { Building2, QrCode, Copy, Check, ShieldCheck, CheckCircle2, Receipt } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
 import {
@@ -66,16 +53,14 @@ export default function DirectPayPage() {
       {/* Hero Section */}
       <section className="relative pt-28 pb-12 overflow-hidden bg-[#FAF9F5] border-b border-[#EAE6DD]">
         <div className="container-etaxwala relative">
-          <Breadcrumbs
-            items={[
-              { label: 'Direct Payment & Bank Transfer', href: '/pay' },
-            ]}
-          />
+          <Breadcrumbs items={[{ label: 'Direct Payment & Bank Transfer', href: '/pay' }]} />
 
           <div className="max-w-3xl mt-4 space-y-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#EAE6DD] shadow-2xs">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span className="text-xs font-bold text-slate-700">Official Beneficiary Verification</span>
+              <span className="text-xs font-bold text-slate-700">
+                Official Beneficiary Verification
+              </span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
@@ -83,7 +68,10 @@ export default function DirectPayPage() {
             </h1>
 
             <p className="text-sm text-slate-600 leading-relaxed">
-              All client payments for professional services and statutory filings are received directly in the verified corporate current accounts of <strong className="text-slate-900">{OFFICIAL_COMPANY_NAME}</strong>. Select your preferred bank or scan via any UPI app.
+              All client payments for professional services and statutory filings are received
+              directly in the verified corporate current accounts of{' '}
+              <strong className="text-slate-900">{OFFICIAL_COMPANY_NAME}</strong>. Select your
+              preferred bank or scan via any UPI app.
             </p>
           </div>
         </div>
@@ -99,10 +87,14 @@ export default function DirectPayPage() {
               </div>
               <h3 className="text-xl font-extrabold text-slate-900">Payment Proof Received!</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                We have registered your transaction reference <strong className="font-mono text-slate-900">{utrNumber}</strong> for <strong className="text-slate-900">{serviceName}</strong> (₹{currentAmount.toLocaleString()}).
+                We have registered your transaction reference{' '}
+                <strong className="font-mono text-slate-900">{utrNumber}</strong> for{' '}
+                <strong className="text-slate-900">{serviceName}</strong> (₹
+                {currentAmount.toLocaleString()}).
               </p>
               <p className="text-xs text-slate-500">
-                Our finance team will reconcile your remittance within 15–30 minutes and deliver your official GST Tax Invoice.
+                Our finance team will reconcile your remittance within 15–30 minutes and deliver
+                your official GST Tax Invoice.
               </p>
               <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
                 <a
@@ -139,7 +131,9 @@ export default function DirectPayPage() {
                   <div className="flex items-center justify-between border-b border-[#EAE6DD] pb-3">
                     <div className="flex items-center gap-2">
                       <QrCode className="w-5 h-5 text-blue-600" />
-                      <h3 className="font-extrabold text-base text-[#1B365D]">Instant UPI QR Code</h3>
+                      <h3 className="font-extrabold text-base text-[#1B365D]">
+                        Instant UPI QR Code
+                      </h3>
                     </div>
                     <span className="badge badge-navy text-[10px]">Zero Convenience Fee</span>
                   </div>
@@ -171,7 +165,9 @@ export default function DirectPayPage() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => copyToClipboard(OFFICIAL_UPI_DETAILS.primaryUpiId, 'upi1')}
+                            onClick={() =>
+                              copyToClipboard(OFFICIAL_UPI_DETAILS.primaryUpiId, 'upi1')
+                            }
                             className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-600 hover:text-blue-600 transition-colors"
                             title="Copy UPI ID"
                           >
@@ -194,7 +190,9 @@ export default function DirectPayPage() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => copyToClipboard(OFFICIAL_UPI_DETAILS.secondaryUpiId, 'upi2')}
+                            onClick={() =>
+                              copyToClipboard(OFFICIAL_UPI_DETAILS.secondaryUpiId, 'upi2')
+                            }
                             className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-600 hover:text-blue-600 transition-colors"
                             title="Copy UPI ID"
                           >
@@ -248,7 +246,9 @@ export default function DirectPayPage() {
                   <div className="p-5 rounded-3xl bg-[#FAF9F5] border border-[#EAE6DD] shadow-2xs space-y-4">
                     <div className="flex items-center justify-between border-b border-[#EAE6DD] pb-3">
                       <div>
-                        <h4 className="font-extrabold text-base text-[#1B365D]">{selectedBank.bankName}</h4>
+                        <h4 className="font-extrabold text-base text-[#1B365D]">
+                          {selectedBank.bankName}
+                        </h4>
                         <p className="text-[11px] text-slate-500">{selectedBank.accountType}</p>
                       </div>
                       {selectedBank.badge && (

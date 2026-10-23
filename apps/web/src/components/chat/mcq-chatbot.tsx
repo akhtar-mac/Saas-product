@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   RotateCcw,
-  Sparkles,
-  ArrowRight,
   Send,
   Phone,
   CheckCircle2,
@@ -12,9 +10,7 @@ import {
   Scale,
   ShieldCheck,
   User,
-  Loader2,
   MessageCircle,
-  Clock,
   Award,
   Lock,
   Globe2,
@@ -659,7 +655,6 @@ export default function McqChatbot({ onClose }: { onClose: () => void }) {
   };
 
   const currentMsg = messages[messages.length - 1];
-  const activeInputType = currentMsg?.inputType || 'none';
 
   return (
     <div className="w-[calc(100vw-1.5rem)] sm:w-[480px] max-w-[480px] h-[640px] max-h-[88vh] bg-[#FFFFFF] rounded-2xl sm:rounded-3xl border border-[#EAE6DD] shadow-2xl flex flex-col overflow-hidden animate-scale-in origin-bottom-right mb-2 select-none z-50">

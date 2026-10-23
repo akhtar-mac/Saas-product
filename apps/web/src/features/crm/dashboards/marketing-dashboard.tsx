@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  BarChart3,
   TrendingUp,
   Target,
-  Globe,
   Share2,
   DollarSign,
   Search,
@@ -15,17 +13,10 @@ import {
   Linkedin,
   Youtube,
   Plus,
-  Clock,
   CheckCircle2,
-  Filter,
-  Eye,
-  ArrowUpRight,
-  ArrowDownRight,
   Layers,
-  Sparkles,
   MessageCircle,
   X,
-  Send,
   RefreshCw,
   ShieldCheck,
   FileSpreadsheet,

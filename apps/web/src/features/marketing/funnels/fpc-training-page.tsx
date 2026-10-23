@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2,
   Video,
-  FileText,
   Award,
   Users,
   Calendar,
@@ -19,10 +18,7 @@ import {
   ArrowRight,
   TrendingUp,
   PhoneCall,
-  HelpCircle,
   Check,
-  Download,
-  Layers,
   Building2,
   BadgeCheck,
   FileSpreadsheet,

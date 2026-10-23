@@ -1,17 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import {
-  ShieldCheck,
-  FileCheck2,
-  AlertCircle,
-  CheckCircle2,
-  FileText,
-  Clock,
-  ExternalLink,
-  BookOpen,
-  Calendar,
-  Award,
-} from 'lucide-react';
+import { ShieldCheck, FileText, Clock, ExternalLink, BookOpen } from 'lucide-react';
 
 export default function CaExpertDashboard() {
   const auditQueue = [

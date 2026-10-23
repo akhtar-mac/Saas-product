@@ -1,4 +1,4 @@
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,15 +10,6 @@ import {
   Search,
   User,
   Sparkles,
-  Building2,
-  Receipt,
-  ClipboardCheck,
-  FileBadge,
-  Code,
-  LayoutDashboard,
-  Smartphone,
-  Layers,
-  CheckCircle2,
   MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

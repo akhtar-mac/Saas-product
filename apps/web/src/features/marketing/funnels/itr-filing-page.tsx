@@ -2,15 +2,28 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Calculator, ShieldCheck, FileText, TrendingUp, CheckCircle2, ArrowRight,
-  AlertTriangle, ChevronDown, Star, Sparkles, Building2, Briefcase, Coins, Home,
-  FileSpreadsheet, HelpCircle, PhoneCall, Check, UserCheck, ShieldAlert
+  Calculator,
+  Shield,
+  FileText,
+  TrendingUp,
+  CheckCircle2,
+  ArrowRight,
+  AlertTriangle,
+  ChevronDown,
+  Star,
+  Sparkles,
+  Building2,
+  Briefcase,
+  Coins,
+  Home,
+  FileSpreadsheet,
+  PhoneCall,
+  User,
+  ShieldAlert,
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
 import CtaBanner from '@/components/cta-banner';
-import { fadeIn, slideUp, staggerContainer, staggerItem } from '@/lib/animations';
-
 const INCOME_TYPES = [
   {
     icon: Briefcase,
@@ -104,7 +117,8 @@ export default function ITRFilingPage() {
           '@context': 'https://schema.org',
           '@type': 'FinancialProduct',
           name: 'ETaxwala ITR Filing Service',
-          description: 'CA assisted income tax return filing in India with 100% compliance guarantee.',
+          description:
+            'CA assisted income tax return filing in India with 100% compliance guarantee.',
           offers: {
             '@type': 'AggregateOffer',
             priceCurrency: 'INR',
@@ -126,20 +140,21 @@ export default function ITRFilingPage() {
 
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 text-xs font-semibold uppercase tracking-wider mb-4">
-              <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> Assessment Year 2025-26 (FY 2024-25)
+              <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" /> Assessment Year 2025-26 (FY
+              2024-25)
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15] text-slate-900">
-              File Your Income Tax Return with <span className="text-multicolor">Senior CA Advisory</span>
+              File Your Income Tax Return with{' '}
+              <span className="text-multicolor">Senior CA Advisory</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-              Never leave your hard-earned tax refund on the table. Every return is audited against 80+ deduction checkpoints and cross-verified with AIS/TIS data by certified Chartered Accountants.
+              Never leave your hard-earned tax refund on the table. Every return is audited against
+              80+ deduction checkpoints and cross-verified with AIS/TIS data by certified Chartered
+              Accountants.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link
-                to="/appointment"
-                className="px-6 py-3.5 rounded-xl btn-multicolor"
-              >
+              <Link to="/appointment" className="px-6 py-3.5 rounded-xl btn-multicolor">
                 <span className="btn-galaxy__stars" aria-hidden="true" />
                 <span className="relative z-[2] inline-flex items-center gap-2 font-bold text-sm">
                   <span>Start CA Assisted Filing</span>
@@ -165,7 +180,9 @@ export default function ITRFilingPage() {
       <section className="section bg-white py-16">
         <div className="container-etaxwala">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#0084D1]">The ETaxwala Standard</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#0084D1]">
+              The ETaxwala Standard
+            </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
               Why 1,00,000+ Taxpayers Trust Our CAs
             </h2>
@@ -174,7 +191,7 @@ export default function ITRFilingPage() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[
               {
-                icon: ShieldCheck,
+                icon: Shield,
                 color: '#0084D1',
                 bg: 'rgba(0,132,209,0.08)',
                 title: 'CA Certified Accuracy',
@@ -215,7 +232,9 @@ export default function ITRFilingPage() {
                     <Icon className="h-6 w-6" />
                   </div>
                   <h3 className="font-bold text-slate-900 text-base">{item.title}</h3>
-                  <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">{item.desc}</p>
+                  <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    {item.desc}
+                  </p>
                 </div>
               );
             })}
@@ -227,12 +246,15 @@ export default function ITRFilingPage() {
       <section className="section bg-[#FAF9F5] py-16 border-y border-[#EAE6DD]">
         <div className="container-etaxwala">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#7C3AED]">Tailored Expertise</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#7C3AED]">
+              Tailored Expertise
+            </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
               We Cover All Income Streams &amp; ITR Forms
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-2">
-              Whether you are a salaried employee or manage multi-asset trading and business portfolios.
+              Whether you are a salaried employee or manage multi-asset trading and business
+              portfolios.
             </p>
           </div>
 
@@ -274,12 +296,15 @@ export default function ITRFilingPage() {
       <section className="section bg-white py-16">
         <div className="container-etaxwala">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#E11D48]">Transparent Pricing</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#E11D48]">
+              Transparent Pricing
+            </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
               Select Your ITR Filing Plan
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-2">
-              All plans include 1-on-1 Chartered Accountant review and instant acknowledgment generation.
+              All plans include 1-on-1 Chartered Accountant review and instant acknowledgment
+              generation.
             </p>
           </div>
 
@@ -365,7 +390,9 @@ export default function ITRFilingPage() {
                     <h3 className="text-xl font-extrabold text-slate-900 mt-1">{plan.type}</h3>
                     <div className="mt-4 pb-4 border-b border-[#EAE6DD]">
                       <span className="text-xl font-extrabold text-[#7C3AED]">{plan.price}</span>
-                      <p className="text-[11px] text-slate-400 mt-0.5">Includes full CA consultation</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Includes full CA consultation
+                      </p>
                     </div>
 
                     <div className="mt-6 space-y-3">
@@ -390,9 +417,7 @@ export default function ITRFilingPage() {
                         }
                       }}
                       className={`w-full py-3.5 px-4 rounded-xl text-center cursor-pointer transition-all duration-200 ${
-                        isSelected
-                          ? 'btn-multicolor shadow-md'
-                          : 'btn-outline-multicolor'
+                        isSelected ? 'btn-multicolor shadow-md' : 'btn-outline-multicolor'
                       }`}
                     >
                       <span className="btn-galaxy__stars" aria-hidden="true" />
@@ -421,7 +446,8 @@ export default function ITRFilingPage() {
                 Avoid Late Filing Penalties Under Section 234F
               </h3>
               <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                Filing past the deadline triggers up to ₹5,000 in penalties plus 1% monthly interest under Section 234A. File on time with CA sign-off to ensure seamless refunds.
+                Filing past the deadline triggers up to ₹5,000 in penalties plus 1% monthly interest
+                under Section 234A. File on time with CA sign-off to ensure seamless refunds.
               </p>
             </div>
             <Link
@@ -441,7 +467,9 @@ export default function ITRFilingPage() {
       <section className="section bg-white py-16">
         <div className="container-etaxwala max-w-4xl">
           <div className="text-center mb-10">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#0084D1]">Client Reviews</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#0084D1]">
+              Client Reviews
+            </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
               What Our Tax Filing Clients Say
             </h2>
@@ -458,7 +486,9 @@ export default function ITRFilingPage() {
                     <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <p className="text-xs sm:text-sm text-slate-700 italic leading-relaxed">"{t.text}"</p>
+                <p className="text-xs sm:text-sm text-slate-700 italic leading-relaxed">
+                  "{t.text}"
+                </p>
                 <div className="pt-3 border-t border-[#EAE6DD]">
                   <p className="font-bold text-sm text-slate-900">{t.name}</p>
                   <p className="text-xs text-slate-500">{t.role}</p>
@@ -473,7 +503,9 @@ export default function ITRFilingPage() {
       <section className="section bg-[#FAF9F5] py-16 border-t border-[#EAE6DD]">
         <div className="container-etaxwala max-w-3xl">
           <div className="text-center mb-10">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#7C3AED]">Help &amp; FAQs</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#7C3AED]">
+              Help &amp; FAQs
+            </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
               Frequently Asked Questions
             </h2>

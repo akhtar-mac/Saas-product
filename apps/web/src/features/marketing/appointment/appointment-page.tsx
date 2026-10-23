@@ -10,21 +10,19 @@ import {
   CheckCircle2,
   Loader2,
   Calendar,
-  Clock,
   Video,
   Building2,
   Sparkles,
   ShieldCheck,
   ArrowRight,
   Check,
-  HelpCircle,
   UserCheck,
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
 import CtaBanner from '@/components/cta-banner';
 import { analytics } from '@/lib/analytics';
-import { fadeIn, slideUp, staggerContainer, staggerItem } from '@/lib/animations';
+import { slideUp, staggerContainer, staggerItem } from '@/lib/animations';
 
 const TIME_SLOTS = [
   '10:00 AM - 11:00 AM',

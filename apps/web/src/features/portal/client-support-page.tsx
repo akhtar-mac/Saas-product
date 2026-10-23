@@ -1,17 +1,6 @@
 import React, { useState } from 'react';
-import {
-  LifeBuoy,
-  MessageSquare,
-  Plus,
-  Send,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Phone,
-  Mail,
-  X,
-} from 'lucide-react';
-import { playStaffMessageSentChime, playStaffChatChime } from '@/lib/staff-chat-audio';
+import { Plus, Send, Phone, X } from 'lucide-react';
+import { playStaffMessageSentChime } from '@/lib/staff-chat-audio';
 
 export default function ClientSupportPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);

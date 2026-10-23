@@ -52,6 +52,7 @@ interface PaginatedListProps<T> {
   isLoading: boolean;
   initialPageSize?: number;
   loadMoreThreshold?: number;
+  _loadMoreThreshold?: number;
   emptyState?: React.ReactNode;
   errorState?: React.ReactNode;
   error?: Error | null;
@@ -64,7 +65,7 @@ export function PaginatedList<T>({
   items,
   isLoading,
   initialPageSize = 10,
-  loadMoreThreshold = 100,
+  _loadMoreThreshold = 100,
   emptyState,
   errorState,
   error,

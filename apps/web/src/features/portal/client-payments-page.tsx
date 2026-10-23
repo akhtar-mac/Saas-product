@@ -1,22 +1,7 @@
 import React, { useState } from 'react';
-import {
-  CreditCard,
-  Download,
-  CheckCircle2,
-  Clock,
-  ArrowUpRight,
-  ShieldCheck,
-  FileText,
-  AlertCircle,
-  Building2,
-  QrCode,
-} from 'lucide-react';
+import { CreditCard, Download, CheckCircle2, ShieldCheck, QrCode } from 'lucide-react';
 import DirectBankPaymentModal from '@/components/payment/direct-bank-payment-modal';
-import {
-  OFFICIAL_COMPANY_NAME,
-  OFFICIAL_BANK_ACCOUNTS,
-  OFFICIAL_UPI_DETAILS,
-} from '@/lib/constants/banking';
+import { OFFICIAL_COMPANY_NAME } from '@/lib/constants/banking';
 
 export default function ClientPaymentsPage() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);

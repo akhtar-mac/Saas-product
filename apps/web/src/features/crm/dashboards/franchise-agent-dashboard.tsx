@@ -1,16 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Briefcase,
-  Users,
-  DollarSign,
-  TrendingUp,
-  FileCheck2,
-  PhoneCall,
-  CheckCircle2,
-  Clock,
-  Plus,
-} from 'lucide-react';
+import { Briefcase } from 'lucide-react';
 
 export default function FranchiseAgentDashboard() {
   const partnerOrders = [

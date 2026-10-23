@@ -4,13 +4,6 @@ import {
   ClipboardList,
   AlertTriangle,
   CheckCircle2,
-  Clock,
-  UserCheck,
-  Building,
-  TrendingUp,
-  FileCheck2,
-  Users,
-  ShieldAlert,
   Tag,
   Plus,
   Copy,
@@ -18,7 +11,6 @@ import {
   X,
   Search,
   RefreshCw,
-  Percent,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 

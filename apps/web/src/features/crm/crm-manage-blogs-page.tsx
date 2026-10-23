@@ -1,20 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Search,
-  Plus,
-  Trash2,
-  Edit3,
-  Save,
-  X,
-  FileText,
-  Calendar,
-  Eye,
-  AlertTriangle,
-  User,
-  ImageIcon,
-  Check,
-  ExternalLink,
-} from 'lucide-react';
+import { Search, Plus, Trash2, Edit3, Save, X, FileText, AlertTriangle } from 'lucide-react';
 
 interface BlogPost {
   id: number;

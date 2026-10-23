@@ -1,26 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
-import {
-  Search,
-  Building2,
-  FileBadge,
-  Receipt,
-  ClipboardCheck,
-  Lightbulb,
-  Sparkles,
-  FileText,
-  ArrowRight,
-  TrendingUp,
-  Filter,
-  SlidersHorizontal,
-  Check,
-  Clock,
-  ShieldCheck,
-  X,
-  HelpCircle,
-  PhoneCall,
-  ChevronRight,
-} from 'lucide-react';
+import { Search, Sparkles, ArrowRight, TrendingUp, Filter, Clock, ShieldX, X } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
 import CtaBanner from '@/components/cta-banner';
@@ -28,7 +8,6 @@ import QuickEnquiryModal from '@/components/quick-enquiry-modal';
 import {
   services,
   categories,
-  formatPrice,
   getFeaturedServices,
   getServiceBySlug,
 } from '@/lib/constants/services';

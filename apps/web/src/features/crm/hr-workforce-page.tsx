@@ -65,8 +65,8 @@ const ROLES = [
 const ALLOWED_CREATE_ROLES: Partial<Record<RoleType, number[]>> = {
   [RoleType.SUPER_ADMIN]: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], // all
   [RoleType.ADMIN]: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], // all
-  [RoleType.SALES_MANAGER]: [7, 13], // Sales Employee, Sales Assistant
-  [RoleType.OPERATIONS_MANAGER]: [8, 12], // Operations Employee, Operations Asst.
+  [RoleType.SALES_MANAGER]: [7, 13], // Sales EmployeSales Assistant
+  [RoleType.OPERATIONS_MANAGER]: [8, 12], // Operations EmployeOperations Asst.
   [RoleType.FRANCHISE_MANAGER]: [10], // Franchise Partner
   [RoleType.MARKETING_MANAGER]: [9], // Marketing Employee
 };
@@ -1069,7 +1069,7 @@ export default function HrWorkforcePage() {
               onSubmit={handleSaveEmployee}
               className="p-6 space-y-4 text-xs max-h-[80vh] overflow-y-auto"
             >
-              {/* Row 1: Name, Email, Phone */}
+              {/* Row 1: NamEmail, Phone */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">

@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Users, PhoneCall, TrendingUp, Award, CheckCircle2,
-  Clock, ArrowRight, UserCheck, Send, Zap,
-  RefreshCw, AlertCircle, FileText, BarChart2,
-  ChevronRight, UserPlus, Calendar, Percent,
-  Ticket, Tag, Copy, Plus, X, Check, DollarSign,
-  CreditCard, Search, MessageSquare, ShieldCheck,
+  Users,
+  CheckCircle2,
+  UserCheck,
+  Zap,
+  RefreshCw,
+  AlertCircle,
+  FileText,
+  BarChart2,
+  ChevronRight,
+  UserPlus,
+  Tag,
+  Copy,
+  Plus,
+  X,
+  Check,
+  DollarSign,
+  CreditCard,
+  MessageSquare,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -93,16 +106,30 @@ const LEAD_STATUS: Record<number, { label: string; color: string; bg: string }> 
 };
 
 function StatCard({
-  title, value, sub, icon: Icon, color, bg, loading,
+  title,
+  value,
+  sub,
+  icon: Icon,
+  color,
+  bg,
+  loading,
 }: {
-  title: string; value: string | number; sub: string;
-  icon: React.ElementType; color: string; bg: string; loading: boolean;
+  title: string;
+  value: string | number;
+  sub: string;
+  icon: React.ElementType;
+  color: string;
+  bg: string;
+  loading: boolean;
 }) {
   return (
     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-slate-500">{title}</span>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: bg }}>
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: bg }}
+        >
           <Icon className="w-4.5 h-4.5" style={{ color }} />
         </div>
       </div>
@@ -126,11 +153,13 @@ export default function SalesManagerDashboard() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [feesReport, setFeesReport] = useState<FeesReportRow[]>([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
-  const [activeTab, setActiveTab] = useState<'overview' | 'tickets' | 'coupons' | 'fees'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tickets' | 'coupons' | 'fees'>(
+    'overview'
+  );
 
   // Support Ticket Modal state
   const [ticketToClose, setTicketToClose] = useState<SupportTicket | null>(null);
@@ -168,14 +197,15 @@ export default function SalesManagerDashboard() {
         fetch(`${API_BASE}/v1/admin/users`, { headers: authHeaders }),
       ]);
 
-      const [statsData, ticketsData, couponsData, feesData, leadsData, agentsData] = await Promise.all([
-        statsRes.json(),
-        ticketsRes.json(),
-        couponsRes.json(),
-        feesRes.json(),
-        leadsRes.json(),
-        agentsRes.json(),
-      ]);
+      const [statsData, ticketsData, couponsData, feesData, leadsData, agentsData] =
+        await Promise.all([
+          statsRes.json(),
+          ticketsRes.json(),
+          couponsRes.json(),
+          feesRes.json(),
+          leadsRes.json(),
+          agentsRes.json(),
+        ]);
 
       if (statsData.success) setSmStats(statsData.data);
       if (ticketsData.success) setTickets(ticketsData.data || []);
@@ -183,7 +213,9 @@ export default function SalesManagerDashboard() {
       if (feesData.success) setFeesReport(feesData.data || []);
       if (leadsData.success) setRecentLeads(leadsData.data || []);
       if (agentsData.success) {
-        setAgents((agentsData.data || []).filter((u: StaffAgent) => [4, 7, 13].includes(u.role_id)));
+        setAgents(
+          (agentsData.data || []).filter((u: StaffAgent) => [4, 7, 13].includes(u.role_id))
+        );
       }
       setLastRefreshed(new Date());
     } catch (e) {
@@ -200,19 +232,83 @@ export default function SalesManagerDashboard() {
         customerLeads: 1373,
       });
       setTickets([
-        { ticket_id: 101, customer_id: 12, service_id: 5, ticket_msg: 'Need GST Certificate urgently for tender', is_open: 0, date: new Date().toISOString(), customer_name: 'Rajesh Kumar', service_name: 'GST Registration' },
-        { ticket_id: 102, customer_id: 45, service_id: 18, ticket_msg: 'Update bank details in IEC registration', is_open: 1, ticket_answer: 'Updated and uploaded on portal', date: new Date().toISOString(), customer_name: 'Anil Sharma', service_name: 'IEC Registration' },
+        {
+          ticket_id: 101,
+          customer_id: 12,
+          service_id: 5,
+          ticket_msg: 'Need GST Certificate urgently for tender',
+          is_open: 0,
+          date: new Date().toISOString(),
+          customer_name: 'Rajesh Kumar',
+          service_name: 'GST Registration',
+        },
+        {
+          ticket_id: 102,
+          customer_id: 45,
+          service_id: 18,
+          ticket_msg: 'Update bank details in IEC registration',
+          is_open: 1,
+          ticket_answer: 'Updated and uploaded on portal',
+          date: new Date().toISOString(),
+          customer_name: 'Anil Sharma',
+          service_name: 'IEC Registration',
+        },
       ]);
       setCoupons([
-        { coupon_id: 1, coupon_type: 0, coupon_name: 'WELCOME1000', coupon_discount: 1000, coupon_validity: '2026-12-31', coupon_uses: 50, coupon_remaining: 38, is_active: 0 },
-        { coupon_id: 2, coupon_type: 1, coupon_name: 'FESTIVE20', coupon_discount: 20, coupon_validity: '2026-10-31', coupon_uses: 100, coupon_remaining: 82, is_active: 0 },
+        {
+          coupon_id: 1,
+          coupon_type: 0,
+          coupon_name: 'WELCOME1000',
+          coupon_discount: 1000,
+          coupon_validity: '2026-12-31',
+          coupon_uses: 50,
+          coupon_remaining: 38,
+          is_active: 0,
+        },
+        {
+          coupon_id: 2,
+          coupon_type: 1,
+          coupon_name: 'FESTIVE20',
+          coupon_discount: 20,
+          coupon_validity: '2026-10-31',
+          coupon_uses: 100,
+          coupon_remaining: 82,
+          is_active: 0,
+        },
       ]);
       setRecentLeads([
-        { id: 17281, name: 'Ravi Sharma', contact: '+91 98765 43210', service: 'GST Registration', city: 'Pune', lead_type: 0, is_assign: 0, source: 'Facebook', date: new Date().toISOString() },
-        { id: 17280, name: 'Sneha Patil', contact: '+91 91234 56789', service: 'Private Limited Company', city: 'Mumbai', lead_type: 2, is_assign: 1, source: 'Google Ads', date: new Date().toISOString() },
+        {
+          id: 17281,
+          name: 'Ravi Sharma',
+          contact: '+91 98765 43210',
+          service: 'GST Registration',
+          city: 'Pune',
+          lead_type: 0,
+          is_assign: 0,
+          source: 'Facebook',
+          date: new Date().toISOString(),
+        },
+        {
+          id: 17280,
+          name: 'Sneha Patil',
+          contact: '+91 91234 56789',
+          service: 'Private Limited Company',
+          city: 'Mumbai',
+          lead_type: 2,
+          is_assign: 1,
+          source: 'Google Ads',
+          date: new Date().toISOString(),
+        },
       ]);
       setAgents([
-        { id: 7, name: 'Priya Sharma (Sales Exec)', email: 'priya.sales@etaxwala.com', role_id: 7, role_name: 'Sales Employee', is_active: true },
+        {
+          id: 7,
+          name: 'Priya Sharma (Sales Exec)',
+          email: 'priya.sales@etaxwala.com',
+          role_id: 7,
+          role_name: 'Sales Employee',
+          is_active: true,
+        },
       ]);
     } finally {
       setLoading(false);
@@ -224,7 +320,11 @@ export default function SalesManagerDashboard() {
   }, []);
 
   const formatCurrency = (amt: number) => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt);
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(amt);
   };
 
   const handleCopyCouponCode = (code: string, id: number) => {
@@ -236,9 +336,12 @@ export default function SalesManagerDashboard() {
   const handleCheckCouponName = async (name: string) => {
     if (!name.trim()) return;
     try {
-      const res = await fetch(`${API_BASE}/v1/crm/sm/coupons/check-name?coupon_name=${encodeURIComponent(name.trim())}`, {
-        headers: authHeaders,
-      });
+      const res = await fetch(
+        `${API_BASE}/v1/crm/sm/coupons/check-name?coupon_name=${encodeURIComponent(name.trim())}`,
+        {
+          headers: authHeaders,
+        }
+      );
       const data = await res.json();
       if (data.exists) {
         setCouponError('Coupon code already exists');
@@ -275,7 +378,13 @@ export default function SalesManagerDashboard() {
       const data = await res.json();
       if (data.success) {
         setIsCouponModalOpen(false);
-        setCouponForm({ coupon_type: 0, coupon_name: '', coupon_discount: '', coupon_validity: '', coupon_uses: '1' });
+        setCouponForm({
+          coupon_type: 0,
+          coupon_name: '',
+          coupon_discount: '',
+          coupon_validity: '',
+          coupon_uses: '1',
+        });
         fetchDashboardData();
       } else {
         setCouponError(data.error || 'Failed to create coupon');
@@ -293,11 +402,14 @@ export default function SalesManagerDashboard() {
     setClosingTicket(true);
 
     try {
-      const res = await fetch(`${API_BASE}/v1/crm/sm/support-tickets/${ticketToClose.ticket_id}/close`, {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ ticket_answer: ticketAnswerInput }),
-      });
+      const res = await fetch(
+        `${API_BASE}/v1/crm/sm/support-tickets/${ticketToClose.ticket_id}/close`,
+        {
+          method: 'POST',
+          headers: authHeaders,
+          body: JSON.stringify({ ticket_answer: ticketAnswerInput }),
+        }
+      );
 
       const data = await res.json();
       if (data.success) {
@@ -328,7 +440,8 @@ export default function SalesManagerDashboard() {
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Real-time revenues, EMI fee collections, support tickets resolution, coupon codes & sales pipeline.
+            Real-time revenues, EMI fee collections, support tickets resolution, coupon codes &
+            sales pipeline.
           </p>
         </div>
 
@@ -358,40 +471,76 @@ export default function SalesManagerDashboard() {
         <span className="font-bold text-slate-400 text-[11px] uppercase tracking-wider pl-2 shrink-0">
           Quick Access:
         </span>
-        <Link to="/crm" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           Dashboard
         </Link>
-        <Link to="/crm/call-analytics" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm/call-analytics"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           Call Report
         </Link>
-        <Link to="/crm/workforce" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm/workforce"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           Manage Employee
         </Link>
-        <Link to="/crm/accounts" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm/accounts"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           Customer
         </Link>
-        <Link to="/crm/services" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm/services"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           Service Questions
         </Link>
-        <Link to="/crm/franchise" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm/franchise"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           Manage Partners
         </Link>
-        <Link to="/crm/leads" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm/leads"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           Manage Leads
         </Link>
-        <Link to="/crm/leads?source=udyamikisan" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm/leads?source=udyamikisan"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           Udyomi Leads
         </Link>
-        <Link to="/crm/leads?source=sahakar" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm/leads?source=sahakar"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           Sahakar Leads
         </Link>
-        <Link to="/crm/quotations" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm/quotations"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           Quotations
         </Link>
-        <Link to="/crm/tasks" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm/tasks"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           My Tasks
         </Link>
-        <Link to="/crm/appointments" className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap">
+        <Link
+          to="/crm/appointments"
+          className="px-3 py-1.5 rounded-xl font-bold bg-slate-100 text-slate-800 hover:bg-brand-navy hover:text-white transition-all whitespace-nowrap"
+        >
           Appointments
         </Link>
       </div>
@@ -448,7 +597,11 @@ export default function SalesManagerDashboard() {
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
         {[
           { id: 'overview', label: 'Pipeline & Roster Overview', icon: BarChart2 },
-          { id: 'tickets', label: `Support Tickets (${tickets.filter(t => t.is_open === 0).length} Open)`, icon: MessageSquare },
+          {
+            id: 'tickets',
+            label: `Support Tickets (${tickets.filter((t) => t.is_open === 0).length} Open)`,
+            icon: MessageSquare,
+          },
           { id: 'coupons', label: `Coupon Codes (${coupons.length})`, icon: Tag },
           { id: 'fees', label: `Fees Collection Report (${feesReport.length})`, icon: FileText },
         ].map(({ id, label, icon: Icon }) => (
@@ -492,7 +645,9 @@ export default function SalesManagerDashboard() {
                     <div key={i} className="h-14 bg-slate-50 rounded-xl animate-pulse" />
                   ))
                 ) : recentLeads.length === 0 ? (
-                  <p className="text-center py-6 text-slate-400 text-sm">No leads found in database.</p>
+                  <p className="text-center py-6 text-slate-400 text-sm">
+                    No leads found in database.
+                  </p>
                 ) : (
                   recentLeads.slice(0, 6).map((lead) => {
                     const status = LEAD_STATUS[lead.lead_type] ?? LEAD_STATUS[0];
@@ -549,7 +704,9 @@ export default function SalesManagerDashboard() {
                     <div key={i} className="h-14 bg-slate-50 rounded-xl animate-pulse" />
                   ))
                 ) : agents.length === 0 ? (
-                  <p className="text-center py-6 text-slate-400 text-sm">No sales agents registered.</p>
+                  <p className="text-center py-6 text-slate-400 text-sm">
+                    No sales agents registered.
+                  </p>
                 ) : (
                   agents.map((agent) => (
                     <div
@@ -608,7 +765,9 @@ export default function SalesManagerDashboard() {
                   >
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-900">{t.customer_name || `Customer #${t.customer_id}`}</span>
+                        <span className="font-bold text-sm text-slate-900">
+                          {t.customer_name || `Customer #${t.customer_id}`}
+                        </span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
                           {t.service_name || 'General Service'}
                         </span>
@@ -711,7 +870,9 @@ export default function SalesManagerDashboard() {
                     <div className="flex justify-between">
                       <span className="text-slate-400">Discount:</span>
                       <span className="font-bold text-emerald-700">
-                        {c.coupon_type === 1 ? `${c.coupon_discount}% OFF` : `₹${c.coupon_discount} OFF`}
+                        {c.coupon_type === 1
+                          ? `${c.coupon_discount}% OFF`
+                          : `₹${c.coupon_discount} OFF`}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -769,10 +930,18 @@ export default function SalesManagerDashboard() {
                     <tr key={row.emi_id} className="hover:bg-slate-50">
                       <td className="p-3 font-bold text-slate-900">{row.customer_name}</td>
                       <td className="p-3 text-slate-600">{row.customer_phone || '—'}</td>
-                      <td className="p-3 font-semibold text-slate-800">{formatCurrency(row.emi_total_amount)}</td>
-                      <td className="p-3 font-semibold text-emerald-700">{formatCurrency(row.emi_paid_amount)}</td>
-                      <td className="p-3 font-semibold text-rose-700">{formatCurrency(row.emi_unpaid_amount)}</td>
-                      <td className="p-3 text-slate-500 truncate max-w-xs">{row.emi_comment || '—'}</td>
+                      <td className="p-3 font-semibold text-slate-800">
+                        {formatCurrency(row.emi_total_amount)}
+                      </td>
+                      <td className="p-3 font-semibold text-emerald-700">
+                        {formatCurrency(row.emi_paid_amount)}
+                      </td>
+                      <td className="p-3 font-semibold text-rose-700">
+                        {formatCurrency(row.emi_unpaid_amount)}
+                      </td>
+                      <td className="p-3 text-slate-500 truncate max-w-xs">
+                        {row.emi_comment || '—'}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -787,8 +956,13 @@ export default function SalesManagerDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
           <div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-display font-bold text-base text-slate-900">Close Support Ticket</h3>
-              <button onClick={() => setTicketToClose(null)} className="text-slate-400 hover:text-slate-600">
+              <h3 className="font-display font-bold text-base text-slate-900">
+                Close Support Ticket
+              </h3>
+              <button
+                onClick={() => setTicketToClose(null)}
+                className="text-slate-400 hover:text-slate-600"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -802,7 +976,9 @@ export default function SalesManagerDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Response / Resolution Answer:</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Response / Resolution Answer:
+                </label>
                 <textarea
                   required
                   rows={4}
@@ -839,8 +1015,13 @@ export default function SalesManagerDashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
           <div className="bg-white w-full max-w-lg rounded-2xl border border-slate-200 shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-display font-bold text-lg text-slate-900">Create New Coupon Code</h3>
-              <button onClick={() => setIsCouponModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <h3 className="font-display font-bold text-lg text-slate-900">
+                Create New Coupon Code
+              </h3>
+              <button
+                onClick={() => setIsCouponModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -857,7 +1038,9 @@ export default function SalesManagerDashboard() {
                   <label className="block text-xs font-bold text-slate-700 mb-1">Coupon Type</label>
                   <select
                     value={couponForm.coupon_type}
-                    onChange={(e) => setCouponForm({ ...couponForm, coupon_type: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setCouponForm({ ...couponForm, coupon_type: Number(e.target.value) })
+                    }
                     className="w-full text-xs p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-navy focus:outline-none"
                   >
                     <option value={0}>Amount Wise (₹ Flat Off)</option>
@@ -866,7 +1049,9 @@ export default function SalesManagerDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Coupon Name / Code</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Coupon Name / Code
+                  </label>
                   <input
                     type="text"
                     required
@@ -882,30 +1067,44 @@ export default function SalesManagerDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Discount Value</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Discount Value
+                  </label>
                   <input
                     type="number"
                     required
-                    placeholder={couponForm.coupon_type === 1 ? 'Discount % (e.g. 15)' : 'Discount ₹ (e.g. 500)'}
+                    placeholder={
+                      couponForm.coupon_type === 1
+                        ? 'Discount % (e.g. 15)'
+                        : 'Discount ₹ (e.g. 500)'
+                    }
                     value={couponForm.coupon_discount}
-                    onChange={(e) => setCouponForm({ ...couponForm, coupon_discount: e.target.value })}
+                    onChange={(e) =>
+                      setCouponForm({ ...couponForm, coupon_discount: e.target.value })
+                    }
                     className="w-full text-xs p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-navy focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Validity Date</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Validity Date
+                  </label>
                   <input
                     type="date"
                     required
                     value={couponForm.coupon_validity}
-                    onChange={(e) => setCouponForm({ ...couponForm, coupon_validity: e.target.value })}
+                    onChange={(e) =>
+                      setCouponForm({ ...couponForm, coupon_validity: e.target.value })
+                    }
                     className="w-full text-xs p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-navy focus:outline-none"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Number of Uses Allowed</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Number of Uses Allowed
+                  </label>
                   <input
                     type="number"
                     required

@@ -1,8 +1,5 @@
 import { Link } from 'react-router-dom';
-import {
-  Phone, Mail, MapPin, ArrowRight, Shield, Award,
-  CheckCircle2, Clock, Globe, Lock
-} from 'lucide-react';
+import { Phone, Mail, MapPin, Shield, Clock, Globe, Lock } from 'lucide-react';
 
 const footerColumns = {
   incorporation: [
@@ -45,12 +42,10 @@ const footerColumns = {
 export default function Footer() {
   return (
     <footer className="bg-[#FAF9F5] text-slate-700 font-sans border-t border-[#EAE6DD]">
-      
       {/* ── Top Trust & Credential Banner (Light Cream) ── */}
       <div className="border-b border-[#EAE6DD] py-8 bg-white/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white border border-[#EAE6DD] flex items-center justify-center text-[#0084D1] shrink-0 shadow-xs">
                 <Shield className="w-5 h-5" />
@@ -90,7 +85,6 @@ export default function Footer() {
                 <p className="text-[11px] text-slate-500">Serving 500+ Cities in 28 States</p>
               </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -98,7 +92,6 @@ export default function Footer() {
       {/* ── Main Categorical Links ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-          
           {/* Brand Info with Official Logo */}
           <div className="col-span-2 space-y-4">
             <Link to="/" className="inline-block">
@@ -111,9 +104,11 @@ export default function Footer() {
                 }}
               />
             </Link>
-            
+
             <p className="text-xs text-slate-600 leading-relaxed max-w-sm">
-              ETaxwala Business Solution Pvt Ltd is India’s modern institutional legal, tax, and compliance platform. Advised by senior Chartered Accountants, Company Secretaries, and Corporate Advocates.
+              ETaxwala Business Solution Pvt Ltd is India’s modern institutional legal, tax, and
+              compliance platform. Advised by senior Chartered Accountants, Company Secretaries, and
+              Corporate Advocates.
             </p>
 
             <div className="space-y-2 pt-2 text-xs">
@@ -127,18 +122,25 @@ export default function Footer() {
               </div>
               <div className="flex items-start gap-2 text-slate-500 text-[11px] leading-snug">
                 <MapPin className="w-3.5 h-3.5 text-[#F97316] shrink-0 mt-0.5" />
-                <span>Head Office: Plot 42, Town Centre, CIDCO, Chhatrapati Sambhaji Nagar, Maharashtra 431003</span>
+                <span>
+                  Head Office: Plot 42, Town Centre, CIDCO, Chhatrapati Sambhaji Nagar, Maharashtra
+                  431003
+                </span>
               </div>
             </div>
           </div>
 
           {/* Column 1: Incorporation */}
           <div className="space-y-3">
-            <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">Incorporation</p>
+            <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              Incorporation
+            </p>
             <ul className="space-y-2 text-xs">
               {footerColumns.incorporation.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.to} className="hover:text-slate-900 transition-colors">{l.label}</Link>
+                  <Link to={l.to} className="hover:text-slate-900 transition-colors">
+                    {l.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -146,11 +148,15 @@ export default function Footer() {
 
           {/* Column 2: Taxation */}
           <div className="space-y-3">
-            <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">Tax &amp; Audit</p>
+            <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              Tax &amp; Audit
+            </p>
             <ul className="space-y-2 text-xs">
               {footerColumns.taxCompliance.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.to} className="hover:text-slate-900 transition-colors">{l.label}</Link>
+                  <Link to={l.to} className="hover:text-slate-900 transition-colors">
+                    {l.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -158,11 +164,15 @@ export default function Footer() {
 
           {/* Column 3: IP & Licenses */}
           <div className="space-y-3">
-            <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">IP &amp; Regulatory</p>
+            <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              IP &amp; Regulatory
+            </p>
             <ul className="space-y-2 text-xs">
               {footerColumns.ipRegulatory.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.to} className="hover:text-slate-900 transition-colors">{l.label}</Link>
+                  <Link to={l.to} className="hover:text-slate-900 transition-colors">
+                    {l.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -174,30 +184,35 @@ export default function Footer() {
             <ul className="space-y-2 text-xs">
               {footerColumns.company.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.to} className="hover:text-slate-900 transition-colors">{l.label}</Link>
+                  <Link to={l.to} className="hover:text-slate-900 transition-colors">
+                    {l.label}
+                  </Link>
                 </li>
               ))}
               {footerColumns.legal.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.to} className="text-slate-500 hover:text-slate-800 transition-colors">{l.label}</Link>
+                  <Link to={l.to} className="text-slate-500 hover:text-slate-800 transition-colors">
+                    {l.label}
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
-
         </div>
       </div>
 
       {/* ── Bottom Copyright & Statutory Disclaimer ── */}
       <div className="border-t border-[#EAE6DD] py-6 bg-[#FAF9F5] text-[11px] text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} ETaxwala Business Solution Pvt Ltd. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} ETaxwala Business Solution Pvt Ltd. All rights reserved.
+          </p>
           <p className="text-slate-400 text-center sm:text-right max-w-xl">
-            Disclaimer: ETaxwala is a technology platform that connects businesses with independent Chartered Accountants, Advocates, and Company Secretaries.
+            Disclaimer: ETaxwala is a technology platform that connects businesses with independent
+            Chartered Accountants, Advocates, and Company Secretaries.
           </p>
         </div>
       </div>
-
     </footer>
   );
 }

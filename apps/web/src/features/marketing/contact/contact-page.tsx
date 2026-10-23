@@ -3,17 +3,14 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion } from 'framer-motion';
 import {
   Phone,
   Mail,
   MapPin,
   Clock,
-  Send,
   CheckCircle2,
   ArrowRight,
   MessageSquare,
-  ShieldCheck,
   Sparkles,
   Loader2,
 } from 'lucide-react';

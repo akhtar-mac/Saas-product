@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
-  Search,
   Plus,
   Trash2,
-  Calendar,
   Clock,
   User,
   CheckCircle2,
-  AlertTriangle,
   Play,
   Square,
   Upload,
   MessageSquare,
   FileText,
   X,
-  ChevronDown,
   UserCheck,
 } from 'lucide-react';
 
@@ -168,9 +164,15 @@ export default function CrmTasksPage() {
             customerName: t.customer_name || t.sub_customer_name || `Customer #${t.cust_id}`,
             companyName: t.company_name || 'ETaxwala Client Enterprise',
             service: t.service_name || `Corporate Compliance #${t.service_id}`,
-            assignTo: t.assigned_to_name || (t.is_assign === 1 ? 'Assigned' : 'Un-Assign'),
+            assignTo:
+              t.assigned_to_name ||
+              (Number(t.is_assign) === 1
+                ? t.assign_to
+                  ? `Staff #${t.assign_to}`
+                  : 'Assigned'
+                : 'Un-Assign'),
             assignedToId: t.assign_to || null,
-            isAssign: t.is_assign ?? (t.assign_to ? 1 : 0),
+            isAssign: Number(t.is_assign) || 0,
             addedBy: t.added_by_name || 'Super Admin',
             assignDate: t.assign_date ? t.assign_date.split('T')[0] : 'N/A',
             dueDate: t.due_date ? t.due_date.split('T')[0] : 'N/A',

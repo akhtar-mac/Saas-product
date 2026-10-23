@@ -10,8 +10,8 @@ import {
   Check,
   CheckCheck,
   CornerDownRight,
-  Sparkles,
 } from 'lucide-react';
+
 import {
   playStaffMessageSentChime,
   isStaffChatSoundEnabled,

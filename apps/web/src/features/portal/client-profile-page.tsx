@@ -2,10 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  User, Mail, Phone, Building, MapPin, Lock,
-  Camera, CheckCircle2, ShieldCheck, KeyRound, Loader2
-} from 'lucide-react';
+import { Camera, CheckCircle2, ShieldCheck, KeyRound } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 
 const profileSchema = z.object({
@@ -17,14 +14,16 @@ const profileSchema = z.object({
   state: z.string().min(1, 'State required'),
 });
 
-const passwordSchema = z.object({
-  currentPassword: z.string().min(6, 'Current password required'),
-  newPassword: z.string().min(6, 'New password must be at least 6 characters'),
-  confirmPassword: z.string().min(6, 'Confirm password required'),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(6, 'Current password required'),
+    newPassword: z.string().min(6, 'New password must be at least 6 characters'),
+    confirmPassword: z.string().min(6, 'Confirm password required'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 type ProfileData = z.infer<typeof profileSchema>;
 type PasswordData = z.infer<typeof passwordSchema>;
@@ -87,11 +86,10 @@ export default function ClientProfilePage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Account &amp; Entity Profile
-        </h1>
+        <h1 className="text-2xl font-bold text-slate-900">Account &amp; Entity Profile</h1>
         <p className="text-xs text-slate-500 mt-0.5">
-          Manage your business contact details, authorized representatives, and authentication security.
+          Manage your business contact details, authorized representatives, and authentication
+          security.
         </p>
       </div>
 
@@ -129,14 +127,14 @@ export default function ClientProfilePage() {
 
             <form onSubmit={handleProfileSubmit(onUpdateProfile)} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Full Name *
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
                 <input
                   {...regProfile('name')}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                 />
-                {profileErrors.name && <p className="mt-1 text-xs text-rose-500">{profileErrors.name.message}</p>}
+                {profileErrors.name && (
+                  <p className="mt-1 text-xs text-rose-500">{profileErrors.name.message}</p>
+                )}
               </div>
 
               <div>
@@ -159,7 +157,9 @@ export default function ClientProfilePage() {
                     type="email"
                     className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   />
-                  {profileErrors.email && <p className="mt-1 text-xs text-rose-500">{profileErrors.email.message}</p>}
+                  {profileErrors.email && (
+                    <p className="mt-1 text-xs text-rose-500">{profileErrors.email.message}</p>
+                  )}
                 </div>
 
                 <div>
@@ -170,24 +170,22 @@ export default function ClientProfilePage() {
                     {...regProfile('contact')}
                     className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   />
-                  {profileErrors.contact && <p className="mt-1 text-xs text-rose-500">{profileErrors.contact.message}</p>}
+                  {profileErrors.contact && (
+                    <p className="mt-1 text-xs text-rose-500">{profileErrors.contact.message}</p>
+                  )}
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    City *
-                  </label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">City *</label>
                   <input
                     {...regProfile('city')}
                     className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    State *
-                  </label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">State *</label>
                   <input
                     {...regProfile('state')}
                     className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
@@ -215,7 +213,9 @@ export default function ClientProfilePage() {
               <KeyRound className="w-5 h-5 text-[#0084D1]" />
               <h3 className="font-bold text-base text-slate-900">Change Password</h3>
             </div>
-            <p className="text-xs text-slate-500">Ensure your new password contains at least 6 characters.</p>
+            <p className="text-xs text-slate-500">
+              Ensure your new password contains at least 6 characters.
+            </p>
 
             {passwordSuccess && (
               <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-700 flex items-center gap-2">
@@ -234,7 +234,9 @@ export default function ClientProfilePage() {
                   {...regPass('currentPassword')}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                 />
-                {passErrors.currentPassword && <p className="mt-1 text-xs text-rose-500">{passErrors.currentPassword.message}</p>}
+                {passErrors.currentPassword && (
+                  <p className="mt-1 text-xs text-rose-500">{passErrors.currentPassword.message}</p>
+                )}
               </div>
 
               <div>
@@ -246,7 +248,9 @@ export default function ClientProfilePage() {
                   {...regPass('newPassword')}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                 />
-                {passErrors.newPassword && <p className="mt-1 text-xs text-rose-500">{passErrors.newPassword.message}</p>}
+                {passErrors.newPassword && (
+                  <p className="mt-1 text-xs text-rose-500">{passErrors.newPassword.message}</p>
+                )}
               </div>
 
               <div>
@@ -258,7 +262,9 @@ export default function ClientProfilePage() {
                   {...regPass('confirmPassword')}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0084D1]/30"
                 />
-                {passErrors.confirmPassword && <p className="mt-1 text-xs text-rose-500">{passErrors.confirmPassword.message}</p>}
+                {passErrors.confirmPassword && (
+                  <p className="mt-1 text-xs text-rose-500">{passErrors.confirmPassword.message}</p>
+                )}
               </div>
 
               <button
@@ -278,7 +284,8 @@ export default function ClientProfilePage() {
               <ShieldCheck className="w-4 h-4 text-[#0084D1]" /> Account Security Note
             </p>
             <p className="leading-relaxed">
-              Your documents and PAN details are accessible only by your assigned CA team and verified operations staff.
+              Your documents and PAN details are accessible only by your assigned CA team and
+              verified operations staff.
             </p>
           </div>
         </div>

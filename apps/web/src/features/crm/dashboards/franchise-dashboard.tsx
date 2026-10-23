@@ -1,15 +1,5 @@
 import React from 'react';
-import {
-  Briefcase,
-  Users,
-  Award,
-  DollarSign,
-  TrendingUp,
-  Plus,
-  ArrowRight,
-  Handshake,
-  MapPin,
-} from 'lucide-react';
+import { Users, Award, DollarSign, Plus, Handshake, MapPin } from 'lucide-react';
 
 export default function FranchiseDashboard() {
   const topFranchises = [

@@ -1,19 +1,5 @@
 import React, { useState } from 'react';
-import {
-  X,
-  Copy,
-  Check,
-  Building2,
-  QrCode,
-  Smartphone,
-  ShieldCheck,
-  Upload,
-  ArrowRight,
-  ExternalLink,
-  CreditCard,
-  Receipt,
-  CheckCircle2,
-} from 'lucide-react';
+import { X, Copy, Check, Building2, QrCode, CreditCard, Receipt, CheckCircle2 } from 'lucide-react';
 import {
   OFFICIAL_COMPANY_NAME,
   OFFICIAL_UPI_DETAILS,
@@ -38,7 +24,7 @@ export default function DirectBankPaymentModal({
   amount = 16499,
   orderId = 'ETW-ORD-' + Math.floor(1000 + Math.random() * 9000),
   customerName = '',
-  customerPhone = '',
+  customerPhone: _customerPhone = '',
 }: DirectBankPaymentModalProps) {
   const [activeTab, setActiveTab] = useState<'upi' | 'banks'>('upi');
   const [selectedBank, setSelectedBank] = useState<BankAccount>(OFFICIAL_BANK_ACCOUNTS[0]);
@@ -87,9 +73,7 @@ export default function DirectBankPaymentModal({
               <h3 className="font-extrabold text-sm sm:text-base text-[#1B365D] tracking-tight">
                 Official Payment Gateway — Direct Bank & UPI
               </h3>
-              <p className="text-[11px] text-slate-500 font-medium">
-                {OFFICIAL_COMPANY_NAME}
-              </p>
+              <p className="text-[11px] text-slate-500 font-medium">{OFFICIAL_COMPANY_NAME}</p>
             </div>
           </div>
 
@@ -108,9 +92,13 @@ export default function DirectBankPaymentModal({
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <div>
-              <h4 className="text-lg font-extrabold text-slate-900">Payment Submitted for Instant Recon!</h4>
+              <h4 className="text-lg font-extrabold text-slate-900">
+                Payment Submitted for Instant Recon!
+              </h4>
               <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                Thank you! We received your UTR reference <span className="font-mono font-bold text-slate-800">{utrNumber}</span> for <span className="font-semibold text-slate-800">{serviceTitle}</span>.
+                Thank you! We received your UTR reference{' '}
+                <span className="font-mono font-bold text-slate-800">{utrNumber}</span> for{' '}
+                <span className="font-semibold text-slate-800">{serviceTitle}</span>.
               </p>
             </div>
 
@@ -121,7 +109,9 @@ export default function DirectBankPaymentModal({
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Amount:</span>
-                <span className="font-mono font-bold text-[#1B365D]">₹{amount.toLocaleString()}</span>
+                <span className="font-mono font-bold text-[#1B365D]">
+                  ₹{amount.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Beneficiary:</span>
@@ -308,19 +298,23 @@ export default function DirectBankPaymentModal({
                       <Building2 className="w-4 h-4 text-emerald-600" />
                       {selectedBank.bankName}
                     </span>
-                    <span className="badge badge-navy text-[10px]">
-                      {selectedBank.accountType}
-                    </span>
+                    <span className="badge badge-navy text-[10px]">{selectedBank.accountType}</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-semibold">Beneficiary Name</span>
-                      <span className="font-bold text-slate-800 text-xs">{selectedBank.accountName}</span>
+                      <span className="text-[10px] text-slate-400 block font-semibold">
+                        Beneficiary Name
+                      </span>
+                      <span className="font-bold text-slate-800 text-xs">
+                        {selectedBank.accountName}
+                      </span>
                     </div>
 
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-semibold">Current Account Number</span>
+                      <span className="text-[10px] text-slate-400 block font-semibold">
+                        Current Account Number
+                      </span>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="font-mono font-extrabold text-slate-900 text-sm">
                           {selectedBank.accountNumber}
@@ -341,7 +335,9 @@ export default function DirectBankPaymentModal({
                     </div>
 
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-semibold">IFSC Code</span>
+                      <span className="text-[10px] text-slate-400 block font-semibold">
+                        IFSC Code
+                      </span>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="font-mono font-bold text-slate-800 text-xs">
                           {selectedBank.ifsc}
@@ -362,7 +358,9 @@ export default function DirectBankPaymentModal({
                     </div>
 
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-semibold">Branch & Location</span>
+                      <span className="text-[10px] text-slate-400 block font-semibold">
+                        Branch & Location
+                      </span>
                       <span className="text-slate-600 text-[11px]">{selectedBank.branch}</span>
                     </div>
                   </div>

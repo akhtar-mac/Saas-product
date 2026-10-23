@@ -1,16 +1,5 @@
 import React, { useState } from 'react';
-import {
-  FolderLock,
-  Upload,
-  Download,
-  FileCheck,
-  Clock,
-  AlertCircle,
-  Trash2,
-  Eye,
-  Plus,
-  ShieldCheck,
-} from 'lucide-react';
+import { Upload, Download, Eye, ShieldCheck } from 'lucide-react';
 
 export default function ClientDocumentsPage() {
   const [activeTab, setActiveTab] = useState('all');

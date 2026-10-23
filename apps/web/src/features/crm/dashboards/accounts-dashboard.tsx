@@ -1,16 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import {
-  CreditCard,
-  DollarSign,
-  TrendingUp,
-  Download,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  FileSpreadsheet,
-  Receipt,
-} from 'lucide-react';
+import { CreditCard, DollarSign, TrendingUp, Download, Clock, FileSpreadsheet } from 'lucide-react';
 
 export default function AccountsDashboard() {
   const transactions = [

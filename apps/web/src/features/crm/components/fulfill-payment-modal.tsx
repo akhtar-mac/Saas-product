@@ -1,17 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   X,
   CheckCircle2,
-  QrCode,
-  CreditCard,
   Upload,
   AlertCircle,
   Copy,
   Check,
   AlertTriangle,
-  Shield,
   ArrowRight,
-  Eye,
 } from 'lucide-react';
 import { DisbursementRequest } from '@etaxwala/types';
 import { useAuthStore } from '@/store/auth-store';
@@ -43,13 +39,7 @@ export const FulfillPaymentModal: React.FC<FulfillPaymentModalProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isOpen && staffToken) {
-      fetchWallet();
-    }
-  }, [isOpen, staffToken]);
-
-  const fetchWallet = async () => {
+  const fetchWallet = useCallback(async () => {
     setLoadingWallet(true);
     try {
       const res = await fetch(`${API_BASE}/v1/disbursements/wallet`, {
@@ -64,7 +54,13 @@ export const FulfillPaymentModal: React.FC<FulfillPaymentModalProps> = ({
     } finally {
       setLoadingWallet(false);
     }
-  };
+  }, [staffToken]);
+
+  useEffect(() => {
+    if (isOpen && staffToken) {
+      fetchWallet();
+    }
+  }, [isOpen, staffToken, fetchWallet]);
 
   if (!isOpen || !request) return null;
 

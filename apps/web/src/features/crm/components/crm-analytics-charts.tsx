@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   AreaChart,
   Area,
@@ -20,12 +20,12 @@ import { TrendingUp, PieChart as PieIcon, BarChart3, Activity } from 'lucide-rea
 
 /* ─── Static mock data ─── */
 const leadTrendData = [
-  { week: 'Wk 1 Aug', 'Google Ads': 312, 'Website': 148, 'Referral': 64, 'Sub-brands': 42 },
-  { week: 'Wk 2 Aug', 'Google Ads': 389, 'Website': 172, 'Referral': 71, 'Sub-brands': 58 },
-  { week: 'Wk 3 Aug', 'Google Ads': 341, 'Website': 159, 'Referral': 88, 'Sub-brands': 51 },
-  { week: 'Wk 4 Aug', 'Google Ads': 428, 'Website': 193, 'Referral': 102, 'Sub-brands': 74 },
-  { week: 'Wk 1 Sep', 'Google Ads': 467, 'Website': 214, 'Referral': 89, 'Sub-brands': 93 },
-  { week: 'Wk 2 Sep', 'Google Ads': 512, 'Website': 231, 'Referral': 118, 'Sub-brands': 104 },
+  { week: 'Wk 1 Aug', 'Google Ads': 312, Website: 148, Referral: 64, 'Sub-brands': 42 },
+  { week: 'Wk 2 Aug', 'Google Ads': 389, Website: 172, Referral: 71, 'Sub-brands': 58 },
+  { week: 'Wk 3 Aug', 'Google Ads': 341, Website: 159, Referral: 88, 'Sub-brands': 51 },
+  { week: 'Wk 4 Aug', 'Google Ads': 428, Website: 193, Referral: 102, 'Sub-brands': 74 },
+  { week: 'Wk 1 Sep', 'Google Ads': 467, Website: 214, Referral: 89, 'Sub-brands': 93 },
+  { week: 'Wk 2 Sep', 'Google Ads': 512, Website: 231, Referral: 118, 'Sub-brands': 104 },
 ];
 
 const revenuePieData = [
@@ -46,12 +46,12 @@ const taskFunnelData = [
 ];
 
 const salesVelocityData = [
-  { day: 'Mon', 'Calls Logged': 142, 'Quotations Sent': 38, 'Payments': 9 },
-  { day: 'Tue', 'Calls Logged': 168, 'Quotations Sent': 44, 'Payments': 14 },
-  { day: 'Wed', 'Calls Logged': 195, 'Quotations Sent': 51, 'Payments': 18 },
-  { day: 'Thu', 'Calls Logged': 183, 'Quotations Sent': 47, 'Payments': 12 },
-  { day: 'Fri', 'Calls Logged': 221, 'Quotations Sent': 58, 'Payments': 21 },
-  { day: 'Sat', 'Calls Logged': 134, 'Quotations Sent': 31, 'Payments': 8 },
+  { day: 'Mon', 'Calls Logged': 142, 'Quotations Sent': 38, Payments: 9 },
+  { day: 'Tue', 'Calls Logged': 168, 'Quotations Sent': 44, Payments: 14 },
+  { day: 'Wed', 'Calls Logged': 195, 'Quotations Sent': 51, Payments: 18 },
+  { day: 'Thu', 'Calls Logged': 183, 'Quotations Sent': 47, Payments: 12 },
+  { day: 'Fri', 'Calls Logged': 221, 'Quotations Sent': 58, Payments: 21 },
+  { day: 'Sat', 'Calls Logged': 134, 'Quotations Sent': 31, Payments: 8 },
 ];
 
 /* ─── Custom Tooltip ─── */
@@ -107,14 +107,47 @@ export function LeadAcquisitionChart() {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="week" tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+          <XAxis
+            dataKey="week"
+            tick={{ fontSize: 9, fill: '#94a3b8' }}
+            axisLine={false}
+            tickLine={false}
+          />
           <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
           <Tooltip content={<CustomTooltip />} />
-          <Area type="monotone" dataKey="Google Ads" stroke="#003A66" strokeWidth={2} fill="url(#colorGoogleAds)" />
-          <Area type="monotone" dataKey="Website" stroke="#059669" strokeWidth={2} fill="url(#colorWebsite)" />
-          <Area type="monotone" dataKey="Referral" stroke="#D97706" strokeWidth={2} fill="url(#colorReferral)" />
-          <Area type="monotone" dataKey="Sub-brands" stroke="#7C3AED" strokeWidth={2} fill="url(#colorSubBrands)" />
-          <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }} />
+          <Area
+            type="monotone"
+            dataKey="Google Ads"
+            stroke="#003A66"
+            strokeWidth={2}
+            fill="url(#colorGoogleAds)"
+          />
+          <Area
+            type="monotone"
+            dataKey="Website"
+            stroke="#059669"
+            strokeWidth={2}
+            fill="url(#colorWebsite)"
+          />
+          <Area
+            type="monotone"
+            dataKey="Referral"
+            stroke="#D97706"
+            strokeWidth={2}
+            fill="url(#colorReferral)"
+          />
+          <Area
+            type="monotone"
+            dataKey="Sub-brands"
+            stroke="#7C3AED"
+            strokeWidth={2}
+            fill="url(#colorSubBrands)"
+          />
+          <Legend
+            iconType="circle"
+            iconSize={8}
+            wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }}
+          />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -128,7 +161,15 @@ const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight="bold">
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={10}
+      fontWeight="bold"
+    >
       {`${(percent * 100).toFixed(0)}%`}
     </text>
   );
@@ -139,7 +180,9 @@ export function MultiBrandRevenueDonut() {
     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-display font-bold text-sm text-slate-800">Multi-Brand Lead Distribution</h3>
+          <h3 className="font-display font-bold text-sm text-slate-800">
+            Multi-Brand Lead Distribution
+          </h3>
           <p className="text-[10px] text-slate-400 mt-0.5">17,281 total leads across 3 brands</p>
         </div>
         <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
@@ -191,17 +234,30 @@ export function TaskFunnelChart() {
     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-display font-bold text-sm text-slate-800">10-Stage Operations Funnel</h3>
-          <p className="text-[10px] text-slate-400 mt-0.5">Task distribution across pipeline stages</p>
+          <h3 className="font-display font-bold text-sm text-slate-800">
+            10-Stage Operations Funnel
+          </h3>
+          <p className="text-[10px] text-slate-400 mt-0.5">
+            Task distribution across pipeline stages
+          </p>
         </div>
         <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center">
           <BarChart3 className="w-4 h-4 text-purple-600" />
         </div>
       </div>
       <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={taskFunnelData} layout="vertical" margin={{ top: 0, right: 20, left: 8, bottom: 0 }}>
+        <BarChart
+          data={taskFunnelData}
+          layout="vertical"
+          margin={{ top: 0, right: 20, left: 8, bottom: 0 }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-          <XAxis type="number" tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+          <XAxis
+            type="number"
+            tick={{ fontSize: 9, fill: '#94a3b8' }}
+            axisLine={false}
+            tickLine={false}
+          />
           <YAxis
             dataKey="stage"
             type="category"
@@ -231,8 +287,12 @@ export function SalesVelocityChart() {
     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-display font-bold text-sm text-slate-800">Sales Team Conversion Velocity</h3>
-          <p className="text-[10px] text-slate-400 mt-0.5">Calls → Quotations → Payments this week</p>
+          <h3 className="font-display font-bold text-sm text-slate-800">
+            Sales Team Conversion Velocity
+          </h3>
+          <p className="text-[10px] text-slate-400 mt-0.5">
+            Calls → Quotations → Payments this week
+          </p>
         </div>
         <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
           <Activity className="w-4 h-4 text-emerald-600" />
@@ -241,13 +301,44 @@ export function SalesVelocityChart() {
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={salesVelocityData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="day" tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+          <XAxis
+            dataKey="day"
+            tick={{ fontSize: 9, fill: '#94a3b8' }}
+            axisLine={false}
+            tickLine={false}
+          />
           <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
           <Tooltip content={<CustomTooltip />} />
-          <Line type="monotone" dataKey="Calls Logged" stroke="#003A66" strokeWidth={2.5} dot={{ r: 3, fill: '#003A66' }} activeDot={{ r: 5 }} />
-          <Line type="monotone" dataKey="Quotations Sent" stroke="#D97706" strokeWidth={2.5} dot={{ r: 3, fill: '#D97706' }} activeDot={{ r: 5 }} strokeDasharray="5 3" />
-          <Line type="monotone" dataKey="Payments" stroke="#059669" strokeWidth={2.5} dot={{ r: 3, fill: '#059669' }} activeDot={{ r: 5 }} />
-          <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }} />
+          <Line
+            type="monotone"
+            dataKey="Calls Logged"
+            stroke="#003A66"
+            strokeWidth={2.5}
+            dot={{ r: 3, fill: '#003A66' }}
+            activeDot={{ r: 5 }}
+          />
+          <Line
+            type="monotone"
+            dataKey="Quotations Sent"
+            stroke="#D97706"
+            strokeWidth={2.5}
+            dot={{ r: 3, fill: '#D97706' }}
+            activeDot={{ r: 5 }}
+            strokeDasharray="5 3"
+          />
+          <Line
+            type="monotone"
+            dataKey="Payments"
+            stroke="#059669"
+            strokeWidth={2.5}
+            dot={{ r: 3, fill: '#059669' }}
+            activeDot={{ r: 5 }}
+          />
+          <Legend
+            iconType="circle"
+            iconSize={8}
+            wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

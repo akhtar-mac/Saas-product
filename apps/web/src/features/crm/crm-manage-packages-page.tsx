@@ -8,8 +8,6 @@ import {
   X,
   Package,
   Check,
-  IndianRupee,
-  Percent,
   AlertTriangle,
   Star,
 } from 'lucide-react';

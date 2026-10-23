@@ -1,17 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  FileCheck2,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  Upload,
-  ArrowRight,
-  User,
-  ShieldCheck,
-  ChevronRight,
-  X,
-} from 'lucide-react';
+import { FileCheck2, Clock, CheckCircle2, ShieldCheck, ChevronRight, X } from 'lucide-react';
 import { TaskStatus, TASK_STATUS_LABELS } from '@etaxwala/types';
 
 export default function OpsExecutiveDashboard() {

@@ -1,21 +1,8 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Calendar,
-  User,
-  Phone,
-  Mail,
-  Download,
-  Upload,
-  CheckCircle2,
-  FileText,
-  Clock,
-  ShieldCheck,
-  Building,
-} from 'lucide-react';
+import { ArrowLeft, Phone, Mail, Download, FileText } from 'lucide-react';
 import { ServiceTimeline } from '@/components/ui/timeline';
-import { TaskStatus, TASK_STATUS_LABELS } from '@etaxwala/types';
+import { TaskStatus } from '@etaxwala/types';
 
 export default function ClientServiceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -46,21 +33,33 @@ export default function ClientServiceDetailPage() {
       {
         status: TaskStatus.VERIFICATION_COMPLETED,
         title: 'Company Name Reservation (RUN Form Approved)',
-        remarks: 'Name "SHARMA AGRI EXPORTS PRIVATE LIMITED" approved by Central Registration Centre (CRC).',
+        remarks:
+          'Name "SHARMA AGRI EXPORTS PRIVATE LIMITED" approved by Central Registration Centre (CRC).',
         date: '14 Aug 2026, 04:15 PM',
         addedBy: 'CRC Govt Portal',
       },
       {
         status: TaskStatus.GOVT_FILING_IN_PROGRESS,
         title: 'SPICe+ Part B Filing Submitted',
-        remarks: 'MOA, AOA, AGILE-PRO, and INC-9 signed via DSC and uploaded to MCA portal. SRN: F89230192.',
+        remarks:
+          'MOA, AOA, AGILE-PRO, and INC-9 signed via DSC and uploaded to MCA portal. SRN: F89230192.',
         date: '20 Aug 2026, 02:40 PM',
         addedBy: 'CA Pooja Kulkarni',
       },
     ],
     documents: [
-      { name: 'Draft Memorandum of Association (MOA)', type: 'PDF', size: '1.4 MB', date: '15 Aug 2026' },
-      { name: 'Draft Articles of Association (AOA)', type: 'PDF', size: '1.1 MB', date: '15 Aug 2026' },
+      {
+        name: 'Draft Memorandum of Association (MOA)',
+        type: 'PDF',
+        size: '1.4 MB',
+        date: '15 Aug 2026',
+      },
+      {
+        name: 'Draft Articles of Association (AOA)',
+        type: 'PDF',
+        size: '1.1 MB',
+        date: '15 Aug 2026',
+      },
       { name: 'RUN Approval Letter', type: 'PDF', size: '320 KB', date: '14 Aug 2026' },
     ],
   };
@@ -82,19 +81,13 @@ export default function ClientServiceDetailPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="badge badge-navy text-[10px]">
-                {service.category}
-              </span>
+              <span className="badge badge-navy text-[10px]">{service.category}</span>
               <span className="text-xs text-slate-400 font-mono">Order #{service.id}</span>
             </div>
-            <h2 className="text-2xl font-display font-bold text-brand-navy">
-              {service.name}
-            </h2>
+            <h2 className="text-2xl font-display font-bold text-brand-navy">{service.name}</h2>
           </div>
 
-          <span className="badge badge-green">
-            Stage 5: Govt Filing In Progress
-          </span>
+          <span className="badge badge-green">Stage 5: Govt Filing In Progress</span>
         </div>
 
         {/* Key Info Grid */}
@@ -109,7 +102,9 @@ export default function ClientServiceDetailPage() {
           </div>
           <div>
             <p className="text-slate-400 font-medium">Service Fee</p>
-            <p className="font-bold text-emerald-700 mt-1">₹{service.amount.toLocaleString()} (Paid)</p>
+            <p className="font-bold text-emerald-700 mt-1">
+              ₹{service.amount.toLocaleString()} (Paid)
+            </p>
           </div>
           <div>
             <p className="text-slate-400 font-medium">Filing Portal</p>
@@ -129,10 +124,7 @@ export default function ClientServiceDetailPage() {
           </p>
         </div>
 
-        <ServiceTimeline
-          currentStatus={service.status}
-          history={service.history}
-        />
+        <ServiceTimeline currentStatus={service.status} history={service.history} />
       </div>
 
       {/* Assigned Specialist & Files */}
@@ -147,15 +139,11 @@ export default function ClientServiceDetailPage() {
               PK
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-800">
-                {service.assignedExecutive.name}
-              </h4>
+              <h4 className="text-sm font-bold text-slate-800">{service.assignedExecutive.name}</h4>
               <p className="text-xs text-brand-navy font-semibold">
                 {service.assignedExecutive.role}
               </p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {service.assignedExecutive.email}
-              </p>
+              <p className="text-xs text-slate-400 mt-0.5">{service.assignedExecutive.email}</p>
             </div>
           </div>
 
@@ -178,7 +166,10 @@ export default function ClientServiceDetailPage() {
             <h3 className="font-display font-bold text-sm text-slate-800">
               Generated Files & Charters
             </h3>
-            <Link to="/portal/documents" className="text-xs text-brand-navy font-semibold hover:underline">
+            <Link
+              to="/portal/documents"
+              className="text-xs text-brand-navy font-semibold hover:underline"
+            >
               Open Vault →
             </Link>
           </div>
@@ -191,9 +182,7 @@ export default function ClientServiceDetailPage() {
               >
                 <div className="flex items-center gap-2 overflow-hidden">
                   <FileText className="w-4 h-4 text-brand-navy shrink-0" />
-                  <span className="font-semibold text-slate-800 truncate">
-                    {doc.name}
-                  </span>
+                  <span className="font-semibold text-slate-800 truncate">{doc.name}</span>
                 </div>
                 <button className="btn btn-outline btn-sm text-xs shrink-0">
                   <Download className="w-3 h-3" /> Download

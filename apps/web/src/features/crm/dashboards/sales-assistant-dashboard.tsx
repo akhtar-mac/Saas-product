@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Users,
-  Filter,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
-  Send,
-  Sparkles,
-  PhoneCall,
-  MessageCircle,
-  FileSpreadsheet,
-} from 'lucide-react';
+import { Users, FileSpreadsheet } from 'lucide-react';
 
 export default function SalesAssistantDashboard() {
   const [leads, setLeads] = useState<any[]>([]);

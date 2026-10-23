@@ -1,14 +1,5 @@
 import React from 'react';
-import {
-  LifeBuoy,
-  MessageSquare,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Phone,
-  UserCheck,
-  Send,
-} from 'lucide-react';
+import { LifeBuoy, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 
 export default function SupportDashboard() {
   const tickets = [

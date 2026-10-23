@@ -7,13 +7,7 @@ import {
   Copy,
   Check,
   ExternalLink,
-  ArrowUpRight,
-  Shield,
-  FileText,
-  ChevronDown,
-  ChevronUp,
   CreditCard,
-  AlertTriangle,
   Eye,
 } from 'lucide-react';
 import { DisbursementRequest } from '@etaxwala/types';
@@ -21,6 +15,7 @@ import { DisbursementRequest } from '@etaxwala/types';
 interface PaymentRequestCardProps {
   request: DisbursementRequest;
   isSelf: boolean;
+  _isSelf?: boolean;
   canFulfill: boolean;
   onFulfillClick: (req: DisbursementRequest) => void;
   onRejectClick: (req: DisbursementRequest) => void;
@@ -81,7 +76,7 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
 
 export const PaymentRequestCard: React.FC<PaymentRequestCardProps> = ({
   request,
-  isSelf,
+  _isSelf,
   canFulfill,
   onFulfillClick,
   onRejectClick,

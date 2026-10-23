@@ -1,6 +1,6 @@
 import React from 'react';
 import { TaskStatus, TASK_STATUS_LABELS } from '@etaxwala/types';
-import { CheckCircle2, Clock, AlertCircle, FileCheck, ArrowRight } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 export interface TimelineStep {
   status: TaskStatus;
@@ -48,11 +48,7 @@ export function ServiceTimeline({ currentStatus, history, className = '' }: Serv
         <div
           className="absolute top-1/2 left-0 h-1 bg-blue-600 -translate-y-1/2 z-0 transition-all duration-500"
           style={{
-            width: `${
-              currentIndex >= 0
-                ? (currentIndex / (standardOrder.length - 1)) * 100
-                : 0
-            }%`,
+            width: `${currentIndex >= 0 ? (currentIndex / (standardOrder.length - 1)) * 100 : 0}%`,
           }}
         />
 
@@ -68,8 +64,8 @@ export function ServiceTimeline({ currentStatus, history, className = '' }: Serv
                   isDone
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                     : isCurrent
-                    ? 'bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/40 animate-pulse'
-                    : 'bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 text-slate-400'
+                      ? 'bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/40 animate-pulse'
+                      : 'bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 text-slate-400'
                 }`}
               >
                 {isDone ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
@@ -79,8 +75,8 @@ export function ServiceTimeline({ currentStatus, history, className = '' }: Serv
                   isCurrent
                     ? 'text-blue-600 dark:text-blue-400 font-bold'
                     : isDone
-                    ? 'text-slate-800 dark:text-slate-200'
-                    : 'text-slate-400'
+                      ? 'text-slate-800 dark:text-slate-200'
+                      : 'text-slate-400'
                 }`}
               >
                 {label}
@@ -106,7 +102,9 @@ export function ServiceTimeline({ currentStatus, history, className = '' }: Serv
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
                   <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
                     <span className="text-sm font-bold text-slate-900 dark:text-white">
-                      {item.title || TASK_STATUS_LABELS[item.status as TaskStatus] || `Stage ${item.status}`}
+                      {item.title ||
+                        TASK_STATUS_LABELS[item.status as TaskStatus] ||
+                        `Stage ${item.status}`}
                     </span>
                     {item.date ? (
                       <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -130,7 +128,11 @@ export function ServiceTimeline({ currentStatus, history, className = '' }: Serv
           </div>
         ) : (
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-center text-xs text-slate-500">
-            Current stage: <strong className="text-slate-800 dark:text-slate-200">{TASK_STATUS_LABELS[currentNum as TaskStatus] || 'Processing'}</strong>. Updates will appear as progress is made by your assigned specialist.
+            Current stage:{' '}
+            <strong className="text-slate-800 dark:text-slate-200">
+              {TASK_STATUS_LABELS[currentNum as TaskStatus] || 'Processing'}
+            </strong>
+            . Updates will appear as progress is made by your assigned specialist.
           </div>
         )}
       </div>

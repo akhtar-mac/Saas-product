@@ -1,16 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Search,
-  Plus,
-  Trash2,
-  Edit3,
-  Save,
-  X,
-  Tag,
-  LayoutGrid,
-  FileText,
-  AlertTriangle,
-} from 'lucide-react';
+import { Search, Plus, Trash2, Edit3, Save, X, LayoutGrid, AlertTriangle } from 'lucide-react';
 
 interface CategoryItem {
   id: number;
