@@ -84,7 +84,7 @@ const DEFAULT_STAFF_USERS: DbStaffUser[] = [
     name: 'Rahul Verma (Operations)',
     role_id: 8,
     role_name: 'operations_employee',
-    position: 'Operations Specialist',
+    position: 'Operations Employee',
     department: 'Operations',
   },
   {
@@ -219,6 +219,7 @@ export default function CrmLoginPage() {
         return;
       }
       const { accessToken, refreshToken, user } = data.data;
+      console.log('Login response user:', user);
       // Map API role_name to RoleType enum
       const roleMap: Record<string, RoleType> = {
         super_admin: RoleType.SUPER_ADMIN,
@@ -242,6 +243,9 @@ export default function CrmLoginPage() {
       const mappedRoles: RoleType[] = Array.isArray(user.roles)
         ? user.roles.map((r: string) => roleMap[r] || RoleType.STAFF)
         : [roleMap[user.role_name] || RoleType.STAFF];
+
+      console.log('Mapped roles:', mappedRoles);
+      console.log('Primary role:', roleMap[user.role_name]);
 
       loginStaff(
         {

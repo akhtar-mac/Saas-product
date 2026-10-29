@@ -5,6 +5,7 @@
     "types": ["vite/client", "node"],
     "noEmit": true,
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["./src/*"],
       "@etaxwala/types": ["../../packages/types/src"]

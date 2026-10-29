@@ -5389,7 +5389,7 @@ router.get('/ops-employee/work-timeline', async (req, res) => {
     if (!task_id) return res.status(400).json({ success: false, message: 'task_id required' });
 
     const rows: any[] = (await prisma.$queryRawUnsafe(
-      `SELECT cwt.*, u.username
+      `SELECT cwt.id, cwt.cust_id, cwt.task_id, cwt.work, cwt.status, cwt.added_by, cwt.service_id, cwt.start_time, cwt.end_time, cwt.work_seconds, cwt.date, cwt.time, u.username
        FROM customer_work_timeline cwt
        LEFT JOIN users u ON u.id = cwt.added_by
        WHERE cwt.task_id = ?

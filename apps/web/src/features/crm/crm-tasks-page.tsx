@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Plus,
   Trash2,
@@ -13,7 +13,9 @@ import {
   FileText,
   X,
   UserCheck,
+  Loader2,
 } from 'lucide-react';
+import { useAuthStore } from '@/store/auth-store';
 
 interface TaskTimelineStep {
   id: number;
@@ -36,35 +38,78 @@ interface OperationTask {
   addedBy: string;
   assignDate: string;
   dueDate: string;
-  status: 'completed' | 'not-started' | 'wip' | 'pendingfromclient';
+  status:
+    | 'completed'
+    | 'not-started'
+    | 'wip'
+    | 'pendingfromclient'
+    | 'invoiced'
+    | 'returnback'
+    | 'cancel'
+    | 'feespending'
+    | 'onhold';
   email: string;
   phone: string;
   state: string;
   city: string;
+  customerId: number;
+  serviceId: number;
   timeline: TaskTimelineStep[];
 }
 
 export default function CrmTasksPage() {
+  const { staffUser, staffToken } = useAuthStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Check if user has a real token (not demo token)
+  useEffect(() => {
+    if (!staffToken || staffToken === 'demo-staff-token') {
+      // Redirect to login if no real token
+      navigate('/crm/login');
+    }
+  }, [staffToken, navigate]);
   const [tasks, setTasks] = useState<OperationTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const [opsStaff, setOpsStaff] = useState<
     { id: number; name: string; email: string; role_id: number }[]
   >([]);
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
-  // Filters
+  // Check if user is Operations Employee - primary check via role string, fallback via roleId
+  const isOpsEmployee =
+    staffUser?.role === 'OPERATIONS_EMPLOYEE' ||
+    staffUser?.roles?.includes('OPERATIONS_EMPLOYEE' as any) ||
+    (staffUser?.roleIds?.includes(7) && !staffUser?.roles?.includes('SALES_EMPLOYEE' as any));
+
   const [taskFilter, setTaskFilter] = useState('Tasks');
   const [categoryFilter, setCategoryFilter] = useState('Category');
   const [staffFilter, setStaffFilter] = useState('Staff');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-
-  const location = useLocation();
+  const [dateFilter, setDateFilter] = useState('');
+  const [taskStats, setTaskStats] = useState({
+    overdues: 0,
+    onhold: 0,
+    todays: 0,
+    tomorrows: 0,
+    next7days: 0,
+    next15days: 0,
+    notstarted: 0,
+    wip: 0,
+    pendingfc: 0,
+    completed: 0,
+    total: 0,
+  });
+  const [categories, setCategories] = useState<{ category_id: number; category_name: string }[]>(
+    []
+  );
 
   // Modals
   const [effortModalTask, setEffortModalTask] = useState<OperationTask | null>(null);
@@ -78,12 +123,46 @@ export default function CrmTasksPage() {
   // Effort Modal Timer state
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
-  const [startTimeCapture, setStartTimeCapture] = useState('--:--');
-  const [endTimeCapture, setEndTimeCapture] = useState('--:--');
-  const [effortStatus, setEffortStatus] = useState('Completed');
+  const [startTimeCapture, setStartTimeCapture] = useState('--:--:--');
+  const [endTimeCapture, setEndTimeCapture] = useState('--:--:--');
+  const [effortStatus, setEffortStatus] = useState('1');
   const [effortNotes, setEffortNotes] = useState('');
-  const [uploadedDocs, setUploadedDocs] = useState<{ name: string; date: string }[]>([]);
   const [docNameInput, setDocNameInput] = useState('');
+  const [sentDocuments, setSentDocuments] = useState<{ name: string; url: string }[]>([]);
+  const [receivedDocuments, setReceivedDocuments] = useState<{ name: string; url: string }[]>([]);
+  const [effortSaveMsg, setEffortSaveMsg] = useState('');
+  const [effortSaving, setEffortSaving] = useState(false);
+  const [docUploading, setDocUploading] = useState(false);
+  // Effort modal Work Timeline
+  const [effortTimeline, setEffortTimeline] = useState<any[]>([]);
+  const [effortTlLoading, setEffortTlLoading] = useState(false);
+  const [effortModalTab, setEffortModalTab] = useState<'effort' | 'timeline'>('effort');
+  // Table expand timeline
+  const [tableTimeline, setTableTimeline] = useState<Record<number, any[]>>({});
+  const [tableTlLoading, setTableTlLoading] = useState<Record<number, boolean>>({});
+  // Status maps
+  const STATUS_LABELS_MAP: Record<number, string> = {
+    1: 'Not Started',
+    2: 'Work In Progress',
+    3: 'Pending From Client',
+    4: 'Invoiced',
+    5: 'Completed',
+    6: 'Return Back',
+    7: 'Cancelled',
+    8: 'Fees Pending',
+    9: 'On Hold',
+  };
+  const STATUS_COLORS_MAP: Record<number, string> = {
+    1: '#dc2626',
+    2: '#2563eb',
+    3: '#d97706',
+    4: '#7c3aed',
+    5: '#16a34a',
+    6: '#0891b2',
+    7: '#6b7280',
+    8: '#ea580c',
+    9: '#b45309',
+  };
 
   // Live timer tick
   useEffect(() => {
@@ -105,18 +184,47 @@ export default function CrmTasksPage() {
 
   const startEffortTimer = () => {
     const now = new Date();
-    setStartTimeCapture(
-      `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-    );
+    const timeStr = now.toTimeString().split(' ')[0];
+    setStartTimeCapture(timeStr);
     setIsTimerRunning(true);
+    setTimerSeconds(0);
+
+    // Save to localStorage for persistence
+    if (effortModalTask) {
+      localStorage.setItem(
+        `timer_${effortModalTask.id}`,
+        JSON.stringify({
+          startTime: timeStr,
+          startedAt: now.getTime(),
+        })
+      );
+    }
   };
 
   const stopEffortTimer = () => {
     const now = new Date();
-    setEndTimeCapture(
-      `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-    );
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    setEndTimeCapture(timeStr);
     setIsTimerRunning(false);
+
+    // Clear localStorage
+    if (effortModalTask) {
+      localStorage.removeItem(`timer_${effortModalTask.id}`);
+    }
+  };
+
+  const resetEffortTimer = () => {
+    setIsTimerRunning(false);
+    setTimerSeconds(0);
+    setStartTimeCapture('--:--:--');
+    setEndTimeCapture('--:--:--');
+  };
+
+  const fmtTimeSec = (sec: number) => {
+    const h = Math.floor(sec / 3600),
+      m = Math.floor((sec % 3600) / 60),
+      s = sec % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
   const toggleSelectAll = () => {
@@ -141,23 +249,40 @@ export default function CrmTasksPage() {
   };
 
   // Fetch real tasks from backend DB
-  const loadTasksFromApi = () => {
+  const loadTasksFromApi = (dateFilterOverride?: string) => {
+    const activeDateFilter = dateFilterOverride !== undefined ? dateFilterOverride : dateFilter;
     setLoading(true);
-    let url = `${API_BASE}/v1/crm/tasks?limit=100`;
-    if (taskFilter && taskFilter !== 'Tasks') {
-      url += `&status=${encodeURIComponent(taskFilter)}`;
+    const params = new URLSearchParams();
+    if (activeDateFilter) {
+      params.append('date_filter', activeDateFilter);
+    } else if (taskFilter && taskFilter !== 'Tasks') {
+      params.append('status', taskFilter);
     }
-    if (staffFilter && staffFilter !== 'Staff') {
+    // Category filter
+    if (categoryFilter && categoryFilter !== 'Category') {
+      params.append('category_id', String(Number(categoryFilter)));
+    }
+    // Filter by current logged-in user's ID ONLY for operations employee (not manager)
+    if (isOpsEmployee && staffUser?.id) {
+      params.append('employee_id', String(staffUser.id));
+    }
+    // Only apply staff filter if not operations employee
+    if (!isOpsEmployee && staffFilter && staffFilter !== 'Staff') {
       const selectedStaff = opsStaff.find((s) => s.name === staffFilter);
       if (selectedStaff) {
-        url += `&employee_id=${selectedStaff.id}`;
+        params.append('employee_id', String(selectedStaff.id));
       }
     }
+    const url = `${API_BASE}/v1/crm/tasks?${params.toString()}`;
+    console.log('API URL:', url);
+    console.log('API_BASE:', API_BASE);
 
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
+        console.log('API response:', data);
         if (data?.success && Array.isArray(data?.data)) {
+          console.log('Tasks count:', data.data.length);
           const mapped: OperationTask[] = data.data.map((t: any, i: number) => ({
             id: t.task_id || t.id || i + 1,
             taskName: t.task_name || `Milestone Task #${t.task_id || i + 1}`,
@@ -174,14 +299,26 @@ export default function CrmTasksPage() {
             assignedToId: t.assign_to || null,
             isAssign: Number(t.is_assign) || 0,
             addedBy: t.added_by_name || 'Super Admin',
-            assignDate: t.assign_date ? t.assign_date.split('T')[0] : 'N/A',
-            dueDate: t.due_date ? t.due_date.split('T')[0] : 'N/A',
+            assignDate: t.assign_date ? t.assign_date.split(' ')[0] : 'N/A',
+            dueDate: t.due_date ? t.due_date.split(' ')[0] : 'N/A',
             status:
               t.actual_task_status === 5 || t.original_task_status === 5
                 ? 'completed'
                 : t.actual_task_status === 2 || t.original_task_status === 2
                   ? 'wip'
-                  : 'not-started',
+                  : t.actual_task_status === 3 || t.original_task_status === 3
+                    ? 'pendingfromclient'
+                    : t.actual_task_status === 4 || t.original_task_status === 4
+                      ? 'invoiced'
+                      : t.actual_task_status === 6 || t.original_task_status === 6
+                        ? 'returnback'
+                        : t.actual_task_status === 7 || t.original_task_status === 7
+                          ? 'cancel'
+                          : t.actual_task_status === 8 || t.original_task_status === 8
+                            ? 'feespending'
+                            : t.actual_task_status === 9 || t.original_task_status === 9
+                              ? 'onhold'
+                              : 'not-started',
             email:
               t.customer_email && t.customer_email !== 'N/A'
                 ? t.customer_email
@@ -192,6 +329,8 @@ export default function CrmTasksPage() {
                 : '9876543210',
             state: 'Maharashtra',
             city: 'Pune',
+            customerId: t.cust_id || 0,
+            serviceId: t.service_id || 0,
             timeline: [
               {
                 id: 1,
@@ -206,9 +345,7 @@ export default function CrmTasksPage() {
             ],
           }));
           setTasks(mapped);
-          if (mapped.length > 0 && !expandedId) {
-            setExpandedId(mapped[0].id);
-          }
+          // Do NOT auto-expand any task on load
         }
       })
       .catch((err) => console.error('Failed to fetch tasks', err))
@@ -217,7 +354,39 @@ export default function CrmTasksPage() {
 
   useEffect(() => {
     loadTasksFromApi();
-  }, [API_BASE, taskFilter, staffFilter]);
+  }, [API_BASE, taskFilter, isOpsEmployee, categoryFilter]);
+
+  // Fetch task stats for the count cards
+  const loadTaskStats = () => {
+    let url = `${API_BASE}/v1/crm/tasks/stats`;
+    if (isOpsEmployee && staffUser?.id) {
+      url += `?employee_id=${staffUser.id}`;
+    }
+    fetch(url)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.success) setTaskStats(data.data);
+      })
+      .catch(() => {});
+  };
+
+  // Fetch categories
+  const loadCategories = () => {
+    fetch(`${API_BASE}/v1/crm/ops-employee/categories`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.success) setCategories(data.data);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadTaskStats();
+  }, [API_BASE, isOpsEmployee, staffUser?.id]);
+
+  useEffect(() => {
+    loadCategories();
+  }, [API_BASE]);
 
   // Fetch Operations Staff (Managers, Employees, Assistants) from DB
   useEffect(() => {
@@ -288,48 +457,156 @@ export default function CrmTasksPage() {
   };
 
   const handleSaveEffort = async () => {
-    if (!effortModalTask) return;
-    const newStage = effortStatus.toLowerCase().includes('completed') ? 10 : 2;
+    if (!effortModalTask || !staffUser?.id) return;
+    const statusCode = Number(effortStatus) || 1;
+    setEffortSaving(true);
+    setEffortSaveMsg('');
+
+    // Calculate end time if timer is running but end time not set
+    let calculatedEndTime = endTimeCapture !== '--:--:--' ? endTimeCapture : '';
+    if (isTimerRunning && startTimeCapture !== '--:--:--' && calculatedEndTime === '') {
+      const now = new Date();
+      calculatedEndTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    }
+
+    const payload = {
+      cust_id: effortModalTask.customerId,
+      task_id: effortModalTask.id,
+      status: statusCode,
+      work: effortNotes,
+      work_service_id: effortModalTask.serviceId,
+      start_time: startTimeCapture !== '--:--:--' ? startTimeCapture : '',
+      end_time: calculatedEndTime,
+      user_id: staffUser.id,
+    };
     try {
-      await fetch(`${API_BASE}/v1/crm/tasks/${effortModalTask.id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          new_status: newStage,
-          remarks: effortNotes || `Milestone updated to ${effortStatus}`,
-          updated_by: effortModalTask.assignTo || 'Operations Specialist',
-        }),
+      const res = await fetch(`${API_BASE}/v1/crm/ops-employee/add-work-effort`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${staffToken}` },
+        body: JSON.stringify(payload),
       });
-
-      const newStep: TaskTimelineStep = {
-        id: Date.now(),
-        dateTime: new Date().toLocaleString(),
-        timeSpent: formatTimer(timerSeconds),
-        staff: effortModalTask.assignTo || 'Avinash Mate',
-        status: effortStatus as any,
-        comment: effortNotes || 'Effort logged',
-      };
-
-      setTasks((prev) =>
-        prev.map((t) =>
-          t.id === effortModalTask.id
-            ? {
-                ...t,
-                status: effortStatus.toLowerCase().includes('completed') ? 'completed' : 'wip',
-                timeline: [newStep, ...t.timeline],
-              }
-            : t
-        )
-      );
-      setEffortModalTask(null);
-      setTimerSeconds(0);
-      setIsTimerRunning(false);
-      setEffortNotes('');
-      alert('Effort logged and milestone saved to database successfully!');
+      const data = await res.json();
+      if (data.success) {
+        setEffortSaveMsg('Status updated successfully!');
+        setEffortNotes('');
+        resetEffortTimer();
+        // Reload from API to get latest status
+        loadTasksFromApi();
+        loadTaskStats();
+        // Reload timeline
+        loadEffortTimeline(effortModalTask.id);
+      } else {
+        setEffortSaveMsg('Error: ' + (data.message || data.error || 'Failed'));
+      }
     } catch {
-      alert('Failed to save effort/milestone to database.');
+      setEffortSaveMsg('Network error â€” check connection.');
+    } finally {
+      setEffortSaving(false);
     }
   };
+
+  // Fetch documents for a task using the correct endpoint
+  const fetchDocuments = async (customerId: number, serviceId: number) => {
+    try {
+      const dp = new URLSearchParams({
+        customer_id: String(customerId),
+        service_id: String(serviceId),
+      });
+      const res = await fetch(`${API_BASE}/v1/crm/ops-employee/documents?${dp}`, {
+        headers: { Authorization: `Bearer ${staffToken}` },
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        const docs = data.data;
+        setSentDocuments(
+          docs
+            .filter((d: any) => d.cd_from !== customerId)
+            .map((d: any) => ({ name: d.cd_name, url: d.cd_doc }))
+        );
+        setReceivedDocuments(
+          docs
+            .filter((d: any) => d.cd_from === customerId)
+            .map((d: any) => ({ name: d.cd_name, url: d.cd_doc }))
+        );
+      }
+    } catch (error) {
+      console.error('Failed to fetch documents:', error);
+    }
+  };
+
+  // Fetch work timeline for effort modal
+  const loadEffortTimeline = async (taskId: number) => {
+    setEffortTlLoading(true);
+    setEffortTimeline([]);
+    try {
+      const r = await fetch(`${API_BASE}/v1/crm/ops-employee/work-timeline?task_id=${taskId}`, {
+        headers: { Authorization: `Bearer ${staffToken}` },
+      });
+      const j = await r.json();
+      if (j.success) setEffortTimeline(j.data || []);
+    } catch {
+      /* ignore */
+    } finally {
+      setEffortTlLoading(false);
+    }
+  };
+
+  // Fetch work timeline for table expand
+  const loadTableTimeline = async (taskId: number) => {
+    setTableTlLoading((prev) => ({ ...prev, [taskId]: true }));
+    try {
+      const r = await fetch(`${API_BASE}/v1/crm/ops-employee/work-timeline?task_id=${taskId}`, {
+        headers: { Authorization: `Bearer ${staffToken}` },
+      });
+      const j = await r.json();
+      if (j.success) setTableTimeline((prev) => ({ ...prev, [taskId]: j.data || [] }));
+    } catch {
+      /* ignore */
+    } finally {
+      setTableTlLoading((prev) => ({ ...prev, [taskId]: false }));
+    }
+  };
+
+  // Load documents + timeline when effort modal opens
+  useEffect(() => {
+    if (effortModalTask) {
+      fetchDocuments(effortModalTask.customerId, effortModalTask.serviceId);
+      loadEffortTimeline(effortModalTask.id);
+
+      // Set current task status in dropdown
+      let currentStatus = '1';
+      if (effortModalTask.status === 'completed') currentStatus = '5';
+      else if (effortModalTask.status === 'wip') currentStatus = '2';
+      else if (effortModalTask.status === 'pendingfromclient') currentStatus = '3';
+      else if (effortModalTask.status === 'invoiced') currentStatus = '4';
+      else if (effortModalTask.status === 'returnback') currentStatus = '6';
+      else if (effortModalTask.status === 'cancel') currentStatus = '7';
+      else if (effortModalTask.status === 'feespending') currentStatus = '8';
+      else if (effortModalTask.status === 'onhold') currentStatus = '9';
+      setEffortStatus(currentStatus);
+
+      // Restore timer from localStorage
+      const savedTimer = localStorage.getItem(`timer_${effortModalTask.id}`);
+      if (savedTimer) {
+        try {
+          const { startTime, startedAt } = JSON.parse(savedTimer);
+          const now = new Date();
+          const elapsed = Math.floor((now.getTime() - startedAt) / 1000);
+          setStartTimeCapture(startTime);
+          setIsTimerRunning(true);
+          setTimerSeconds(Math.max(0, elapsed));
+        } catch {
+          resetEffortTimer();
+        }
+      } else {
+        resetEffortTimer();
+      }
+
+      setEffortModalTab('effort');
+      setEffortSaveMsg('');
+      setEffortNotes('');
+    }
+  }, [effortModalTask?.id]);
 
   const filteredTasks = tasks.filter(
     (t) =>
@@ -339,53 +616,70 @@ export default function CrmTasksPage() {
       t.assignTo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredTasks.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-4">
-      {/* ─── Top KPI Metric Cards with Single-Color Moving Outline ─── */}
-      <div className="flex flex-wrap items-center gap-2.5">
+      {/* â”€â”€â”€ Top KPI Filter Buttons (matching old CRM: overdues, onhold, todays etc.) â”€â”€â”€ */}
+      <div className="flex flex-wrap items-center gap-2">
         {[
-          { label: 'OVER DUES', count: 0, cBase: '#EF4444', cLight: '#FCA5A5', cDark: '#B91C1C' },
-          { label: 'ON HOLD', count: 29, cBase: '#DC2626', cLight: '#F87171', cDark: '#991B1B' },
-          {
-            label: "TODAY'S TASKS",
-            count: 6,
-            cBase: '#1F2937',
-            cLight: '#64748B',
-            cDark: '#0F172A',
-          },
-          { label: "TOMORROW'S", count: 22, cBase: '#16A34A', cLight: '#86EFAC', cDark: '#15803D' },
-          {
-            label: 'NEXT 7 DAYS',
-            count: 786,
-            cBase: '#F97316',
-            cLight: '#FDBA74',
-            cDark: '#C2410C',
-          },
+          { label: 'OVER DUES', key: 'overdues', count: taskStats.overdues, cBase: '#EF4444' },
+          { label: 'ON HOLD', key: 'onhold', count: taskStats.onhold, cBase: '#DC2626' },
+          { label: "TODAY'S TASKS", key: 'todays', count: taskStats.todays, cBase: '#1F2937' },
+          { label: "TOMORROW'S", key: 'tomorrows', count: taskStats.tomorrows, cBase: '#16A34A' },
+          { label: 'NEXT 7 DAYS', key: 'nextweeks', count: taskStats.next7days, cBase: '#F97316' },
           {
             label: 'NEXT 15 DAYS',
-            count: 15,
+            key: 'nexttwoweeks',
+            count: taskStats.next15days,
             cBase: '#6366F1',
-            cLight: '#A5B4FC',
-            cDark: '#4338CA',
           },
         ].map((kpi) => (
           <button
             key={kpi.label}
-            onClick={() => setSearchTerm(kpi.label === 'OVER DUES' ? '' : kpi.label)}
-            className="btn-multicolor group flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer"
+            onClick={() => {
+              const newFilter = dateFilter === kpi.key ? '' : kpi.key;
+              setDateFilter(newFilter);
+              setTaskFilter('Tasks');
+              loadTasksFromApi(newFilter);
+            }}
+            className={`group flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs hover:shadow-md cursor-pointer border ${
+              dateFilter === kpi.key
+                ? 'bg-slate-800 text-white border-slate-800'
+                : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
+            }`}
           >
             <span className="tracking-tight text-[11px] uppercase font-bold">{kpi.label}</span>
             <span
-              className="px-2 py-0.5 rounded-full text-[10px] font-extrabold text-white shadow-2xs"
+              className="px-2 py-0.5 rounded-full text-[10px] font-extrabold text-white"
               style={{ backgroundColor: kpi.cBase }}
             >
               {kpi.count}
             </span>
           </button>
         ))}
+        {dateFilter && (
+          <button
+            onClick={() => {
+              setDateFilter('');
+              loadTasksFromApi('');
+            }}
+            className="text-xs text-slate-500 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 font-medium transition-colors"
+          >
+            âœ• Clear Filter
+          </button>
+        )}
       </div>
 
-      {/* ─── Search & Filter Bar (Website Clean UI Style) ─── */}
+      {/* â”€â”€â”€ Search & Filter Bar (Website Clean UI Style) â”€â”€â”€ */}
       <div className="bg-white p-4 rounded-3xl border border-[#EAE6DD] shadow-xs space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 items-center">
           <select
@@ -398,7 +692,12 @@ export default function CrmTasksPage() {
             <option value="1">Not Started</option>
             <option value="2">Work In Progress (WIP)</option>
             <option value="3">Pending From Client</option>
+            <option value="4">Invoiced</option>
             <option value="5">Completed</option>
+            <option value="6">Return Back</option>
+            <option value="7">Cancelled</option>
+            <option value="8">Fees Pending</option>
+            <option value="9">On Hold</option>
           </select>
 
           <select
@@ -407,28 +706,32 @@ export default function CrmTasksPage() {
             className="text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
           >
             <option value="Category">Category</option>
-            <option value="Taxation">Taxation</option>
-            <option value="Registration">Registration</option>
-            <option value="Compliances">Compliances</option>
-          </select>
-
-          <select
-            value={staffFilter}
-            onChange={(e) => setStaffFilter(e.target.value)}
-            className="text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-          >
-            <option value="Staff">Staff (All 39)</option>
-            {opsStaff.map((staff) => (
-              <option key={staff.id} value={staff.name}>
-                {staff.name}{' '}
-                {staff.role_id === 12
-                  ? '(Assistant)'
-                  : staff.role_id === 3
-                    ? '(Manager)'
-                    : '(Employee)'}
+            {categories.map((cat) => (
+              <option key={cat.category_id} value={cat.category_id}>
+                {cat.category_name}
               </option>
             ))}
           </select>
+
+          {!isOpsEmployee && (
+            <select
+              value={staffFilter}
+              onChange={(e) => setStaffFilter(e.target.value)}
+              className="text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+            >
+              <option value="Staff">Staff (All 39)</option>
+              {opsStaff.map((staff) => (
+                <option key={staff.id} value={staff.name}>
+                  {staff.name}{' '}
+                  {staff.role_id === 12
+                    ? '(Assistant)'
+                    : staff.role_id === 3
+                      ? '(Manager)'
+                      : '(Employee)'}
+                </option>
+              ))}
+            </select>
+          )}
 
           <input
             type="date"
@@ -453,56 +756,60 @@ export default function CrmTasksPage() {
             <span>Filter</span>
           </button>
 
-          <button
-            onClick={() => {
-              if (selectedIds.size === 0) {
-                alert('Please select tasks to bulk assign.');
-                return;
-              }
-              setAssignTargetTask(null);
-              setAssignModalOpen(true);
-            }}
-            className="btn-multicolor px-4 py-2 rounded-full text-xs font-bold shadow-2xs cursor-pointer"
-          >
-            <span>Bulk Assign</span>
-          </button>
+          {!isOpsEmployee && (
+            <button
+              onClick={() => {
+                if (selectedIds.size === 0) {
+                  alert('Please select tasks to bulk assign.');
+                  return;
+                }
+                setAssignTargetTask(null);
+                setAssignModalOpen(true);
+              }}
+              className="btn-multicolor px-4 py-2 rounded-full text-xs font-bold shadow-2xs cursor-pointer"
+            >
+              <span>Bulk Assign</span>
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2.5 pt-1">
-          <button
-            onClick={async () => {
-              if (selectedIds.size === 0) {
-                alert('Please select at least one task to update due date.');
-                return;
-              }
-              const nd = prompt('Enter new due date (YYYY-MM-DD):');
-              if (nd) {
-                try {
-                  const res = await fetch(`${API_BASE}/v1/crm/tasks/update-due-date`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      task_ids: Array.from(selectedIds),
-                      due_date: nd,
-                    }),
-                  });
-                  const result = await res.json();
-                  if (result.success) {
-                    alert(`Due date updated for ${selectedIds.size} tasks.`);
-                    setSelectedIds(new Set());
-                    loadTasksFromApi();
-                  } else {
-                    alert(result.message || 'Failed to update due dates');
-                  }
-                } catch {
-                  alert('Network error while updating due dates.');
+          {!isOpsEmployee && (
+            <button
+              onClick={async () => {
+                if (selectedIds.size === 0) {
+                  alert('Please select at least one task to update due date.');
+                  return;
                 }
-              }
-            }}
-            className="btn-multicolor px-5 py-2 rounded-full text-xs font-bold shadow-2xs cursor-pointer"
-          >
-            <span>Change Due Date</span>
-          </button>
+                const nd = prompt('Enter new due date (YYYY-MM-DD):');
+                if (nd) {
+                  try {
+                    const res = await fetch(`${API_BASE}/v1/crm/tasks/update-due-date`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        task_ids: Array.from(selectedIds),
+                        due_date: nd,
+                      }),
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                      alert(`Due date updated for ${selectedIds.size} tasks.`);
+                      setSelectedIds(new Set());
+                      loadTasksFromApi();
+                    } else {
+                      alert(result.message || 'Failed to update due dates');
+                    }
+                  } catch {
+                    alert('Network error while updating due dates.');
+                  }
+                }
+              }}
+              className="btn-multicolor px-5 py-2 rounded-full text-xs font-bold shadow-2xs cursor-pointer"
+            >
+              <span>Change Due Date</span>
+            </button>
+          )}
 
           <button
             onClick={handleResetFilters}
@@ -513,7 +820,7 @@ export default function CrmTasksPage() {
         </div>
       </div>
 
-      {/* ─── Task Table Card with Expandable Horizontal Timeline ─── */}
+      {/* â”€â”€â”€ Task Table Card with Expandable Horizontal Timeline â”€â”€â”€ */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         {/* Table Action Bar */}
         <div className="p-3 bg-slate-50/70 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
@@ -560,14 +867,16 @@ export default function CrmTasksPage() {
           <table className="table-crm w-full text-left text-xs border-separate border-spacing-0">
             <thead className="sticky top-0 z-10">
               <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider sticky top-0 z-10">
-                <th className="py-2.5 px-3 w-8 text-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.size === tasks.length && tasks.length > 0}
-                    onChange={toggleSelectAll}
-                    className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
-                  />
-                </th>
+                {!isOpsEmployee && (
+                  <th className="py-2.5 px-3 w-8 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === tasks.length && tasks.length > 0}
+                      onChange={toggleSelectAll}
+                      className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
+                    />
+                  </th>
+                )}
                 <th className="py-2.5 px-3 font-bold">Task Name</th>
                 <th className="py-2.5 px-3 font-bold">Customer Name</th>
                 <th className="py-2.5 px-3 font-bold">Company Name</th>
@@ -583,7 +892,10 @@ export default function CrmTasksPage() {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-xs text-slate-500">
+                  <td
+                    colSpan={isOpsEmployee ? 10 : 11}
+                    className="py-12 text-center text-xs text-slate-500"
+                  >
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-[#1E3A8A] border-t-transparent rounded-full animate-spin" />
                       Loading live SQL operations tasks from database...
@@ -592,12 +904,15 @@ export default function CrmTasksPage() {
                 </tr>
               ) : filteredTasks.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-10 text-center text-xs text-slate-400">
+                  <td
+                    colSpan={isOpsEmployee ? 10 : 11}
+                    className="py-10 text-center text-xs text-slate-400"
+                  >
                     No tasks found in database matching your filter.
                   </td>
                 </tr>
               ) : (
-                filteredTasks.map((task, idx) => (
+                paginatedTasks.map((task, idx) => (
                   <React.Fragment key={task.id}>
                     <tr
                       className={
@@ -608,18 +923,27 @@ export default function CrmTasksPage() {
                             : 'bg-[#F9FAFB] hover:bg-sky-50/30'
                       }
                     >
-                      <td className="py-2.5 px-3 text-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(task.id)}
-                          onChange={() => toggleSelect(task.id)}
-                          className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
-                        />
-                      </td>
+                      {!isOpsEmployee && (
+                        <td className="py-2.5 px-3 text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(task.id)}
+                            onChange={() => toggleSelect(task.id)}
+                            className="rounded text-[#003A66] focus:ring-0 cursor-pointer"
+                          />
+                        </td>
+                      )}
                       <td className="py-2.5 px-3">
                         <div className="flex items-center gap-1.5">
                           <button
-                            onClick={() => setExpandedId(expandedId === task.id ? null : task.id)}
+                            onClick={() => {
+                              if (expandedId === task.id) {
+                                setExpandedId(null);
+                              } else {
+                                setExpandedId(task.id);
+                                loadTableTimeline(task.id);
+                              }
+                            }}
                             className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center font-bold text-[11px]"
                             title="Expand timeline"
                           >
@@ -633,7 +957,9 @@ export default function CrmTasksPage() {
                           </button>
                         </div>
                       </td>
-                      <td className="py-2.5 px-3 text-slate-800">{task.customerName}</td>
+                      <td className="py-2.5 px-3 text-slate-800 font-medium">
+                        {task.customerName}
+                      </td>
                       <td className="py-2.5 px-3 text-slate-600">{task.companyName}</td>
                       <td className="py-2.5 px-3 text-slate-700 font-medium">{task.service}</td>
                       <td className="py-2.5 px-3 font-medium">
@@ -649,34 +975,66 @@ export default function CrmTasksPage() {
                       </td>
                       <td className="py-2.5 px-3 text-slate-600">{task.addedBy}</td>
                       <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
-                        {task.assignDate}
+                        {task.assignDate ? task.assignDate.split('T')[0] : 'N/A'}
                       </td>
                       <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
-                        {task.dueDate}
+                        {task.dueDate ? task.dueDate.split('T')[0] : 'N/A'}
                       </td>
                       <td className="py-2.5 px-3">
-                        {task.status === 'completed' ? (
-                          <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            completed
-                          </span>
-                        ) : (
-                          <span className="bg-[#DC2626] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            not-started
-                          </span>
-                        )}
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            task.status === 'completed'
+                              ? 'bg-[#16A34A] text-white'
+                              : task.status === 'wip'
+                                ? 'bg-[#2563EB] text-white'
+                                : task.status === 'pendingfromclient'
+                                  ? 'bg-[#D97706] text-white'
+                                  : task.status === 'invoiced'
+                                    ? 'bg-[#7C3AED] text-white'
+                                    : task.status === 'returnback'
+                                      ? 'bg-[#0891B2] text-white'
+                                      : task.status === 'cancel'
+                                        ? 'bg-[#6B7280] text-white'
+                                        : task.status === 'feespending'
+                                          ? 'bg-[#EA580C] text-white'
+                                          : task.status === 'onhold'
+                                            ? 'bg-[#B45309] text-white'
+                                            : 'bg-[#DC2626] text-white'
+                          }`}
+                        >
+                          {task.status === 'completed'
+                            ? 'Completed'
+                            : task.status === 'wip'
+                              ? 'Work In Progress'
+                              : task.status === 'pendingfromclient'
+                                ? 'Pending From Client'
+                                : task.status === 'invoiced'
+                                  ? 'Invoiced'
+                                  : task.status === 'returnback'
+                                    ? 'Return Back'
+                                    : task.status === 'cancel'
+                                      ? 'Cancelled'
+                                      : task.status === 'feespending'
+                                        ? 'Fees Pending'
+                                        : task.status === 'onhold'
+                                          ? 'On Hold'
+                                          : 'Not Started'}
+                        </span>
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => {
-                              setAssignTargetTask(task);
-                              setAssignModalOpen(true);
-                            }}
-                            className="w-6 h-6 rounded-full bg-[#003A66] hover:bg-[#002B4D] text-white flex items-center justify-center"
-                            title="Assign"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </button>
+                          {!isOpsEmployee && (
+                            <button
+                              onClick={() => {
+                                setAssignTargetTask(task);
+                                setAssignModalOpen(true);
+                              }}
+                              className="w-6 h-6 rounded-full bg-[#003A66] hover:bg-[#002B4D] text-white flex items-center justify-center"
+                              title="Assign"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               if (confirm(`Delete task ${task.taskName}?`)) {
@@ -692,38 +1050,49 @@ export default function CrmTasksPage() {
                       </td>
                     </tr>
 
-                    {/* ─── Expandable Visual Stepper Timeline ─── */}
+                    {/* --- Expandable Visual Stepper Timeline --- */}
                     {expandedId === task.id && (
                       <tr className="bg-[#FAF9F5]">
-                        <td colSpan={11} className="p-5">
+                        <td colSpan={isOpsEmployee ? 10 : 11} className="p-5">
                           <div className="bg-white rounded-2xl p-5 border border-[#EAE6DD] shadow-xs">
                             <h4 className="text-xs font-bold text-[#1B365D] uppercase mb-4 flex items-center gap-2">
                               <Clock className="w-4 h-4 text-emerald-600" />
                               <span>Task Progress Timeline & Action Audit</span>
                             </h4>
 
-                            {task.timeline.length === 0 ? (
+                            {tableTlLoading[task.id] ? (
                               <p className="text-xs text-slate-500 italic py-2">
-                                No timeline steps logged yet.
+                                Loading timeline...
+                              </p>
+                            ) : !tableTimeline[task.id] || tableTimeline[task.id].length === 0 ? (
+                              <p className="text-xs text-slate-500 italic py-2">
+                                No timeline records yet.
                               </p>
                             ) : (
                               <div className="relative flex items-start gap-12 overflow-x-auto py-4 px-2">
                                 {/* Continuous timeline connector bar centered on node */}
                                 <div className="absolute top-[68px] left-12 right-12 h-0.5 bg-blue-200 -z-0" />
 
-                                {task.timeline.map((step) => (
+                                {tableTimeline[task.id].map((tl: any, idx: number) => (
                                   <div
-                                    key={step.id}
+                                    key={idx}
                                     className="relative z-10 flex flex-col items-center text-center min-w-[160px]"
                                   >
                                     <p className="text-[11px] font-mono text-slate-600 font-semibold">
-                                      {step.dateTime}
+                                      {tl.date} {tl.time}
                                     </p>
-                                    <p className="text-[10px] text-slate-400">
-                                      Time Spent: {step.timeSpent}
-                                    </p>
+                                    {tl.work_seconds > 0 && (
+                                      <p className="text-[10px] text-slate-400">
+                                        {(() => {
+                                          const h = Math.floor(tl.work_seconds / 3600);
+                                          const m = Math.floor((tl.work_seconds % 3600) / 60);
+                                          const s = tl.work_seconds % 60;
+                                          return `Total: ${h > 0 ? `${h}h ` : ''}${m}m ${s}s`;
+                                        })()}
+                                      </p>
+                                    )}
                                     <p className="text-[11px] font-bold text-slate-800 mt-0.5">
-                                      {step.staff}
+                                      {tl.username || 'Unknown'}
                                     </p>
 
                                     {/* Step Node */}
@@ -732,18 +1101,20 @@ export default function CrmTasksPage() {
                                     {/* Status Pill */}
                                     <span
                                       className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-2xs ${
-                                        step.status === 'Completed'
+                                        tl.status === 5
                                           ? 'bg-[#16A34A] text-white'
                                           : 'bg-[#EF4444] text-white'
                                       }`}
                                     >
-                                      {step.status}
+                                      {STATUS_LABELS_MAP[tl.status] || 'Unknown'}
                                     </span>
 
                                     {/* Comment */}
-                                    <p className="text-xs font-bold text-slate-700 mt-2 max-w-[180px]">
-                                      {step.comment}
-                                    </p>
+                                    {tl.work && (
+                                      <p className="text-xs font-bold text-slate-700 mt-2 max-w-[180px]">
+                                        {tl.work}
+                                      </p>
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -761,29 +1132,61 @@ export default function CrmTasksPage() {
 
         {/* Pagination Bar */}
         <div className="p-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Showing 1 to {filteredTasks.length} of 1,280 entries</span>
+          <span>
+            Showing {startIndex + 1} to {Math.min(endIndex, filteredTasks.length)} of{' '}
+            {filteredTasks.length} entries
+          </span>
           <div className="flex items-center gap-1">
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Previous
             </button>
-            <button className="px-2.5 py-1 rounded bg-[#1E3A8A] text-white font-bold">1</button>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
-              2
-            </button>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
-              3
-            </button>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  className={`px-2.5 py-1 rounded ${
+                    currentPage === pageNum
+                      ? 'bg-[#1E3A8A] text-white font-bold'
+                      : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Next
             </button>
           </div>
         </div>
       </div>
 
-      {/* ─── CLIENT INFO & EFFORT TRACKING MODAL (Website Clean UI Style) ─── */}
+      {/* â”€â”€â”€ CLIENT INFO & EFFORT TRACKING MODAL â”€â”€â”€ */}
       {effortModalTask && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-2xl w-full animate-scale-in">
+          <div
+            className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-2xl w-full"
+            style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+          >
             {/* Signature Top Multicolor Strip */}
             <div className="h-1 bg-multicolor" />
 
@@ -798,267 +1201,306 @@ export default function CrmTasksPage() {
                     Client Info & Effort Tracking
                   </h3>
                   <p className="text-[10px] text-slate-500 font-medium">
-                    Task #{effortModalTask.id} • {effortModalTask.taskName}
+                    {effortModalTask.customerName} â€¢ {effortModalTask.taskName}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => alert(`Opening live WhatsApp chat with ${effortModalTask.phone}`)}
-                  className="btn-multicolor px-3.5 py-1.5 rounded-full font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                  style={
-                    {
-                      '--c-base': '#F59E0B',
-                      '--c-light': '#FCD34D',
-                      '--c-dark': '#D97706',
-                    } as React.CSSProperties
-                  }
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>Chat</span>
-                </button>
-                <button
-                  onClick={() => {
-                    const n = prompt('Add operational note:');
-                    if (n) alert('Note saved!');
-                  }}
-                  className="btn-multicolor px-3.5 py-1.5 rounded-full font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add Note</span>
-                </button>
-                <button
-                  onClick={() => setEffortModalTask(null)}
-                  className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+              <button
+                onClick={() => setEffortModalTask(null)}
+                className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <div className="p-6 space-y-6 text-xs max-h-[82vh] overflow-y-auto">
-              {/* Upper Section: Client Details & Add Effort */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Left: Client Details */}
-                <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4 space-y-3">
-                  <h4 className="text-xs font-bold text-[#1B365D] uppercase tracking-wide flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-[#1B365D]" />
-                    <span>Client Details</span>
-                  </h4>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                      Customer Name
-                    </label>
-                    <input
-                      type="text"
-                      readOnly
-                      defaultValue={effortModalTask.customerName}
-                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      readOnly
-                      defaultValue={effortModalTask.email}
-                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                      Mobile Contact
-                    </label>
-                    <input
-                      type="text"
-                      readOnly
-                      defaultValue={effortModalTask.phone}
-                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                      Service Assigned
-                    </label>
-                    <input
-                      type="text"
-                      readOnly
-                      defaultValue={effortModalTask.service}
-                      className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-medium"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                        State
-                      </label>
-                      <input
-                        type="text"
-                        readOnly
-                        defaultValue={effortModalTask.state}
-                        className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                        City
-                      </label>
-                      <input
-                        type="text"
-                        readOnly
-                        defaultValue={effortModalTask.city}
-                        className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800"
-                      />
+            <div className="p-6 space-y-5 text-xs overflow-y-auto flex-1">
+              <>
+                {/* Upper Section: Client Details & Add Effort */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Left: Client Details */}
+                  <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4 space-y-3">
+                    <h4 className="text-xs font-bold text-[#1B365D] uppercase tracking-wide flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-[#1B365D]" />
+                      <span>Client Details</span>
+                    </h4>
+                    {[
+                      { l: 'Customer Name', v: effortModalTask.customerName },
+                      { l: 'Email Address', v: effortModalTask.email },
+                      { l: 'Mobile Contact', v: effortModalTask.phone },
+                      { l: 'Service Assigned', v: effortModalTask.service },
+                    ].map((f) => (
+                      <div key={f.l}>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          {f.l}
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          defaultValue={f.v}
+                          className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold text-xs"
+                        />
+                      </div>
+                    ))}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          State
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          defaultValue={effortModalTask.state}
+                          className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          City
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          defaultValue={effortModalTask.city}
+                          className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 text-xs"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Right: Add Effort & Live Stopwatch */}
-                <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4 space-y-3">
-                  <h4 className="text-xs font-bold text-[#1B365D] uppercase tracking-wide flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Add Effort & Timer</span>
-                  </h4>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                      Task Status
-                    </label>
-                    <select
-                      value={effortStatus}
-                      onChange={(e) => setEffortStatus(e.target.value)}
-                      className="w-full text-xs bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                  {/* Right: Add Effort & Timer */}
+                  <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4 space-y-3">
+                    <h4 className="text-xs font-bold text-[#1B365D] uppercase tracking-wide flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Add Effort & Timer</span>
+                      <span className="text-[9px] font-normal text-slate-400 normal-case ml-1">
+                        (Start/End time optional)
+                      </span>
+                    </h4>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                        Task Status
+                      </label>
+                      <select
+                        value={effortStatus}
+                        onChange={(e) => setEffortStatus(e.target.value)}
+                        className="w-full text-xs bg-white border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                      >
+                        <option value="0" disabled>
+                          Select Status
+                        </option>
+                        {Object.entries(STATUS_LABELS_MAP).map(([v, l]) => (
+                          <option key={v} value={v}>
+                            {l}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Start / End Time Buttons */}
+                    <div className="grid grid-cols-2 gap-2.5 text-center">
+                      <div>
+                        <button
+                          onClick={startEffortTimer}
+                          disabled={isTimerRunning}
+                          className="btn-multicolor w-full px-3 py-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Start Time</span>
+                        </button>
+                        <p className="text-[10px] text-slate-500 mt-1 font-mono">
+                          Captured: {startTimeCapture}
+                        </p>
+                      </div>
+                      <div>
+                        <button
+                          onClick={stopEffortTimer}
+                          disabled={!isTimerRunning}
+                          className="btn-multicolor w-full px-3 py-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer"
+                        >
+                          <Square className="w-3.5 h-3.5 fill-current" />
+                          <span>End Time</span>
+                        </button>
+                        <p className="text-[10px] text-slate-500 mt-1 font-mono">
+                          Captured: {endTimeCapture}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Live Clock Display */}
+                    <div className="bg-[#1B365D] text-white font-mono text-xl font-black py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2.5 shadow-md border border-white/10 tracking-widest">
+                      <Clock className="w-4 h-4 text-emerald-400 animate-pulse" />
+                      <span>{formatTimer(timerSeconds)}</span>
+                    </div>
+
+                    {/* Notes Textarea */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                        Work Remarks / Efforts
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={effortNotes}
+                        onChange={(e) => setEffortNotes(e.target.value)}
+                        placeholder="Describe work done or status update..."
+                        className="w-full text-xs bg-white border border-[#EAE6DD] rounded-xl p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleSaveEffort}
+                      disabled={effortSaving || !Number(effortStatus)}
+                      className="btn-multicolor w-full py-2.5 rounded-full text-xs font-extrabold shadow-xs cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-60"
                     >
-                      <option value="Completed">Completed</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Pending From Client">Pending From Client</option>
-                      <option value="Not Started">Not Started</option>
-                    </select>
-                  </div>
-
-                  {/* Start Time & End Time buttons */}
-                  <div className="grid grid-cols-2 gap-2.5 text-center">
-                    <div>
-                      <button
-                        onClick={startEffortTimer}
-                        disabled={isTimerRunning}
-                        className="btn-multicolor w-full px-3 py-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer"
+                      {effortSaving ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      )}
+                      <span>{effortSaving ? 'Updating...' : 'Update Status & Save'}</span>
+                    </button>
+                    {effortSaveMsg && (
+                      <div
+                        className={`text-[11px] font-semibold px-3 py-2 rounded-xl ${effortSaveMsg.startsWith('S') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}
                       >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>Start Time</span>
-                      </button>
-                      <p className="text-[10px] text-slate-500 mt-1 font-mono">
-                        Captured: {startTimeCapture}
-                      </p>
-                    </div>
-
-                    <div>
-                      <button
-                        onClick={stopEffortTimer}
-                        disabled={!isTimerRunning}
-                        className="btn-multicolor w-full px-3 py-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-60 cursor-pointer"
-                      >
-                        <Square className="w-3.5 h-3.5 fill-current" />
-                        <span>End Time</span>
-                      </button>
-                      <p className="text-[10px] text-slate-500 mt-1 font-mono">
-                        Captured: {endTimeCapture}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Live Clock Display */}
-                  <div className="bg-[#1B365D] text-white font-mono text-xl font-black py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2.5 shadow-md border border-white/10 tracking-widest">
-                    <Clock className="w-4 h-4 text-emerald-400 animate-pulse" />
-                    <span>{formatTimer(timerSeconds)}</span>
-                  </div>
-
-                  {/* Add Efforts Textarea */}
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                      Operational Notes
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={effortNotes}
-                      onChange={(e) => setEffortNotes(e.target.value)}
-                      placeholder="Add efforts or status update..."
-                      className="w-full text-xs bg-white border border-[#EAE6DD] rounded-xl p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleSaveEffort}
-                    className="btn-multicolor w-full py-2.5 rounded-full text-xs font-extrabold shadow-xs cursor-pointer"
-                  >
-                    <span>Update</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Lower Section: Document Management */}
-              <div className="pt-2">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4">
-                    <h5 className="font-bold text-[#1B365D] mb-2 flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Send Documents</span>
-                    </h5>
-                    <div className="p-3 bg-white border border-[#EAE6DD] rounded-xl text-[11px] text-slate-500">
-                      No sent documents yet.
-                    </div>
-                  </div>
-
-                  <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4">
-                    <h5 className="font-bold text-[#1B365D] mb-2 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Received Documents</span>
-                    </h5>
-                    <div className="p-3 bg-white border border-[#EAE6DD] rounded-xl text-[11px] text-slate-700 font-medium">
-                      PAN Card, Aadhaar, Bank Statement
-                    </div>
-                  </div>
-
-                  <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4">
-                    <h5 className="font-bold text-[#1B365D] mb-2 flex items-center gap-1.5">
-                      <Upload className="w-3.5 h-3.5 text-purple-600" />
-                      <span>Upload Documents</span>
-                    </h5>
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        placeholder="Document Name..."
-                        value={docNameInput}
-                        onChange={(e) => setDocNameInput(e.target.value)}
-                        className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-1.5 text-xs focus:outline-none"
-                      />
-                      <input type="file" className="text-[11px] text-slate-500" />
-                      <button
-                        onClick={() => {
-                          if (docNameInput) {
-                            setUploadedDocs([
-                              ...uploadedDocs,
-                              { name: docNameInput, date: new Date().toLocaleDateString() },
-                            ]);
-                            setDocNameInput('');
-                            alert('Document uploaded successfully.');
-                          }
-                        }}
-                        className="btn-multicolor w-full py-2 rounded-full text-xs font-bold cursor-pointer"
-                      >
-                        <span>Upload</span>
-                      </button>
-                    </div>
+                        {effortSaveMsg}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
+
+                {/* Documents Section */}
+                <div className="pt-1">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4">
+                      <h5 className="font-bold text-[#1B365D] mb-2 flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Sent Documents</span>
+                      </h5>
+                      <div className="p-3 bg-white border border-[#EAE6DD] rounded-xl text-[11px] text-slate-500">
+                        {sentDocuments.length === 0 ? (
+                          <span>No sent documents yet.</span>
+                        ) : (
+                          <div className="space-y-1">
+                            {sentDocuments.map((doc, idx) => (
+                              <a
+                                key={idx}
+                                href={`${API_BASE}/Docs/${doc.url}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block text-slate-700 hover:text-blue-600 hover:underline"
+                              >
+                                {doc.name}
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4">
+                      <h5 className="font-bold text-[#1B365D] mb-2 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Received Documents</span>
+                      </h5>
+                      <div className="p-3 bg-white border border-[#EAE6DD] rounded-xl text-[11px] text-slate-700 font-medium">
+                        {receivedDocuments.length === 0 ? (
+                          <span>No received documents yet.</span>
+                        ) : (
+                          <div className="space-y-1">
+                            {receivedDocuments.map((doc, idx) => (
+                              <a
+                                key={idx}
+                                href={`${API_BASE}/Docs/${doc.url}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block text-slate-700 hover:text-emerald-600 hover:underline"
+                              >
+                                {doc.name}
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl p-4">
+                      <h5 className="font-bold text-[#1B365D] mb-2 flex items-center gap-1.5">
+                        <Upload className="w-3.5 h-3.5 text-purple-600" />
+                        <span>Upload Document</span>
+                      </h5>
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Document Name..."
+                          value={docNameInput}
+                          onChange={(e) => setDocNameInput(e.target.value)}
+                          className="w-full bg-white border border-[#EAE6DD] rounded-xl px-3 py-1.5 text-xs focus:outline-none"
+                        />
+                        <input
+                          type="file"
+                          id="customer_docs"
+                          className="text-[11px] text-slate-500"
+                          accept="*"
+                        />
+                        <button
+                          onClick={async () => {
+                            const fileInput = document.getElementById(
+                              'customer_docs'
+                            ) as HTMLInputElement;
+                            const file = fileInput?.files?.[0];
+                            if (!docNameInput || !file || !effortModalTask || !staffUser?.id) {
+                              alert('Please enter document name and select a file');
+                              return;
+                            }
+                            setDocUploading(true);
+                            const fd = new FormData();
+                            fd.append('customer_docs', file);
+                            fd.append('doc_cust_id', String(effortModalTask.customerId));
+                            fd.append('docs_name', docNameInput);
+                            fd.append('cd_service_id', String(effortModalTask.serviceId));
+                            fd.append('user_id', String(staffUser.id));
+                            try {
+                              const res = await fetch(
+                                `${API_BASE}/v1/crm/ops-employee/upload-document`,
+                                {
+                                  method: 'POST',
+                                  headers: { Authorization: `Bearer ${staffToken}` },
+                                  body: fd,
+                                }
+                              );
+                              const data = await res.json();
+                              if (data.success) {
+                                setDocNameInput('');
+                                if (fileInput) fileInput.value = '';
+                                fetchDocuments(
+                                  effortModalTask.customerId,
+                                  effortModalTask.serviceId
+                                );
+                              } else {
+                                alert(data.error || 'Upload failed');
+                              }
+                            } catch {
+                              alert('Failed to upload document');
+                            } finally {
+                              setDocUploading(false);
+                            }
+                          }}
+                          disabled={docUploading}
+                          className="btn-multicolor w-full py-2 rounded-full text-xs font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span>{docUploading ? 'Uploading...' : 'Upload'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
             </div>
           </div>
         </div>
       )}
 
-      {/* ─── ASSIGN TASK TO MODAL (Website Clean UI Style) ─── */}
+      {/* â”€â”€â”€ ASSIGN TASK TO MODAL (Website Clean UI Style) â”€â”€â”€ */}
       {assignModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-sm w-full animate-scale-in">

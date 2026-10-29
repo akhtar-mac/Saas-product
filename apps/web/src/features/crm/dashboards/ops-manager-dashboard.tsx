@@ -27,6 +27,19 @@ interface Coupon {
   is_active: number; // 0 = Open/Active, 1 = Expired
 }
 
+interface DashboardStats {
+  total: number;
+  over_dues: number;
+  on_hold: number;
+  not_started: number;
+  wip: number;
+  pending_from_client: number;
+  invoiced: number;
+  completed: number;
+  cancelled: number;
+  fees_pending: number;
+}
+
 export default function OpsManagerDashboard() {
   const { staffToken } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'overview' | 'coupons'>('overview');
@@ -34,6 +47,8 @@ export default function OpsManagerDashboard() {
   const [loadingCoupons, setLoadingCoupons] = useState(false);
   const [copiedCouponId, setCopiedCouponId] = useState<number | null>(null);
   const [searchCoupon, setSearchCoupon] = useState('');
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   // Coupon modal state
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
@@ -52,6 +67,21 @@ export default function OpsManagerDashboard() {
     Authorization: `Bearer ${staffToken}`,
   };
 
+  const fetchDashboardStats = async () => {
+    setLoadingStats(true);
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/om/dashboard-stats`, { headers: authHeaders });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setDashboardStats(data.data);
+      }
+    } catch (e) {
+      console.error('Error fetching dashboard stats:', e);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
   const fetchCoupons = async () => {
     setLoadingCoupons(true);
     try {
@@ -68,6 +98,7 @@ export default function OpsManagerDashboard() {
   };
 
   useEffect(() => {
+    fetchDashboardStats();
     fetchCoupons();
   }, []);
 
@@ -142,14 +173,63 @@ export default function OpsManagerDashboard() {
     }
   };
 
-  const stageBreakdown = [
-    { stage: 'Documents Pending', count: 24, badge: 'bg-amber-50 text-amber-700' },
-    { stage: 'Documents Collected', count: 18, badge: 'bg-blue-50 text-blue-700' },
-    { stage: 'Verification In Progress', count: 32, badge: 'bg-indigo-50 text-indigo-700' },
-    { stage: 'Govt Filing In Progress', count: 46, badge: 'bg-purple-50 text-purple-700' },
-    { stage: 'QC Review Desk', count: 14, badge: 'bg-cyan-50 text-cyan-700' },
-    { stage: 'Govt Approved / Done', count: 50, badge: 'bg-emerald-50 text-emerald-700' },
-  ];
+  const stageBreakdown = dashboardStats
+    ? [
+        {
+          stage: 'Total Tasks',
+          count: dashboardStats.total || 0,
+          badge: 'bg-slate-50 text-slate-700',
+        },
+        {
+          stage: 'Over Dues',
+          count: dashboardStats.over_dues || 0,
+          badge: 'bg-red-50 text-red-700',
+        },
+        {
+          stage: 'On Hold',
+          count: dashboardStats.on_hold || 0,
+          badge: 'bg-amber-50 text-amber-700',
+        },
+        {
+          stage: 'Not Started',
+          count: dashboardStats.not_started || 0,
+          badge: 'bg-blue-50 text-blue-700',
+        },
+        { stage: 'WIP', count: dashboardStats.wip || 0, badge: 'bg-indigo-50 text-indigo-700' },
+        {
+          stage: 'Pending From Client',
+          count: dashboardStats.pending_from_client || 0,
+          badge: 'bg-purple-50 text-purple-700',
+        },
+        {
+          stage: 'Invoiced',
+          count: dashboardStats.invoiced || 0,
+          badge: 'bg-cyan-50 text-cyan-700',
+        },
+        {
+          stage: 'Completed',
+          count: dashboardStats.completed || 0,
+          badge: 'bg-emerald-50 text-emerald-700',
+        },
+        {
+          stage: 'Cancelled',
+          count: dashboardStats.cancelled || 0,
+          badge: 'bg-rose-50 text-rose-700',
+        },
+        {
+          stage: 'Fees Pending',
+          count: dashboardStats.fees_pending || 0,
+          badge: 'bg-orange-50 text-orange-700',
+        },
+      ]
+    : [
+        { stage: 'Documents Pending', count: 24, badge: 'bg-amber-50 text-amber-700' },
+        { stage: 'Documents Collected', count: 18, badge: 'bg-blue-50 text-blue-700' },
+        { stage: 'Verification In Progress', count: 32, badge: 'bg-indigo-50 text-indigo-700' },
+        { stage: 'Govt Filing In Progress', count: 46, badge: 'bg-purple-50 text-purple-700' },
+        { stage: 'QC Review Desk', count: 14, badge: 'bg-cyan-50 text-cyan-700' },
+        { stage: 'Govt Approved / Done', count: 50, badge: 'bg-emerald-50 text-emerald-700' },
+      ];
 
   const opsTeam = [
     {
@@ -248,28 +328,28 @@ export default function OpsManagerDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               {
-                title: 'Total Active Filings',
-                value: '184 Active',
-                sub: 'Across 8 core categories',
+                title: 'Total Tasks',
+                value: loadingStats ? 'Loading...' : `${dashboardStats?.total || 0} Tasks`,
+                sub: 'All operation tasks',
                 icon: ClipboardList,
                 color: '#003A66',
                 bg: 'rgba(0,58,102,0.08)',
               },
               {
-                title: 'SLA Compliance Rate',
-                value: '95.2%',
-                sub: '175 cases on track',
-                icon: CheckCircle2,
-                color: '#059669',
-                bg: 'rgba(5,150,105,0.08)',
-              },
-              {
-                title: 'Govt Query / At Risk',
-                value: '9 Orders',
-                sub: 'Requires CA intervention',
+                title: 'Over Due Tasks',
+                value: loadingStats ? 'Loading...' : `${dashboardStats?.over_dues || 0} Overdue`,
+                sub: 'Requires immediate attention',
                 icon: AlertTriangle,
                 color: '#DC2626',
                 bg: 'rgba(220,38,38,0.08)',
+              },
+              {
+                title: 'Work In Progress',
+                value: loadingStats ? 'Loading...' : `${dashboardStats?.wip || 0} Active`,
+                sub: 'Currently being processed',
+                icon: CheckCircle2,
+                color: '#059669',
+                bg: 'rgba(5,150,105,0.08)',
               },
               {
                 title: 'Active Coupons Available',
@@ -315,10 +395,12 @@ export default function OpsManagerDashboard() {
                   Real-time status tracking from document intake to government approval
                 </p>
               </div>
-              <span className="badge badge-navy">184 Live Cases</span>
+              <span className="badge badge-navy">
+                {loadingStats ? 'Loading...' : `${dashboardStats?.total || 0} Live Cases`}
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
               {stageBreakdown.map((item, i) => (
                 <div
                   key={i}

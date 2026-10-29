@@ -65,7 +65,7 @@ export default function CrmAccountsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10);
-  const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   // Dynamic categories & services from DB
   const [dbCategories, setDbCategories] = useState<CategoryItem[]>([]);
@@ -94,29 +94,8 @@ export default function CrmAccountsPage() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.success && Array.isArray(data?.data)) {
-          const mapped: CustomerItem[] = data.data.map((c: any, i: number) => ({
-            id: c.id || i + 1,
-            orderId: c.orderId || null,
-            packageId: c.packageId || null,
-            serviceId: c.serviceId || 1,
-            name: c.name || 'Client',
-            company: c.business || c.company || 'Company',
-            subCustomer: c.subCustomer || '',
-            mobile: c.mobile || c.contact || '9876543210',
-            email: c.email || 'client@etaxwala.in',
-            state: c.state || 'Maharashtra',
-            city: c.city || 'Pune',
-            category: c.category || 'Taxation & Return Filing',
-            service: c.service || 'Advisory',
-            cp_type: Number(c.cp_type) || 0,
-            type: c.type || 'Basic',
-            addedBy: c.addedBy || `Staff #${c.added_by || 1}`,
-            total: c.total !== undefined ? c.total : 1499,
-            paid: c.paid !== undefined ? c.paid : 0,
-            unpaid: c.unpaid !== undefined ? c.unpaid : 1499,
-            dueDate: c.dueDate || '—',
-          }));
-          setCustomers(mapped);
+          // API already returns mapped data with orderId, use it directly
+          setCustomers(data.data);
           if (data.total) setTotalCount(data.total);
         }
       })
@@ -670,7 +649,11 @@ export default function CrmAccountsPage() {
     setActiveCustomer(item);
     setIsTasksDrawerOpen(true);
     setLoadingTasks(true);
-    fetch(`${API_BASE}/v1/crm/customers/${item.id}/tasks`)
+    // Use customer ID and pass order_id as query parameter if available
+    const url = item.orderId
+      ? `${API_BASE}/v1/crm/customers/${item.id}/tasks?order_id=${item.orderId}`
+      : `${API_BASE}/v1/crm/customers/${item.id}/tasks`;
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
         if (data?.success && Array.isArray(data?.data)) {
@@ -1229,7 +1212,7 @@ export default function CrmAccountsPage() {
         </div>
 
         {/* Customers Table */}
-        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-250px)] border border-slate-200 rounded-xl shadow-2xs">
+        <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs">
           <table className="w-full text-left text-xs border-separate border-spacing-0">
             <thead className="sticky top-0 z-10">
               <tr className="bg-[#1E3A8A] text-white uppercase text-[11px] tracking-wider sticky top-0 z-10">
@@ -1332,102 +1315,106 @@ export default function CrmAccountsPage() {
                     <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{item.dueDate}</td>
                     <td className="py-2.5 px-3 text-center relative">
                       <button
-                        onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
+                        onClick={() => {
+                          const uniqueId = item.orderId
+                            ? `${item.id}-${item.orderId}`
+                            : `${item.id}`;
+                          setActiveMenuId(activeMenuId === uniqueId ? null : uniqueId);
+                        }}
                         className="p-1 hover:bg-slate-200 rounded text-slate-600"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
 
                       {/* 3-Dot Dropdown Action Menu (Exact Replica of Old CRM OMController) */}
-                      {activeMenuId === item.id && (
-                        <div className="absolute right-4 top-8 z-30 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 text-left text-xs divide-y divide-slate-100 animate-scale-in">
-                          <div className="py-1">
-                            {/* 1. Manage Tasks (AddWorkEffort) */}
-                            <button
-                              onClick={() => {
-                                openManageTasks(item);
-                                setActiveMenuId(null);
-                              }}
-                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
-                            >
-                              <ListTodo className="w-3.5 h-3.5 text-blue-600" />
-                              Manage Tasks
-                            </button>
+                      {(() => {
+                        const uniqueId = item.orderId ? `${item.id}-${item.orderId}` : `${item.id}`;
+                        return activeMenuId === uniqueId;
+                      })() && (
+                        <div className="absolute right-0 top-6 z-50 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 text-left text-xs">
+                          {/* 1. Manage Tasks (AddWorkEffort) */}
+                          <button
+                            onClick={() => {
+                              openManageTasks(item);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                          >
+                            <ListTodo className="w-3.5 h-3.5 text-blue-600" />
+                            Manage Tasks
+                          </button>
 
-                            {/* 2. Edit Customer (EditCustomer) */}
-                            <button
-                              onClick={() => {
-                                openEditCustomer(item);
-                                setActiveMenuId(null);
-                              }}
-                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
-                            >
-                              <Edit3 className="w-3.5 h-3.5 text-amber-600" />
-                              Edit Customer
-                            </button>
+                          {/* 2. Edit Customer (EditCustomer) */}
+                          <button
+                            onClick={() => {
+                              openEditCustomer(item);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-amber-600" />
+                            Edit Customer
+                          </button>
 
-                            {/* 3. Add New Order (addNewOrder) */}
-                            <button
-                              onClick={() => {
-                                openAddOrder(item);
-                                setActiveMenuId(null);
-                              }}
-                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
-                            >
-                              <PlusCircle className="w-3.5 h-3.5 text-emerald-600" />
-                              Add New Order
-                            </button>
+                          {/* 3. Add New Order (addNewOrder) */}
+                          <button
+                            onClick={() => {
+                              openAddOrder(item);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                          >
+                            <PlusCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            Add New Order
+                          </button>
 
-                            {/* 4. Create Customer (createCustomer - Requested by User) */}
-                            <button
-                              onClick={() => {
-                                openCreateCustomer(item);
-                                setActiveMenuId(null);
-                              }}
-                              className="w-full px-3 py-1.5 hover:bg-purple-50 text-purple-700 font-semibold flex items-center gap-2 cursor-pointer"
-                            >
-                              <UserPlus className="w-3.5 h-3.5 text-purple-600" />
-                              Create Customer
-                            </button>
-                          </div>
+                          {/* 4. Create Customer (createCustomer - Requested by User) */}
+                          <button
+                            onClick={() => {
+                              openCreateCustomer(item);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 hover:bg-purple-50 text-purple-700 font-semibold flex items-center gap-2 cursor-pointer"
+                          >
+                            <UserPlus className="w-3.5 h-3.5 text-purple-600" />
+                            Create Customer
+                          </button>
 
-                          <div className="py-1">
-                            {/* 5. Edit Sub Customer (EditSubCustomer) */}
-                            <button
-                              onClick={() => {
-                                openEditSubCustomer(item);
-                                setActiveMenuId(null);
-                              }}
-                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
-                            >
-                              <Tag className="w-3.5 h-3.5 text-indigo-600" />
-                              Edit Sub Customer
-                            </button>
+                          {/* 5. Edit Sub Customer (EditSubCustomer) */}
+                          <button
+                            onClick={() => {
+                              openEditSubCustomer(item);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                          >
+                            <Tag className="w-3.5 h-3.5 text-indigo-600" />
+                            Edit Sub Customer
+                          </button>
 
-                            {/* 6. Add Appointment (AddAppointment) */}
-                            <button
-                              onClick={() => {
-                                openAddAppointment(item);
-                                setActiveMenuId(null);
-                              }}
-                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
-                            >
-                              <Calendar className="w-3.5 h-3.5 text-teal-600" />
-                              Add Appointment
-                            </button>
+                          {/* 6. Add Appointment (AddAppointment) */}
+                          <button
+                            onClick={() => {
+                              openAddAppointment(item);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                          >
+                            <Calendar className="w-3.5 h-3.5 text-teal-600" />
+                            Add Appointment
+                          </button>
 
-                            {/* 7. Delete Order (DeleteCustomer) */}
-                            <button
-                              onClick={() => {
-                                openDeleteConfirm(item);
-                                setActiveMenuId(null);
-                              }}
-                              className="w-full px-3 py-1.5 hover:bg-red-50 text-red-600 font-medium flex items-center gap-2 cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 text-red-600" />
-                              Delete Order
-                            </button>
-                          </div>
+                          {/* 7. Delete Order (DeleteCustomer) */}
+                          <button
+                            onClick={() => {
+                              openDeleteConfirm(item);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 hover:bg-red-50 text-red-600 font-medium flex items-center gap-2 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                            Delete Order
+                          </button>
                         </div>
                       )}
                     </td>

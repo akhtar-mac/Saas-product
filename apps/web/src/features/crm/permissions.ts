@@ -125,6 +125,18 @@ export const PERMISSIONS_CATALOG: PermissionDefinition[] = [
     description: 'Access training materials and standard operating procedure docs',
     category: 'Franchise',
   },
+  {
+    key: 'franchise:leads',
+    label: 'Manage Franchise Leads',
+    description: 'View and manage franchise leads',
+    category: 'Franchise',
+  },
+  {
+    key: 'franchise:orders',
+    label: 'Manage Franchise Orders',
+    description: 'View and manage franchise customer orders',
+    category: 'Franchise',
+  },
 
   // HR & ATS
   {
@@ -318,21 +330,21 @@ export function getDepartmentPermissions(creatorRoleId: number): PermissionDefin
     return PERMISSIONS_CATALOG.filter((p) => p.category === 'Dashboard' || p.category === 'Sales');
   }
 
-  // Marketing Manager (5) / Sub-brands Manager (15) -> Dashboard + Sales + Marketing + IT
-  if (creatorRoleId === 5 || creatorRoleId === 15) {
+  // Franchise Manager (5) -> Dashboard + Franchise domain only
+  if (creatorRoleId === 5) {
+    return PERMISSIONS_CATALOG.filter(
+      (p) => p.category === 'Dashboard' || p.category === 'Franchise'
+    );
+  }
+
+  // Marketing Manager (6) / Sub-brands Manager (16) -> Dashboard + Sales + Marketing + IT
+  if (creatorRoleId === 6 || creatorRoleId === 16) {
     return PERMISSIONS_CATALOG.filter(
       (p) =>
         p.category === 'Dashboard' ||
         p.category === 'Sales' ||
         p.category === 'Marketing' ||
         p.category === 'IT & Solutions'
-    );
-  }
-
-  // Franchise Manager (6) -> Dashboard + Franchise domain only
-  if (creatorRoleId === 6) {
-    return PERMISSIONS_CATALOG.filter(
-      (p) => p.category === 'Dashboard' || p.category === 'Franchise'
     );
   }
 
@@ -381,8 +393,22 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'it:quotations',
   ],
 
-  // 5: Marketing Manager
+  // 5: Franchise Manager
   5: [
+    'dashboard:view',
+    'franchise:view',
+    'franchise:partners',
+    'franchise:inquiries',
+    'franchise:training',
+    'franchise:leads',
+    'franchise:orders',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
+
+  // 6: Marketing Manager
+  6: [
     'dashboard:view',
     'marketing:view',
     'marketing:social',
@@ -397,21 +423,145 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'chat:attachments',
   ],
 
-  // 6: Franchise Manager
-  6: [
+  // 7: Operations Employee (user_type=7 in old users table → role_id=7 in API ROLE_MAP)
+  7: [
+    'dashboard:view',
+    'operations:view',
+    'operations:tasks',
+    'tasks:view',
+    'appointments:manage',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
+
+  // 8: Franchise Employee
+  8: [
     'dashboard:view',
     'franchise:view',
-    'franchise:partners',
+    'franchise:leads',
     'franchise:inquiries',
+    'franchise:orders',
     'franchise:training',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
+
+  // 9: Operations Employee
+  9: [
+    'dashboard:view',
+    'operations:view',
+    'operations:tasks',
+    'tasks:view',
+    'appointments:manage',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
+
+  // 10: Marketing Employee
+  10: [
+    'dashboard:view',
+    'marketing:view',
+    'marketing:social',
+    'sales:view',
     'leads:view',
     'chat:view',
     'chat:send',
     'chat:attachments',
   ],
 
-  // 7: Sales Employee
-  7: [
+  // 11: Franchise Partner
+  11: [
+    'dashboard:view',
+    'franchise:view',
+    'franchise:training',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
+
+  // 12: Consultation
+  12: [
+    'dashboard:view',
+    'sales:view',
+    'leads:view',
+    'quotations:view',
+    'tasks:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
+
+  // 13: Operations Assistant
+  13: [
+    'dashboard:view',
+    'operations:view',
+    'operations:tasks',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
+
+  // 14: Sales Assistant
+  14: [
+    'dashboard:view',
+    'sales:view',
+    'leads:view',
+    'quotations:view',
+    'tasks:view',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
+
+  // 15: HR
+  15: [
+    'dashboard:view',
+    'hr:view',
+    'hr:ats',
+    'hr:payroll',
+    'admin:view',
+    'workforce:view',
+    'operations:employees',
+    'users:manage',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
+
+  // 16: Website Manager / IT Lead
+  16: [
+    'dashboard:view',
+    'it:view',
+    'it:leads',
+    'it:quotations',
+    'it:projects',
+    'infrastructure:view',
+    'admin:view',
+    'blogs:manage',
+    'chat:view',
+    'chat:send',
+    'chat:attachments',
+  ],
+
+  // 17: Staff / Support
+  17: ['dashboard:view', 'chat:view', 'chat:send', 'chat:attachments'],
+};
+
+// Also map by RoleType enum string name for convenience
+export const ROLE_NAME_DEFAULT_PERMISSIONS: Record<string, string[]> = {
+  SUPER_ADMIN: ['*'],
+  ADMIN: ['*'],
+  OPERATIONS_MANAGER: ROLE_DEFAULT_PERMISSIONS[3],
+  SALES_MANAGER: ROLE_DEFAULT_PERMISSIONS[4],
+  FRANCHISE_MANAGER: ROLE_DEFAULT_PERMISSIONS[5],
+  MARKETING_MANAGER: ROLE_DEFAULT_PERMISSIONS[6],
+  // OPERATIONS_EMPLOYEE: role_id 7 in API (user_type=7 in users table)
+  OPERATIONS_EMPLOYEE: ROLE_DEFAULT_PERMISSIONS[7],
+  // SALES_EMPLOYEE: handled separately with sales permissions
+  SALES_EMPLOYEE: [
     'dashboard:view',
     'sales:view',
     'leads:view',
@@ -426,127 +576,15 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<number, string[]> = {
     'it:leads',
     'it:quotations',
   ],
-
-  // 8: Operations Employee
-  8: [
-    'dashboard:view',
-    'operations:view',
-    'operations:tasks',
-    'operations:customers',
-    'chat:view',
-    'chat:send',
-    'chat:attachments',
-  ],
-
-  // 9: Marketing Employee
-  9: [
-    'dashboard:view',
-    'marketing:view',
-    'marketing:social',
-    'sales:view',
-    'leads:view',
-    'chat:view',
-    'chat:send',
-    'chat:attachments',
-  ],
-
-  // 10: Franchise Partner
-  10: [
-    'dashboard:view',
-    'franchise:view',
-    'franchise:training',
-    'chat:view',
-    'chat:send',
-    'chat:attachments',
-  ],
-
-  // 11: Consultation
-  11: [
-    'dashboard:view',
-    'sales:view',
-    'leads:view',
-    'quotations:view',
-    'tasks:view',
-    'chat:view',
-    'chat:send',
-    'chat:attachments',
-  ],
-
-  // 12: Operations Assistant
-  12: [
-    'dashboard:view',
-    'operations:view',
-    'operations:tasks',
-    'chat:view',
-    'chat:send',
-    'chat:attachments',
-  ],
-
-  // 13: Sales Assistant
-  13: [
-    'dashboard:view',
-    'sales:view',
-    'leads:view',
-    'quotations:view',
-    'tasks:view',
-    'chat:view',
-    'chat:send',
-    'chat:attachments',
-  ],
-
-  // 14: HR
-  14: [
-    'dashboard:view',
-    'hr:view',
-    'hr:ats',
-    'hr:payroll',
-    'admin:view',
-    'workforce:view',
-    'operations:employees',
-    'users:manage',
-    'chat:view',
-    'chat:send',
-    'chat:attachments',
-  ],
-
-  // 15: Website Manager / IT Lead
-  15: [
-    'dashboard:view',
-    'it:view',
-    'it:leads',
-    'it:quotations',
-    'it:projects',
-    'infrastructure:view',
-    'admin:view',
-    'blogs:manage',
-    'chat:view',
-    'chat:send',
-    'chat:attachments',
-  ],
-
-  // 16: Staff / Support
-  16: ['dashboard:view', 'chat:view', 'chat:send', 'chat:attachments'],
-};
-
-// Also map by RoleType enum string name for convenience
-export const ROLE_NAME_DEFAULT_PERMISSIONS: Record<string, string[]> = {
-  SUPER_ADMIN: ['*'],
-  ADMIN: ['*'],
-  OPERATIONS_MANAGER: ROLE_DEFAULT_PERMISSIONS[3],
-  SALES_MANAGER: ROLE_DEFAULT_PERMISSIONS[4],
-  MARKETING_MANAGER: ROLE_DEFAULT_PERMISSIONS[5],
-  FRANCHISE_MANAGER: ROLE_DEFAULT_PERMISSIONS[6],
-  SALES_EMPLOYEE: ROLE_DEFAULT_PERMISSIONS[7],
-  OPERATIONS_EMPLOYEE: ROLE_DEFAULT_PERMISSIONS[8],
+  FRANCHISE_EMPLOYEE: ROLE_DEFAULT_PERMISSIONS[8],
   MARKETING_EMPLOYEE: ROLE_DEFAULT_PERMISSIONS[9],
-  FRANCHISE_EMPLOYEE: ROLE_DEFAULT_PERMISSIONS[10],
-  FRANCHISE_PARTNER: ROLE_DEFAULT_PERMISSIONS[10],
-  CONSULTATION: ROLE_DEFAULT_PERMISSIONS[11],
-  OPERATIONS_ASSISTANT: ROLE_DEFAULT_PERMISSIONS[12],
-  SALES_ASSISTANT: ROLE_DEFAULT_PERMISSIONS[13],
-  HR: ROLE_DEFAULT_PERMISSIONS[14],
-  WEBSITE_MANAGER: ROLE_DEFAULT_PERMISSIONS[15],
-  STAFF: ROLE_DEFAULT_PERMISSIONS[16],
+  FRANCHISE_PARTNER: ROLE_DEFAULT_PERMISSIONS[11],
+  CONSULTATION: ROLE_DEFAULT_PERMISSIONS[12],
+  OPERATIONS_ASSISTANT: ROLE_DEFAULT_PERMISSIONS[13],
+  SALES_ASSISTANT: ROLE_DEFAULT_PERMISSIONS[14],
+  HR: ROLE_DEFAULT_PERMISSIONS[15],
+  WEBSITE_MANAGER: ROLE_DEFAULT_PERMISSIONS[16],
+  STAFF: ROLE_DEFAULT_PERMISSIONS[17],
 };
 
 /**

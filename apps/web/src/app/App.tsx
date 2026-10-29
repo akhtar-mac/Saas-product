@@ -60,12 +60,23 @@ const CrmManageServicesPage = lazy(() => import('@/features/crm/crm-manage-servi
 const CrmManagePackagesPage = lazy(() => import('@/features/crm/crm-manage-packages-page'));
 const CrmManageBlogsPage = lazy(() => import('@/features/crm/crm-manage-blogs-page'));
 const CrmAppointmentsPage = lazy(() => import('@/features/crm/crm-appointments-page'));
+const CrmInternalTasksPage = lazy(() => import('@/features/crm/crm-internal-tasks-page'));
+const CrmCustomerDetailsPage = lazy(() => import('@/features/crm/crm-customer-details-page'));
 const CrmChatPage = lazy(() => import('@/features/crm/pages/crm-chat-page'));
 const HrDashboard = lazy(() => import('@/features/crm/dashboards/hr-dashboard'));
 const MarketingDashboard = lazy(() => import('@/features/crm/dashboards/marketing-dashboard'));
 const ItCommandDashboard = lazy(() => import('@/features/crm/dashboards/it-command-dashboard'));
 const FranchiseDashboard = lazy(() => import('@/features/crm/dashboards/franchise-dashboard'));
 const SubBrandsDashboard = lazy(() => import('@/features/crm/dashboards/sub-brands-dashboard'));
+const FranchiseManagerDashboard = lazy(
+  () => import('@/features/crm/dashboards/franchise-manager-dashboard')
+);
+const FranchiseEmployeeDashboard = lazy(
+  () => import('@/features/crm/dashboards/franchise-employee-dashboard')
+);
+const CrmFranchiseManagePartnersOrders = lazy(
+  () => import('@/features/crm/crm-franchise-manage-partners-orders')
+);
 
 export default function App() {
   return (
@@ -148,6 +159,8 @@ export default function App() {
           <Route path="sales-manage-leads-details" element={<CrmLeadsPage />} />
           <Route path="tasks" element={<CrmTasksPage />} />
           <Route path="operation-manage-tasks" element={<CrmTasksPage />} />
+          <Route path="internal-tasks" element={<CrmInternalTasksPage />} />
+          <Route path="customer-details" element={<CrmCustomerDetailsPage />} />
           <Route path="quotations" element={<CrmQuotationsPage />} />
           <Route path="quotation" element={<CrmQuotationsPage />} />
           <Route path="accounts" element={<CrmAccountsPage />} />
@@ -210,8 +223,16 @@ export default function App() {
           <Route
             path="appointments"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2, 7]}>
+              <CrmProtectedRoute allowedRoleIds={[1, 2, 3, 7, 8]}>
                 <CrmAppointmentsPage />
+              </CrmProtectedRoute>
+            }
+          />
+          <Route
+            path="internal-tasks"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2, 3, 7, 8]}>
+                <CrmInternalTasksPage />
               </CrmProtectedRoute>
             }
           />
@@ -228,6 +249,28 @@ export default function App() {
           {/* Specialized Verticals: Franchise Network & Sub-Brands */}
           <Route path="franchise" element={<FranchiseDashboard />} />
           <Route path="sub-brands" element={<SubBrandsDashboard />} />
+
+          {/* Franchise Dashboards */}
+          <Route
+            path="franchise-manager-dashboard"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2, 5]}>
+                <FranchiseManagerDashboard />
+              </CrmProtectedRoute>
+            }
+          />
+          <Route
+            path="franchise-employee-dashboard"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2, 8]}>
+                <FranchiseEmployeeDashboard />
+              </CrmProtectedRoute>
+            }
+          />
+          <Route
+            path="franchise-manage-partners-orders"
+            element={<CrmFranchiseManagePartnersOrders />}
+          />
         </Route>
 
         {/* ── 4. 404 ──────────────────────────────────────────────── */}
