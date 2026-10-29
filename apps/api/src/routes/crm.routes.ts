@@ -1,7 +1,32 @@
 import { Router } from 'express';
 import { prisma } from '../config/db.js';
 import { validateBody } from '../middleware/validate.middleware.js';
+import { verifyJWT } from '../middleware/auth.middleware.js';
 import { CreateLeadSchema, UpdateTaskStatusSchema } from '../schemas/crm.schema.js';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../../../public/Docs');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const uploadSingle = multer({ storage }).single('customer_docs');
 
 const router = Router();
 
@@ -1197,20 +1222,48 @@ router.post('/calls/log', async (req, res) => {
 // 5. Tasks & 10-Stage Milestone Workflow
 router.get('/tasks', async (req, res) => {
   try {
-    const { status, limit = 100, employee_id, search } = req.query;
+    const { status, limit, employee_id, search, date_filter, category_id } = req.query;
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const next7 = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+    const next15 = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
 
     let whereClause = 'WHERE 1=1';
     const params: any[] = [];
 
-    if (status === '123' || status === 'unassigned') {
+    // Date-based quick filters (matching old CRM buttons)
+    if (date_filter === 'overdues') {
+      whereClause += ' AND ta.due_date < ? AND ta.actual_task_status NOT IN (5,7)';
+      params.push(today);
+    } else if (date_filter === 'onhold') {
+      whereClause += ' AND ta.actual_task_status = 9';
+    } else if (date_filter === 'todays') {
+      whereClause += ' AND ta.due_date = ?';
+      params.push(today);
+    } else if (date_filter === 'tomorrows') {
+      whereClause += ' AND ta.due_date = ?';
+      params.push(tomorrow);
+    } else if (date_filter === 'nextweeks') {
+      whereClause += ' AND ta.due_date > ? AND ta.due_date <= ?';
+      params.push(today, next7);
+    } else if (date_filter === 'nexttwoweeks') {
+      whereClause += ' AND ta.due_date > ? AND ta.due_date <= ?';
+      params.push(today, next15);
+    } else if (status === '123' || status === 'unassigned') {
       whereClause += ' AND (ta.task_id IS NULL OR ot.is_assign = 0 OR ta.assign_to IS NULL)';
     } else if (status && status !== 'ALL' && status !== 'Tasks') {
       whereClause += ' AND (ot.original_task_status = ? OR ta.actual_task_status = ?)';
       params.push(Number(status), Number(status));
     }
 
+    // Category filter (matching old CRM line 743-745)
+    if (category_id && category_id !== 'Category' && category_id !== '0') {
+      whereClause += ' AND s.category_id = ?';
+      params.push(Number(category_id));
+    }
+
     if (employee_id) {
-      whereClause += ' AND ta.assign_to = ?';
+      whereClause += ' AND ta.assign_to = ? AND ta.task_status = 0';
       params.push(Number(employee_id));
     }
 
@@ -1221,6 +1274,7 @@ router.get('/tasks', async (req, res) => {
       params.push(searchParam, searchParam, searchParam, searchParam);
     }
 
+    // KEY FIX: JOIN both staff_users AND users tables since task_assign.assign_to stores users.id (legacy)
     const query = `
       SELECT 
         ot.task_id, 
@@ -1229,26 +1283,39 @@ router.get('/tasks', async (req, res) => {
         ot.cust_id,
         ot.service_id,
         ot.original_task_status,
+        ot.added_by,
+        ta.ta_id,
         ta.assign_to,
         ta.assign_date, 
         ta.due_date, 
         ta.actual_task_status,
-        su.name as assigned_to_name, 
+        ta.assign_by,
+        ta.task_status,
+        COALESCE(su.name, u.username, CONCAT('User #', ta.assign_to)) as assigned_to_name,
         c.name as customer_name, 
         c.business as company_name,
         c.contact as customer_contact,
         c.email as customer_email,
-        s.service_name, 
-        sub.name as added_by_name
+        c.state as customer_state,
+        c.city as customer_city,
+        s.service_name,
+        CASE 
+          WHEN ab.user_type = 8 THEN CONCAT(ab.username, ' (P)')
+          ELSE COALESCE(ab.username, sub.name, 'Admin')
+        END as added_by_name,
+        ab_by.username as assign_by_name
       FROM operation_tasks ot
       LEFT JOIN customers c ON c.id = ot.cust_id
       LEFT JOIN services s ON s.service_id = ot.service_id
       LEFT JOIN task_assign ta ON ta.task_id = ot.task_id
       LEFT JOIN staff_users su ON su.id = ta.assign_to
+      LEFT JOIN users u ON u.id = ta.assign_to
       LEFT JOIN staff_users sub ON sub.id = ot.added_by
+      LEFT JOIN users ab ON ab.id = ot.added_by
+      LEFT JOIN users ab_by ON ab_by.id = ta.assign_by
       ${whereClause}
       ORDER BY ot.task_id DESC
-      LIMIT ${Math.min(Number(limit) || 100, 500)}
+      ${limit ? `LIMIT ${Math.min(Number(limit), 5000)}` : ''}
     `;
 
     const tasks: any[] = (await prisma.$queryRawUnsafe(query, ...params)) as any[];
@@ -1256,6 +1323,123 @@ router.get('/tasks', async (req, res) => {
   } catch (error) {
     console.error('Error fetching tasks:', error);
     return res.status(500).json({ success: false, message: 'Failed to fetch tasks' });
+  }
+});
+
+// 5b. Tasks Stats — for status count cards (OverDue, OnHold, Today, Tomorrow, Next 7 days, Next 15 days)
+router.get('/tasks/stats', async (req, res) => {
+  try {
+    const { employee_id } = req.query;
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const next7 = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+    const next15 = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
+
+    const empFilter = employee_id ? `AND ta.assign_to = ${Number(employee_id)}` : '';
+    const baseFilter = `${empFilter} AND ta.task_status = 0`;
+
+    const [
+      overdues,
+      onhold,
+      todays,
+      tomorrows,
+      next7days,
+      next15days,
+      notstarted,
+      wip,
+      pendingfc,
+      invoiced,
+      completed,
+      feespending,
+      total,
+    ] = await Promise.all([
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.due_date < '${today}' AND ta.actual_task_status NOT IN (5,7) ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.actual_task_status = 9 ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.due_date = '${today}' ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.due_date = '${tomorrow}' ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.due_date > '${today}' AND ta.due_date <= '${next7}' ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.due_date > '${today}' AND ta.due_date <= '${next15}' ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.actual_task_status = 1 ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.actual_task_status = 2 ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.actual_task_status = 3 ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.actual_task_status = 4 ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.actual_task_status = 5 ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.actual_task_status = 8 ${baseFilter}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(`SELECT COUNT(*) as cnt FROM task_assign ta WHERE 1=1 ${baseFilter}`)
+        .catch(() => [{ cnt: 0 }]),
+    ]);
+
+    const get = (r: any) => Number((r as any[])[0]?.cnt || 0);
+    return res.json({
+      success: true,
+      data: {
+        overdues: get(overdues),
+        onhold: get(onhold),
+        todays: get(todays),
+        tomorrows: get(tomorrows),
+        next7days: get(next7days),
+        next15days: get(next15days),
+        notstarted: get(notstarted),
+        wip: get(wip),
+        pendingfc: get(pendingfc),
+        invoiced: get(invoiced),
+        completed: get(completed),
+        feespending: get(feespending),
+        total: get(total),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching task stats:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch task stats' });
   }
 });
 
@@ -1413,54 +1597,89 @@ router.post('/tasks/update-due-date', async (req, res) => {
 });
 
 // 6. Advance Task Milestone Status
-router.patch('/tasks/:id/status', validateBody(UpdateTaskStatusSchema), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { new_status, remarks, updated_by = 'Operations Specialist' } = req.body;
+router.patch(
+  '/tasks/:id/status',
+  verifyJWT,
+  validateBody(UpdateTaskStatusSchema),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const {
+        new_status,
+        remarks,
+        updated_by = 'Operations Specialist',
+        start_time,
+        end_time,
+        work_seconds,
+      } = req.body;
 
-    const updatedTask = await prisma.operation_tasks.update({
-      where: { task_id: Number(id) },
-      data: {
-        original_task_status: Number(new_status),
-        updated_at: new Date(),
-      },
-    });
+      console.log('Task status update request:', {
+        id,
+        new_status,
+        remarks,
+        start_time,
+        end_time,
+        work_seconds,
+      });
 
-    const maxTimeline = await prisma.customer_work_timeline.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
-    const nextTimelineId = (maxTimeline?.id || 29220) + 1;
-
-    await prisma.customer_work_timeline
-      .create({
+      const updatedTask = await prisma.operation_tasks.update({
+        where: { task_id: Number(id) },
         data: {
-          id: nextTimelineId,
-          cust_id: updatedTask.cust_id,
-          service_id: updatedTask.service_id,
-          task_id: Number(id),
-          work: remarks || `Milestone advanced to stage ${new_status} by ${updated_by}`,
-          status: Number(new_status),
-          added_by: 1,
-          date: new Date().toISOString().split('T')[0],
-          time: new Date().toLocaleTimeString(),
+          original_task_status: Number(new_status),
+          updated_at: new Date(),
         },
-      })
-      .catch(() => null);
+      });
 
-    res.json({
-      success: true,
-      message: 'Milestone updated successfully',
-      data: serializeBigInt(updatedTask),
-    });
-  } catch (error) {
-    res.json({
-      success: true,
-      message: 'Milestone updated in state',
-      data: { task_id: Number(req.params.id), original_task_status: Number(req.body.new_status) },
-    });
+      // ✅ FIX: Also update task_assign.actual_task_status (required for tasks to persist)
+      await prisma
+        .$executeRawUnsafe(`UPDATE task_assign SET actual_task_status = ? WHERE task_id = ?`, [
+          Number(new_status),
+          Number(id),
+        ])
+        .catch(() => null);
+
+      const maxTimeline = await prisma.customer_work_timeline.findFirst({
+        orderBy: { id: 'desc' },
+        select: { id: true },
+      });
+      const nextTimelineId = (maxTimeline?.id || 29220) + 1;
+
+      await prisma.customer_work_timeline
+        .create({
+          data: {
+            id: nextTimelineId,
+            cust_id: updatedTask.cust_id,
+            service_id: updatedTask.service_id,
+            task_id: Number(id),
+            work: remarks || `Milestone advanced to stage ${new_status} by ${updated_by}`,
+            status: Number(new_status),
+            added_by: 1,
+            date: new Date().toISOString().split('T')[0],
+            time: new Date().toLocaleTimeString(),
+            start_time: start_time || null,
+            end_time: end_time || null,
+            work_seconds: work_seconds || 0,
+          },
+        })
+        .catch(() => null);
+
+      console.log('Task status updated successfully:', updatedTask);
+
+      res.json({
+        success: true,
+        message: 'Milestone updated successfully',
+        data: serializeBigInt(updatedTask),
+      });
+    } catch (error) {
+      console.error('Task status update error:', error);
+      res.json({
+        success: true,
+        message: 'Milestone updated in state',
+        data: { task_id: Number(req.params.id), original_task_status: Number(req.body.new_status) },
+      });
+    }
   }
-});
+);
 
 // 7. Quotations List
 router.get('/quotations', async (req, res) => {
@@ -1847,43 +2066,46 @@ router.get('/customers', async (req, res) => {
     const pageNum = Math.max(Number(page) || 1, 1);
     const skip = (pageNum - 1) * take;
 
-    const whereConditions: string[] = ['1=1'];
+    const whereConditions: string[] = ['o.payment_status = 1', 'c.is_approve = 1'];
     if (search) {
       const q = String(search).trim().replace(/'/g, "''");
       whereConditions.push(
-        `(c.name LIKE '%${q}%' OR c.business LIKE '%${q}%' OR c.contact LIKE '%${q}%' OR c.email LIKE '%${q}%' OR c.city LIKE '%${q}%' OR c.service LIKE '%${q}%')`
+        `(c.name LIKE '%${q}%' OR c.business LIKE '%${q}%' OR c.contact LIKE '%${q}%' OR c.email LIKE '%${q}%' OR c.city LIKE '%${q}%' OR s.service_name LIKE '%${q}%')`
       );
     }
     const whereSql = whereConditions.join(' AND ');
 
     const countRes = await prisma.$queryRawUnsafe<any[]>(
-      `SELECT COUNT(*) as total FROM customers c WHERE ${whereSql}`
+      `SELECT COUNT(*) as total FROM orders o LEFT JOIN customers c ON o.customer_id = c.id WHERE ${whereSql}`
     );
     const total = Number(countRes[0]?.total || 0);
 
     const custsRaw = await prisma.$queryRawUnsafe<any[]>(
       `SELECT 
-        c.id, c.name, c.business, c.email, c.contact, c.state, c.city, c.service,
+        o.id as orderID, o.customer_id, o.package_id, o.sub_customer_name, o.total_amount, o.order_date,
+        c.id, c.name, c.business, c.email, c.contact, c.state, c.city, c.service as customer_service,
         c.service_price, c.added_by, c.date, c.is_payment,
         s.service_id, s.service_name, cat.category_name, su.name AS added_by_name
-       FROM customers c 
-       LEFT JOIN services s ON (c.service = CAST(s.service_id AS CHAR) OR c.service = s.service_name) 
-       LEFT JOIN categories cat ON s.category_id = cat.category_id 
+       FROM orders o
+       LEFT JOIN customers c ON o.customer_id = c.id
+       LEFT JOIN combo_packages cp ON o.package_id = cp.cp_id
+       LEFT JOIN services s ON cp.cp_title = s.service_id
+       LEFT JOIN categories cat ON s.category_id = cat.category_id
        LEFT JOIN staff_users su ON c.added_by = su.id
        WHERE ${whereSql}
-       ORDER BY c.id DESC 
+       ORDER BY o.id DESC 
        LIMIT ${take} OFFSET ${skip}`
     );
 
-    const ids = custsRaw.map((c) => Number(c.id)).filter(Boolean);
+    const ids = custsRaw.map((c) => Number(c.customer_id)).filter(Boolean);
     let emiMap: Record<number, any> = {};
-    let orderMap: Record<number, any> = {};
 
     if (ids.length > 0) {
       try {
+        const idStrings = ids.map((id) => `'${id}'`).join(',');
         const emis: any[] = await prisma.$queryRawUnsafe(
           `SELECT customer_id, emi_total_amount, emi_paid_amount, emi_unpaid_amount, emi_due_date 
-           FROM customer_emi WHERE customer_id IN (${ids.join(',')}) ORDER BY emi_id DESC`
+           FROM customer_emi WHERE customer_id IN (${idStrings}) ORDER BY emi_id DESC`
         );
         emis.forEach((e: any) => {
           const cid = Number(e.customer_id);
@@ -1894,43 +2116,26 @@ router.get('/customers', async (req, res) => {
       } catch (err) {
         console.error('Error fetching customer EMIs:', err);
       }
-
-      try {
-        const idStrings = ids.map((id) => `'${id}'`).join(',');
-        const ordersList: any[] = await prisma.$queryRawUnsafe(
-          `SELECT id, customer_id, package_id, sub_customer_name 
-           FROM orders WHERE customer_id IN (${idStrings}) ORDER BY id DESC`
-        );
-        ordersList.forEach((o: any) => {
-          const cid = Number(o.customer_id);
-          if (!orderMap[cid]) {
-            orderMap[cid] = o;
-          }
-        });
-      } catch (err) {
-        console.error('Error fetching customer orders:', err);
-      }
     }
 
     const mapped = custsRaw.map((c: any) => {
-      const cid = Number(c.id);
+      const cid = Number(c.customer_id);
       const emi = emiMap[cid];
-      const ord = orderMap[cid];
-      const totalAmt = emi ? Number(emi.emi_total_amount) : Number(c.service_price) || 0;
+      const totalAmt = emi ? Number(emi.emi_total_amount) : Number(c.total_amount) || 0;
       const paidAmt = emi
         ? Number(emi.emi_paid_amount)
         : c.is_payment
-          ? Number(c.service_price) || 0
+          ? Number(c.total_amount) || 0
           : 0;
       const unpaidAmt = emi ? Number(emi.emi_unpaid_amount) : Math.max(totalAmt - paidAmt, 0);
       const dueDate = emi?.emi_due_date ? String(emi.emi_due_date).split('T')[0] : '—';
 
       return {
         id: cid,
-        orderId: ord ? Number(ord.id) : null,
-        packageId: ord?.package_id || null,
-        subCustomer: ord?.sub_customer_name || '',
-        serviceId: c.service_id ? Number(c.service_id) : Number(c.service) || 1,
+        orderId: Number(c.orderID),
+        packageId: c.package_id || null,
+        subCustomer: c.sub_customer_name || '',
+        serviceId: c.service_id ? Number(c.service_id) : Number(c.customer_service) || 1,
         name: c.name || 'Client',
         business: c.business || '',
         company: c.business || '—',
@@ -1939,7 +2144,7 @@ router.get('/customers', async (req, res) => {
         state: c.state || 'Maharashtra',
         city: c.city || '—',
         category: c.category_name || 'General Services',
-        service: c.service_name || c.service || 'Tax & Filing',
+        service: c.service_name || c.customer_service || 'Tax & Filing',
         type: c.business ? 'Corporate' : 'Individual',
         addedBy: c.added_by_name || `Staff #${c.added_by || 1}`,
         total: totalAmt,
@@ -2544,15 +2749,23 @@ router.put('/customers/:id', async (req, res) => {
 router.get('/customers/:id/tasks', async (req, res) => {
   try {
     const custId = Number(req.params.id);
-    const tasks: any[] = await prisma.$queryRawUnsafe(
-      `SELECT ot.*, ta.assign_to, ta.due_date, ta.task_status, u.username as assigned_user_name, u.name as employee_name
+    const { order_id } = req.query;
+
+    let query = `SELECT ot.*, ta.assign_to, ta.due_date, ta.task_status, u.username as assigned_user_name
        FROM operation_tasks ot
        LEFT JOIN task_assign ta ON ta.task_id = ot.task_id
        LEFT JOIN users u ON u.id = ta.assign_to
-       WHERE ot.cust_id = ?
-       ORDER BY ot.task_id DESC`,
-      custId
-    );
+       WHERE ot.cust_id = ?`;
+    const params: any[] = [custId];
+
+    if (order_id) {
+      query += ` AND ot.order_id = ?`;
+      params.push(Number(order_id));
+    }
+
+    query += ` ORDER BY ot.task_id DESC`;
+
+    const tasks: any[] = await prisma.$queryRawUnsafe(query, ...params);
     res.json({ success: true, data: serializeBigInt(tasks) });
   } catch (error: any) {
     console.error('Error fetching customer tasks:', error);
@@ -2616,6 +2829,54 @@ router.delete('/tasks/:id', async (req, res) => {
   }
 });
 
+// 13e-d. Manage Customer Action: Get Customer Orders
+router.get('/customers/:id/orders', async (req, res) => {
+  try {
+    const custId = Number(req.params.id);
+    const orders = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT * FROM orders WHERE customer_id = '${custId}' ORDER BY order_date DESC`
+    );
+    res.json({ success: true, data: orders });
+  } catch (error: any) {
+    console.error('Error fetching customer orders:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to fetch orders' });
+  }
+});
+
+// 13e-e. Customer Details List (Customer-centric, not order-centric)
+router.get('/customer-details-list', async (req, res) => {
+  try {
+    const customers = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT
+        c.id,
+        c.name,
+        c.email,
+        c.contact,
+        c.state,
+        c.city,
+        c.password,
+        c.service_price,
+        c.added_by,
+        c.date,
+        s.service_name,
+        u.username
+       FROM customers c
+       LEFT JOIN users u ON u.id = c.added_by
+       LEFT JOIN combo_packages cp ON cp.cp_id = c.service
+       LEFT JOIN services s ON s.service_id = cp.cp_title
+       WHERE c.is_active = 1
+       ORDER BY c.id DESC`
+    );
+    console.log('Customer Details List - Total records:', customers.length);
+    res.json({ success: true, data: serializeBigInt(customers) });
+  } catch (error: any) {
+    console.error('Error fetching customer details list:', error);
+    res
+      .status(500)
+      .json({ success: false, message: error.message || 'Failed to fetch customer details' });
+  }
+});
+
 // 13e. Manage Customer Action: Add New Order (addNewOrder)
 router.post('/customers/:id/orders', async (req, res) => {
   try {
@@ -2637,6 +2898,8 @@ router.post('/customers/:id/orders', async (req, res) => {
       discount_amount,
       is_custom,
       custom_package_services,
+      customer_name,
+      customer_businessName,
     } = req.body;
 
     const customer = await prisma.customers.findFirst({ where: { id: custId } });
@@ -2646,39 +2909,52 @@ router.post('/customers/:id/orders', async (req, res) => {
 
     const totalAmt = Number(customer_total_service_price) || 0;
     const paidAmt = Number(customer_paid_amount) || 0;
+
+    // Update customer details (same as old CRM line 2684-2689)
+    await prisma.customers.update({
+      where: { id: custId },
+      data: {
+        name: customer_name || customer.name,
+        business: customer_businessName || customer.business,
+      },
+    });
+
+    // Now use normal Prisma create since AUTO_INCREMENT is fixed
+    const subCustName = sub_customer_name || null;
+    const companyName = customer_businessName || customer.business || customer.name || 'NA';
     const newOrder = await prisma.orders.create({
       data: {
         customer_id: String(custId),
         package_id: String(customer_service_id || '1'),
-        company_name: customer.business || customer.name || 'NA',
+        company_name: companyName,
         total_amount: totalAmt,
         payment_status: 1,
         order_date: new Date(),
-        sub_customer_name: sub_customer_name || null,
+        sub_customer_name: subCustName,
       },
     });
+    const orderId = newOrder.id;
 
-    const maxEmi = await prisma.customer_emi.findFirst({
-      orderBy: { emi_id: 'desc' },
-      select: { emi_id: true },
-    });
-    const emiId = (maxEmi?.emi_id || 0) + 1;
-    await prisma.customer_emi.create({
-      data: {
-        emi_id: emiId,
-        customer_id: custId,
-        order_id: newOrder.id,
-        emi_type: Number(customer_payment_mode) || 1,
-        emi_total_amount: totalAmt,
-        emi_paid_amount: paidAmt,
-        emi_unpaid_amount: Number(customer_unpaid_amount) || Math.max(totalAmt - paidAmt, 0),
-        emi_due_date: customer_due_date ? new Date(customer_due_date) : null,
-        second_emi: customer_unpaid_amount2 ? Number(customer_unpaid_amount2) : null,
-        second_emi_due_date: customer_due_date2 ? new Date(customer_due_date2) : null,
-        emi_comment: customer_comment || '',
-        date: new Date(),
-      },
-    });
+    const maxEmi = await prisma.$queryRawUnsafe<{ max_id: number }[]>(
+      'SELECT MAX(emi_id) as max_id FROM customer_emi'
+    );
+    const emiId = (maxEmi[0]?.max_id || 0) + 1;
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO customer_emi (emi_id, customer_id, order_id, emi_type, emi_total_amount, emi_paid_amount, emi_unpaid_amount, emi_due_date, second_emi, second_emi_due_date, emi_comment, date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      emiId,
+      custId,
+      orderId,
+      Number(customer_payment_mode) || 1,
+      totalAmt,
+      paidAmt,
+      Number(customer_unpaid_amount) || Math.max(totalAmt - paidAmt, 0),
+      customer_due_date ? new Date(customer_due_date) : null,
+      customer_unpaid_amount2 ? Number(customer_unpaid_amount2) : null,
+      customer_due_date2 ? new Date(customer_due_date2) : null,
+      customer_comment || '',
+      new Date()
+    );
 
     if (coupon_code) {
       const couponRecord = await prisma.coupons.findFirst({
@@ -2747,7 +3023,7 @@ router.post('/customers/:id/orders', async (req, res) => {
           task_id: currentTaskId++,
           cust_id: custId,
           service_id: serv.service_id,
-          order_id: newOrder.id,
+          order_id: orderId,
           sub_customer_name: sub_customer_name || null,
           task_name: serv.service_name,
           added_by: 1,
@@ -2766,7 +3042,7 @@ router.post('/customers/:id/orders', async (req, res) => {
             task_id: currentTaskId++,
             cust_id: custId,
             service_id: serv.service_id,
-            order_id: newOrder.id,
+            order_id: orderId,
             sub_customer_name: sub_customer_name || null,
             task_name: 'Customer Support',
             added_by: 1,
@@ -2784,7 +3060,7 @@ router.post('/customers/:id/orders', async (req, res) => {
     res.json({
       success: true,
       message: 'New order added successfully',
-      data: { orderId: newOrder.id },
+      data: { orderId },
     });
   } catch (error: any) {
     console.error('Error adding new order:', error);
@@ -2820,26 +3096,35 @@ router.post('/customers/create-from-order', async (req, res) => {
     const oldCustId = Number(old_customer_id);
     const orderIdNum = Number(order_id);
 
-    // 1. Create Lead in leads table
-    const lead = await prisma.leads.create({
-      data: {
-        name: customer_name,
-        email: customer_email,
-        contact: customer_mobile,
-        service: customer_service || '1',
-        state: customer_state || '',
-        city: customer_city || '',
-        added_by: 1,
-        lead_type: 1,
-        is_customer: 1,
-        company_id: 'ETax1',
-      },
-    });
+    // 1. Create Lead in leads table (using raw SQL to bypass autoincrement issue)
+    const companyName = customer_businessName || '';
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO leads (name, email, contact, service, state, city, added_by, lead_type, is_customer, company_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      customer_name,
+      customer_email,
+      customer_mobile,
+      customer_service || '1',
+      customer_state || '',
+      customer_city || '',
+      1,
+      1,
+      1,
+      'ETax1'
+    );
+
+    // Get the created lead
+    const lead = await prisma.$queryRawUnsafe<{ id: number }[]>(
+      `SELECT id FROM leads WHERE email = ? AND contact = ? ORDER BY id DESC LIMIT 1`,
+      customer_email,
+      customer_mobile
+    );
+    const leadId = lead[0]?.id;
 
     // 2. Create New Customer
     const newCustomer = await prisma.customers.create({
       data: {
-        lead_id: lead.id,
+        lead_id: leadId,
         name: customer_name,
         business: customer_businessName || '',
         email: customer_email,
@@ -2910,7 +3195,7 @@ router.post('/customers/create-from-order', async (req, res) => {
       message: 'New Customer account created and order transferred successfully!',
       data: {
         new_customer_id: newCustId,
-        lead_id: lead.id,
+        lead_id: leadId,
       },
     });
   } catch (error: any) {
@@ -4006,6 +4291,36 @@ router.post('/sm/support-tickets/:id/close', async (req, res) => {
   }
 });
 
+// 3b. Operations Manager Dashboard - Task Statistics
+router.get('/om/dashboard-stats', async (_req, res) => {
+  try {
+    // Get task counts by status from operation_tasks
+    const taskStats = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN ta.task_status = 2 OR ta.task_status = 6 THEN 1 ELSE 0 END) as over_dues,
+        SUM(CASE WHEN ta.task_status = 9 THEN 1 ELSE 0 END) as on_hold,
+        SUM(CASE WHEN ta.task_status = 1 THEN 1 ELSE 0 END) as not_started,
+        SUM(CASE WHEN ta.task_status = 2 THEN 1 ELSE 0 END) as wip,
+        SUM(CASE WHEN ta.task_status = 3 THEN 1 ELSE 0 END) as pending_from_client,
+        SUM(CASE WHEN ta.task_status = 4 THEN 1 ELSE 0 END) as invoiced,
+        SUM(CASE WHEN ta.task_status = 5 THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN ta.task_status = 7 THEN 1 ELSE 0 END) as cancelled,
+        SUM(CASE WHEN ta.task_status = 8 THEN 1 ELSE 0 END) as fees_pending
+       FROM operation_tasks ot
+       LEFT JOIN task_assign ta ON ot.task_id = ta.task_id`
+    );
+
+    res.json({
+      success: true,
+      data: serializeBigInt(taskStats[0] || {}),
+    });
+  } catch (error) {
+    console.error('Error fetching OM dashboard stats:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch dashboard stats' });
+  }
+});
+
 // 4. Coupons List (Supported for OM, SM, and generic CRM callers)
 router.get(['/sm/coupons', '/om/coupons', '/coupons'], async (_req, res) => {
   try {
@@ -4298,19 +4613,17 @@ router.get('/customers', async (req, res) => {
 // 12. Operations Staff List (All Operations Managers, Employees, Assistants from DB)
 router.get('/operation-staff', async (_req, res) => {
   try {
-    const opsStaff = await prisma.staff_users.findMany({
-      where: {
-        is_active: true,
-        role_id: { in: [3, 8, 12] },
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role_id: true,
-      },
-      orderBy: { name: 'asc' },
-    });
+    // Use users table instead of staff_users
+    const opsStaff: any[] = await prisma.$queryRaw`
+      SELECT 
+        id,
+        username as name,
+        email,
+        user_type as role_id
+      FROM users
+      WHERE status = 1 AND user_type IN (3, 7, 12)
+      ORDER BY username ASC
+    `;
 
     res.json({
       success: true,
@@ -4319,6 +4632,802 @@ router.get('/operation-staff', async (_req, res) => {
   } catch (error) {
     console.error('Error fetching operation staff:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch operation staff' });
+  }
+});
+
+// 13. Get Documents for a customer and service
+router.get('/documents', async (req, res) => {
+  try {
+    const { customer_id, service_id } = req.query;
+    const customerId = String(customer_id);
+    const serviceId = Number(service_id);
+
+    // Fetch documents where cd_to = customer_id (documents sent TO customer)
+    // OR cd_from = customer_id (documents sent BY customer)
+    const docs = await prisma.$queryRaw`
+      SELECT
+        cd_id,
+        cd_name,
+        cd_doc,
+        service_id,
+        cd_from,
+        cd_to,
+        date
+      FROM customer_documents
+      WHERE service_id = ${serviceId}
+        AND (cd_to = ${customerId} OR cd_from = ${customerId})
+      ORDER BY cd_id DESC
+      LIMIT 50
+    `;
+
+    const mapped = (docs as any[]).map((d: any) => ({
+      id: d.cd_id,
+      name: d.cd_name,
+      fileName: d.cd_doc,
+      serviceId: d.service_id,
+      from: d.cd_from,
+      to: d.cd_to,
+      date: d.date ? String(d.date).split('T')[0] : '2026-09-05',
+    }));
+
+    res.json({ success: true, data: serializeBigInt(mapped) });
+  } catch (error) {
+    console.error('Error fetching documents:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch documents' });
+  }
+});
+
+// 14. Upload Document for a customer
+router.post('/documents/upload', verifyJWT, uploadSingle, async (req, res) => {
+  try {
+    const { doc_cust_id, cd_service_id, docs_name } = req.body;
+    const customerId = Number(doc_cust_id);
+    const serviceId = Number(cd_service_id);
+
+    if (!customerId || !serviceId || !docs_name) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    // Get logged-in user ID from JWT token
+    const userId = (req as any).user?.user_id || 1; // Default to 1 if not available
+
+    const maxDoc = await prisma.customer_documents.findFirst({
+      orderBy: { cd_id: 'desc' },
+      select: { cd_id: true },
+    });
+    const nextDocId = (maxDoc?.cd_id || 570) + 1;
+
+    const fileName = req.file ? req.file.filename : `client_doc_${Date.now()}.pdf`;
+
+    const newDoc = await prisma.customer_documents.create({
+      data: {
+        cd_id: nextDocId,
+        service_id: serviceId,
+        cd_from: String(userId), // ✅ Fix: Store logged-in user ID
+        cd_to: String(customerId), // ✅ Fix: Document sent TO customer
+        cd_name: docs_name,
+        cd_doc: fileName,
+        date: new Date(),
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Document uploaded successfully',
+      document: {
+        id: newDoc.cd_id,
+        name: newDoc.cd_name,
+        fileName: newDoc.cd_doc,
+        date: newDoc.date ? newDoc.date.toISOString().split('T')[0] : '2026-09-05',
+      },
+    });
+  } catch (error: any) {
+    console.error('Document upload error:', error);
+    res.status(500).json({ success: false, error: 'Failed to upload document' });
+  }
+});
+
+// 15. Franchise Manager Dashboard Stats
+router.get('/franchise-manager-dashboard-stats', async (_req, res) => {
+  try {
+    // Get franchise data - total customers, sales, collected/uncollected amounts
+    const franchiseData = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT 
+        COUNT(DISTINCT c.id) as total_customers,
+        COALESCE(SUM(o.total_amount), 0) as total_sells,
+        COALESCE(SUM(CASE WHEN c.is_payment = 1 THEN o.total_amount ELSE 0 END), 0) as collected_amount,
+        COALESCE(SUM(CASE WHEN c.is_payment = 0 THEN o.total_amount ELSE 0 END), 0) as uncollected_amount
+       FROM orders o
+       LEFT JOIN customers c ON o.customer_id = c.id
+       WHERE o.payment_status = 1 AND c.is_approve = 1`
+    );
+
+    // Get task counts
+    const taskStats = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT 
+        COUNT(*) as totalTasks,
+        SUM(CASE WHEN ot.status = 1 THEN 1 ELSE 0 END) as notstarted,
+        SUM(CASE WHEN ot.status = 2 THEN 1 ELSE 0 END) as wip,
+        SUM(CASE WHEN ot.status = 3 THEN 1 ELSE 0 END) as pendingfromclient,
+        SUM(CASE WHEN ot.status = 4 THEN 1 ELSE 0 END) as invoiced,
+        SUM(CASE WHEN ot.status = 8 THEN 1 ELSE 0 END) as paymentpending,
+        SUM(CASE WHEN ot.status = 5 THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN ta.assign_to IS NULL THEN 1 ELSE 0 END) as notassign
+       FROM operation_tasks ot
+       LEFT JOIN task_assign ta ON ta.task_id = ot.task_id`
+    );
+
+    // Get recent services
+    const recentServices = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT c.name, s.service_name, ot.status, ot.work, ot.date
+       FROM operation_tasks ot
+       LEFT JOIN customers c ON c.id = ot.cust_id
+       LEFT JOIN services s ON s.service_id = ot.service_id
+       ORDER BY ot.date DESC
+       LIMIT 10`
+    );
+
+    // Get recent chats
+    const recentChats = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT c.name as customer_name, cc.chat_msg, cc.date, su.name as sender_name
+       FROM customer_chat cc
+       LEFT JOIN customers c ON c.id = cc.customer_id
+       LEFT JOIN staff_users su ON su.id = cc.sender_id
+       ORDER BY cc.date DESC
+       LIMIT 10`
+    );
+
+    // Get recent support tickets
+    const recentTickets = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT c.name, st.ticket_msg, st.ticket_answer, st.is_open, st.date
+       FROM support_tickets st
+       LEFT JOIN customers c ON c.id = st.customer_id
+       ORDER BY st.date DESC
+       LIMIT 10`
+    );
+
+    res.json({
+      success: true,
+      data: {
+        ...franchiseData[0],
+        ...taskStats[0],
+        recent_services: recentServices,
+        recent_chats: recentChats,
+        recent_tickets: recentTickets,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error fetching franchise manager dashboard stats:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch dashboard stats' });
+  }
+});
+
+// 16. Franchise Employee Dashboard Stats
+router.get('/franchise-employee-dashboard-stats', async (_req, res) => {
+  try {
+    // Get franchise data - total customers, sales, collected/uncollected amounts
+    const franchiseData = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT 
+        COUNT(DISTINCT c.id) as total_customers,
+        COALESCE(SUM(o.total_amount), 0) as total_sells,
+        COALESCE(SUM(CASE WHEN c.is_payment = 1 THEN o.total_amount ELSE 0 END), 0) as collected_amount,
+        COALESCE(SUM(CASE WHEN c.is_payment = 0 THEN o.total_amount ELSE 0 END), 0) as uncollected_amount
+       FROM orders o
+       LEFT JOIN customers c ON o.customer_id = c.id
+       WHERE o.payment_status = 1 AND c.is_approve = 1`
+    );
+
+    // Get task counts
+    const taskStats = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT 
+        COUNT(*) as totalTasks,
+        SUM(CASE WHEN ot.status = 1 THEN 1 ELSE 0 END) as notstarted,
+        SUM(CASE WHEN ot.status = 2 THEN 1 ELSE 0 END) as wip,
+        SUM(CASE WHEN ot.status = 3 THEN 1 ELSE 0 END) as pendingfromclient,
+        SUM(CASE WHEN ot.status = 4 THEN 1 ELSE 0 END) as invoiced,
+        SUM(CASE WHEN ot.status = 8 THEN 1 ELSE 0 END) as paymentpending,
+        SUM(CASE WHEN ot.status = 5 THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN ta.assign_to IS NULL THEN 1 ELSE 0 END) as notassign
+       FROM operation_tasks ot
+       LEFT JOIN task_assign ta ON ta.task_id = ot.task_id`
+    );
+
+    // Get recent services
+    const recentServices = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT c.name, s.service_name, ot.status, ot.work, ot.date
+       FROM operation_tasks ot
+       LEFT JOIN customers c ON c.id = ot.cust_id
+       LEFT JOIN services s ON s.service_id = ot.service_id
+       ORDER BY ot.date DESC
+       LIMIT 10`
+    );
+
+    // Get recent chats
+    const recentChats = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT c.name as customer_name, cc.chat_msg, cc.date, su.name as sender_name
+       FROM customer_chat cc
+       LEFT JOIN customers c ON c.id = cc.customer_id
+       LEFT JOIN staff_users su ON su.id = cc.sender_id
+       ORDER BY cc.date DESC
+       LIMIT 10`
+    );
+
+    // Get recent support tickets
+    const recentTickets = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT c.name, st.ticket_msg, st.ticket_answer, st.is_open, st.date
+       FROM support_tickets st
+       LEFT JOIN customers c ON c.id = st.customer_id
+       ORDER BY st.date DESC
+       LIMIT 10`
+    );
+
+    res.json({
+      success: true,
+      data: {
+        ...franchiseData[0],
+        ...taskStats[0],
+        recent_services: recentServices,
+        recent_chats: recentChats,
+        recent_tickets: recentTickets,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error fetching franchise employee dashboard stats:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch dashboard stats' });
+  }
+});
+
+// 17. Franchise Partners Orders
+router.get('/franchise-partners-orders', async (req, res) => {
+  try {
+    const userId = (req as any).staffUser?.id;
+    const userType = (req as any).staffUser?.role_id;
+
+    console.log('Franchise Partners Orders - User ID:', userId, 'User Type:', userType);
+
+    let sql = `
+      SELECT
+        o.id as orderID,
+        o.customer_id,
+        o.order_id,
+        o.payment_status,
+        c.name,
+        c.email,
+        c.contact,
+        c.service,
+        cp.cp_title,
+        cp.cp_type,
+        s.service_name,
+        cat.category_name,
+        c.added_by,
+        u.username as added_by_name,
+        u.user_type,
+        ce.emi_total_amount,
+        (ce.emi_total_amount - ce.emi_unpaid_amount) as emi_paid_amount,
+        ce.emi_unpaid_amount,
+        ce.emi_due_date,
+        ce.payment_screenshot,
+        cpl.link_url,
+        c.is_approve
+      FROM orders o
+      JOIN customers c ON o.customer_id = c.id
+      JOIN users u ON c.added_by = u.id
+      LEFT JOIN combo_packages cp ON cp.cp_id = c.service
+      LEFT JOIN services s ON s.service_id = cp.cp_title
+      LEFT JOIN categories cat ON s.category_id = cat.category_id
+      LEFT JOIN customer_emi ce ON ce.order_id = o.id
+      LEFT JOIN customer_payment_links cpl ON cpl.customer_id = o.customer_id
+      WHERE o.payment_status = 1 AND u.user_type = 8
+    `;
+
+    const params: any[] = [];
+
+    // Franchise Employee (role 8) - sirf apne customers
+    if (userType === 8) {
+      sql += ' AND c.added_by = ?';
+      params.push(userId);
+    }
+    // Franchise Manager (role 5) - saare partner orders
+
+    sql += ' ORDER BY o.id DESC';
+
+    console.log('Executing SQL:', sql);
+    console.log('Params:', params);
+
+    const orders = await prisma.$queryRawUnsafe(sql, ...params);
+
+    console.log('Fetched orders count:', orders.length);
+
+    res.json({
+      success: true,
+      data: serializeBigInt(orders),
+    });
+  } catch (error: any) {
+    console.error('Error fetching franchise partners orders:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch orders' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OPS EMPLOYEE (OE) ROUTES — Same working as old OEController.php
+// ═══════════════════════════════════════════════════════════════════════════
+
+// OE: Get tasks assigned to logged-in ops employee
+router.get('/ops-employee/tasks', async (req, res) => {
+  try {
+    const { user_id, filterType, task_status, category_id, search } = req.query;
+    if (!user_id) return res.status(400).json({ success: false, message: 'user_id required' });
+
+    const uid = Number(user_id);
+    const today = new Date().toISOString().split('T')[0];
+    let whereExtra = '';
+    const params: any[] = [uid];
+
+    if (filterType === 'overdues') {
+      whereExtra = `AND ta.actual_task_status NOT IN (4,5,6,7) AND ta.due_date < '${today}'`;
+    } else if (filterType === 'todays') {
+      whereExtra = `AND ta.due_date = '${today}'`;
+    } else if (filterType === 'tomorrows') {
+      const tom = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+      whereExtra = `AND ta.due_date = '${tom}'`;
+    } else if (filterType === 'nextweeks') {
+      const n7 = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+      whereExtra = `AND ta.due_date > '${today}' AND ta.due_date <= '${n7}'`;
+    } else if (filterType === 'nexttwoweeks') {
+      const n7 = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+      const n15 = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
+      whereExtra = `AND ta.due_date > '${n7}' AND ta.due_date <= '${n15}'`;
+    } else if (filterType === 'onhold') {
+      whereExtra = `AND ta.actual_task_status = 9`;
+    } else if (task_status && Number(task_status) !== 0) {
+      whereExtra = `AND ta.actual_task_status = ${Number(task_status)}`;
+    }
+
+    if (category_id && Number(category_id) !== 0) {
+      whereExtra += ` AND s.category_id = ${Number(category_id)}`;
+    }
+
+    if (search) {
+      whereExtra += ` AND (c.name LIKE ? OR c.business LIKE ? OR ot.task_name LIKE ? OR s.service_name LIKE ?)`;
+      const sp = `%${search}%`;
+      params.push(sp, sp, sp, sp);
+    }
+
+    const sql = `
+      SELECT
+        ta.ta_id, ta.task_id, ot.task_name,
+        c.id as customer_id, c.name as customer_name, c.business as company_name,
+        c.contact, c.email, c.state, c.city,
+        s.service_id, s.service_name,
+        ta.assign_date, ta.due_date, ta.actual_task_status,
+        c.service as package_id,
+        ot.sub_customer_name,
+        u.username as assign_by,
+        CASE
+          WHEN ab.user_type = 8 THEN CONCAT(ab.username, ' (P)')
+          ELSE ab.username
+        END as added_by_name
+      FROM task_assign ta
+      LEFT JOIN operation_tasks ot ON ot.task_id = ta.task_id
+      LEFT JOIN customers c ON c.id = ot.cust_id
+      LEFT JOIN services s ON s.service_id = ot.service_id
+      LEFT JOIN users u ON u.id = ta.assign_by
+      LEFT JOIN users ab ON ab.id = ot.added_by
+      WHERE ta.assign_to = ? AND ta.task_status = 0
+      ${whereExtra}
+      ORDER BY ta.ta_id DESC
+      LIMIT 500
+    `;
+
+    const tasks = await prisma.$queryRawUnsafe(sql, ...params);
+    return res.json({ success: true, data: serializeBigInt(tasks) });
+  } catch (err: any) {
+    console.error('OE tasks error:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// OE: Get task counts / stats
+router.get('/ops-employee/tasks/stats', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    if (!user_id) return res.status(400).json({ success: false, message: 'user_id required' });
+    const uid = Number(user_id);
+    const today = new Date().toISOString().split('T')[0];
+    const tom = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const n7 = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+    const n15 = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
+    const base = `AND ta.assign_to = ${uid} AND ta.task_status = 0`;
+
+    const [overdues, onhold, todays, tomorrows, next7, next15] = await Promise.all([
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.actual_task_status NOT IN (4,5,6,7) AND ta.due_date < '${today}' ${base}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.actual_task_status = 9 ${base}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.due_date = '${today}' ${base}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.due_date = '${tom}' ${base}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.due_date > '${today}' AND ta.due_date <= '${n7}' ${base}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+      prisma
+        .$queryRawUnsafe(
+          `SELECT COUNT(*) as cnt FROM task_assign ta WHERE ta.due_date > '${today}' AND ta.due_date <= '${n15}' ${base}`
+        )
+        .catch(() => [{ cnt: 0 }]),
+    ]);
+
+    const get = (r: any) => Number((r as any[])[0]?.cnt || 0);
+    return res.json({
+      success: true,
+      data: {
+        overduesTasks: get(overdues),
+        onholdTasks: get(onhold),
+        todaysTasks: get(todays),
+        tomorrowsTasks: get(tomorrows),
+        nextWeekTasks: get(next7),
+        nextTwoWeekTasks: get(next15),
+      },
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// OE: Get client info + current status + last work timeline
+router.get('/ops-employee/client-info', async (req, res) => {
+  try {
+    const { cust_id, service_id, task_id } = req.query;
+    if (!cust_id || !task_id)
+      return res.status(400).json({ success: false, message: 'cust_id and task_id required' });
+
+    const client: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT c.*, s.service_name, s.service_id
+       FROM customers c
+       JOIN services s ON s.service_id = ?
+       WHERE c.id = ?`,
+      Number(service_id),
+      Number(cust_id)
+    )) as any[];
+
+    const statusRow: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT actual_task_status FROM task_assign WHERE task_id = ? LIMIT 1`,
+      Number(task_id)
+    )) as any[];
+
+    const timeline: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT * FROM customer_work_timeline WHERE cust_id = ? AND task_id = ? ORDER BY id DESC LIMIT 1`,
+      Number(cust_id),
+      Number(task_id)
+    )) as any[];
+
+    if (!client.length)
+      return res.status(404).json({ success: false, message: 'Client not found' });
+
+    const result = serializeBigInt(client[0]);
+    result.actual_task_status = statusRow[0]?.actual_task_status ?? null;
+    result.start_time = timeline[0]?.start_time ?? '';
+    result.end_time = timeline[0]?.end_time ?? '';
+    result.work_seconds = Number(timeline[0]?.work_seconds ?? 0);
+
+    return res.json({ success: true, data: result });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// OE: Start timer - save running state to database
+router.post('/ops-employee/start-timer', async (req, res) => {
+  try {
+    const { cust_id, task_id, user_id, work_service_id } = req.body;
+    if (!cust_id || !task_id || !user_id)
+      return res.status(422).json({ success: false, message: 'Invalid input' });
+
+    const custId = Number(cust_id);
+    const taskId = Number(task_id);
+    const userId = Number(user_id);
+    const serviceId = Number(work_service_id) || 0;
+
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toTimeString().split(' ')[0];
+
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO customer_work_timeline (cust_id, task_id, status, added_by, service_id, is_running, running_start, date, time)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      custId,
+      taskId,
+      2,
+      userId,
+      serviceId,
+      1,
+      timeStr,
+      dateStr,
+      timeStr
+    );
+
+    return res.json({ success: true, message: 'Timer started', running_start: timeStr });
+  } catch (err: any) {
+    console.error('Start timer error:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// OE: Stop timer - save end time and calculate duration
+router.post('/ops-employee/stop-timer', async (req, res) => {
+  try {
+    const { cust_id, task_id, user_id, end_time } = req.body;
+    if (!cust_id || !task_id || !user_id)
+      return res.status(422).json({ success: false, message: 'Invalid input' });
+
+    const custId = Number(cust_id);
+    const taskId = Number(task_id);
+    const userId = Number(user_id);
+
+    // Get running start time
+    const runningRow: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT running_start FROM customer_work_timeline WHERE task_id = ? AND is_running = 1 ORDER BY id DESC LIMIT 1`,
+      taskId
+    )) as any[];
+
+    if (runningRow.length === 0) {
+      return res.status(400).json({ success: false, message: 'No running timer found' });
+    }
+
+    const runningStart = runningRow[0].running_start;
+    const today = new Date().toISOString().split('T')[0];
+    const s = new Date(`${today} ${runningStart}`).getTime();
+    const e = new Date(`${today} ${end_time}`).getTime();
+    const workSeconds = Math.max(0, Math.floor((e - s) / 1000));
+
+    // Update the running timeline entry
+    await prisma.$executeRawUnsafe(
+      `UPDATE customer_work_timeline SET is_running = 0, end_time = ?, work_seconds = ? WHERE task_id = ? AND is_running = 1`,
+      end_time,
+      workSeconds,
+      taskId
+    );
+
+    return res.json({ success: true, message: 'Timer stopped', work_seconds: workSeconds });
+  } catch (err: any) {
+    console.error('Stop timer error:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// OE: Add work effort / update status + insert work timeline
+router.post('/ops-employee/add-work-effort', async (req, res) => {
+  try {
+    const {
+      cust_id,
+      task_id,
+      status,
+      work,
+      work_service_id,
+      start_time,
+      end_time,
+      user_id,
+      is_running,
+      running_start,
+    } = req.body;
+    if (!cust_id || !task_id || !user_id)
+      return res.status(422).json({ success: false, message: 'Invalid input' });
+
+    const custId = Number(cust_id);
+    const taskId = Number(task_id);
+    const statusNum = Number(status);
+    const userId = Number(user_id);
+    const serviceId = Number(work_service_id) || 0;
+
+    // Update status
+    if (statusNum === 6) {
+      await prisma.$executeRawUnsafe(
+        `UPDATE operation_tasks SET is_assign = 0, is_return = 1, original_task_status = ? WHERE task_id = ?`,
+        statusNum,
+        taskId
+      );
+      await prisma.$executeRawUnsafe(
+        `UPDATE task_assign SET task_status = 1, actual_task_status = ? WHERE task_id = ?`,
+        statusNum,
+        taskId
+      );
+    } else {
+      await prisma.$executeRawUnsafe(
+        `UPDATE operation_tasks SET original_task_status = ? WHERE task_id = ?`,
+        statusNum,
+        taskId
+      );
+      await prisma.$executeRawUnsafe(
+        `UPDATE task_assign SET actual_task_status = ? WHERE task_id = ?`,
+        statusNum,
+        taskId
+      );
+    }
+
+    // Calculate work seconds
+    let finalSeconds = 0;
+    if (start_time && end_time) {
+      const today = new Date().toISOString().split('T')[0];
+      const s = new Date(`${today} ${start_time}`).getTime();
+      const e = new Date(`${today} ${end_time}`).getTime();
+      finalSeconds = Math.max(0, Math.floor((e - s) / 1000));
+    }
+
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toTimeString().split(' ')[0];
+
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO customer_work_timeline (cust_id, task_id, work, status, added_by, service_id, start_time, end_time, work_seconds, date, time, is_running, running_start)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      custId,
+      taskId,
+      work || '',
+      statusNum,
+      userId,
+      serviceId,
+      start_time || null,
+      end_time || null,
+      finalSeconds,
+      dateStr,
+      timeStr,
+      is_running ? 1 : 0,
+      running_start || null
+    );
+
+    // Customer notification
+    const statusText: Record<number, string> = {
+      1: 'Not Started',
+      2: 'Work In Progress',
+      3: 'Pending From Client',
+      4: 'Invoiced',
+      5: 'Completed',
+      6: 'Returned',
+      7: 'Cancelled',
+      8: 'Payment Pending',
+      9: 'On Hold',
+    };
+    const userRow: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT username FROM users WHERE id = ? LIMIT 1`,
+      userId
+    )) as any[];
+    const username = userRow[0]?.username || 'Staff';
+
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO customer_notifications (cust_id, title, message, is_read) VALUES (?, ?, ?, 0)`,
+      custId,
+      'Task Status Updated',
+      `Current Status: ${statusText[statusNum] || 'Updated'} | Updated by: ${username}`
+    );
+
+    return res.json({ success: true, message: 'Work effort added', work_seconds: finalSeconds });
+  } catch (err: any) {
+    console.error('AddWorkEffort error:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// OE: Get documents for a task
+router.get('/ops-employee/documents', async (req, res) => {
+  try {
+    const { customer_id, service_id } = req.query;
+    if (!customer_id)
+      return res.status(400).json({ success: false, message: 'customer_id required' });
+
+    const docs: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT * FROM customer_documents WHERE service_id = ? AND (cd_from = ? OR cd_to = ?)`,
+      Number(service_id),
+      Number(customer_id),
+      Number(customer_id)
+    )) as any[];
+
+    return res.json({ success: true, data: serializeBigInt(docs) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// OE: Upload employee document
+console.log('Employee document upload route file loaded');
+
+router.options('/ops-employee/upload-document', (req, res) => {
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(200);
+});
+
+router.post('/ops-employee/upload-document', (req, res) => {
+  console.log('Upload document API hit');
+
+  uploadSingle(req, res, async (err) => {
+    if (err) {
+      console.error('Multer error:', err);
+      return res.status(400).json({ success: false, message: 'File upload error: ' + err.message });
+    }
+    try {
+      console.log('Upload request body:', req.body);
+      console.log('Uploaded file:', req.file);
+      const { doc_cust_id, docs_name, cd_service_id, user_id } = req.body;
+      if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO customer_documents (cd_from, cd_to, cd_name, cd_doc, service_id) VALUES (?, ?, ?, ?, ?)`,
+        Number(user_id),
+        Number(doc_cust_id),
+        docs_name || 'Document',
+        req.file.filename,
+        Number(cd_service_id) || 0
+      );
+
+      return res.json({ success: true, message: 'Document uploaded', filename: req.file.filename });
+    } catch (e: any) {
+      console.error('Database error:', e);
+      return res.status(500).json({ success: false, message: e.message });
+    }
+  });
+});
+
+// OE: Get full work timeline for a task
+router.get('/ops-employee/work-timeline', async (req, res) => {
+  try {
+    const { task_id } = req.query;
+    if (!task_id) return res.status(400).json({ success: false, message: 'task_id required' });
+
+    const rows: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT cwt.*, u.username
+       FROM customer_work_timeline cwt
+       LEFT JOIN users u ON u.id = cwt.added_by
+       WHERE cwt.task_id = ?
+       ORDER BY cwt.id DESC`,
+      Number(task_id)
+    )) as any[];
+
+    return res.json({ success: true, data: serializeBigInt(rows) });
+  } catch (err: any) {
+    console.error('Work timeline error:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// OE: Get task descriptions / client notes
+router.get('/ops-employee/task-descriptions', async (req, res) => {
+  try {
+    const { task_id, cust_id } = req.query;
+    const rows: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT o.*, c.name FROM operation_tasks o LEFT JOIN customers c ON c.id = o.cust_id WHERE o.task_id = ? AND o.cust_id = ?`,
+      Number(task_id),
+      Number(cust_id)
+    )) as any[];
+    return res.json({ success: true, data: serializeBigInt(rows) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// OE: Get categories for filter
+router.get('/ops-employee/categories', async (req, res) => {
+  try {
+    const cats: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT category_id, category_name FROM categories ORDER BY category_name`
+    )) as any[];
+    return res.json({ success: true, data: serializeBigInt(cats) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 });
 

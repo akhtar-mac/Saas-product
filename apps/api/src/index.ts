@@ -2,6 +2,8 @@ import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
 import { requestLogger } from './middleware/audit.middleware.js';
@@ -24,7 +26,9 @@ import disbursementRoutes from './routes/disbursement.routes.js';
 import { initChatSocket } from './socket/chat.socket.js';
 import { prisma } from './config/db.js';
 import { authRateLimit, apiRateLimit } from './middleware/rate-limit.middleware.js';
-import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -53,6 +57,9 @@ app.use(
 );
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// ─── Static file serving for uploaded documents ───────────────────────────────
+app.use('/Docs', express.static(path.join(__dirname, '../../public/Docs')));
 
 // ─── Request Logger & Global API Rate Limit ──────────────────────────────────
 app.use(requestLogger);
@@ -86,7 +93,7 @@ app.use('/v1/admin/users', usersRoutes);
 app.use('/v1/chat', chatRoutes);
 
 // ─── CRM Business Logic: Won form, lead lifecycle, orders, coupons ────────────
-app.use('/v1/crm', ordersRoutes);
+app.use('/v1/crm', crmRoutes);
 
 // ─── Call Analytics: Flutter sync + analytics endpoints ──────────────────────
 app.use('/v1/call-logs', callAnalyticsRoutes);

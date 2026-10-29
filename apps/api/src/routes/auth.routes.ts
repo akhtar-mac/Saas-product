@@ -17,10 +17,10 @@ const ROLE_MAP: Record<number, string> = {
   4: 'sales_manager',
   5: 'marketing_manager',
   6: 'franchise_manager',
-  7: 'sales_employee',
-  8: 'operations_employee',
+  7: 'operations_employee',
+  8: 'franchise_partner',
   9: 'marketing_employee',
-  10: 'franchise_partner',
+  10: 'consultation',
   11: 'consultation',
   12: 'operations_assistant',
   13: 'sales_assistant',
@@ -98,9 +98,9 @@ const BUILTIN_ACCOUNTS: Array<{
     id: 8,
     email: 'rahul.ops@etaxwala.com',
     name: 'Rahul Verma (Operations)',
-    role_id: 8,
-    roles: [8],
-    position: 'Operations Specialist',
+    role_id: 7,
+    roles: [7],
+    position: 'Operations Employee',
   },
   {
     id: 9,
@@ -193,71 +193,183 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // 1. Try DB lookup in staff_users table first
+    // 1. Try DB lookup in users table FIRST (for legacy users)
     let staffUser: any = null;
     try {
-      staffUser = await (prisma as any).staff_users.findFirst({
-        where: {
-          OR: [{ email: cleanEmail }, { name: cleanEmail }],
-        },
-      });
+      const uRes: any[] = await prisma.$queryRaw`
+        SELECT * FROM users
+        WHERE LOWER(email) = ${cleanEmail} OR LOWER(username) = ${cleanEmail}
+        LIMIT 1
+      `;
+      if (uRes && uRes[0]) {
+        const u = uRes[0];
+        console.log('Login user from users table:', {
+          id: u.id,
+          username: u.username,
+          user_type: u.user_type,
+        });
+        const userTypeToRoleIdMap: Record<number, number> = {
+          1: 1, // Super Admin
+          2: 2, // Admin
+          3: 4, // Sales Manager
+          4: 3, // Ops Manager
+          5: 6, // Franchise Manager
+          6: 7, // Sales Employee (maps to role_id 7 in staff system)
+          7: 7, // Ops Employee (maps to role_id 7 in ROLE_MAP = 'operations_employee')
+          8: 8, // Franchise Partner
+          9: 12, // Ops Assistant
+          10: 11, // Consultation
+        };
+        // Role name mapping by user_type so ops vs sales employees get different role names
+        const userTypeToRoleNameMap: Record<number, string> = {
+          1: 'super_admin',
+          2: 'admin',
+          3: 'sales_manager',
+          4: 'operations_manager',
+          5: 'franchise_manager',
+          6: 'sales_employee', // user_type 6 = Sales Employee
+          7: 'operations_employee', // user_type 7 = Operations Employee
+          8: 'franchise_partner',
+          9: 'operations_assistant',
+          10: 'consultation',
+        };
+        const resolvedRoleId = userTypeToRoleIdMap[u.user_type] || 7;
+        const resolvedRoleName = userTypeToRoleNameMap[u.user_type] || 'operations_employee';
+        // Role-specific permissions based on role name
+        const rolePermissionsMap: Record<string, string[]> = {
+          super_admin: ['*'],
+          admin: ['*'],
+          operations_manager: [
+            'dashboard:view',
+            'operations:view',
+            'desktop_tracking:view',
+            'operations:employees',
+            'operations:customers',
+            'operations:tasks',
+            'accounts:view',
+            'chat:view',
+            'chat:send',
+          ],
+          sales_manager: [
+            'dashboard:view',
+            'sales:view',
+            'leads:view',
+            'quotations:view',
+            'tasks:view',
+            'workforce:view',
+            'accounts:view',
+            'chat:view',
+            'chat:send',
+          ],
+          franchise_manager: [
+            'dashboard:view',
+            'franchise:view',
+            'franchise:partners',
+            'franchise:inquiries',
+            'franchise:training',
+            'franchise:leads',
+            'franchise:orders',
+            'chat:view',
+            'chat:send',
+          ],
+          sales_employee: [
+            'dashboard:view',
+            'sales:view',
+            'leads:view',
+            'quotations:view',
+            'tasks:view',
+            'accounts:view',
+            'appointments:manage',
+            'chat:view',
+            'chat:send',
+          ],
+          operations_employee: [
+            'dashboard:view',
+            'operations:view',
+            'operations:tasks',
+            'tasks:view',
+            'appointments:manage',
+            'chat:view',
+            'chat:send',
+          ],
+          franchise_partner: [
+            'dashboard:view',
+            'franchise:view',
+            'franchise:leads',
+            'franchise:inquiries',
+            'franchise:orders',
+            'franchise:training',
+            'chat:view',
+            'chat:send',
+          ],
+          operations_assistant: [
+            'dashboard:view',
+            'operations:view',
+            'operations:tasks',
+            'chat:view',
+            'chat:send',
+          ],
+          consultation: [
+            'dashboard:view',
+            'sales:view',
+            'leads:view',
+            'quotations:view',
+            'tasks:view',
+            'chat:view',
+            'chat:send',
+          ],
+        };
+        const resolvedPermissions = rolePermissionsMap[resolvedRoleName] || [
+          'dashboard:view',
+          'operations:tasks',
+        ];
+        console.log(
+          'Resolved role_id:',
+          resolvedRoleId,
+          'role_name:',
+          resolvedRoleName,
+          'from user_type:',
+          u.user_type
+        );
+        staffUser = {
+          id: Number(u.id),
+          email: u.email || cleanEmail,
+          name: u.username || cleanEmail.split('@')[0],
+          role_id: resolvedRoleId,
+          role_name: resolvedRoleName,
+          roles: JSON.stringify([resolvedRoleId]),
+          is_active: u.status === 1,
+          password_hash: u.password,
+          permissions: JSON.stringify(resolvedPermissions),
+        };
+      }
     } catch {
       staffUser = null;
     }
 
+    // 2. Try DB lookup in staff_users table if not in users
     if (!staffUser) {
       try {
-        const rawRes: any[] = await prisma.$queryRaw`
-          SELECT * FROM staff_users 
-          WHERE LOWER(email) = ${cleanEmail} OR LOWER(name) = ${cleanEmail}
-          LIMIT 1
-        `;
-        if (rawRes && rawRes[0]) {
-          staffUser = rawRes[0];
-        }
-      } catch {}
-    }
-
-    // 2. Try DB lookup in users table if not in staff_users
-    if (!staffUser) {
-      try {
-        const uRes: any[] = await prisma.$queryRaw`
-          SELECT * FROM users 
-          WHERE LOWER(email) = ${cleanEmail} OR LOWER(username) = ${cleanEmail}
-          LIMIT 1
-        `;
-        if (uRes && uRes[0]) {
-          const u = uRes[0];
-          const userTypeToRoleIdMap: Record<number, number> = {
-            1: 1, // Super Admin
-            2: 2, // Admin
-            3: 4, // Sales Manager
-            4: 3, // Ops Manager
-            5: 6, // Franchise Manager
-            6: 7, // Sales Employee
-            7: 8, // Ops Employee
-            8: 10, // Franchise Partner
-            9: 12, // Ops Assistant
-            10: 11, // Consultation
-          };
-          const resolvedRoleId = userTypeToRoleIdMap[u.user_type] || 7;
-          staffUser = {
-            id: Number(u.id),
-            email: u.email || cleanEmail,
-            name: u.username || cleanEmail.split('@')[0],
-            role_id: resolvedRoleId,
-            roles: JSON.stringify([resolvedRoleId]),
-            is_active: u.status === 1,
-            password_hash: u.password,
-            permissions: JSON.stringify(
-              resolvedRoleId === 1
-                ? ['*']
-                : ['dashboard:view', 'sales:view', 'leads:view', 'quotations:view', 'tasks:view']
-            ),
-          };
-        }
+        staffUser = await (prisma as any).staff_users.findFirst({
+          where: {
+            OR: [{ email: cleanEmail }, { name: cleanEmail }],
+          },
+        });
       } catch {
         staffUser = null;
+      }
+
+      if (!staffUser) {
+        try {
+          const rawRes: any[] = await prisma.$queryRaw`
+            SELECT * FROM staff_users
+            WHERE LOWER(email) = ${cleanEmail} OR LOWER(name) = ${cleanEmail}
+            LIMIT 1
+          `;
+          if (rawRes && rawRes[0]) {
+            staffUser = rawRes[0];
+          }
+        } catch {}
       }
     }
 
@@ -369,11 +481,14 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
       userPermissions = ['*'];
     }
 
+    // Use explicit role_name from staffUser (set during users table lookup) OR fallback to ROLE_MAP
+    const effectiveRoleName = staffUser.role_name || ROLE_MAP[staffUser.role_id] || 'staff';
+
     const payload: JwtPayload = {
       user_id: staffUser.id,
       role_id: staffUser.role_id,
       role_ids: assignedRoleIds,
-      role_name: ROLE_MAP[staffUser.role_id] || 'staff',
+      role_name: effectiveRoleName,
       roles: roleNames,
       permissions: userPermissions,
       username: staffUser.name,
@@ -392,7 +507,7 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
           email: staffUser.email,
           role_id: staffUser.role_id,
           role_ids: assignedRoleIds,
-          role_name: ROLE_MAP[staffUser.role_id] || 'staff',
+          role_name: effectiveRoleName,
           roles: roleNames,
           permissions: userPermissions,
           profile_photo: staffUser.profile_photo,

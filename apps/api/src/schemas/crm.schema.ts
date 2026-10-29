@@ -12,14 +12,19 @@ export const CreateLeadSchema = z.object({
   source: z.string().optional().default('CRM Web'),
 });
 
-export const UpdateTaskStatusSchema = z.object({
-  new_status: z.union([z.number(), z.string().regex(/^\d+$/).transform(Number)]).optional(),
-  status: z.union([z.number(), z.string().regex(/^\d+$/).transform(Number)]).optional(),
-  remarks: z.string().max(1000).optional(),
-  updated_by: z.string().max(255).optional(),
-}).refine((data) => data.new_status !== undefined || data.status !== undefined, {
-  message: 'new_status or status is required',
-});
+export const UpdateTaskStatusSchema = z
+  .object({
+    new_status: z.union([z.number(), z.string().regex(/^\d+$/).transform(Number)]).optional(),
+    status: z.union([z.number(), z.string().regex(/^\d+$/).transform(Number)]).optional(),
+    remarks: z.string().max(1000).optional(),
+    updated_by: z.string().max(255).optional(),
+    start_time: z.string().optional(),
+    end_time: z.string().optional(),
+    work_seconds: z.number().optional(),
+  })
+  .refine((data) => data.new_status !== undefined || data.status !== undefined, {
+    message: 'new_status or status is required',
+  });
 
 export const ConvertLeadSchema = z.object({
   name: z.string().min(2, 'Customer name is required'),
@@ -30,11 +35,31 @@ export const ConvertLeadSchema = z.object({
   city: z.string().optional(),
   category_id: z.union([z.number(), z.string().regex(/^\d+$/).transform(Number)]),
   service_id: z.union([z.number(), z.string().regex(/^\d+$/).transform(Number)]),
-  total_amount: z.union([z.number(), z.string().regex(/^\d+(\.\d+)?$/).transform(Number)]),
+  total_amount: z.union([
+    z.number(),
+    z
+      .string()
+      .regex(/^\d+(\.\d+)?$/)
+      .transform(Number),
+  ]),
   coupon_code: z.string().optional(),
-  discount_amount: z.union([z.number(), z.string().regex(/^\d+(\.\d+)?$/).transform(Number)]).optional(),
+  discount_amount: z
+    .union([
+      z.number(),
+      z
+        .string()
+        .regex(/^\d+(\.\d+)?$/)
+        .transform(Number),
+    ])
+    .optional(),
   payment_mode: z.string().optional(),
-  paid_amount: z.union([z.number(), z.string().regex(/^\d+(\.\d+)?$/).transform(Number)]),
+  paid_amount: z.union([
+    z.number(),
+    z
+      .string()
+      .regex(/^\d+(\.\d+)?$/)
+      .transform(Number),
+  ]),
   next_due_date: z.string().optional(),
   comment: z.string().optional(),
   payment_screenshot_url: z.string().optional(),
@@ -48,4 +73,3 @@ export const WonFormSchema = z.object({
   panNumber: z.string().max(15).optional(),
   advancePaid: z.number().nonnegative().optional(),
 });
-

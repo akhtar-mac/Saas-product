@@ -376,22 +376,23 @@ model ca_onboards {
 }
 
 model call_history {
-  id             BigInt    @id @default(autoincrement())
+  id             Int       @id @default(autoincrement()) @db.UnsignedInt
   lead_id        Int
-  user_id        Decimal   @db.Decimal(20, 0)
+  user_id        BigInt    @db.UnsignedBigInt
   contact        String    @db.VarChar(20)
   lead_source    String?   @db.VarChar(50)
   name           String?   @db.VarChar(255)
   call_type      String    @db.VarChar(20)
   duration       Int?
-  call_timestamp DateTime  @default(now()) @db.Timestamp(6)
+  call_timestamp DateTime  @default(now()) @db.Timestamp(0)
   call_date      DateTime  @db.Date
-  created_at     DateTime? @default(now()) @db.Timestamp(6)
-  updated_at     DateTime? @default(now()) @db.Timestamp(6)
+  created_at     DateTime? @default(now()) @db.Timestamp(0)
+  updated_at     DateTime? @default(now()) @db.Timestamp(0)
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model call_remarks {
-  call_id              Int       @id @default(autoincrement())
+  call_id              Int
   lead_id              Int
   lead_status          Int
   user_id              Int
@@ -400,6 +401,8 @@ model call_remarks {
   call_followup_date   DateTime? @db.Date
   call_followup_remark String?   @db.VarChar(250)
   call_date            DateTime  @default(now()) @db.Date
+
+  @@ignore
 }
 
 model campaign_leads {
@@ -438,23 +441,29 @@ model cart {
   date          DateTime @default(now()) @db.Timestamp(6)
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model categories {
-  category_id   Int    @id @default(autoincrement())
+  category_id   Int
   company_id    String @db.VarChar(11)
   category_name String @db.VarChar(100)
   added_by      Int
   date          String @db.VarChar(50)
+
+  @@ignore
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model combo_packages {
-  cp_id       Int       @id @default(autoincrement())
+  cp_id       Int
   service_id  String    @db.VarChar(255)
   cp_title    Int
   cp_type     Int
   cp_discount Int
   company_id  String    @db.VarChar(20)
   added_by    Int
-  cp_date     DateTime? @default(now()) @db.Timestamp(6)
+  cp_date     DateTime? @default(now()) @db.DateTime(0)
+
+  @@ignore
 }
 
 model comments {
@@ -514,15 +523,18 @@ model coupons {
   date             DateTime @default(now()) @db.Timestamp(6)
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model custom_packages {
-  id           Int      @id @default(autoincrement())
+  id           Int
   service_ids  String   @db.VarChar(100)
   cp_id        Int
   customer_id  Int
   price        Int
   package_name String   @db.VarChar(100)
   added_by     Int
-  date         DateTime @default(now()) @db.Timestamp(6)
+  date         DateTime @default(now()) @db.Timestamp(0)
+
+  @@ignore
 }
 
 model customer_affiliate_referrals {
@@ -542,18 +554,22 @@ model customer_chatting {
   date       DateTime @default(now()) @db.Timestamp(6)
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model customer_documents {
-  cd_id      Int      @id @default(autoincrement())
+  cd_id      Int
   service_id Int?
   cd_from    String   @db.VarChar(10)
   cd_to      Int
   cd_name    String   @db.VarChar(100)
   cd_doc     String   @db.VarChar(100)
-  date       DateTime @default(now()) @db.Timestamp(6)
+  date       DateTime @default(now()) @db.DateTime(0)
+
+  @@ignore
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model customer_dues {
-  cd_id              Int      @id @default(autoincrement())
+  cd_id              Int
   emi_id             Int
   customer_id        Int
   paid_amount        Int
@@ -561,11 +577,14 @@ model customer_dues {
   payment_screenshot String   @db.VarChar(250)
   added_by           Int
   is_approve         Int      @default(0)
-  date               DateTime @default(now()) @db.Timestamp(6)
+  date               DateTime @default(now()) @db.Timestamp(0)
+
+  @@ignore
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model customer_emi {
-  emi_id              Int       @id @default(autoincrement())
+  emi_id              Int
   customer_id         Int
   order_id            Int
   emi_type            Int
@@ -577,7 +596,9 @@ model customer_emi {
   second_emi_due_date DateTime? @db.Date
   emi_comment         String    @db.VarChar(2400)
   payment_screenshot  String?   @db.VarChar(250)
-  date                DateTime  @default(now()) @db.Timestamp(6)
+  date                DateTime  @default(now()) @db.Timestamp(0)
+
+  @@ignore
 }
 
 model customer_inquiries {
@@ -620,8 +641,9 @@ model customer_tickets {
   date          DateTime @default(now()) @db.Timestamp(6)
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model customer_work_timeline {
-  id            Int       @id @default(autoincrement())
+  id            Int
   cust_id       Int
   service_id    Int
   task_id       Int
@@ -629,18 +651,21 @@ model customer_work_timeline {
   work_hour     Int?
   work_minute   Int?
   work_seconds  Int       @default(0)
-  is_running    Int?      @default(0) @db.SmallInt
-  running_start DateTime? @db.Timestamp(6)
+  is_running    Boolean?  @default(false)
+  running_start DateTime? @db.DateTime(0)
   status        Int
   added_by      Int
   date          String    @db.VarChar(20)
   time          String    @db.VarChar(20)
-  start_time    DateTime? @db.Time(6)
-  end_time      DateTime? @db.Time(6)
+  start_time    DateTime? @db.Time(0)
+  end_time      DateTime? @db.Time(0)
+
+  @@ignore
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model customers {
-  id             Int      @id @default(autoincrement())
+  id             Int
   lead_id        Int
   name           String   @db.VarChar(100)
   business       String   @db.VarChar(100)
@@ -653,12 +678,14 @@ model customers {
   city           String   @db.VarChar(100)
   added_by       Int
   company_id     String   @db.VarChar(11)
-  is_payment     Int      @default(0) @db.SmallInt
+  is_payment     Int      @default(0) @db.TinyInt
   is_active      Int      @default(1)
   is_approve     Int      @default(0)
   is_partner     Int      @default(1)
   customer_token String   @db.VarChar(500)
-  date           DateTime @default(now()) @db.Timestamp(6)
+  date           DateTime @default(now()) @db.Timestamp(0)
+
+  @@ignore
 }
 
 model desktop_users {
@@ -706,26 +733,32 @@ model jobs {
   updated_at       DateTime @default(now()) @db.Timestamp(6)
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model lead_assign {
-  id          Int      @id @default(autoincrement())
+  id          Int
   lead_id     Int
   assign_to   Int
   lead_status Int      @default(0)
   lead_type   Int
-  assign_date DateTime @default(now()) @db.Timestamp(6)
+  assign_date DateTime @default(now()) @db.Timestamp(0)
   lead_source String?  @db.VarChar(50)
+
+  @@ignore
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model lead_followups {
-  id              Int      @id @default(autoincrement())
+  id              Int
   user_id         Int
   lead_id         Int
   followup_date   DateTime @db.Date
   followup_time   String?  @db.VarChar(20)
   followup_remark String   @db.VarChar(500)
-  is_called       Int      @default(0) @db.SmallInt
-  date            DateTime @default(now()) @db.Timestamp(6)
+  is_called       Int      @default(0) @db.TinyInt
+  date            DateTime @default(now()) @db.Timestamp(0)
   lead_source     String?  @default("etaxwala") @db.VarChar(50)
+
+  @@ignore
 }
 
 model lead_notifications {
@@ -737,31 +770,22 @@ model lead_notifications {
   created_at DateTime? @default(now()) @db.Timestamp(6)
 }
 
-model lead_question_ans {
-  id          Int       @id @default(autoincrement())
-  lead_id     Int
-  question_id Int?
-  company_id  String?   @db.VarChar(50)
-  question    String
-  answer      String?
-  service_id  Int
-  added_by    Int
-  created_at  DateTime? @default(now()) @db.Timestamp(6)
-  updated_at  DateTime? @default(now()) @db.Timestamp(6)
-}
-
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model lead_remarks {
-  id          Int      @id @default(autoincrement())
+  id          Int
   user_id     Int
   lead_id     Int
   lead_status Int
   lead_remark String   @db.VarChar(5000)
-  date        DateTime @default(now()) @db.Timestamp(6)
+  date        DateTime @default(now()) @db.Timestamp(0)
   lead_source String?  @default("etaxwala") @db.VarChar(50)
+
+  @@ignore
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model leads {
-  id           Int      @id @default(autoincrement())
+  id           Int
   campaign_id  Int?
   source       String?  @db.VarChar(100)
   name         String   @db.VarChar(100)
@@ -775,17 +799,20 @@ model leads {
   is_assign    Int      @default(0)
   lead_type    Int
   is_customer  Int      @default(0)
-  is_payment   Int      @default(0) @db.SmallInt
+  is_payment   Int      @default(0) @db.TinyInt
   company_id   String   @db.VarChar(11)
   date         DateTime @default(now()) @db.Date
-  updated_at   DateTime @default(now()) @db.Timestamp(6)
-  created_at   DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @default(now()) @db.Timestamp(0)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
   lead_score   Int?
   quoted_price Decimal? @db.Decimal(12, 2)
+
+  @@ignore
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model leads_sahakarsamridhi {
-  id           Int      @id @default(autoincrement())
+  id           Int
   name         String   @db.VarChar(100)
   email        String   @db.VarChar(50)
   contact      String   @db.VarChar(20)
@@ -797,17 +824,20 @@ model leads_sahakarsamridhi {
   is_assign    Int      @default(0)
   lead_type    Int
   is_customer  Int      @default(0)
-  is_payment   Int      @default(0) @db.SmallInt
+  is_payment   Int      @default(0) @db.TinyInt
   company_id   String   @db.VarChar(11)
-  date         DateTime @default(now()) @db.Timestamp(6)
-  updated_at   DateTime @default(now()) @db.Timestamp(6)
-  created_at   DateTime @default(now()) @db.Timestamp(6)
+  date         DateTime @default(now()) @db.Timestamp(0)
+  updated_at   DateTime @default(now()) @db.Timestamp(0)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
   lead_score   Int?     @default(0)
   quoted_price Decimal? @db.Decimal(12, 2)
+
+  @@ignore
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model leads_udyamikisan {
-  id           Int      @id @default(autoincrement())
+  id           Int
   name         String   @db.VarChar(100)
   email        String   @db.VarChar(50)
   contact      String   @db.VarChar(20)
@@ -819,13 +849,15 @@ model leads_udyamikisan {
   is_assign    Int      @default(0)
   lead_type    Int
   is_customer  Int      @default(0)
-  is_payment   Int      @default(0) @db.SmallInt
+  is_payment   Int      @default(0) @db.TinyInt
   company_id   String   @db.VarChar(11)
-  date         DateTime @default(now()) @db.Timestamp(6)
-  updated_at   DateTime @default(now()) @db.Timestamp(6)
-  created_at   DateTime @default(now()) @db.Timestamp(6)
+  date         DateTime @default(now()) @db.Timestamp(0)
+  updated_at   DateTime @default(now()) @db.Timestamp(0)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
   lead_score   Int?
   quoted_price Decimal? @db.Decimal(12, 2)
+
+  @@ignore
 }
 
 model meetings {
@@ -854,8 +886,9 @@ model notifications {
   updated_at   DateTime? @default(now()) @db.Timestamp(6)
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model operation_tasks {
-  task_id              Int      @id @default(autoincrement())
+  task_id              Int
   cust_id              Int
   service_id           Int
   task_name            String   @db.VarChar(250)
@@ -864,15 +897,18 @@ model operation_tasks {
   is_return            Int      @default(0)
   added_by             Int
   is_payment           Int      @default(0)
-  assign_date          DateTime @default(now()) @db.Timestamp(6)
-  updated_at           DateTime @default(now()) @db.Timestamp(6)
-  created_at           DateTime @default(now()) @db.Timestamp(6)
+  assign_date          DateTime @default(now()) @db.Timestamp(0)
+  updated_at           DateTime @default(now()) @db.Timestamp(0)
+  created_at           DateTime @default(now()) @db.Timestamp(0)
   sub_customer_name    String?  @db.VarChar(255)
   order_id             Int?
+
+  @@ignore
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model orders {
-  id                Int      @id @default(autoincrement())
+  id                Int
   customer_id       String   @db.VarChar(250)
   package_id        String   @db.VarChar(1000)
   order_id          String?  @db.VarChar(250)
@@ -880,8 +916,10 @@ model orders {
   company_name      String   @default("NA") @db.VarChar(255)
   total_amount      Int
   payment_status    Int      @default(0)
-  order_date        DateTime @default(now()) @db.Timestamp(6)
+  order_date        DateTime @default(now()) @db.DateTime(0)
   sub_customer_name String?  @db.VarChar(255)
+
+  @@ignore
 }
 
 model other_leads {
@@ -929,25 +967,32 @@ model profile {
   updated_at    DateTime  @default(now()) @db.Timestamp(6)
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model quotations {
-  id         BigInt   @id @default(autoincrement())
+  id         BigInt
   lead_id    BigInt
   created_by String   @db.VarChar(50)
-  created_at DateTime @default(now()) @db.Timestamp(6)
-  updated_at DateTime @default(now()) @db.Timestamp(6)
-  note       String?
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+  note       String?  @db.Text
+
+  @@ignore
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model sahakar_samriddhi_categories {
-  category_id   Int      @id @default(autoincrement())
+  category_id   Int
   company_id    String   @db.VarChar(50)
   category_name String   @db.VarChar(100)
   added_by      Int
-  date          DateTime @default(now()) @db.Timestamp(6)
+  date          DateTime @default(now()) @db.Timestamp(0)
+
+  @@ignore
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model sahakar_samridhhi_services {
-  service_id         Int      @id @default(autoincrement())
+  service_id         Int
   company_id         String   @db.VarChar(50)
   category_id        Int
   service_name       String   @db.VarChar(100)
@@ -955,7 +1000,9 @@ model sahakar_samridhhi_services {
   partner_percentage Int      @default(0)
   description        String   @db.VarChar(2000)
   added_by           Int
-  date               DateTime @default(now()) @db.Timestamp(6)
+  date               DateTime @default(now()) @db.Timestamp(0)
+
+  @@ignore
 }
 
 model sales {
@@ -997,14 +1044,17 @@ model service_docs {
 model service_questions {
   id         Int       @id @default(autoincrement())
   service_id Int
-  question   String
+  question   String    @db.Text
   added_by   Int
-  created_at DateTime? @default(now()) @db.Timestamp(6)
-  updated_at DateTime? @default(now()) @db.Timestamp(6)
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([service_id], map: "fk_service_questions_service")
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model services {
-  service_id         Int      @id @default(autoincrement())
+  service_id         Int
   company_id         String   @db.VarChar(11)
   category_id        Int
   service_name       String   @db.VarChar(100)
@@ -1012,8 +1062,10 @@ model services {
   partner_percentage Int      @default(0)
   description        String   @db.VarChar(2000)
   added_by           Int
-  date               DateTime @default(now()) @db.Timestamp(6)
+  date               DateTime @default(now()) @db.Timestamp(0)
   url                String?  @db.VarChar(255)
+
+  @@ignore
 }
 
 model sessions {
@@ -1077,21 +1129,28 @@ model system_logs {
 }
 
 model users {
-  id            Int       @id @default(autoincrement())
-  username      String    @db.VarChar(100)
-  email         String    @unique @db.VarChar(150)
-  contact       String?   @db.VarChar(20)
-  password      String    @db.VarChar(255)
-  user_type     Int       @default(6)
-  status        Int       @default(1) @db.SmallInt
-  company_id    String?   @db.VarChar(20)
-  user_token    String?   @db.VarChar(255)
-  is_online     Int       @default(0) @db.SmallInt
-  last_login_at DateTime? @db.Timestamp(6)
-  created_at    DateTime  @default(now()) @db.Timestamp(6)
-  updated_at    DateTime  @default(now()) @db.Timestamp(6)
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  username       String    @db.VarChar(255)
+  email          String    @db.VarChar(255)
+  contact        String    @db.VarChar(255)
+  user_type      Int
+  password       String    @db.VarChar(255)
+  status         Int       @default(1)
+  added_by       Int
+  user_token     String    @db.VarChar(250)
+  user_date      DateTime  @default(now()) @db.Timestamp(0)
+  company_id     String    @default("0") @db.VarChar(10)
+  is_online      Int       @default(0)
+  last_login_at  DateTime? @db.Timestamp(0)
+  last_logout_at DateTime? @db.Timestamp(0)
+  updated_at     DateTime  @default(now()) @db.Timestamp(0)
+  created_at     DateTime  @default(now()) @db.Timestamp(0)
 
-  @@index([user_type])
+  @@index([id], map: "idx_users_id")
+  @@index([id, username], map: "idx_users_id_username")
+  @@index([username, user_type, id], map: "idx_users_login_fast")
+  @@index([user_type], map: "idx_users_user_type")
+  @@index([username], map: "idx_users_username")
 }
 
 model it_tech_leads {
@@ -1441,4 +1500,93 @@ model ai_automation_tasks {
   @@index([task_type])
   @@index([created_at])
   @@index([status])
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model lead_answers {
+  id         Int
+  lead_id    Int
+  question   String    @db.Text
+  answer     String?   @db.Text
+  field_name String?   @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+
+  @@ignore
+}
+
+model task_assign {
+  ta_id              Int       @id @default(autoincrement())
+  task_id            Int
+  assign_to          Int
+  assign_by          Int
+  task_status        Int       @default(0)
+  actual_task_status Int       @default(1)
+  assign_date        String    @db.VarChar(100)
+  due_date           DateTime? @db.Date
+
+  @@index([assign_to], map: "idx_task_assign_assign_to")
+  @@index([task_id], map: "idx_task_assign_task")
+}
+
+model task_comments {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  task_id    BigInt   @db.UnsignedBigInt
+  comment    String   @db.Text
+  status     Int
+  username   String   @db.VarChar(255)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([task_id], map: "idx_task_id")
+}
+
+model task_notes {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  task_id    BigInt   @db.UnsignedBigInt
+  sent_by    BigInt   @db.UnsignedBigInt
+  sent_to    BigInt   @db.UnsignedBigInt
+  note       String   @db.Text
+  is_read    Boolean? @default(false)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([is_read], map: "idx_is_read")
+  @@index([sent_to], map: "idx_sent_to")
+  @@index([task_id], map: "idx_task_id")
+}
+
+model task_update_notes {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  task_id    BigInt    @db.UnsignedBigInt
+  note       String    @db.Text
+  created_by BigInt    @db.UnsignedBigInt
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([created_by], map: "idx_created_by")
+  @@index([task_id], map: "idx_task_id")
+}
+
+model udyomi_kisan_categories {
+  category_id   Int      @id @default(autoincrement())
+  company_id    String   @db.VarChar(11)
+  category_name String   @db.VarChar(100)
+  added_by      Int
+  date          DateTime @default(now()) @db.Timestamp(0)
+}
+
+model udyomi_kisan_services {
+  service_id         Int      @id @default(autoincrement())
+  company_id         String   @db.VarChar(11)
+  category_id        Int
+  service_name       String   @db.VarChar(100)
+  service_price      Int
+  partner_percentage Int      @default(0)
+  description        String   @db.VarChar(2000)
+  added_by           Int
+  date               DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([service_id], map: "idx_udyami_services_id")
+  @@index([service_id], map: "idx_udyomi_services_id")
 }
