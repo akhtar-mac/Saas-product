@@ -2070,7 +2070,7 @@ router.get('/customers', async (req, res) => {
     if (search) {
       const q = String(search).trim().replace(/'/g, "''");
       whereConditions.push(
-        `(c.name LIKE '%${q}%' OR c.business LIKE '%${q}%' OR c.contact LIKE '%${q}%' OR c.email LIKE '%${q}%' OR c.city LIKE '%${q}%' OR s.service_name LIKE '%${q}%')`
+        `(c.name LIKE '%${q}%' OR c.business LIKE '%${q}%' OR c.contact LIKE '%${q}%' OR c.email LIKE '%${q}%' OR c.city LIKE '%${q}%')`
       );
     }
     const whereSql = whereConditions.join(' AND ');
@@ -2080,62 +2080,70 @@ router.get('/customers', async (req, res) => {
     );
     const total = Number(countRes[0]?.total || 0);
 
-    const custsRaw = await prisma.$queryRawUnsafe<any[]>(
-      `SELECT 
-        o.id as orderID, o.customer_id, o.package_id, o.sub_customer_name, o.total_amount, o.order_date,
-        c.id, c.name, c.business, c.email, c.contact, c.state, c.city, c.service as customer_service,
-        c.service_price, c.added_by, c.date, c.is_payment,
-        s.service_id, s.service_name, cat.category_name, su.name AS added_by_name
+    const query = `SELECT 
+        o.id as orderID,
+        o.customer_id,
+        o.package_id,
+        o.order_id,
+        o.total_amount,
+        o.payment_status,
+        o.order_date,
+        o.sub_customer_name,
+        cp.cp_type,
+        s.service_id,
+        s.service_name,
+        cat.category_name,
+        c.id,
+        c.name,
+        c.business,
+        c.email,
+        c.contact,
+        c.state,
+        c.city,
+        ce.emi_total_amount,
+        ce.emi_paid_amount,
+        ce.emi_unpaid_amount,
+        ce.emi_due_date,
+        u.username AS added_by_name
        FROM orders o
-       LEFT JOIN customers c ON o.customer_id = c.id
        LEFT JOIN combo_packages cp ON o.package_id = cp.cp_id
        LEFT JOIN services s ON cp.cp_title = s.service_id
        LEFT JOIN categories cat ON s.category_id = cat.category_id
-       LEFT JOIN staff_users su ON c.added_by = su.id
+       LEFT JOIN customers c ON o.customer_id = c.id
+       LEFT JOIN customer_emi ce ON ce.order_id = o.id
+       LEFT JOIN users u ON c.added_by = u.id
        WHERE ${whereSql}
        ORDER BY o.id DESC 
-       LIMIT ${take} OFFSET ${skip}`
-    );
+       LIMIT ${take} OFFSET ${skip}`;
+    console.log('Customers SQL:', query);
+    const custsRaw = await prisma.$queryRawUnsafe<any[]>(query);
+    console.log('Customers Query Result:', custsRaw.length);
 
-    const ids = custsRaw.map((c) => Number(c.customer_id)).filter(Boolean);
-    let emiMap: Record<number, any> = {};
-
-    if (ids.length > 0) {
-      try {
-        const idStrings = ids.map((id) => `'${id}'`).join(',');
-        const emis: any[] = await prisma.$queryRawUnsafe(
-          `SELECT customer_id, emi_total_amount, emi_paid_amount, emi_unpaid_amount, emi_due_date 
-           FROM customer_emi WHERE customer_id IN (${idStrings}) ORDER BY emi_id DESC`
-        );
-        emis.forEach((e: any) => {
-          const cid = Number(e.customer_id);
-          if (!emiMap[cid]) {
-            emiMap[cid] = e;
-          }
-        });
-      } catch (err) {
-        console.error('Error fetching customer EMIs:', err);
-      }
-    }
+    const typeMap: Record<number, string> = {
+      1: 'basic',
+      2: 'standard',
+      3: 'premium',
+      4: 'diamond',
+      5: 'custom',
+    };
 
     const mapped = custsRaw.map((c: any) => {
-      const cid = Number(c.customer_id);
-      const emi = emiMap[cid];
-      const totalAmt = emi ? Number(emi.emi_total_amount) : Number(c.total_amount) || 0;
-      const paidAmt = emi
-        ? Number(emi.emi_paid_amount)
-        : c.is_payment
-          ? Number(c.total_amount) || 0
-          : 0;
-      const unpaidAmt = emi ? Number(emi.emi_unpaid_amount) : Math.max(totalAmt - paidAmt, 0);
-      const dueDate = emi?.emi_due_date ? String(emi.emi_due_date).split('T')[0] : '—';
+      const totalAmt = c.emi_total_amount
+        ? Number(c.emi_total_amount)
+        : Number(c.total_amount) || 0;
+      const paidAmt = c.emi_paid_amount ? Number(c.emi_paid_amount) : Number(c.total_amount) || 0;
+      const unpaidAmt = c.emi_unpaid_amount
+        ? Number(c.emi_unpaid_amount)
+        : Math.max(totalAmt - paidAmt, 0);
+      const dueDate = c.emi_due_date ? String(c.emi_due_date).split('T')[0] : '—';
+      const planType = c.cp_type ? typeMap[Number(c.cp_type)] || 'standard' : 'standard';
 
       return {
-        id: cid,
+        id: Number(c.id),
         orderId: Number(c.orderID),
         packageId: c.package_id || null,
         subCustomer: c.sub_customer_name || '',
-        serviceId: c.service_id ? Number(c.service_id) : Number(c.customer_service) || 1,
+        serviceId: c.service_id ? Number(c.service_id) : 1,
         name: c.name || 'Client',
         business: c.business || '',
         company: c.business || '—',
@@ -2144,14 +2152,14 @@ router.get('/customers', async (req, res) => {
         state: c.state || 'Maharashtra',
         city: c.city || '—',
         category: c.category_name || 'General Services',
-        service: c.service_name || c.customer_service || 'Tax & Filing',
-        type: c.business ? 'Corporate' : 'Individual',
+        service: c.service_name || 'Tax & Filing',
+        type: planType,
         addedBy: c.added_by_name || `Staff #${c.added_by || 1}`,
         total: totalAmt,
         paid: paidAmt,
         unpaid: unpaidAmt,
         dueDate,
-        date: c.date ? String(c.date).split('T')[0] : '',
+        date: c.order_date ? String(c.order_date).split('T')[0] : '',
       };
     });
 
@@ -2160,15 +2168,85 @@ router.get('/customers', async (req, res) => {
       total,
       data: mapped,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching customers:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch customers' });
+    res.status(500).json({ success: false, error: error.message || 'Failed to fetch customers' });
+  }
+});
+
+// Check if email already exists
+router.post('/customers/check-email', async (req, res) => {
+  try {
+    const { customerEmail } = req.body;
+    const defaultEmail = 'na@gmail.com';
+
+    if (!customerEmail) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const existing = await prisma.customers.findFirst({
+      where: {
+        email: customerEmail,
+        NOT: { email: defaultEmail },
+      },
+    });
+
+    if (existing) {
+      return res.json({ error: 'Email already exist, please try another one' });
+    } else {
+      return res.json({ done: 'Email Approved' });
+    }
+  } catch (error: any) {
+    console.error('Error checking email:', error);
+    return res.status(500).json({ error: 'Failed to check email' });
+  }
+});
+
+// Normalize mobile number (remove spaces, non-numeric, country code)
+function normalizeMobile(number: string): string {
+  let normalized = number.trim();
+  normalized = normalized.replace(/[^0-9]/g, '');
+  if (normalized.length === 12 && normalized.startsWith('91')) {
+    normalized = normalized.substring(2);
+  }
+  return normalized;
+}
+
+// Check if mobile already exists
+router.post('/customers/check-mobile', async (req, res) => {
+  try {
+    const { customerMobile } = req.body;
+
+    if (!customerMobile) {
+      return res.status(400).json({ error: 'Mobile number is required' });
+    }
+
+    const normalizedInput = normalizeMobile(customerMobile);
+
+    const customers = await prisma.customers.findMany();
+
+    for (const customer of customers) {
+      const dbMobile = normalizeMobile(customer.contact || '');
+      if (dbMobile === normalizedInput) {
+        return res.json({ exists: true });
+      }
+    }
+
+    return res.json({ exists: false });
+  } catch (error: any) {
+    console.error('Error checking mobile:', error);
+    return res.status(500).json({ error: 'Failed to check mobile' });
   }
 });
 
 // 8c. Add Offline Customer & Spawn Operations Tasks (Exact Replica of OMController.php AddOfflineCustomer)
 router.post('/customers/add-offline', async (req, res) => {
   try {
+    console.log('=== Add Offline Customer Request ===');
+    console.log('Full Request Body:', JSON.stringify(req.body, null, 2));
+    console.log('req.user:', (req as any).user);
+    console.log('req.headers.authorization:', req.headers.authorization);
+
     const {
       customer_name,
       customer_businessName,
@@ -2192,6 +2270,7 @@ router.post('/customers/add-offline', async (req, res) => {
       is_custom,
       custom_package_name,
       custom_package_services, // Array of service IDs
+      customer_type, // Type/Plan: basic, premium, etc.
     } = req.body;
 
     if (!customer_name || !customer_mobile) {
@@ -2200,7 +2279,9 @@ router.post('/customers/add-offline', async (req, res) => {
         .json({ success: false, error: 'Customer Name and Mobile number are required.' });
     }
 
-    const staffUserId = 40; // Default logged-in staff ID
+    console.log('Add Offline Customer - req.user:', (req as any).user);
+    console.log('Add Offline Customer - req.headers:', req.headers.authorization);
+    const staffUserId = (req as any).user?.user_id || 40; // Get logged-in staff ID from users table
     const companyId = 'ETax1';
 
     // 1. Create Lead in leads table
@@ -2229,65 +2310,13 @@ router.post('/customers/add-offline', async (req, res) => {
       },
     });
 
-    // 2. Create Customer in customers table
-    const maxCust = await prisma.customers.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
-    const custId = (maxCust?.id || 1373) + 1;
-
-    await prisma.customers.create({
-      data: {
-        id: custId,
-        lead_id: leadId,
-        name: String(customer_name).trim(),
-        business: customer_businessName || String(customer_name).trim(),
-        email: customer_email || `client_${Date.now()}@etaxwala.in`,
-        contact: String(customer_mobile).trim(),
-        password: '123456',
-        service: leadService,
-        service_price: Number(customer_total_service_price || 0),
-        state: customer_state || 'Maharashtra',
-        city: customer_city || 'Pune',
-        added_by: staffUserId,
-        company_id: companyId,
-        is_payment: Number(customer_paid_amount || 0) > 0 ? 1 : 0,
-        is_active: 1,
-        is_approve: 1,
-        is_partner: 1,
-        customer_token: `tok_${Date.now()}_${custId}`,
-        date: new Date(),
-      },
-    });
-
-    // 3. Create EMI Record in customer_emi
-    const maxEmi = await prisma.customer_emi.findFirst({
-      orderBy: { emi_id: 'desc' },
-      select: { emi_id: true },
-    });
-    const emiId = (maxEmi?.emi_id || 1000) + 1;
-    const orderDbId = custId;
-
-    await prisma.customer_emi.create({
-      data: {
-        emi_id: emiId,
-        customer_id: custId,
-        order_id: orderDbId,
-        emi_type: Number(customer_payment_mode) || 1,
-        emi_total_amount: Number(customer_total_service_price || 0),
-        emi_paid_amount: Number(customer_paid_amount || 0),
-        emi_unpaid_amount: Number(customer_unpaid_amount || 0),
-        emi_due_date: customer_due_date ? new Date(customer_due_date) : null,
-        second_emi: customer_unpaid_amount2 ? Number(customer_unpaid_amount2) : null,
-        second_emi_due_date: customer_due_date2 ? new Date(customer_due_date2) : null,
-        emi_comment: customer_comment || '',
-        date: new Date(),
-      },
-    });
-
-    // 4. Task Creation in operation_tasks table (Exact OMController.php Rules)
+    // Task configuration arrays
     const no_customer_support_task_service_ids = [
       22, 23, 33, 61, 62, 64, 65, 66, 67, 68, 69, 70, 72,
+    ];
+    const single_task_service_ids = [
+      106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124,
+      125, 126, 127, 128, 129, 130, 229, 230, 236, 255, 265, 284,
     ];
     const tasks_array = [
       'Form INC 20A',
@@ -2299,6 +2328,7 @@ router.post('/customers/add-offline', async (req, res) => {
       'Form MGT 7A',
     ];
 
+    // Get target services BEFORE creating customer
     let targetServices: { service_id: number; service_name: string; category_id: number }[] = [];
 
     if (
@@ -2337,6 +2367,117 @@ router.post('/customers/add-offline', async (req, res) => {
       ];
     }
 
+    // 2. Create Customer in customers table
+    const maxCust = await prisma.customers.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
+    const custId = (maxCust?.id || 1373) + 1;
+
+    // Get actual service_id from targetServices
+    let serviceIdForCustomer = Number(customer_service_id) || 1;
+    if (targetServices.length > 0) {
+      serviceIdForCustomer = targetServices[0].service_id;
+    }
+
+    await prisma.customers.create({
+      data: {
+        id: custId,
+        lead_id: leadId,
+        name: String(customer_name).trim(),
+        business: customer_businessName || String(customer_name).trim(),
+        email: customer_email || `client_${Date.now()}@etaxwala.in`,
+        contact: String(customer_mobile).trim(),
+        password: '123456',
+        service: String(serviceIdForCustomer), // Store service_id as string (database field is VarChar)
+        service_price: Number(customer_total_service_price || 0),
+        state: customer_state || 'Maharashtra',
+        city: customer_city || 'Pune',
+        added_by: staffUserId,
+        company_id: companyId,
+        is_payment: Number(customer_paid_amount || 0) > 0 ? 1 : 0,
+        is_active: 1,
+        is_approve: 1,
+        is_partner: 1,
+        customer_token: `tok_${Date.now()}_${custId}`,
+        date: new Date(),
+      },
+    });
+
+    // 3. Create Order in orders table (like old Laravel CRM)
+    const maxOrder = await prisma.orders.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
+    const orderId = (maxOrder?.id || 5000) + 1;
+    const order_id_str = `order_${Date.now()}`;
+    const payment_id_str = `offline_${Date.now()}`;
+
+    let packageIdForOrder = leadService;
+    if (is_custom === '1' && custom_package_name) {
+      // Create custom package if needed
+      const maxCombo = await prisma.combo_packages.findFirst({
+        orderBy: { cp_id: 'desc' },
+        select: { cp_id: true },
+      });
+      const comboId = (maxCombo?.cp_id || 100) + 1;
+      const serviceString = Array.isArray(custom_package_services)
+        ? custom_package_services.join(', ')
+        : String(custom_package_services || '');
+
+      await prisma.combo_packages.create({
+        data: {
+          cp_id: comboId,
+          service_id: serviceString,
+          cp_title: Array.isArray(custom_package_services)
+            ? custom_package_services[0]
+            : String(custom_package_services || ''),
+          cp_type: 5,
+          cp_discount: 0,
+          company_id: companyId,
+          added_by: staffUserId,
+        },
+      });
+      packageIdForOrder = String(comboId);
+    }
+
+    await prisma.orders.create({
+      data: {
+        id: orderId,
+        customer_id: String(custId),
+        package_id: packageIdForOrder,
+        order_id: order_id_str,
+        payment_id: payment_id_str,
+        total_amount: Number(customer_paid_amount || 0),
+        payment_status: 1,
+      },
+    });
+
+    // 4. Create EMI Record in customer_emi
+    const maxEmi = await prisma.customer_emi.findFirst({
+      orderBy: { emi_id: 'desc' },
+      select: { emi_id: true },
+    });
+    const emiId = (maxEmi?.emi_id || 1000) + 1;
+
+    await prisma.customer_emi.create({
+      data: {
+        emi_id: emiId,
+        customer_id: custId,
+        order_id: orderId,
+        emi_type: Number(customer_payment_mode) || 1,
+        emi_total_amount: Number(customer_total_service_price || 0),
+        emi_paid_amount: Number(customer_paid_amount || 0),
+        emi_unpaid_amount: Number(customer_unpaid_amount || 0),
+        emi_due_date: customer_due_date ? new Date(customer_due_date) : null,
+        second_emi: customer_unpaid_amount2 ? Number(customer_unpaid_amount2) : null,
+        second_emi_due_date: customer_due_date2 ? new Date(customer_due_date2) : null,
+        emi_comment: customer_comment || '',
+        date: new Date(),
+      },
+    });
+
+    // 4. Task Creation in operation_tasks table (Exact OMController.php Rules)
     const createdTasks: any[] = [];
     const maxTask = await prisma.operation_tasks.findFirst({
       orderBy: { task_id: 'desc' },
@@ -2349,33 +2490,34 @@ router.post('/customers/add-offline', async (req, res) => {
       const sName = serv.service_name;
       const catId = serv.category_id;
 
-      // 1. Main Service Task (Always created)
-      const t1 = await prisma.operation_tasks.create({
-        data: {
-          task_id: currentTaskId++,
-          cust_id: custId,
-          service_id: sid,
-          order_id: orderDbId,
-          task_name: sName,
-          added_by: staffUserId,
-          is_assign: 0,
-          is_return: 0,
-          original_task_status: 1,
-          assign_date: new Date(),
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-      });
-      createdTasks.push(t1);
+      // CASE 1: Single Task Services
+      if (single_task_service_ids.includes(sid)) {
+        // Main Task
+        const t1 = await prisma.operation_tasks.create({
+          data: {
+            task_id: currentTaskId++,
+            cust_id: custId,
+            service_id: sid,
+            order_id: orderId,
+            task_name: sName,
+            added_by: staffUserId,
+            is_assign: 0,
+            is_return: 0,
+            original_task_status: 1,
+            assign_date: new Date(),
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        });
+        createdTasks.push(t1);
 
-      // 2. Customer Support Task (If allowed)
-      if (!no_customer_support_task_service_ids.includes(sid)) {
+        // Customer Support
         const t2 = await prisma.operation_tasks.create({
           data: {
             task_id: currentTaskId++,
             cust_id: custId,
             service_id: sid,
-            order_id: orderDbId,
+            order_id: orderId,
             task_name: 'Customer Support',
             added_by: staffUserId,
             is_assign: 0,
@@ -2387,39 +2529,16 @@ router.post('/customers/add-offline', async (req, res) => {
           },
         });
         createdTasks.push(t2);
-      }
-
-      // 3. Category Specific Extra Tasks
-      if (catId === 4) {
-        // Company Incorporation - 7 Subtasks
-        for (const tName of tasks_array) {
-          const tCat = await prisma.operation_tasks.create({
-            data: {
-              task_id: currentTaskId++,
-              cust_id: custId,
-              service_id: sid,
-              order_id: orderDbId,
-              task_name: tName,
-              added_by: staffUserId,
-              is_assign: 0,
-              is_return: 0,
-              original_task_status: 1,
-              assign_date: new Date(),
-              created_at: new Date(),
-              updated_at: new Date(),
-            },
-          });
-          createdTasks.push(tCat);
-        }
-      } else if (catId === 1) {
-        // DSC Services - 1 Extra Task
-        const tDsc = await prisma.operation_tasks.create({
+      } else {
+        // CASE 2: Normal Services
+        // 1. Main Service Task (Always created)
+        const t1 = await prisma.operation_tasks.create({
           data: {
             task_id: currentTaskId++,
             cust_id: custId,
             service_id: sid,
-            order_id: orderDbId,
-            task_name: 'DSC Application',
+            order_id: orderId,
+            task_name: sName,
             added_by: staffUserId,
             is_assign: 0,
             is_return: 0,
@@ -2429,7 +2548,71 @@ router.post('/customers/add-offline', async (req, res) => {
             updated_at: new Date(),
           },
         });
-        createdTasks.push(tDsc);
+        createdTasks.push(t1);
+
+        // 2. Customer Support Task (If allowed)
+        if (!no_customer_support_task_service_ids.includes(sid)) {
+          const t2 = await prisma.operation_tasks.create({
+            data: {
+              task_id: currentTaskId++,
+              cust_id: custId,
+              service_id: sid,
+              order_id: orderId,
+              task_name: 'Customer Support',
+              added_by: staffUserId,
+              is_assign: 0,
+              is_return: 0,
+              original_task_status: 1,
+              assign_date: new Date(),
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+          });
+          createdTasks.push(t2);
+        }
+
+        // 3. Category Specific Extra Tasks
+        if (catId === 4) {
+          // Company Incorporation - 7 Subtasks
+          for (const tName of tasks_array) {
+            const tCat = await prisma.operation_tasks.create({
+              data: {
+                task_id: currentTaskId++,
+                cust_id: custId,
+                service_id: sid,
+                order_id: orderId,
+                task_name: tName,
+                added_by: staffUserId,
+                is_assign: 0,
+                is_return: 0,
+                original_task_status: 1,
+                assign_date: new Date(),
+                created_at: new Date(),
+                updated_at: new Date(),
+              },
+            });
+            createdTasks.push(tCat);
+          }
+        } else if (catId === 1) {
+          // DSC Services - 1 Extra Task
+          const tDsc = await prisma.operation_tasks.create({
+            data: {
+              task_id: currentTaskId++,
+              cust_id: custId,
+              service_id: sid,
+              order_id: orderId,
+              task_name: 'DSC Application',
+              added_by: staffUserId,
+              is_assign: 0,
+              is_return: 0,
+              original_task_status: 1,
+              assign_date: new Date(),
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+          });
+          createdTasks.push(tDsc);
+        }
       }
     }
 
@@ -2846,6 +3029,16 @@ router.get('/customers/:id/orders', async (req, res) => {
 // 13e-e. Customer Details List (Customer-centric, not order-centric)
 router.get('/customer-details-list', async (req, res) => {
   try {
+    const { limit = 50, page = 1 } = req.query;
+    const take = limit === 'all' ? 10000 : Math.min(Math.max(Number(limit) || 50, 1), 10000);
+    const pageNum = Math.max(Number(page) || 1, 1);
+    const skip = (pageNum - 1) * take;
+
+    const countRes = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT COUNT(*) as total FROM customers c WHERE c.is_active = 1`
+    );
+    const total = Number(countRes[0]?.total || 0);
+
     const customers = await prisma.$queryRawUnsafe<any[]>(
       `SELECT
         c.id,
@@ -2858,17 +3051,18 @@ router.get('/customer-details-list', async (req, res) => {
         c.service_price,
         c.added_by,
         c.date,
-        s.service_name,
-        u.username
+        c.service as service_id,
+        s.service_name as service,
+        u.username as added_by_name
        FROM customers c
        LEFT JOIN users u ON u.id = c.added_by
-       LEFT JOIN combo_packages cp ON cp.cp_id = c.service
-       LEFT JOIN services s ON s.service_id = cp.cp_title
+       LEFT JOIN services s ON s.service_id = c.service
        WHERE c.is_active = 1
-       ORDER BY c.id DESC`
+       ORDER BY c.id DESC
+       LIMIT ${take} OFFSET ${skip}`
     );
     console.log('Customer Details List - Total records:', customers.length);
-    res.json({ success: true, data: serializeBigInt(customers) });
+    res.json({ success: true, data: serializeBigInt(customers), total });
   } catch (error: any) {
     console.error('Error fetching customer details list:', error);
     res
@@ -2910,12 +3104,25 @@ router.post('/customers/:id/orders', async (req, res) => {
     const totalAmt = Number(customer_total_service_price) || 0;
     const paidAmt = Number(customer_paid_amount) || 0;
 
+    // Get cp_id from combo_packages using service_id for orders
+    let packageId = String(customer_service_id || '1');
+    if (!is_custom || is_custom === '0') {
+      const comboPkg = await prisma.$queryRawUnsafe<any[]>(
+        `SELECT cp_id FROM combo_packages WHERE cp_title = ? LIMIT 1`,
+        String(customer_service_id || '1')
+      );
+      if (comboPkg.length > 0) {
+        packageId = String(comboPkg[0].cp_id);
+      }
+    }
+
     // Update customer details (same as old CRM line 2684-2689)
     await prisma.customers.update({
       where: { id: custId },
       data: {
         name: customer_name || customer.name,
         business: customer_businessName || customer.business,
+        service: String(customer_service_id || '1'),
       },
     });
 
@@ -2925,7 +3132,7 @@ router.post('/customers/:id/orders', async (req, res) => {
     const newOrder = await prisma.orders.create({
       data: {
         customer_id: String(custId),
-        package_id: String(customer_service_id || '1'),
+        package_id: packageId,
         company_name: companyName,
         total_amount: totalAmt,
         payment_status: 1,
@@ -3083,6 +3290,7 @@ router.post('/customers/create-from-order', async (req, res) => {
       customer_state,
       customer_city,
       customer_service,
+      customer_service_id,
       customer_total_service_price,
       apply_coupon,
     } = req.body;
@@ -3095,6 +3303,8 @@ router.post('/customers/create-from-order', async (req, res) => {
 
     const oldCustId = Number(old_customer_id);
     const orderIdNum = Number(order_id);
+    console.log('Create Customer from Order - req.user:', (req as any).user);
+    const staffUserId = (req as any).user?.user_id || 40;
 
     // 1. Create Lead in leads table (using raw SQL to bypass autoincrement issue)
     const companyName = customer_businessName || '';
@@ -3107,7 +3317,7 @@ router.post('/customers/create-from-order', async (req, res) => {
       customer_service || '1',
       customer_state || '',
       customer_city || '',
-      1,
+      staffUserId,
       1,
       1,
       'ETax1'
@@ -3129,14 +3339,14 @@ router.post('/customers/create-from-order', async (req, res) => {
         business: customer_businessName || '',
         email: customer_email,
         contact: customer_mobile,
-        service: customer_service || '1',
+        service: String(customer_service_id || customer_service || '1'),
         service_price: Number(customer_total_service_price) || 0,
         state: customer_state || '',
         city: customer_city || '',
         password: '123456',
         company_id: 'ETax1',
         customer_token: 'cust_' + Date.now(),
-        added_by: 1,
+        added_by: staffUserId,
         is_approve: 1,
         date: new Date(),
       },
@@ -4604,9 +4814,9 @@ router.get('/customers', async (req, res) => {
       total,
       data: mapped,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching customers:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch customers' });
+    res.status(500).json({ success: false, error: error.message || 'Failed to fetch customers' });
   }
 });
 
