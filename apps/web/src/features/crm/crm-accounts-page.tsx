@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useAuthStore } from '@/store/auth-store';
 import {
   Plus,
   Trash2,
@@ -61,10 +62,12 @@ interface ServiceItem {
 }
 
 export default function CrmAccountsPage() {
+  const { staffUser, staffToken } = useAuthStore();
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   // Dynamic categories & services from DB
@@ -90,7 +93,8 @@ export default function CrmAccountsPage() {
   const fetchCustomers = useCallback(() => {
     setLoading(true);
     const limitParam = pageSize === -1 ? 'all' : pageSize;
-    fetch(`${API_BASE}/v1/crm/customers?limit=${limitParam}`)
+    const pageParam = currentPage;
+    fetch(`${API_BASE}/v1/crm/customers?limit=${limitParam}&page=${pageParam}`)
       .then((res) => res.json())
       .then((data) => {
         if (data?.success && Array.isArray(data?.data)) {
@@ -101,7 +105,7 @@ export default function CrmAccountsPage() {
       })
       .catch((err) => console.error('Failed to fetch customers', err))
       .finally(() => setLoading(false));
-  }, [API_BASE, pageSize]);
+  }, [API_BASE, pageSize, currentPage]);
 
   useEffect(() => {
     fetchCustomers();
@@ -177,6 +181,7 @@ export default function CrmAccountsPage() {
   const [addBusinessName, setAddBusinessName] = useState('');
   const [addEmail, setAddEmail] = useState('');
   const [addMobile, setAddMobile] = useState('');
+  const [mobileValid, setMobileValid] = useState<boolean | null>(null);
   const [addState, setAddState] = useState('Maharashtra');
   const [addCity, setAddCity] = useState('Chhatrapati Sambhajinagar');
   const [isCustomPkg, setIsCustomPkg] = useState('0'); // '0' = No, '1' = Yes
@@ -194,6 +199,8 @@ export default function CrmAccountsPage() {
   const [isAddCustServiceOpen, setIsAddCustServiceOpen] = useState(false);
   const [isOrderServiceOpen, setIsOrderServiceOpen] = useState(false);
   const [isCreateCustServiceOpen, setIsCreateCustServiceOpen] = useState(false);
+  const [serviceSearchTerm, setServiceSearchTerm] = useState('');
+  const [customServiceSearchTerm, setCustomServiceSearchTerm] = useState('');
 
   const [couponCode, setCouponCode] = useState('');
   const [couponMessage, setCouponMessage] = useState<{
@@ -414,6 +421,30 @@ export default function CrmAccountsPage() {
     }
   };
 
+  const handleMobileChange = async (value: string) => {
+    setAddMobile(value);
+    setMobileValid(null);
+
+    // Check mobile when 10 digits are entered
+    if (value.replace(/\D/g, '').length === 10) {
+      try {
+        const checkRes = await fetch(`${API_BASE}/v1/crm/customers/check-mobile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customerMobile: value }),
+        });
+        const checkData = await checkRes.json();
+        if (checkData.error) {
+          setMobileValid(false);
+        } else {
+          setMobileValid(true);
+        }
+      } catch (err) {
+        console.error('Error checking mobile:', err);
+      }
+    }
+  };
+
   const handleAddOfflineCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addCustomerName.trim()) {
@@ -424,6 +455,28 @@ export default function CrmAccountsPage() {
       alert('Please enter customer mobile number');
       return;
     }
+    if (mobileValid === false) {
+      alert('Mobile number already exists. Please use a different number.');
+      return;
+    }
+
+    // Check if email already exists
+    if (addEmail.trim()) {
+      try {
+        const checkRes = await fetch(`${API_BASE}/v1/crm/customers/check-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customerEmail: addEmail }),
+        });
+        const checkData = await checkRes.json();
+        if (checkData.error) {
+          alert(checkData.error);
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking email:', err);
+      }
+    }
 
     const serviceLabel =
       isCustomPkg === '1' ? customPkgName || 'Custom Package' : selectedServiceName;
@@ -431,8 +484,12 @@ export default function CrmAccountsPage() {
     try {
       const res = await fetch(`${API_BASE}/v1/crm/customers/add-offline`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { Authorization: `Bearer ${staffToken}` } : {}),
+        },
         body: JSON.stringify({
+          staff_user_id: staffUser?.id ?? undefined,
           customer_name: addCustomerName,
           customer_businessName: addBusinessName,
           customer_email: addEmail,
@@ -441,6 +498,7 @@ export default function CrmAccountsPage() {
           customer_city: addCity,
           customer_category_id: selectedCategoryId,
           customer_service_id: selectedServiceId,
+          customer_cp_id: isCustomPkg === '1' ? undefined : selectedCpId || undefined,
           customer_service: serviceLabel,
           customer_total_service_price: finalTotalAmount,
           customer_paid_amount: paidAmount,
@@ -489,14 +547,6 @@ export default function CrmAccountsPage() {
     }
   };
 
-  // Add tasks drawer state
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [tasksList, setTasksList] = useState<string[]>([
-    'PAN Registration',
-    'Customer Support',
-    'TAN Registration',
-  ]);
-
   const filtered = customers.filter((c) => {
     const matchSearch =
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -538,6 +588,26 @@ export default function CrmAccountsPage() {
     confirmLabel?: string;
     onConfirm: () => void;
   }>({ open: false, title: '', message: '', onConfirm: () => {} });
+
+  // Validate create customer mobile
+  const validateCreateCustomerMobile = async (mobile: string) => {
+    const normalized = mobile.replace(/\D/g, '');
+    if (normalized.length === 10) {
+      try {
+        const res = await fetch(`${API_BASE}/v1/crm/customers/check-mobile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customerMobile: normalized }),
+        });
+        const data = await res.json();
+        setCreateCustMobileValid(!data.exists);
+      } catch {
+        setCreateCustMobileValid(false);
+      }
+    } else {
+      setCreateCustMobileValid(null);
+    }
+  };
 
   const showConfirm = (
     title: string,
@@ -604,6 +674,7 @@ export default function CrmAccountsPage() {
   const [createCustSubCustomer, setCreateCustSubCustomer] = useState('');
   const [createCustEmail, setCreateCustEmail] = useState('');
   const [createCustMobile, setCreateCustMobile] = useState('');
+  const [createCustMobileValid, setCreateCustMobileValid] = useState<boolean | null>(null);
   const [createCustState, setCreateCustState] = useState('Maharashtra');
   const [createCustCity, setCreateCustCity] = useState('Pune');
   const [createCustCatId, setCreateCustCatId] = useState(0);
@@ -653,12 +724,16 @@ export default function CrmAccountsPage() {
     const url = item.orderId
       ? `${API_BASE}/v1/crm/customers/${item.id}/tasks?order_id=${item.orderId}`
       : `${API_BASE}/v1/crm/customers/${item.id}/tasks`;
+    console.log('Fetching tasks from:', url);
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
+        console.log('Tasks API response:', data);
         if (data?.success && Array.isArray(data?.data)) {
+          console.log('Setting customerTasks:', data.data);
           setCustomerTasks(data.data);
         } else {
+          console.log('No tasks found or invalid response');
           setCustomerTasks([]);
         }
       })
@@ -816,14 +891,20 @@ export default function CrmAccountsPage() {
 
       const res = await fetch(`${API_BASE}/v1/crm/customers/${activeCustomer.id}/orders`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { Authorization: `Bearer ${staffToken}` } : {}),
+        },
         body: JSON.stringify({
+          staff_user_id: staffUser?.id ?? undefined,
           sub_customer_name: orderSubCustomer,
           customer_service: servName,
           customer_service_id: servId || 1,
+          customer_cp_id: orderIsCustom ? undefined : orderCpId || undefined,
           customer_category_id: orderCatId || 1,
           is_custom: orderIsCustom ? 1 : 0,
           custom_package_name: orderIsCustom ? orderCustomPkgName : undefined,
+          custom_package_services: orderIsCustom ? orderCustomServiceIds : undefined,
           customer_total_service_price: netTotal,
           customer_paid_amount: paidAmt,
           customer_unpaid_amount: emi1,
@@ -858,6 +939,26 @@ export default function CrmAccountsPage() {
       alert('Customer Name, Email, and Mobile are required');
       return;
     }
+
+    // Check mobile on submit
+    const normalizedMobile = createCustMobile.replace(/\D/g, '');
+    if (normalizedMobile.length === 10) {
+      try {
+        const res = await fetch(`${API_BASE}/v1/crm/customers/check-mobile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customerMobile: normalizedMobile }),
+        });
+        const data = await res.json();
+        if (data.exists) {
+          alert('Mobile number already exists. Please use a different number.');
+          return;
+        }
+      } catch {
+        alert('Error checking mobile number');
+        return;
+      }
+    }
     setIsCreatingCustomer(true);
     try {
       const selectedServ = dbServicesByCategory.find((s) => s.service_id === createCustServId);
@@ -869,8 +970,12 @@ export default function CrmAccountsPage() {
 
       const res = await fetch(`${API_BASE}/v1/crm/customers/create-from-order`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { Authorization: `Bearer ${staffToken}` } : {}),
+        },
         body: JSON.stringify({
+          staff_user_id: staffUser?.id ?? undefined,
           old_customer_id: activeCustomer.id,
           order_id: activeCustomer.orderId || null,
           customer_name: createCustName.trim(),
@@ -881,6 +986,7 @@ export default function CrmAccountsPage() {
           customer_state: createCustState,
           customer_city: createCustCity,
           customer_service: servName,
+          customer_service_id: createCustServId || 1,
           customer_total_service_price: netTotal,
           apply_coupon: createCustCoupon.trim(),
         }),
@@ -994,6 +1100,7 @@ export default function CrmAccountsPage() {
           task_id: taskId,
           employee_id: Number(assigneeId),
           due_date: assignDueDate || null,
+          staff_user_id: staffUser?.id ?? undefined,
         }),
       });
       const data = await res.json();
@@ -1014,8 +1121,12 @@ export default function CrmAccountsPage() {
     try {
       const res = await fetch(`${API_BASE}/v1/crm/customers/${activeCustomer.id}/tasks`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { Authorization: `Bearer ${staffToken}` } : {}),
+        },
         body: JSON.stringify({
+          staff_user_id: staffUser?.id ?? undefined,
           task_name: newCustomerTaskTitle.trim(),
           service_id: activeCustomer.serviceId || 1,
           order_id: activeCustomer.orderId || null,
@@ -1308,7 +1419,7 @@ export default function CrmAccountsPage() {
                         <span className="text-slate-400 text-[9px]">—</span>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-600">{item.addedBy}</td>
+                    <td className="py-2.5 px-3 text-slate-600">{item.addedBy || '-'}</td>
                     <td className="py-2.5 px-3 font-bold text-slate-800">{item.total}</td>
                     <td className="py-2.5 px-3 font-bold text-emerald-700">{item.paid}</td>
                     <td className="py-2.5 px-3 font-bold text-red-600">{item.unpaid}</td>
@@ -1428,24 +1539,59 @@ export default function CrmAccountsPage() {
         {/* Pagination Bar */}
         <div className="p-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
           <span>
-            Showing 1 to {filtered.length} of {totalCount || customers.length} entries
+            Showing {(currentPage - 1) * pageSize + 1} to{' '}
+            {Math.min(currentPage * pageSize, totalCount || customers.length)} of{' '}
+            {totalCount || customers.length} entries
           </span>
           <div className="flex items-center gap-1">
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Previous
             </button>
-            <button className="px-2.5 py-1 rounded bg-[#1E3A8A] text-white font-bold">1</button>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
-              2
-            </button>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
-              3
-            </button>
-            <span className="px-1 text-slate-400">...</span>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
-              207
-            </button>
-            <button className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700">
+            {Array.from(
+              { length: Math.min(5, Math.ceil((totalCount || customers.length) / pageSize)) },
+              (_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`px-2.5 py-1 rounded ${
+                      currentPage === pageNum
+                        ? 'bg-[#1E3A8A] text-white font-bold'
+                        : 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              }
+            )}
+            {Math.ceil((totalCount || customers.length) / pageSize) > 5 && (
+              <span className="px-1 text-slate-400">...</span>
+            )}
+            {Math.ceil((totalCount || customers.length) / pageSize) > 5 && (
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.ceil((totalCount || customers.length) / pageSize))
+                }
+                className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
+              >
+                {Math.ceil((totalCount || customers.length) / pageSize)}
+              </button>
+            )}
+            <button
+              onClick={() =>
+                setCurrentPage(
+                  Math.min(Math.ceil((totalCount || customers.length) / pageSize), currentPage + 1)
+                )
+              }
+              disabled={currentPage === Math.ceil((totalCount || customers.length) / pageSize)}
+              className="px-2.5 py-1 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Next
             </button>
           </div>
@@ -1538,12 +1684,17 @@ export default function CrmAccountsPage() {
                     required
                     placeholder="Mobile No"
                     value={addMobile}
-                    onChange={(e) => setAddMobile(e.target.value)}
+                    onChange={(e) => handleMobileChange(e.target.value)}
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
-                  {addMobile && (
+                  {mobileValid === true && (
                     <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
-                      true
+                      Mobile Approved
+                    </span>
+                  )}
+                  {mobileValid === false && (
+                    <span className="text-[10px] text-red-600 font-bold block mt-0.5">
+                      Mobile already exists
                     </span>
                   )}
                 </div>
@@ -1660,24 +1811,39 @@ export default function CrmAccountsPage() {
                           className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl z-[200] max-h-56 overflow-y-auto p-1"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {dbServicesByCategory.map((s) => (
-                            <div
-                              key={s.cp_id}
-                              onClick={() => {
-                                handleServiceChange(String(s.cp_id));
-                                setIsAddCustServiceOpen(false);
-                              }}
-                              className={`px-3 py-2 rounded-lg text-xs cursor-pointer flex items-center justify-between font-medium transition-colors ${selectedCpId === s.cp_id ? 'bg-sky-100 text-sky-900' : 'hover:bg-slate-50 text-slate-700'}`}
-                            >
-                              <span className="flex items-center">
-                                {s.service_name}
-                                {cpTypeBadge(s.cp_type)}
-                              </span>
-                              <span className="text-[10px] text-slate-500 ml-2 flex-shrink-0">
-                                ₹{s.effective_price ?? s.service_price}
-                              </span>
-                            </div>
-                          ))}
+                          <div className="p-2 border-b border-slate-200">
+                            <input
+                              type="text"
+                              placeholder="Search services..."
+                              value={serviceSearchTerm}
+                              onChange={(e) => setServiceSearchTerm(e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                          {dbServicesByCategory
+                            .filter((s) =>
+                              s.service_name.toLowerCase().includes(serviceSearchTerm.toLowerCase())
+                            )
+                            .map((s) => (
+                              <div
+                                key={s.cp_id}
+                                onClick={() => {
+                                  handleServiceChange(String(s.cp_id));
+                                  setIsAddCustServiceOpen(false);
+                                  setServiceSearchTerm('');
+                                }}
+                                className={`px-3 py-2 rounded-lg text-xs cursor-pointer flex items-center justify-between font-medium transition-colors ${selectedCpId === s.cp_id ? 'bg-sky-100 text-sky-900' : 'hover:bg-slate-50 text-slate-700'}`}
+                              >
+                                <span className="flex items-center">
+                                  {s.service_name}
+                                  {cpTypeBadge(s.cp_type)}
+                                </span>
+                                <span className="text-[10px] text-slate-500 ml-2 flex-shrink-0">
+                                  ₹{s.effective_price ?? s.service_price}
+                                </span>
+                              </div>
+                            ))}
                         </div>
                       )}
                     </div>
@@ -1759,25 +1925,41 @@ export default function CrmAccountsPage() {
 
                     {isCustomDropdownOpen && (
                       <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto p-1">
+                        <div className="p-2 border-b border-slate-200">
+                          <input
+                            type="text"
+                            placeholder="Search services..."
+                            value={customServiceSearchTerm}
+                            onChange={(e) => setCustomServiceSearchTerm(e.target.value)}
+                            className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
                         {allDbServices.length === 0 && (
                           <div className="p-3 text-xs text-slate-400 text-center">
                             Loading services...
                           </div>
                         )}
-                        {allDbServices.map((s) => (
-                          <div
-                            key={s.service_id}
-                            onClick={() => toggleCustomService(s.service_id)}
-                            className={`p-2 rounded-lg text-xs cursor-pointer font-medium flex items-center justify-between ${
-                              selectedCustomServiceIds.includes(s.service_id)
-                                ? 'bg-sky-100 text-sky-900 font-bold'
-                                : 'hover:bg-slate-50 text-slate-700'
-                            }`}
-                          >
-                            <span>{s.service_name}</span>
-                            <span className="text-[10px] text-slate-500">₹{s.service_price}</span>
-                          </div>
-                        ))}
+                        {allDbServices
+                          .filter((s) =>
+                            s.service_name
+                              .toLowerCase()
+                              .includes(customServiceSearchTerm.toLowerCase())
+                          )
+                          .map((s) => (
+                            <div
+                              key={s.service_id}
+                              onClick={() => toggleCustomService(s.service_id)}
+                              className={`p-2 rounded-lg text-xs cursor-pointer font-medium flex items-center justify-between ${
+                                selectedCustomServiceIds.includes(s.service_id)
+                                  ? 'bg-sky-100 text-sky-900 font-bold'
+                                  : 'hover:bg-slate-50 text-slate-700'
+                              }`}
+                            >
+                              <span>{s.service_name}</span>
+                              <span className="text-[10px] text-slate-500">₹{s.service_price}</span>
+                            </div>
+                          ))}
                       </div>
                     )}
                   </div>
@@ -2200,35 +2382,52 @@ export default function CrmAccountsPage() {
                             className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl z-[200] max-h-56 overflow-y-auto p-1"
                             onClick={(e) => e.stopPropagation()}
                           >
+                            <div className="p-2 border-b border-slate-200">
+                              <input
+                                type="text"
+                                placeholder="Search services..."
+                                value={serviceSearchTerm}
+                                onChange={(e) => setServiceSearchTerm(e.target.value)}
+                                className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
                             {dbServicesByCategory.length === 0 && (
                               <div className="p-3 text-xs text-slate-400 text-center">
                                 Select a category first...
                               </div>
                             )}
-                            {dbServicesByCategory.map((serv) => (
-                              <div
-                                key={serv.cp_id}
-                                onClick={() => {
-                                  setOrderCpId(serv.cp_id!);
-                                  setOrderServId(serv.service_id);
-                                  setOrderServPrice(serv.effective_price ?? serv.service_price);
-                                  setOrderCpType(serv.cp_type || 0);
-                                  setOrderDiscount(0);
-                                  setOrderCoupon('');
-                                  setOrderCouponMsg(null);
-                                  setIsOrderServiceOpen(false);
-                                }}
-                                className={`px-3 py-2 rounded-lg text-xs cursor-pointer flex items-center justify-between font-medium transition-colors ${orderCpId === serv.cp_id ? 'bg-sky-100 text-sky-900' : 'hover:bg-slate-50 text-slate-700'}`}
-                              >
-                                <span className="flex items-center">
-                                  {serv.service_name}
-                                  {cpTypeBadge(serv.cp_type)}
-                                </span>
-                                <span className="text-[10px] text-slate-500 ml-2 flex-shrink-0">
-                                  ₹{serv.effective_price ?? serv.service_price}
-                                </span>
-                              </div>
-                            ))}
+                            {dbServicesByCategory
+                              .filter((serv) =>
+                                serv.service_name
+                                  .toLowerCase()
+                                  .includes(serviceSearchTerm.toLowerCase())
+                              )
+                              .map((serv) => (
+                                <div
+                                  key={serv.cp_id}
+                                  onClick={() => {
+                                    setOrderCpId(serv.cp_id!);
+                                    setOrderServId(serv.service_id);
+                                    setOrderServPrice(serv.effective_price ?? serv.service_price);
+                                    setOrderCpType(serv.cp_type || 0);
+                                    setOrderDiscount(0);
+                                    setOrderCoupon('');
+                                    setOrderCouponMsg(null);
+                                    setIsOrderServiceOpen(false);
+                                    setServiceSearchTerm('');
+                                  }}
+                                  className={`px-3 py-2 rounded-lg text-xs cursor-pointer flex items-center justify-between font-medium transition-colors ${orderCpId === serv.cp_id ? 'bg-sky-100 text-sky-900' : 'hover:bg-slate-50 text-slate-700'}`}
+                                >
+                                  <span className="flex items-center">
+                                    {serv.service_name}
+                                    {cpTypeBadge(serv.cp_type)}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 ml-2 flex-shrink-0">
+                                    ₹{serv.effective_price ?? serv.service_price}
+                                  </span>
+                                </div>
+                              ))}
                           </div>
                         )}
                       </div>
@@ -2294,34 +2493,52 @@ export default function CrmAccountsPage() {
                       </div>
                       {isOrderCustomDropdownOpen && (
                         <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto p-1">
+                          <div className="p-2 border-b border-slate-200">
+                            <input
+                              type="text"
+                              placeholder="Search services..."
+                              value={customServiceSearchTerm}
+                              onChange={(e) => setCustomServiceSearchTerm(e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
                           {allDbServices.length === 0 && (
                             <div className="p-3 text-xs text-slate-400 text-center">
                               Loading services...
                             </div>
                           )}
-                          {allDbServices.map((s) => (
-                            <div
-                              key={s.service_id}
-                              onClick={() => {
-                                const ids = orderCustomServiceIds.includes(s.service_id)
-                                  ? orderCustomServiceIds.filter((i) => i !== s.service_id)
-                                  : [...orderCustomServiceIds, s.service_id];
-                                setOrderCustomServiceIds(ids);
-                                const total = ids.reduce(
-                                  (sum, id) =>
-                                    sum +
-                                    (allDbServices.find((x) => x.service_id === id)
-                                      ?.service_price || 0),
-                                  0
-                                );
-                                setOrderServPrice(total);
-                              }}
-                              className={`p-2 rounded-lg text-xs cursor-pointer font-medium flex items-center justify-between ${orderCustomServiceIds.includes(s.service_id) ? 'bg-sky-100 text-sky-900 font-bold' : 'hover:bg-slate-50 text-slate-700'}`}
-                            >
-                              <span>{s.service_name}</span>
-                              <span className="text-[10px] text-slate-500">₹{s.service_price}</span>
-                            </div>
-                          ))}
+                          {allDbServices
+                            .filter((s) =>
+                              s.service_name
+                                .toLowerCase()
+                                .includes(customServiceSearchTerm.toLowerCase())
+                            )
+                            .map((s) => (
+                              <div
+                                key={s.service_id}
+                                onClick={() => {
+                                  const ids = orderCustomServiceIds.includes(s.service_id)
+                                    ? orderCustomServiceIds.filter((i) => i !== s.service_id)
+                                    : [...orderCustomServiceIds, s.service_id];
+                                  setOrderCustomServiceIds(ids);
+                                  const total = ids.reduce(
+                                    (sum, id) =>
+                                      sum +
+                                      (allDbServices.find((x) => x.service_id === id)
+                                        ?.service_price || 0),
+                                    0
+                                  );
+                                  setOrderServPrice(total);
+                                }}
+                                className={`p-2 rounded-lg text-xs cursor-pointer font-medium flex items-center justify-between ${orderCustomServiceIds.includes(s.service_id) ? 'bg-sky-100 text-sky-900 font-bold' : 'hover:bg-slate-50 text-slate-700'}`}
+                              >
+                                <span>{s.service_name}</span>
+                                <span className="text-[10px] text-slate-500">
+                                  ₹{s.service_price}
+                                </span>
+                              </div>
+                            ))}
                         </div>
                       )}
                     </div>
@@ -2818,10 +3035,19 @@ export default function CrmAccountsPage() {
                     type="text"
                     required
                     value={createCustMobile}
-                    onChange={(e) => setCreateCustMobile(e.target.value)}
+                    onChange={(e) => {
+                      setCreateCustMobile(e.target.value);
+                      validateCreateCustomerMobile(e.target.value);
+                    }}
                     placeholder="Mobile No"
                     className="w-full bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#7C3AED]/20 focus:border-[#7C3AED]"
                   />
+                  {createCustMobileValid === true && (
+                    <p className="text-[10px] text-green-600 mt-1">Mobile Approved</p>
+                  )}
+                  {createCustMobileValid === false && (
+                    <p className="text-[10px] text-red-600 mt-1">Mobile already exists</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-600 mb-1">State</label>
@@ -2939,35 +3165,52 @@ export default function CrmAccountsPage() {
                             className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl z-[200] max-h-56 overflow-y-auto p-1"
                             onClick={(e) => e.stopPropagation()}
                           >
+                            <div className="p-2 border-b border-slate-200">
+                              <input
+                                type="text"
+                                placeholder="Search services..."
+                                value={serviceSearchTerm}
+                                onChange={(e) => setServiceSearchTerm(e.target.value)}
+                                className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
                             {dbServicesByCategory.length === 0 && (
                               <div className="p-3 text-xs text-slate-400 text-center">
                                 Select a category first...
                               </div>
                             )}
-                            {dbServicesByCategory.map((s) => (
-                              <div
-                                key={s.cp_id}
-                                onClick={() => {
-                                  setCreateCustCpId(s.cp_id!);
-                                  setCreateCustServId(s.service_id);
-                                  setCreateCustPrice(s.effective_price ?? s.service_price);
-                                  setCreateCustCpType(s.cp_type || 0);
-                                  setCreateCustDiscount(0);
-                                  setCreateCustCoupon('');
-                                  setCreateCustCouponMsg(null);
-                                  setIsCreateCustServiceOpen(false);
-                                }}
-                                className={`px-3 py-2 rounded-lg text-xs cursor-pointer flex items-center justify-between font-medium transition-colors ${createCustCpId === s.cp_id ? 'bg-sky-100 text-sky-900' : 'hover:bg-slate-50 text-slate-700'}`}
-                              >
-                                <span className="flex items-center">
-                                  {s.service_name}
-                                  {cpTypeBadge(s.cp_type)}
-                                </span>
-                                <span className="text-[10px] text-slate-500 ml-2 flex-shrink-0">
-                                  ₹{s.effective_price ?? s.service_price}
-                                </span>
-                              </div>
-                            ))}
+                            {dbServicesByCategory
+                              .filter((s) =>
+                                s.service_name
+                                  .toLowerCase()
+                                  .includes(serviceSearchTerm.toLowerCase())
+                              )
+                              .map((s) => (
+                                <div
+                                  key={s.cp_id}
+                                  onClick={() => {
+                                    setCreateCustCpId(s.cp_id!);
+                                    setCreateCustServId(s.service_id);
+                                    setCreateCustPrice(s.effective_price ?? s.service_price);
+                                    setCreateCustCpType(s.cp_type || 0);
+                                    setCreateCustDiscount(0);
+                                    setCreateCustCoupon('');
+                                    setCreateCustCouponMsg(null);
+                                    setIsCreateCustServiceOpen(false);
+                                    setServiceSearchTerm('');
+                                  }}
+                                  className={`px-3 py-2 rounded-lg text-xs cursor-pointer flex items-center justify-between font-medium transition-colors ${createCustCpId === s.cp_id ? 'bg-sky-100 text-sky-900' : 'hover:bg-slate-50 text-slate-700'}`}
+                                >
+                                  <span className="flex items-center">
+                                    {s.service_name}
+                                    {cpTypeBadge(s.cp_type)}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 ml-2 flex-shrink-0">
+                                    ₹{s.effective_price ?? s.service_price}
+                                  </span>
+                                </div>
+                              ))}
                           </div>
                         )}
                       </div>
@@ -3035,35 +3278,53 @@ export default function CrmAccountsPage() {
                       </div>
                       {isCreateCustCustomDropdownOpen && (
                         <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto p-1">
+                          <div className="p-2 border-b border-slate-200">
+                            <input
+                              type="text"
+                              placeholder="Search services..."
+                              value={customServiceSearchTerm}
+                              onChange={(e) => setCustomServiceSearchTerm(e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/20"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
                           {allDbServices.length === 0 && (
                             <div className="p-3 text-xs text-slate-400 text-center">
                               Loading services...
                             </div>
                           )}
-                          {allDbServices.map((s) => (
-                            <div
-                              key={s.service_id}
-                              onClick={() => {
-                                const cur = createCustCustomServiceIds || [];
-                                const ids = cur.includes(s.service_id)
-                                  ? cur.filter((i: number) => i !== s.service_id)
-                                  : [...cur, s.service_id];
-                                setCreateCustCustomServiceIds(ids);
-                                const total = ids.reduce(
-                                  (sum: number, id: number) =>
-                                    sum +
-                                    (allDbServices.find((x) => x.service_id === id)
-                                      ?.service_price || 0),
-                                  0
-                                );
-                                setCreateCustPrice(total);
-                              }}
-                              className={`p-2 rounded-lg text-xs cursor-pointer font-medium flex items-center justify-between ${(createCustCustomServiceIds || []).includes(s.service_id) ? 'bg-sky-100 text-sky-900 font-bold' : 'hover:bg-slate-50 text-slate-700'}`}
-                            >
-                              <span>{s.service_name}</span>
-                              <span className="text-[10px] text-slate-500">₹{s.service_price}</span>
-                            </div>
-                          ))}
+                          {allDbServices
+                            .filter((s) =>
+                              s.service_name
+                                .toLowerCase()
+                                .includes(customServiceSearchTerm.toLowerCase())
+                            )
+                            .map((s) => (
+                              <div
+                                key={s.service_id}
+                                onClick={() => {
+                                  const cur = createCustCustomServiceIds || [];
+                                  const ids = cur.includes(s.service_id)
+                                    ? cur.filter((i: number) => i !== s.service_id)
+                                    : [...cur, s.service_id];
+                                  setCreateCustCustomServiceIds(ids);
+                                  const total = ids.reduce(
+                                    (sum: number, id: number) =>
+                                      sum +
+                                      (allDbServices.find((x) => x.service_id === id)
+                                        ?.service_price || 0),
+                                    0
+                                  );
+                                  setCreateCustPrice(total);
+                                }}
+                                className={`p-2 rounded-lg text-xs cursor-pointer font-medium flex items-center justify-between ${(createCustCustomServiceIds || []).includes(s.service_id) ? 'bg-sky-100 text-sky-900 font-bold' : 'hover:bg-slate-50 text-slate-700'}`}
+                              >
+                                <span>{s.service_name}</span>
+                                <span className="text-[10px] text-slate-500">
+                                  ₹{s.service_price}
+                                </span>
+                              </div>
+                            ))}
                         </div>
                       )}
                     </div>
@@ -3676,11 +3937,13 @@ export default function CrmAccountsPage() {
               ) : (
                 <div className="space-y-3">
                   {customerTasks.map((t) => {
-                    const isAssigningThis = selectedTaskToAssign === t.id;
-                    const assignedName = t.assigned_to_name || t.employee_name;
+                    const taskId = t.task_id || t.id;
+                    const isAssigningThis = selectedTaskToAssign === taskId;
+                    const assignedName =
+                      t.assigned_user_name || t.assigned_to_name || t.employee_name;
                     return (
                       <div
-                        key={t.id}
+                        key={taskId}
                         className="p-3 bg-[#FAF9F5] border border-[#EAE6DD] rounded-2xl space-y-2.5 transition-all hover:border-slate-300"
                       >
                         {/* Task header: name + assign/delete buttons */}
@@ -3721,7 +3984,9 @@ export default function CrmAccountsPage() {
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <button
-                              onClick={() => setSelectedTaskToAssign(isAssigningThis ? null : t.id)}
+                              onClick={() =>
+                                setSelectedTaskToAssign(isAssigningThis ? null : taskId)
+                              }
                               className={`p-1.5 rounded-lg border text-xs font-semibold transition-colors flex items-center gap-1 ${
                                 isAssigningThis
                                   ? 'bg-[#1B365D] text-white border-[#1B365D]'
@@ -3735,7 +4000,7 @@ export default function CrmAccountsPage() {
                               </span>
                             </button>
                             <button
-                              onClick={() => handleDeleteTask(t.id)}
+                              onClick={() => handleDeleteTask(taskId)}
                               className="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 flex items-center justify-center text-red-600 transition-colors"
                               title="Delete Task"
                             >
@@ -3790,7 +4055,7 @@ export default function CrmAccountsPage() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleAssignTask(t.id)}
+                                onClick={() => handleAssignTask(taskId)}
                                 className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-xs"
                               >
                                 Confirm Assignment

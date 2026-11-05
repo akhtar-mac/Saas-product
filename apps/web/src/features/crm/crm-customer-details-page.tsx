@@ -11,21 +11,28 @@ export default function CrmCustomerDetailsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [currentPage, pageSize, searchTerm]);
 
   const fetchCustomers = async () => {
     try {
-      const response = await fetch('http://localhost:5001/v1/crm/customer-details-list', {
-        headers: {
-          Authorization: `Bearer ${staffToken}`,
-        },
-      });
+      setLoading(true);
+      const limitParam = pageSize === -1 ? 'all' : pageSize;
+      const response = await fetch(
+        `http://localhost:5001/v1/crm/customer-details-list?limit=${limitParam}&page=${currentPage}`,
+        {
+          headers: {
+            Authorization: `Bearer ${staffToken}`,
+          },
+        }
+      );
       const data = await response.json();
       if (data.success) {
         setCustomers(data.data);
+        if (data.total) setTotalCount(data.total);
       }
     } catch (error) {
       console.error('Error fetching customers:', error);
@@ -43,11 +50,8 @@ export default function CrmCustomerDetailsPage() {
       c.city?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalPages = pageSize === -1 ? 1 : Math.ceil(filteredCustomers.length / pageSize);
-  const startIndex = pageSize === -1 ? 0 : (currentPage - 1) * pageSize;
-  const endIndex = pageSize === -1 ? filteredCustomers.length : startIndex + pageSize;
-  const displayedCustomers =
-    pageSize === -1 ? filteredCustomers : filteredCustomers.slice(startIndex, endIndex);
+  const totalPages = pageSize === -1 ? 1 : Math.ceil(totalCount / pageSize);
+  const displayedCustomers = filteredCustomers;
 
   if (loading) {
     return (
@@ -175,10 +179,10 @@ export default function CrmCustomerDetailsPage() {
                     <td className="py-2.5 px-3 text-slate-600">{customer.state || '-'}</td>
                     <td className="py-2.5 px-3 text-slate-600">{customer.city || '-'}</td>
                     <td className="py-2.5 px-3 text-slate-800 font-medium">
-                      {customer.service_name || '-'}
+                      {customer.service || '-'}
                     </td>
                     <td className="py-2.5 px-3 text-slate-600">{customer.service_price || '-'}</td>
-                    <td className="py-2.5 px-3 text-slate-600">{customer.username || '-'}</td>
+                    <td className="py-2.5 px-3 text-slate-600">{customer.added_by_name || '-'}</td>
                     <td className="py-2.5 px-3 text-slate-600">
                       {customer.date ? new Date(customer.date).toLocaleDateString('en-GB') : '-'}
                     </td>
@@ -192,8 +196,8 @@ export default function CrmCustomerDetailsPage() {
         {/* Pagination Bar */}
         <div className="p-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
           <span>
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredCustomers.length)} of{' '}
-            {filteredCustomers.length} entries
+            Showing {(currentPage - 1) * pageSize + 1} to{' '}
+            {Math.min(currentPage * pageSize, totalCount)} of {totalCount} entries
           </span>
           <div className="flex items-center gap-1">
             <button
