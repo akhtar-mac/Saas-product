@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Building, Sprout, Users, TrendingUp, FileCheck, MapPin, Loader2 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-base';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 export default function SubBrandsDashboard() {
   const [selectedBrand, setSelectedBrand] = useState<'udyomi' | 'sahakar'>('udyomi');

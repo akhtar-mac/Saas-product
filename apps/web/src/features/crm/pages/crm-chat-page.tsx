@@ -35,6 +35,7 @@ import { PaymentRequestCard } from '../components/payment-request-card';
 import { RequestMoneyModal } from '../components/request-money-modal';
 import { FulfillPaymentModal } from '../components/fulfill-payment-modal';
 import { AdminFloatDrawer } from '../components/admin-float-drawer';
+import { API_BASE_URL } from '@/lib/api-base';
 import {
   playStaffChatChime,
   playStaffMessageSentChime,
@@ -42,7 +43,7 @@ import {
   setStaffChatSoundEnabled,
 } from '@/lib/staff-chat-audio';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 export default function CrmChatPage() {
   const { staffUser, staffToken } = useAuthStore();

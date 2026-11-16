@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth-store';
+import { API_BASE_URL } from '@/lib/api-base';
 import {
   PhoneCall,
   PhoneIncoming,
@@ -139,7 +140,7 @@ export default function SalesAgentDashboard() {
     if (!activeUserId) return;
     setIsLoadingAssigned(true);
     try {
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const API_BASE = API_BASE_URL;
       const res = await fetch(`${API_BASE}/v1/crm/leads?assigned_to=${activeUserId}&limit=10`);
       const data = await res.json();
       if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {

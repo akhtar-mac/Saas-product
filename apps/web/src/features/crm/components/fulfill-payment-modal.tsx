@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { DisbursementRequest } from '@etaxwala/types';
 import { useAuthStore } from '@/store/auth-store';
+import { API_BASE_URL } from '@/lib/api-base';
 
 interface FulfillPaymentModalProps {
   isOpen: boolean;
@@ -19,7 +20,7 @@ interface FulfillPaymentModalProps {
   onSuccess: (updated: DisbursementRequest) => void;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 export const FulfillPaymentModal: React.FC<FulfillPaymentModalProps> = ({
   isOpen,

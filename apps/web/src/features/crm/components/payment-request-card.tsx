@@ -11,6 +11,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { DisbursementRequest } from '@etaxwala/types';
+import { API_BASE_URL } from '@/lib/api-base';
 
 interface PaymentRequestCardProps {
   request: DisbursementRequest;
@@ -21,7 +22,7 @@ interface PaymentRequestCardProps {
   onRejectClick: (req: DisbursementRequest) => void;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
   CLIENT_REGISTRATION: {

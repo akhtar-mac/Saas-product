@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
+import { API_BASE_URL } from '@/lib/api-base';
 import {
   Phone,
   PhoneCall,
@@ -20,7 +21,7 @@ import {
   ArrowDownLeft,
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 interface EmployeeAnalytics {
   user_id?: number;

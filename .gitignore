@@ -45,3 +45,9 @@ Thumbs.db
 
 # Uploads
 apps/api/uploads/
+# Deploy artifacts
+hostinger-api/
+*.zip
+nul
+staff-users-import.sql
+missing-tables.sql

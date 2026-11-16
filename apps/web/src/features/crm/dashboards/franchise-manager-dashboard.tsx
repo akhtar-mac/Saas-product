@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
+import { API_BASE_URL } from '@/lib/api-base';
 
 export default function FranchiseManagerDashboard() {
   const { staffUser, staffToken } = useAuthStore();
@@ -12,14 +13,11 @@ export default function FranchiseManagerDashboard() {
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await fetch(
-        'http://localhost:5001/v1/crm/franchise-manager-dashboard-stats',
-        {
-          headers: {
-            Authorization: `Bearer ${staffToken}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/v1/crm/franchise-manager-dashboard-stats`, {
+        headers: {
+          Authorization: `Bearer ${staffToken}`,
+        },
+      });
       const data = await response.json();
       if (data.success) {
         setStats(data.data);

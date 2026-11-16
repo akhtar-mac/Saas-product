@@ -348,18 +348,6 @@ function CrmLayoutContent() {
     isSalesEmployee &&
     (can('leads:view') || can('quotations:view') || can('tasks:view'));
 
-  // For ops employees from users table (user_type=7), their primary role string is OPERATIONS_EMPLOYEE
-  // The can() check uses ROLE_NAME_DEFAULT_PERMISSIONS['OPERATIONS_EMPLOYEE'] which has operations:tasks
-  const showOpsEmployeeSection =
-    !isFranchiseManager &&
-    !isFranchiseEmployee &&
-    isOpsEmployee &&
-    !isOpsManager &&
-    (can('operations:tasks') ||
-      can('tasks:view') ||
-      can('appointments:manage') ||
-      isActiveRole(RoleType.OPERATIONS_EMPLOYEE));
-
   const showAdminSection =
     !isFranchiseManager &&
     !isFranchiseEmployee &&
@@ -374,6 +362,23 @@ function CrmLayoutContent() {
       can('blogs:manage') ||
       can('call_analytics:view') ||
       can('appointments:manage'));
+
+  // For ops employees from users table (user_type=7), their primary role string is OPERATIONS_EMPLOYEE
+  // The can() check uses ROLE_NAME_DEFAULT_PERMISSIONS['OPERATIONS_EMPLOYEE'] which has operations:tasks
+  // Only show these direct tabs when the user has no other nav section (avoids duplicate buttons)
+  const showOpsEmployeeSection =
+    !isFranchiseManager &&
+    !isFranchiseEmployee &&
+    isOpsEmployee &&
+    !isOpsManager &&
+    !showOpsSection &&
+    !showSalesSection &&
+    !showSalesEmployeeSection &&
+    !showAdminSection &&
+    (can('operations:tasks') ||
+      can('tasks:view') ||
+      can('appointments:manage') ||
+      isActiveRole(RoleType.OPERATIONS_EMPLOYEE));
 
   return (
     <div className="h-screen bg-[#FAF9F5] text-slate-800 flex flex-col md:flex-row font-sans overflow-hidden">

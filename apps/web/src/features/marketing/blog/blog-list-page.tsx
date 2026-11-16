@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '@/components/seo';
 import { Calendar, Clock, ArrowRight, Search, User, Sparkles, Loader2 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-base';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 const categories = [
   'All',

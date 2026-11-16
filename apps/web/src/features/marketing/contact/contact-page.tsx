@@ -17,6 +17,7 @@ import {
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
 import { analytics } from '@/lib/analytics';
+import { API_BASE_URL } from '@/lib/api-base';
 
 const offices = [
   {
@@ -61,7 +62,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 const CUSTOMER_API = `${API_BASE}/api`;
 
 export default function ContactPage() {

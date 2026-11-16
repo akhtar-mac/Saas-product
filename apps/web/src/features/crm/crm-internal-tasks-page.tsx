@@ -11,6 +11,7 @@ import {
   Search,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
+import { API_BASE_URL } from '@/lib/api-base';
 
 interface InternalTask {
   id: number;
@@ -76,7 +77,7 @@ export default function CrmInternalTasksPage() {
   // Users dropdown
   const [users, setUsers] = useState<{ id: number; name: string; role: string }[]>([]);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+  const API_BASE = API_BASE_URL;
 
   // Fetch users from API
   useEffect(() => {

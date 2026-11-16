@@ -15,8 +15,9 @@ import {
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
+import { API_BASE_URL } from '@/lib/api-base';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 const FALLBACK_POSTS: Record<string, any> = {
   'how-to-register-private-limited-company-india': {

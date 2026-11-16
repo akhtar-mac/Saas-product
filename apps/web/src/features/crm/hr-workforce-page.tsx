@@ -22,8 +22,9 @@ import {
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
 import { PERMISSIONS_CATALOG, ROLE_DEFAULT_PERMISSIONS, ALL_PERMISSIONS } from './permissions';
+import { API_BASE_URL } from '@/lib/api-base';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 const ROLES = [
   { id: 1, name: 'Super Admin', color: '#003A66', group: 'Executive', deptKey: 'hr' },
@@ -320,7 +321,7 @@ export default function HrWorkforcePage() {
       const endpoints = [
         '/v1/crm/users',
         `${API_BASE}/v1/crm/users`,
-        'http://localhost:5001/v1/crm/users',
+        `${API_BASE_URL}/v1/crm/users`,
       ];
 
       for (const url of endpoints) {

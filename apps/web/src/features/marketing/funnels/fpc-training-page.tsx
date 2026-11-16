@@ -27,6 +27,7 @@ import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
 import CtaBanner from '@/components/cta-banner';
 import FlipClock from '@/components/flip-clock';
+import { API_BASE_URL } from '@/lib/api-base';
 
 const FPC_FAQS = [
   {
@@ -107,7 +108,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 const CUSTOMER_API = `${API_BASE}/api`;
 
 export default function FPCTrainingPage() {

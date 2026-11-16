@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '@/lib/api-base';
 import {
   FileSpreadsheet,
   Plus,
@@ -323,7 +324,7 @@ export function CrmQuotationsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+  const API_BASE = API_BASE_URL;
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, CheckCircle2, Phone, User, Sparkles, Loader2, ArrowRight } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-base';
 
 interface QuickEnquiryModalProps {
   isOpen: boolean;
@@ -75,7 +76,7 @@ export default function QuickEnquiryModal({
 
       // Post to local API
       try {
-        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+        const API_BASE = API_BASE_URL;
         await fetch(`${API_BASE}/api/add-inquiry-lead`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

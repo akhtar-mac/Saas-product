@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth-store';
+import { RoleType } from '@etaxwala/types';
+import { API_BASE_URL } from '@/lib/api-base';
 import {
   Plus,
   Trash2,
@@ -62,7 +64,14 @@ interface ServiceItem {
 }
 
 export default function CrmAccountsPage() {
-  const { staffUser, staffToken } = useAuthStore();
+  const { staffUser, staffToken, activeRole } = useAuthStore();
+  // Sales employees only get "Add New Order" in the row action menu
+  const isSalesEmployeeView =
+    activeRole === RoleType.SALES_EMPLOYEE ||
+    (staffUser?.roles || []).includes(RoleType.SALES_EMPLOYEE) ||
+    ((staffUser?.roleIds || []).includes(7) &&
+      activeRole !== RoleType.OPERATIONS_EMPLOYEE &&
+      !(staffUser?.roles || []).includes(RoleType.OPERATIONS_EMPLOYEE));
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -87,7 +96,7 @@ export default function CrmAccountsPage() {
 
   const customDropdownRef = React.useRef<HTMLDivElement>(null);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+  const API_BASE = API_BASE_URL;
 
   // Fetch real customers from database
   const fetchCustomers = useCallback(() => {
@@ -1444,28 +1453,32 @@ export default function CrmAccountsPage() {
                       })() && (
                         <div className="absolute right-0 top-6 z-50 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 text-left text-xs">
                           {/* 1. Manage Tasks (AddWorkEffort) */}
-                          <button
-                            onClick={() => {
-                              openManageTasks(item);
-                              setActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
-                          >
-                            <ListTodo className="w-3.5 h-3.5 text-blue-600" />
-                            Manage Tasks
-                          </button>
+                          {!isSalesEmployeeView && (
+                            <button
+                              onClick={() => {
+                                openManageTasks(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                            >
+                              <ListTodo className="w-3.5 h-3.5 text-blue-600" />
+                              Manage Tasks
+                            </button>
+                          )}
 
                           {/* 2. Edit Customer (EditCustomer) */}
-                          <button
-                            onClick={() => {
-                              openEditCustomer(item);
-                              setActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
-                          >
-                            <Edit3 className="w-3.5 h-3.5 text-amber-600" />
-                            Edit Customer
-                          </button>
+                          {!isSalesEmployeeView && (
+                            <button
+                              onClick={() => {
+                                openEditCustomer(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                            >
+                              <Edit3 className="w-3.5 h-3.5 text-amber-600" />
+                              Edit Customer
+                            </button>
+                          )}
 
                           {/* 3. Add New Order (addNewOrder) */}
                           <button
@@ -1480,52 +1493,60 @@ export default function CrmAccountsPage() {
                           </button>
 
                           {/* 4. Create Customer (createCustomer - Requested by User) */}
-                          <button
-                            onClick={() => {
-                              openCreateCustomer(item);
-                              setActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-2 hover:bg-purple-50 text-purple-700 font-semibold flex items-center gap-2 cursor-pointer"
-                          >
-                            <UserPlus className="w-3.5 h-3.5 text-purple-600" />
-                            Create Customer
-                          </button>
+                          {!isSalesEmployeeView && (
+                            <button
+                              onClick={() => {
+                                openCreateCustomer(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-2 hover:bg-purple-50 text-purple-700 font-semibold flex items-center gap-2 cursor-pointer"
+                            >
+                              <UserPlus className="w-3.5 h-3.5 text-purple-600" />
+                              Create Customer
+                            </button>
+                          )}
 
                           {/* 5. Edit Sub Customer (EditSubCustomer) */}
-                          <button
-                            onClick={() => {
-                              openEditSubCustomer(item);
-                              setActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
-                          >
-                            <Tag className="w-3.5 h-3.5 text-indigo-600" />
-                            Edit Sub Customer
-                          </button>
+                          {!isSalesEmployeeView && (
+                            <button
+                              onClick={() => {
+                                openEditSubCustomer(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                            >
+                              <Tag className="w-3.5 h-3.5 text-indigo-600" />
+                              Edit Sub Customer
+                            </button>
+                          )}
 
                           {/* 6. Add Appointment (AddAppointment) */}
-                          <button
-                            onClick={() => {
-                              openAddAppointment(item);
-                              setActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
-                          >
-                            <Calendar className="w-3.5 h-3.5 text-teal-600" />
-                            Add Appointment
-                          </button>
+                          {!isSalesEmployeeView && (
+                            <button
+                              onClick={() => {
+                                openAddAppointment(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-2 hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2 cursor-pointer"
+                            >
+                              <Calendar className="w-3.5 h-3.5 text-teal-600" />
+                              Add Appointment
+                            </button>
+                          )}
 
                           {/* 7. Delete Order (DeleteCustomer) */}
-                          <button
-                            onClick={() => {
-                              openDeleteConfirm(item);
-                              setActiveMenuId(null);
-                            }}
-                            className="w-full px-3 py-2 hover:bg-red-50 text-red-600 font-medium flex items-center gap-2 cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-red-600" />
-                            Delete Order
-                          </button>
+                          {!isSalesEmployeeView && (
+                            <button
+                              onClick={() => {
+                                openDeleteConfirm(item);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full px-3 py-2 hover:bg-red-50 text-red-600 font-medium flex items-center gap-2 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                              Delete Order
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>

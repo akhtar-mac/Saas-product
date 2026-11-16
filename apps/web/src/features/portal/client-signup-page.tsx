@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { services } from '@/lib/constants/services';
 import { useAuthStore } from '@/store/auth-store';
+import { API_BASE_URL } from '@/lib/api-base';
 
 const schema = z.object({
   name: z.string().min(1, 'Full name is required'),
@@ -28,7 +29,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 export default function ClientSignupPage() {
   const [serviceSearch, setServiceSearch] = useState('');

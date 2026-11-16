@@ -2,13 +2,17 @@ import React, { createContext, useContext, useEffect, useState, useRef, useCallb
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '@/store/auth-store';
 import { playStaffChatChime, playStaffMessageSentChime } from '@/lib/staff-chat-audio';
-import { showDesktopNotification, requestNotificationPermission } from '@/lib/whatsapp-desktop-notification';
+import {
+  showDesktopNotification,
+  requestNotificationPermission,
+} from '@/lib/whatsapp-desktop-notification';
+import { API_BASE_URL } from '@/lib/api-base';
 import {
   StaffChatPopupContainer,
   StaffChatPopupNotificationData,
 } from '../components/staff-chat-popup';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 interface ChatNotificationContextValue {
   unreadChatCount: number;

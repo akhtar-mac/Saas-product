@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../../../public/Docs');
+    const uploadPath = path.join(process.cwd(), 'public/Docs');
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }
@@ -1182,6 +1182,208 @@ router.get('/services/questions', async (req, res) => {
   }
 });
 
+// 3j. Service Questions CRUD (Sales Manager — replica of old CRM SMController)
+router.get('/service-questions', async (req, res) => {
+  try {
+    const serviceId = req.query.service_id ? Number(req.query.service_id) : null;
+    const q = req.query.q ? String(req.query.q).trim() : '';
+
+    let whereSql = '1=1';
+    const params: any[] = [];
+    if (serviceId) {
+      whereSql += ' AND sq.service_id = ?';
+      params.push(serviceId);
+    }
+    if (q) {
+      whereSql += ' AND (sq.question LIKE ? OR s.service_name LIKE ?)';
+      params.push(`%${q}%`, `%${q}%`);
+    }
+
+    const rows = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT sq.id, sq.service_id, sq.question, sq.added_by, sq.created_at, sq.updated_at,
+              s.service_name, u.username AS added_by_name
+       FROM service_questions sq
+       LEFT JOIN services s ON s.service_id = sq.service_id
+       LEFT JOIN users u ON u.id = sq.added_by
+       WHERE ${whereSql}
+       ORDER BY sq.id DESC`,
+      ...params
+    );
+
+    res.json({ success: true, data: serializeBigInt(rows) });
+  } catch (error: any) {
+    console.error('List service questions error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to fetch questions' });
+  }
+});
+
+router.post('/service-questions', async (req, res) => {
+  try {
+    const { service_id, questions } = req.body;
+    const staffUserId = (req as any).user?.user_id || Number(req.body?.staff_user_id) || 40;
+
+    const svcId = Number(service_id);
+    const list = Array.isArray(questions) ? questions : [];
+    const clean = list.map((x: any) => String(x || '').trim()).filter((x: string) => x.length > 0);
+
+    if (!svcId || svcId <= 0 || clean.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'service_id and at least one question are required' });
+    }
+
+    for (const question of clean) {
+      await (prisma as any).service_questions.create({
+        data: {
+          service_id: svcId,
+          question,
+          added_by: staffUserId,
+        },
+      });
+    }
+
+    res.json({ success: true, message: `${clean.length} question(s) added successfully` });
+  } catch (error: any) {
+    console.error('Add service questions error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to add questions' });
+  }
+});
+
+router.put('/service-questions/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { service_id, question } = req.body;
+
+    if (!id || !service_id || !String(question || '').trim()) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'service_id and question are required' });
+    }
+
+    await (prisma as any).service_questions.update({
+      where: { id },
+      data: {
+        service_id: Number(service_id),
+        question: String(question).trim(),
+        updated_at: new Date(),
+      },
+    });
+
+    res.json({ success: true, message: 'Question updated successfully' });
+  } catch (error: any) {
+    console.error('Update service question error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to update question' });
+  }
+});
+
+router.delete('/service-questions/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    await (prisma as any).service_questions.delete({ where: { id } });
+    res.json({ success: true, message: 'Question deleted successfully' });
+  } catch (error: any) {
+    console.error('Delete service question error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to delete question' });
+  }
+});
+
+// Questions for a specific service (used by lead QA forms)
+router.get('/service-questions/by-service/:serviceId', async (req, res) => {
+  try {
+    const serviceId = Number(req.params.serviceId);
+    const questions = await (prisma as any).service_questions.findMany({
+      where: { service_id: serviceId },
+      orderBy: { id: 'asc' },
+    });
+    res.json({ success: true, data: serializeBigInt(questions) });
+  } catch (error: any) {
+    console.error('Fetch questions by service error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to fetch questions' });
+  }
+});
+
+// Existing answers for a lead (lead_question_ans)
+router.get('/lead-question-answers', async (req, res) => {
+  try {
+    const leadId = Number(req.query.lead_id);
+    if (!leadId) {
+      return res.status(400).json({ success: false, message: 'lead_id is required' });
+    }
+    const rows = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT id, lead_id, question_id, question, answer, service_id, added_by, created_at, updated_at
+       FROM lead_question_ans WHERE lead_id = ? ORDER BY id ASC`,
+      leadId
+    );
+    res.json({ success: true, data: serializeBigInt(rows) });
+  } catch (error: any) {
+    console.error('Fetch lead answers error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to fetch answers' });
+  }
+});
+
+// Save/upsert answers for a lead (replica of LeadController::SaveServiceAnswers)
+router.post('/lead-question-answers', async (req, res) => {
+  try {
+    const { lead_id, service_id, lead_source, answers } = req.body;
+    const staffUserId = (req as any).user?.user_id || Number(req.body?.staff_user_id) || 40;
+
+    const leadId = Number(lead_id);
+    const serviceId = Number(service_id);
+    const answerMap: Record<string, string> = answers && typeof answers === 'object' ? answers : {};
+
+    if (!leadId || !serviceId || Object.keys(answerMap).length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'lead_id, service_id and answers are required' });
+    }
+
+    const companyId =
+      lead_source === 'udyamikisan' ? 'Udyami1' : lead_source === 'sahakar' ? 'Sahakar1' : 'ETax1';
+
+    for (const [questionIdStr, answerText] of Object.entries(answerMap)) {
+      const questionId = Number(questionIdStr);
+      if (!questionId || !String(answerText ?? '').trim()) continue;
+
+      const q = await (prisma as any).service_questions.findFirst({
+        where: { id: questionId },
+        select: { question: true },
+      });
+      if (!q) continue;
+
+      const existing = await prisma.$queryRawUnsafe<any[]>(
+        `SELECT id FROM lead_question_ans WHERE lead_id = ? AND question_id = ? LIMIT 1`,
+        leadId,
+        questionId
+      );
+
+      if (existing.length > 0) {
+        await prisma.$executeRawUnsafe(
+          `UPDATE lead_question_ans SET answer = ?, updated_at = NOW() WHERE id = ?`,
+          String(answerText),
+          existing[0].id
+        );
+      } else {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO lead_question_ans (lead_id, question_id, company_id, question, answer, service_id, added_by, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+          leadId,
+          questionId,
+          companyId,
+          q.question,
+          String(answerText),
+          serviceId,
+          staffUserId
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Answers saved successfully!' });
+  } catch (error: any) {
+    console.error('Save lead answers error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to save answers' });
+  }
+});
+
 // 4. Log Call Conversation in Database
 router.post('/calls/log', async (req, res) => {
   try {
@@ -1446,7 +1648,7 @@ router.get('/tasks/stats', async (req, res) => {
 // Single Task Assign
 router.post('/tasks/assign', async (req, res) => {
   try {
-    const { task_id, employee_id, due_date, assign_by = 1 } = req.body;
+    const { task_id, employee_id, due_date, assign_by } = req.body;
     if (!task_id || !employee_id) {
       return res
         .status(400)
@@ -1455,7 +1657,8 @@ router.post('/tasks/assign', async (req, res) => {
 
     const taskIdNum = Number(task_id);
     const empIdNum = Number(employee_id);
-    const assignByNum = Number(assign_by);
+    const assignByNum =
+      Number(assign_by) || (req as any).user?.user_id || Number(req.body?.staff_user_id) || 1;
 
     const existing: any[] = (await prisma.$queryRawUnsafe(
       `SELECT task_id FROM task_assign WHERE task_id = ?`,
@@ -1497,13 +1700,14 @@ router.post('/tasks/assign', async (req, res) => {
 // Bulk Task Assign
 router.post('/tasks/bulk-assign', async (req, res) => {
   try {
-    const { task_ids, employee_id, due_date, assign_by = 1 } = req.body;
+    const { task_ids, employee_id, due_date, assign_by } = req.body;
     if (!Array.isArray(task_ids) || task_ids.length === 0) {
       return res.status(400).json({ success: false, message: 'task_ids array is required' });
     }
 
     const empIdNum = employee_id ? Number(employee_id) : null;
-    const assignByNum = Number(assign_by);
+    const assignByNum =
+      Number(assign_by) || (req as any).user?.user_id || Number(req.body?.staff_user_id) || 1;
 
     for (const tid of task_ids) {
       const taskIdNum = Number(tid);
@@ -1554,14 +1758,15 @@ router.post('/tasks/bulk-assign', async (req, res) => {
 // Update Task Due Date
 router.post('/tasks/update-due-date', async (req, res) => {
   try {
-    const { task_ids, due_date, assign_by = 1 } = req.body;
+    const { task_ids, due_date, assign_by } = req.body;
     if (!Array.isArray(task_ids) || task_ids.length === 0 || !due_date) {
       return res
         .status(400)
         .json({ success: false, message: 'task_ids array and due_date are required' });
     }
 
-    const assignByNum = Number(assign_by);
+    const assignByNum =
+      Number(assign_by) || (req as any).user?.user_id || Number(req.body?.staff_user_id) || 1;
 
     for (const tid of task_ids) {
       const taskIdNum = Number(tid);
@@ -1653,7 +1858,7 @@ router.patch(
             task_id: Number(id),
             work: remarks || `Milestone advanced to stage ${new_status} by ${updated_by}`,
             status: Number(new_status),
-            added_by: 1,
+            added_by: (req as any).user?.user_id || 1,
             date: new Date().toISOString().split('T')[0],
             time: new Date().toLocaleTimeString(),
             start_time: start_time || null,
@@ -2154,6 +2359,7 @@ router.get('/customers', async (req, res) => {
         category: c.category_name || 'General Services',
         service: c.service_name || 'Tax & Filing',
         type: planType,
+        cp_type: Number(c.cp_type) || 0,
         addedBy: c.added_by_name || `Staff #${c.added_by || 1}`,
         total: totalAmt,
         paid: paidAmt,
@@ -2256,6 +2462,7 @@ router.post('/customers/add-offline', async (req, res) => {
       customer_city,
       customer_category_id,
       customer_service_id,
+      customer_cp_id,
       customer_service,
       customer_total_service_price,
       customer_paid_amount,
@@ -2281,7 +2488,7 @@ router.post('/customers/add-offline', async (req, res) => {
 
     console.log('Add Offline Customer - req.user:', (req as any).user);
     console.log('Add Offline Customer - req.headers:', req.headers.authorization);
-    const staffUserId = (req as any).user?.user_id || 40; // Get logged-in staff ID from users table
+    const staffUserId = (req as any).user?.user_id || Number(req.body?.staff_user_id) || 40; // Get logged-in staff ID from users table
     const companyId = 'ETax1';
 
     // 1. Create Lead in leads table
@@ -2413,25 +2620,30 @@ router.post('/customers/add-offline', async (req, res) => {
     const order_id_str = `order_${Date.now()}`;
     const payment_id_str = `offline_${Date.now()}`;
 
-    let packageIdForOrder = leadService;
-    if (is_custom === '1' && custom_package_name) {
+    // Resolve package_id (cp_id) for orders table - never store service name
+    let packageIdForOrder = '';
+    const customSvcIds = (Array.isArray(custom_package_services) ? custom_package_services : [])
+      .map((id: any) => Number(id))
+      .filter((n: number) => !isNaN(n) && n > 0);
+    const isCustomPkgOrder =
+      is_custom === '1' ||
+      is_custom === 1 ||
+      is_custom === true ||
+      (custom_package_name && customSvcIds.length > 0);
+    if (isCustomPkgOrder && customSvcIds.length > 0) {
       // Create custom package if needed
       const maxCombo = await prisma.combo_packages.findFirst({
         orderBy: { cp_id: 'desc' },
         select: { cp_id: true },
       });
       const comboId = (maxCombo?.cp_id || 100) + 1;
-      const serviceString = Array.isArray(custom_package_services)
-        ? custom_package_services.join(', ')
-        : String(custom_package_services || '');
+      const serviceString = customSvcIds.join(', ');
 
       await prisma.combo_packages.create({
         data: {
           cp_id: comboId,
           service_id: serviceString,
-          cp_title: Array.isArray(custom_package_services)
-            ? custom_package_services[0]
-            : String(custom_package_services || ''),
+          cp_title: customSvcIds[0],
           cp_type: 5,
           cp_discount: 0,
           company_id: companyId,
@@ -2439,6 +2651,25 @@ router.post('/customers/add-offline', async (req, res) => {
         },
       });
       packageIdForOrder = String(comboId);
+    }
+    if (!packageIdForOrder) {
+      // Normal service: use selected cp_id, else lookup combo_packages.cp_title = service_id
+      const cpIdNum = Number(customer_cp_id);
+      if (!isNaN(cpIdNum) && cpIdNum > 0) {
+        const cpRow = await prisma.$queryRawUnsafe<any[]>(
+          `SELECT cp_id FROM combo_packages WHERE cp_id = ? LIMIT 1`,
+          cpIdNum
+        );
+        if (cpRow.length > 0) packageIdForOrder = String(cpRow[0].cp_id);
+      }
+    }
+    if (!packageIdForOrder) {
+      const svcIdForPkg = serviceIdForCustomer || Number(customer_service_id) || 1;
+      const comboPkg = await prisma.$queryRawUnsafe<any[]>(
+        `SELECT cp_id FROM combo_packages WHERE cp_title = ? ORDER BY cp_id LIMIT 1`,
+        String(svcIdForPkg)
+      );
+      packageIdForOrder = comboPkg.length > 0 ? String(comboPkg[0].cp_id) : String(svcIdForPkg);
     }
 
     await prisma.orders.create({
@@ -2934,6 +3165,8 @@ router.get('/customers/:id/tasks', async (req, res) => {
     const custId = Number(req.params.id);
     const { order_id } = req.query;
 
+    console.log('Fetching tasks - custId:', custId, 'order_id:', order_id);
+
     let query = `SELECT ot.*, ta.assign_to, ta.due_date, ta.task_status, u.username as assigned_user_name
        FROM operation_tasks ot
        LEFT JOIN task_assign ta ON ta.task_id = ot.task_id
@@ -2949,7 +3182,31 @@ router.get('/customers/:id/tasks', async (req, res) => {
     query += ` ORDER BY ot.task_id DESC`;
 
     const tasks: any[] = await prisma.$queryRawUnsafe(query, ...params);
-    res.json({ success: true, data: serializeBigInt(tasks) });
+    console.log('Fetched tasks - customer', custId, 'order', order_id, ':', tasks.length, 'tasks');
+
+    // Map tasks to ensure proper field names for frontend
+    const mappedTasks = tasks.map((t: any) => ({
+      id: t.task_id,
+      task_id: t.task_id,
+      cust_id: t.cust_id,
+      service_id: t.service_id,
+      order_id: t.order_id,
+      task_name: t.task_name,
+      original_task_status: t.original_task_status,
+      is_assign: t.is_assign,
+      is_return: t.is_return,
+      added_by: t.added_by,
+      assign_date: t.assign_date,
+      created_at: t.created_at,
+      updated_at: t.updated_at,
+      sub_customer_name: t.sub_customer_name,
+      assigned_to: t.assign_to,
+      due_date: t.due_date,
+      task_status: t.task_status,
+      assigned_user_name: t.assigned_user_name,
+    }));
+
+    res.json({ success: true, data: serializeBigInt(mappedTasks) });
   } catch (error: any) {
     console.error('Error fetching customer tasks:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch customer tasks' });
@@ -2964,6 +3221,7 @@ router.post('/customers/:id/tasks', async (req, res) => {
     if (!task_name) {
       return res.status(400).json({ success: false, message: 'Task name is required' });
     }
+    const staffUserId = (req as any).user?.user_id || Number(req.body?.staff_user_id) || 40;
 
     const maxTask = await prisma.operation_tasks.findFirst({
       orderBy: { task_id: 'desc' },
@@ -2978,7 +3236,7 @@ router.post('/customers/:id/tasks', async (req, res) => {
         service_id: Number(service_id) || 1,
         order_id: order_id ? Number(order_id) : null,
         task_name: String(task_name).trim(),
-        added_by: 1,
+        added_by: staffUserId,
         is_assign: 0,
         is_return: 0,
         original_task_status: 1,
@@ -3079,6 +3337,7 @@ router.post('/customers/:id/orders', async (req, res) => {
       sub_customer_name,
       customer_service,
       customer_service_id,
+      customer_cp_id,
       customer_category_id,
       customer_total_service_price,
       customer_paid_amount,
@@ -3091,6 +3350,7 @@ router.post('/customers/:id/orders', async (req, res) => {
       coupon_code,
       discount_amount,
       is_custom,
+      custom_package_name,
       custom_package_services,
       customer_name,
       customer_businessName,
@@ -3103,17 +3363,65 @@ router.post('/customers/:id/orders', async (req, res) => {
 
     const totalAmt = Number(customer_total_service_price) || 0;
     const paidAmt = Number(customer_paid_amount) || 0;
+    const isCustomOrder = is_custom === '1' || is_custom === 1 || is_custom === true;
+    const staffUserId = (req as any).user?.user_id || Number(req.body?.staff_user_id) || 40;
+    const companyId = String((customer as any).company_id || 'ETax1');
 
-    // Get cp_id from combo_packages using service_id for orders
-    let packageId = String(customer_service_id || '1');
-    if (!is_custom || is_custom === '0') {
+    // Resolve package_id (cp_id) for orders table:
+    // - Custom package: create/find combo_packages row, store its cp_id
+    // - Normal service: use selected cp_id, else lookup combo_packages.cp_title = service_id
+    let packageId = '';
+    if (isCustomOrder) {
+      const svcIds = (Array.isArray(custom_package_services) ? custom_package_services : [])
+        .map((id: any) => Number(id))
+        .filter((n: number) => !isNaN(n) && n > 0);
+      if (svcIds.length > 0) {
+        const serviceString = svcIds.join(', ');
+        // Reuse existing combo package with the same service set if present
+        const existingCombo = await prisma.$queryRawUnsafe<any[]>(
+          `SELECT cp_id FROM combo_packages WHERE service_id = ? AND cp_type = 5 LIMIT 1`,
+          serviceString
+        );
+        if (existingCombo.length > 0) {
+          packageId = String(existingCombo[0].cp_id);
+        } else {
+          const maxCombo = await prisma.$queryRawUnsafe<{ max_id: number }[]>(
+            'SELECT MAX(cp_id) as max_id FROM combo_packages'
+          );
+          const comboId = (maxCombo[0]?.max_id || 100) + 1;
+          await prisma.$executeRawUnsafe(
+            `INSERT INTO combo_packages (cp_id, service_id, cp_title, cp_type, cp_discount, company_id, added_by, cp_date)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            comboId,
+            serviceString,
+            svcIds[0],
+            5,
+            0,
+            companyId,
+            staffUserId,
+            new Date()
+          );
+          packageId = String(comboId);
+        }
+      }
+    }
+    if (!packageId) {
+      const cpIdNum = Number(customer_cp_id);
+      if (!isNaN(cpIdNum) && cpIdNum > 0) {
+        const cpRow = await prisma.$queryRawUnsafe<any[]>(
+          `SELECT cp_id FROM combo_packages WHERE cp_id = ? LIMIT 1`,
+          cpIdNum
+        );
+        if (cpRow.length > 0) packageId = String(cpRow[0].cp_id);
+      }
+    }
+    if (!packageId) {
       const comboPkg = await prisma.$queryRawUnsafe<any[]>(
-        `SELECT cp_id FROM combo_packages WHERE cp_title = ? LIMIT 1`,
+        `SELECT cp_id FROM combo_packages WHERE cp_title = ? ORDER BY cp_id LIMIT 1`,
         String(customer_service_id || '1')
       );
-      if (comboPkg.length > 0) {
-        packageId = String(comboPkg[0].cp_id);
-      }
+      packageId =
+        comboPkg.length > 0 ? String(comboPkg[0].cp_id) : String(customer_service_id || '1');
     }
 
     // Update customer details (same as old CRM line 2684-2689)
@@ -3186,12 +3494,8 @@ router.post('/customers/:id/orders', async (req, res) => {
     let currentTaskId = (maxTask?.task_id || 4911) + 1;
 
     let targetServices: { service_id: number; service_name: string; category_id: number }[] = [];
-    if (
-      is_custom === '1' &&
-      Array.isArray(custom_package_services) &&
-      custom_package_services.length > 0
-    ) {
-      const sIds = custom_package_services
+    if (isCustomOrder) {
+      const sIds = (Array.isArray(custom_package_services) ? custom_package_services : [])
         .map((id: any) => Number(id))
         .filter((n: number) => !isNaN(n) && n > 0);
       if (sIds.length > 0) {
@@ -3212,10 +3516,17 @@ router.post('/customers/:id/orders', async (req, res) => {
     }
 
     if (targetServices.length === 0) {
+      const fbId = Number(customer_service_id) || 1;
+      const fbService = await prisma.services.findFirst({
+        where: { service_id: fbId },
+        select: { service_id: true, service_name: true, category_id: true },
+      });
       targetServices = [
-        {
-          service_id: Number(customer_service_id) || 1,
-          service_name: String(customer_service || 'Business Service'),
+        fbService || {
+          service_id: fbId,
+          service_name: isCustomOrder
+            ? String(custom_package_name || 'Custom Package')
+            : String(customer_service || 'Business Service'),
           category_id: Number(customer_category_id) || 1,
         },
       ];
@@ -3233,7 +3544,7 @@ router.post('/customers/:id/orders', async (req, res) => {
           order_id: orderId,
           sub_customer_name: sub_customer_name || null,
           task_name: serv.service_name,
-          added_by: 1,
+          added_by: staffUserId,
           is_assign: 0,
           is_return: 0,
           original_task_status: 1,
@@ -3252,7 +3563,7 @@ router.post('/customers/:id/orders', async (req, res) => {
             order_id: orderId,
             sub_customer_name: sub_customer_name || null,
             task_name: 'Customer Support',
-            added_by: 1,
+            added_by: staffUserId,
             is_assign: 0,
             is_return: 0,
             original_task_status: 1,
@@ -3304,7 +3615,7 @@ router.post('/customers/create-from-order', async (req, res) => {
     const oldCustId = Number(old_customer_id);
     const orderIdNum = Number(order_id);
     console.log('Create Customer from Order - req.user:', (req as any).user);
-    const staffUserId = (req as any).user?.user_id || 40;
+    const staffUserId = (req as any).user?.user_id || Number(req.body?.staff_user_id) || 40;
 
     // 1. Create Lead in leads table (using raw SQL to bypass autoincrement issue)
     const companyName = customer_businessName || '';
@@ -4913,8 +5224,8 @@ router.post('/documents/upload', verifyJWT, uploadSingle, async (req, res) => {
       data: {
         cd_id: nextDocId,
         service_id: serviceId,
-        cd_from: String(userId), // ✅ Fix: Store logged-in user ID
-        cd_to: String(customerId), // ✅ Fix: Document sent TO customer
+        cd_from: userId, // ✅ Fix: Store logged-in user ID
+        cd_to: customerId, // ✅ Fix: Document sent TO customer
         cd_name: docs_name,
         cd_doc: fileName,
         date: new Date(),
@@ -5144,7 +5455,7 @@ router.get('/franchise-partners-orders', async (req, res) => {
     console.log('Executing SQL:', sql);
     console.log('Params:', params);
 
-    const orders = await prisma.$queryRawUnsafe(sql, ...params);
+    const orders: any[] = await prisma.$queryRawUnsafe(sql, ...params);
 
     console.log('Fetched orders count:', orders.length);
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '../../store/auth-store';
+import { API_BASE_URL } from '@/lib/api-base';
 
 // Customer Details Page - Customer-centric listing (not order-centric)
 export default function CrmCustomerDetailsPage() {
@@ -22,7 +23,7 @@ export default function CrmCustomerDetailsPage() {
       setLoading(true);
       const limitParam = pageSize === -1 ? 'all' : pageSize;
       const response = await fetch(
-        `http://localhost:5001/v1/crm/customer-details-list?limit=${limitParam}&page=${currentPage}`,
+        `${API_BASE_URL}/v1/crm/customer-details-list?limit=${limitParam}&page=${currentPage}`,
         {
           headers: {
             Authorization: `Bearer ${staffToken}`,

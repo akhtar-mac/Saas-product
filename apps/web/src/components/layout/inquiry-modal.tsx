@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 import { services } from '@/lib/constants/services';
+import { API_BASE_URL } from '@/lib/api-base';
 
 const schema = z.object({
   name: z.string().min(1, 'Name required'),
@@ -17,7 +18,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 const CUSTOMER_API = `${API_BASE}/api`;
 
 interface Props {

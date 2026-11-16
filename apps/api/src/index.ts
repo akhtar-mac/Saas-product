@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
@@ -59,16 +60,24 @@ app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // ─── Static file serving for uploaded documents ───────────────────────────────
-app.use('/Docs', express.static(path.join(__dirname, '../../public/Docs')));
+app.use('/Docs', express.static(path.join(process.cwd(), 'public/Docs')));
 
 // ─── Request Logger & Global API Rate Limit ──────────────────────────────────
 app.use(requestLogger);
 app.use('/v1', apiRateLimit);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
-app.get(['/health', '/v1/health'], (_req, res) => {
+app.get(['/health', '/v1/health'], async (_req, res) => {
+  let db: 'connected' | 'disconnected' = 'disconnected';
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    db = 'connected';
+  } catch {
+    db = 'disconnected';
+  }
   res.json({
-    status: 'ok',
+    status: db === 'connected' ? 'ok' : 'degraded',
+    database: db,
     environment: env.NODE_ENV,
     timestamp: new Date().toISOString(),
     version: '2.0.0',
@@ -232,6 +241,25 @@ app.post('/v1/appointment', async (req, res) => {
     res.status(500).json({ success: false, error: { message: 'Failed to book' } });
   }
 });
+
+// ─── Static hosting for the marketing website + CRM SPA (single-domain deploy) ─
+// Served only when a ./client build exists (production bundle); skipped in dev.
+const clientDist = path.join(process.cwd(), 'client');
+if (fs.existsSync(path.join(clientDist, 'index.html'))) {
+  app.use(express.static(clientDist));
+  app.get('*', (req, res, next) => {
+    if (
+      req.path.startsWith('/v1') ||
+      req.path.startsWith('/api') ||
+      req.path.startsWith('/Docs') ||
+      req.path.startsWith('/socket.io') ||
+      req.path.startsWith('/health')
+    ) {
+      return next();
+    }
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 // ─── 404 handler (must come after all routes) ─────────────────────────────────
 app.use(notFoundHandler);

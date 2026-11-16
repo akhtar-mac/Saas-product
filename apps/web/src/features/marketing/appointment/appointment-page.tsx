@@ -23,6 +23,7 @@ import Breadcrumbs from '@/components/breadcrumbs';
 import CtaBanner from '@/components/cta-banner';
 import { analytics } from '@/lib/analytics';
 import { slideUp, staggerContainer, staggerItem } from '@/lib/animations';
+import { API_BASE_URL } from '@/lib/api-base';
 
 const TIME_SLOTS = [
   '10:00 AM - 11:00 AM',
@@ -54,7 +55,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 const CUSTOMER_API = `${API_BASE}/api`;
 
 // Minimum date is today, maximum 30 days ahead

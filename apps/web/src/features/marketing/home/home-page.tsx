@@ -27,6 +27,7 @@ import QuickEnquiryModal from '@/components/quick-enquiry-modal';
 import LiveSocialProofGrid from '@/components/marketing/live-social-proof-grid';
 import ReelsShowcaseSection from '@/components/marketing/reels-showcase-section';
 import PhotoSliderSection from '@/components/marketing/photo-slider-section';
+import { API_BASE_URL } from '@/lib/api-base';
 
 /* ─── Hero Segment Categories ─── */
 const HERO_SEGMENTS = [
@@ -887,7 +888,7 @@ export default function HomePage() {
 
     try {
       // Submit to local backend API
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+      const API_BASE = API_BASE_URL;
       await fetch(`${API_BASE}/api/add-inquiry-lead`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

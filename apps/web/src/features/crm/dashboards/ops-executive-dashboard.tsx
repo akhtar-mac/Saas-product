@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuthStore } from '@/store/auth-store';
+import { API_BASE_URL } from '@/lib/api-base';
 import {
   X,
   Play,
@@ -14,7 +15,7 @@ import {
   Loader2,
 } from 'lucide-react';
 
-const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 const STATUS_LABELS: Record<number, string> = {
   1: 'Not Started',

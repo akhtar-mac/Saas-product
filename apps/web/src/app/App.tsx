@@ -61,6 +61,7 @@ const CrmManagePackagesPage = lazy(() => import('@/features/crm/crm-manage-packa
 const CrmManageBlogsPage = lazy(() => import('@/features/crm/crm-manage-blogs-page'));
 const CrmAppointmentsPage = lazy(() => import('@/features/crm/crm-appointments-page'));
 const CrmInternalTasksPage = lazy(() => import('@/features/crm/crm-internal-tasks-page'));
+const CrmServiceQuestionsPage = lazy(() => import('@/features/crm/crm-service-questions-page'));
 const CrmCustomerDetailsPage = lazy(() => import('@/features/crm/crm-customer-details-page'));
 const CrmChatPage = lazy(() => import('@/features/crm/pages/crm-chat-page'));
 const HrDashboard = lazy(() => import('@/features/crm/dashboards/hr-dashboard'));
@@ -160,6 +161,8 @@ export default function App() {
           <Route path="tasks" element={<CrmTasksPage />} />
           <Route path="operation-manage-tasks" element={<CrmTasksPage />} />
           <Route path="internal-tasks" element={<CrmInternalTasksPage />} />
+          <Route path="services" element={<CrmServiceQuestionsPage />} />
+          <Route path="service-questions" element={<CrmServiceQuestionsPage />} />
           <Route path="customer-details" element={<CrmCustomerDetailsPage />} />
           <Route path="quotations" element={<CrmQuotationsPage />} />
           <Route path="quotation" element={<CrmQuotationsPage />} />

@@ -17,10 +17,10 @@ const ROLE_MAP: Record<number, string> = {
   4: 'sales_manager',
   5: 'marketing_manager',
   6: 'franchise_manager',
-  7: 'operations_employee',
-  8: 'franchise_partner',
+  7: 'sales_employee',
+  8: 'operations_employee',
   9: 'marketing_employee',
-  10: 'consultation',
+  10: 'franchise_partner',
   11: 'consultation',
   12: 'operations_assistant',
   13: 'sales_assistant',
@@ -180,7 +180,9 @@ function signTokens(payload: JwtPayload) {
   const accessToken = jwt.sign(payload, env.JWT_SECRET, {
     expiresIn: env.JWT_EXPIRES_IN as any,
   });
-  const refreshToken = jwt.sign({ user_id: payload.user_id }, env.JWT_SECRET + '_refresh', {
+  // Refresh token carries the full claims so /staff/refresh doesn't need a DB
+  // lookup — avoids users.id vs staff_users.id collisions between the two tables.
+  const refreshToken = jwt.sign(payload, env.JWT_SECRET + '_refresh', {
     expiresIn: env.JWT_REFRESH_EXPIRES_IN as any,
   });
   return { accessToken, refreshToken };
@@ -195,6 +197,7 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
 
     // 1. Try DB lookup in users table FIRST (for legacy users)
     let staffUser: any = null;
+    let fromUsersTable = false;
     try {
       const uRes: any[] = await prisma.$queryRaw`
         SELECT * FROM users
@@ -203,6 +206,7 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
       `;
       if (uRes && uRes[0]) {
         const u = uRes[0];
+        fromUsersTable = true;
         console.log('Login user from users table:', {
           id: u.id,
           username: u.username,
@@ -442,18 +446,21 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
       });
     }
 
-    // Fetch all assigned roles
+    // Fetch all assigned roles — only for staff_users records; users-table logins
+    // carry their role in role_id/role_name already (staff_user_roles is keyed by staff_users.id)
     let assignedRoleIds: number[] = [];
-    try {
-      const userRoles = await (prisma as any).staff_user_roles.findMany({
-        where: { user_id: staffUser.id },
-      });
-      if (userRoles && userRoles.length > 0) {
-        assignedRoleIds = userRoles.map((r: any) => r.role_id);
-      }
-    } catch {}
+    if (!fromUsersTable) {
+      try {
+        const userRoles = await (prisma as any).staff_user_roles.findMany({
+          where: { user_id: staffUser.id },
+        });
+        if (userRoles && userRoles.length > 0) {
+          assignedRoleIds = userRoles.map((r: any) => r.role_id);
+        }
+      } catch {}
+    }
 
-    if (assignedRoleIds.length === 0 && staffUser.roles) {
+    if (assignedRoleIds.length === 0 && !fromUsersTable && staffUser.roles) {
       try {
         assignedRoleIds = JSON.parse(staffUser.roles);
       } catch {}
@@ -462,14 +469,24 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
       assignedRoleIds = [staffUser.role_id];
     }
 
-    try {
-      await (prisma as any).staff_users.update({
-        where: { id: staffUser.id },
-        data: { last_login_at: new Date(), is_online: true },
-      });
-    } catch {}
+    if (!fromUsersTable) {
+      try {
+        await (prisma as any).staff_users.update({
+          where: { id: staffUser.id },
+          data: { last_login_at: new Date(), is_online: true },
+        });
+      } catch {}
+    }
 
-    const roleNames = assignedRoleIds.map((id) => ROLE_MAP[id] || 'staff');
+    // Use explicit role_name from staffUser (set during users table lookup) OR fallback to ROLE_MAP
+    const effectiveRoleName = staffUser.role_name || ROLE_MAP[staffUser.role_id] || 'staff';
+
+    // For users-table logins, role_name (from user_type) is authoritative —
+    // ROLE_MAP has no sales_employee entry and user_type 6/7 both map to role_id 7,
+    // so deriving role names from role_id would wrongly return operations_employee.
+    const roleNames = fromUsersTable
+      ? [effectiveRoleName]
+      : assignedRoleIds.map((id) => ROLE_MAP[id] || 'staff');
 
     let userPermissions: string[] = [];
     if (staffUser.permissions) {
@@ -480,9 +497,6 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
     if (assignedRoleIds.includes(1)) {
       userPermissions = ['*'];
     }
-
-    // Use explicit role_name from staffUser (set during users table lookup) OR fallback to ROLE_MAP
-    const effectiveRoleName = staffUser.role_name || ROLE_MAP[staffUser.role_id] || 'staff';
 
     const payload: JwtPayload = {
       user_id: staffUser.id,
@@ -532,9 +546,24 @@ router.post('/staff/refresh', async (req: Request, res: Response) => {
 
     let decoded: any;
     try {
-      decoded = jwt.verify(refreshToken, env.JWT_SECRET + '_refresh') as { user_id: number };
+      decoded = jwt.verify(refreshToken, env.JWT_SECRET + '_refresh');
     } catch {
       return res.status(401).json({ success: false, error: 'Invalid or expired refresh token.' });
+    }
+
+    // New-style refresh tokens carry the full JWT claims — re-issue directly.
+    if (decoded && decoded.role_name && decoded.user_id) {
+      const payload: JwtPayload = {
+        user_id: decoded.user_id,
+        role_id: decoded.role_id,
+        role_ids: decoded.role_ids || [decoded.role_id],
+        role_name: decoded.role_name,
+        roles: decoded.roles || [],
+        permissions: decoded.permissions || [],
+        username: decoded.username,
+        email: decoded.email,
+      };
+      return res.json({ success: true, data: signTokens(payload) });
     }
 
     let staffUser: any = null;

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
 import { Plus, Phone, ChevronDown, X, User } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/api-base';
 
 interface Lead {
   id: number;
@@ -350,7 +351,7 @@ export default function CrmLeadsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loadingLeads, setLoadingLeads] = useState(false);
   const [kpiCounts, setKpiCounts] = useState<Record<string | number, number>>({});
-  const [assignStaff, setAssignStaff] = useState('Assign Leads To');
+  const [assignStaffId, setAssignStaffId] = useState('');
   const [statusDropdown, setStatusDropdown] = useState('Status');
   const [selectedSource, setSelectedSource] = useState(() => {
     const s = new URLSearchParams(location.search).get('source');
@@ -413,8 +414,27 @@ export default function CrmLeadsPage() {
     { id: string | number; name: string }[]
   >([]);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
+  // Manager-only: filter leads by a specific sales employee
+  const [selectedEmployee, setSelectedEmployee] = useState<number | null>(null);
+  const [salesEmployees, setSalesEmployees] = useState<{ id: number; name: string }[]>([]);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+  const API_BASE = API_BASE_URL;
+
+  // Fetch sales employees list for the manager filter dropdown
+  useEffect(() => {
+    if (!isManager) return;
+    fetch(`${API_BASE}/v1/crm/users`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data?.data)) {
+          const emps = data.data
+            .filter((u: any) => Number(u.role_id) === 7 || u.role_name === 'Sales Employee')
+            .map((u: any) => ({ id: Number(u.id), name: u.name || u.email || `Staff #${u.id}` }));
+          setSalesEmployees(emps);
+        }
+      })
+      .catch(() => {});
+  }, [isManager]);
 
   // Sync target brand when selectedSource changes
   useEffect(() => {
@@ -474,9 +494,11 @@ export default function CrmLeadsPage() {
       params.set('status', String(activeStatusKpi));
     }
     if (debouncedSearch) params.set('search', debouncedSearch);
-    // Sales employees only see their own assigned leads
-    if (isSalesEmployee && activeUserId && activeUserId > 1) {
-      params.set('assigned_to', String(activeUserId));
+    // Sales employees only see their own assigned leads; managers can filter by any employee
+    const effectiveAssignee =
+      isSalesEmployee && activeUserId && activeUserId > 1 ? activeUserId : selectedEmployee;
+    if (effectiveAssignee) {
+      params.set('assigned_to', String(effectiveAssignee));
     }
 
     fetch(`${API_BASE}/v1/crm/leads?${params.toString()}`, { signal: controller.signal })
@@ -537,14 +559,17 @@ export default function CrmLeadsPage() {
     refetchTrigger,
     isSalesEmployee,
     activeUserId,
+    selectedEmployee,
   ]);
 
   // Fetch all KPI counts via single fast endpoint
   useEffect(() => {
     const countParams = new URLSearchParams();
-    // Sales employees get counts scoped to their own assigned leads
-    if (isSalesEmployee && activeUserId && activeUserId > 1) {
-      countParams.set('assigned_to', String(activeUserId));
+    // Counts scoped to the selected employee (sales employee's own leads, or manager's filter)
+    const effectiveAssignee =
+      isSalesEmployee && activeUserId && activeUserId > 1 ? activeUserId : selectedEmployee;
+    if (effectiveAssignee) {
+      countParams.set('assigned_to', String(effectiveAssignee));
     }
     const countUrl = `${API_BASE}/v1/crm/leads/counts${countParams.toString() ? '?' + countParams.toString() : ''}`;
     fetch(countUrl)
@@ -553,7 +578,7 @@ export default function CrmLeadsPage() {
         if (data?.success && data.counts) setKpiCounts(data.counts);
       })
       .catch(() => {});
-  }, [isSalesEmployee, activeUserId]);
+  }, [isSalesEmployee, activeUserId, selectedEmployee]);
 
   // Helper to parse staff names from remarks
   const parseRemarkItem = (r: any) => {
@@ -659,7 +684,9 @@ export default function CrmLeadsPage() {
   };
 
   const handleBulkAssign = async () => {
-    if (assignStaff === 'Assign Leads To' || selectedIds.size === 0) {
+    const empId = Number(assignStaffId);
+    const emp = salesEmployees.find((e) => e.id === empId);
+    if (!empId || selectedIds.size === 0) {
       alert('Please select leads and choose a staff member to assign.');
       return;
     }
@@ -668,21 +695,21 @@ export default function CrmLeadsPage() {
       await fetch(`${API_BASE}/v1/crm/leads/assign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_ids: idsArray, assign_to_user_id: 1 }),
+        body: JSON.stringify({ lead_ids: idsArray, assign_to_user_id: empId }),
       });
       setLeads((prev) =>
         prev.map((l) =>
           selectedIds.has(l.id)
             ? {
                 ...l,
-                assignTo: assignStaff,
+                assignTo: emp?.name || `Staff #${empId}`,
                 isAssign: true,
                 assignDate: new Date().toLocaleString(),
               }
             : l
         )
       );
-      alert(`Assigned ${selectedIds.size} leads to ${assignStaff} and saved in database.`);
+      alert(`Assigned ${selectedIds.size} leads to ${emp?.name || 'staff'} and saved in database.`);
       setSelectedIds(new Set());
     } catch {
       alert('Failed to save assignment in database.');
@@ -1181,20 +1208,43 @@ export default function CrmLeadsPage() {
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2.5 pointer-events-none z-2" />
             </div>
 
+            {/* Manager-only: filter leads by a specific sales employee */}
+            {isManager && (
+              <div className="btn-multicolor relative shadow-2xs rounded-xl">
+                <select
+                  value={selectedEmployee ?? ''}
+                  onChange={(e) => {
+                    setSelectedEmployee(e.target.value ? Number(e.target.value) : null);
+                    setCurrentPage(1);
+                  }}
+                  className="bg-transparent text-slate-700 font-semibold text-xs py-2 px-3 pr-7 focus:outline-none cursor-pointer appearance-none relative z-2"
+                >
+                  <option value="">All Employees</option>
+                  {salesEmployees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2.5 pointer-events-none z-2" />
+              </div>
+            )}
+
             {/* Manager-only: Assign Leads To + Bulk Add + Sample Excel + Import FB */}
             {isManager && (
               <>
                 <div className="btn-multicolor relative shadow-2xs rounded-xl">
                   <select
-                    value={assignStaff}
-                    onChange={(e) => setAssignStaff(e.target.value)}
+                    value={assignStaffId}
+                    onChange={(e) => setAssignStaffId(e.target.value)}
                     className="bg-transparent text-slate-800 font-bold text-xs py-2 px-3 pr-7 focus:outline-none cursor-pointer appearance-none relative z-2"
                   >
-                    <option value="Assign Leads To">Assign Leads To</option>
-                    <option value="Krushna Shinde">Krushna Shinde</option>
-                    <option value="Netra Divekar">Netra Divekar</option>
-                    <option value="Manisha Shinde">Manisha Shinde</option>
-                    <option value="Shashikant Panchal">Shashikant Panchal</option>
+                    <option value="">Assign Leads To</option>
+                    {salesEmployees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name}
+                      </option>
+                    ))}
                   </select>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-600 absolute right-2 top-2.5 pointer-events-none z-2" />
                 </div>

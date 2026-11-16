@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/auth-store';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '@/lib/api-base';
 
 export default function CrmFranchiseManagePartnersOrders() {
   const { staffUser, staffToken } = useAuthStore();
@@ -21,7 +22,7 @@ export default function CrmFranchiseManagePartnersOrders() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('http://localhost:5001/v1/crm/franchise-partners-orders', {
+      const response = await fetch(`${API_BASE_URL}/v1/crm/franchise-partners-orders`, {
         headers: {
           Authorization: `Bearer ${staffToken}`,
         },

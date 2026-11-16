@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import SEO from '@/components/seo';
 import Breadcrumbs from '@/components/breadcrumbs';
+import { API_BASE_URL } from '@/lib/api-base';
 
 const defaultJobOpenings = [
   {
@@ -106,7 +107,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_BASE = API_BASE_URL;
 
 export default function CareersPage() {
   const [jobs, setJobs] = useState<any[]>(defaultJobOpenings);
