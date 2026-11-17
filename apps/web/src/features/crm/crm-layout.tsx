@@ -1330,17 +1330,6 @@ function CrmLayoutContent() {
                         {openSections.tasksSub && (
                           <div className="pl-5 space-y-1 py-1 text-[11px]">
                             <Link
-                              to="/crm/tasks"
-                              onClick={handleNavClick}
-                              className={`block py-1 px-2 rounded-md ${
-                                location.pathname === '/crm/tasks'
-                                  ? 'bg-[#1B365D] text-white font-bold'
-                                  : 'text-slate-600 hover:text-[#1B365D]'
-                              }`}
-                            >
-                              My Tasks
-                            </Link>
-                            <Link
                               to="/crm/operation-manage-tasks"
                               onClick={handleNavClick}
                               className="block py-1 px-2 rounded-md text-slate-600 hover:text-[#1B365D]"
@@ -1475,21 +1464,10 @@ function CrmLayoutContent() {
                         {openSections.tasksSub && (
                           <div className="pl-5 space-y-1 py-1 text-[11px]">
                             <Link
-                              to="/crm/tasks"
+                              to="/crm/internal-tasks"
                               onClick={handleNavClick}
                               className={`block py-1 px-2 rounded-md ${
-                                location.pathname === '/crm/tasks'
-                                  ? 'bg-[#1B365D] text-white font-bold'
-                                  : 'text-slate-600 hover:text-[#1B365D]'
-                              }`}
-                            >
-                              My Tasks
-                            </Link>
-                            <Link
-                              to="/crm/operation-manage-tasks"
-                              onClick={handleNavClick}
-                              className={`block py-1 px-2 rounded-md ${
-                                location.pathname === '/crm/operation-manage-tasks'
+                                location.pathname === '/crm/internal-tasks'
                                   ? 'bg-[#1B365D] text-white font-bold'
                                   : 'text-slate-600 hover:text-[#1B365D]'
                               }`}

@@ -5952,4 +5952,128 @@ router.get('/ops-employee/categories', async (req, res) => {
   }
 });
 
+// ─── Internal Tasks (legacy task_excel + task_comments) ─────────────────────
+const INTERNAL_TASK_MANAGER_ROLES = ['SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'OPERATIONS_MANAGER'];
+
+router.get('/internal-tasks', async (req, res) => {
+  try {
+    const { user_id, role } = req.query;
+    const uid = Number(user_id);
+    const isManager = INTERNAL_TASK_MANAGER_ROLES.includes(String(role || ''));
+    const where = !isManager && !isNaN(uid) && uid > 0 ? `WHERE t.assign_to = ${uid}` : '';
+
+    const rows: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT t.id, t.task_name, t.status, t.created_at, t.updated_at,
+              ab.username AS added_by_name, at.username AS assign_to_name,
+              t.added_by, t.assign_to
+       FROM task_excel t
+       LEFT JOIN users ab ON ab.id = t.added_by
+       LEFT JOIN users at ON at.id = t.assign_to
+       ${where}
+       ORDER BY t.id DESC`
+    )) as any[];
+
+    const ids = rows.map((r) => Number(r.id)).filter(Boolean);
+    const comments: any[] = ids.length
+      ? ((await prisma
+          .$queryRawUnsafe(
+            `SELECT id, task_id, comment, status, username, created_at FROM task_comments WHERE task_id IN (${ids.join(',')}) ORDER BY created_at ASC`
+          )
+          .catch(() => [])) as any[])
+      : [];
+
+    const cmap: Record<number, any[]> = {};
+    comments.forEach((c) => {
+      (cmap[Number(c.task_id)] ||= []).push(c);
+    });
+
+    const data = rows.map((r) => ({
+      id: Number(r.id),
+      taskName: r.task_name,
+      status: Number(r.status),
+      createdAt: r.created_at
+        ? r.created_at instanceof Date
+          ? r.created_at.toISOString().split('T')[0]
+          : String(r.created_at).split('T')[0]
+        : '',
+      addedBy: r.added_by_name || 'Unknown',
+      assignedTo: r.assign_to_name || 'Unknown',
+      assignedToId: Number(r.assign_to),
+      addedById: Number(r.added_by),
+      comments: (cmap[Number(r.id)] || []).map((c) => ({
+        id: Number(c.id),
+        comment: c.comment,
+        status: Number(c.status),
+        username: c.username,
+        createdAt: c.created_at
+          ? c.created_at instanceof Date
+            ? c.created_at.toISOString().replace('T', ' ').slice(0, 19)
+            : String(c.created_at).replace('T', ' ').slice(0, 19)
+          : '',
+      })),
+    }));
+
+    return res.json({ success: true, data });
+  } catch (error: any) {
+    console.error('Error fetching internal tasks:', error?.message || error);
+    return res.status(500).json({ success: false, error: 'Failed to fetch internal tasks' });
+  }
+});
+
+router.post('/internal-tasks', async (req, res) => {
+  try {
+    const { task_name, assign_to, added_by } = req.body || {};
+    if (!task_name || !assign_to) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'task_name and assign_to are required' });
+    }
+    const escName = String(task_name).replace(/'/g, "''");
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO task_excel (task_name, added_by, assign_to, status, created_at, updated_at)
+       VALUES ('${escName}', ${Number(added_by) || 1}, ${Number(assign_to)}, 1, NOW(), NOW())`
+    );
+    return res.json({ success: true });
+  } catch (error: any) {
+    console.error('Error creating internal task:', error?.message || error);
+    return res.status(500).json({ success: false, error: 'Failed to create task' });
+  }
+});
+
+router.put('/internal-tasks/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { status, comment, username } = req.body || {};
+    if (status != null) {
+      await prisma.$executeRawUnsafe(
+        `UPDATE task_excel SET status = ${Number(status)}, updated_at = NOW() WHERE id = ${id}`
+      );
+    }
+    if (comment && String(comment).trim()) {
+      const escComment = String(comment).replace(/'/g, "''");
+      const escUser = String(username || 'unknown').replace(/'/g, "''");
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO task_comments (task_id, comment, status, username, created_at, updated_at)
+         VALUES (${id}, '${escComment}', ${Number(status) || 1}, '${escUser}', NOW(), NOW())`
+      );
+    }
+    return res.json({ success: true });
+  } catch (error: any) {
+    console.error('Error updating internal task:', error?.message || error);
+    return res.status(500).json({ success: false, error: 'Failed to update task' });
+  }
+});
+
+router.delete('/internal-tasks/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    await prisma.$executeRawUnsafe(`DELETE FROM task_comments WHERE task_id = ${id}`);
+    await prisma.$executeRawUnsafe(`DELETE FROM task_excel WHERE id = ${id}`);
+    return res.json({ success: true });
+  } catch (error: any) {
+    console.error('Error deleting internal task:', error?.message || error);
+    return res.status(500).json({ success: false, error: 'Failed to delete task' });
+  }
+});
+
 export default router;

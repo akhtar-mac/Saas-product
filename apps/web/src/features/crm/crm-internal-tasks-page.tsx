@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Clock,
-  User,
-  CheckCircle2,
-  MessageSquare,
-  X,
-  Search,
-} from 'lucide-react';
+import { Plus, Edit, Clock, User, CheckCircle2, MessageSquare, X, Search } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { API_BASE_URL } from '@/lib/api-base';
 
@@ -58,7 +48,6 @@ export default function CrmInternalTasksPage() {
   const { staffUser, staffToken } = useAuthStore();
   const [tasks, setTasks] = useState<InternalTask[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -106,123 +95,79 @@ export default function CrmInternalTasksPage() {
 
   useEffect(() => {
     loadTasks();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staffUser?.id, staffUser?.role]);
 
   const loadTasks = () => {
     setLoading(true);
-    // TODO: Replace with actual API call
-    // fetch(`${API_BASE}/v1/crm/internal-tasks`)
-    //   .then(res => res.json())
-    //   .then(data => setTasks(data.data || []))
-    //   .finally(() => setLoading(false));
-
-    // Mock data for now
-    setTimeout(() => {
-      setTasks([
-        {
-          id: 1,
-          taskName: 'Review customer documents',
-          addedBy: 'Admin',
-          assignedTo: 'Operations Employee',
-          assignedToId: 8,
-          createdAt: '2026-09-20',
-          status: 2,
-          comments: [
-            {
-              id: 1,
-              comment: 'Started working on document review',
-              status: 2,
-              username: 'Operations Employee',
-              createdAt: '2026-09-20 10:30:00',
-            },
-          ],
-        },
-        {
-          id: 2,
-          taskName: 'Follow up with pending clients',
-          addedBy: 'Sales Manager',
-          assignedTo: 'Operations Employee',
-          assignedToId: 8,
-          createdAt: '2026-09-19',
-          status: 1,
-          comments: [],
-        },
-      ]);
-      setLoading(false);
-    }, 500);
+    const params = new URLSearchParams({
+      user_id: String(staffUser?.id || ''),
+      role: String(staffUser?.role || ''),
+    });
+    fetch(`${API_BASE}/v1/crm/internal-tasks?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data.data)) {
+          setTasks(data.data);
+        }
+      })
+      .catch((err) => console.error('Failed to load internal tasks', err))
+      .finally(() => setLoading(false));
   };
 
-  const handleCreateTask = () => {
+  const handleCreateTask = async () => {
     if (!newTaskName || !newAssignTo) {
       alert('Please fill all fields');
       return;
     }
-
-    // TODO: Replace with actual API call
-    const newTask: InternalTask = {
-      id: Date.now(),
-      taskName: newTaskName,
-      addedBy: 'Current User',
-      assignedTo: users.find((u) => u.id === Number(newAssignTo))?.name || 'Unknown',
-      assignedToId: Number(newAssignTo),
-      createdAt: new Date().toISOString().split('T')[0],
-      status: 1,
-      comments: [],
-    };
-
-    setTasks([newTask, ...tasks]);
-    setCreateModalOpen(false);
-    setNewTaskName('');
-    setNewAssignTo('');
-  };
-
-  const handleUpdateTask = () => {
-    if (!selectedTask) return;
-
-    // TODO: Replace with actual API call
-    const updatedTasks = tasks.map((t) => {
-      if (t.id === selectedTask.id) {
-        const updatedTask = { ...t, status: editStatus };
-        if (editComment.trim()) {
-          updatedTask.comments = [
-            ...t.comments,
-            {
-              id: Date.now(),
-              comment: editComment,
-              status: editStatus,
-              username: 'Current User',
-              createdAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
-            },
-          ];
-        }
-        return updatedTask;
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/internal-tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task_name: newTaskName,
+          assign_to: Number(newAssignTo),
+          added_by: staffUser?.id || 1,
+        }),
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setCreateModalOpen(false);
+        setNewTaskName('');
+        setNewAssignTo('');
+        loadTasks();
+      } else {
+        alert(data?.error || 'Failed to create task');
       }
-      return t;
-    });
-
-    setTasks(updatedTasks);
-    setEditModalOpen(false);
-    setEditComment('');
-    setSelectedTask(null);
+    } catch {
+      alert('Network error while creating task');
+    }
   };
 
-  const handleDeleteTask = (id: number) => {
-    if (!confirm('Are you sure you want to delete this task?')) return;
-
-    // TODO: Replace with actual API call
-    setTasks(tasks.filter((t) => t.id !== id));
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.size === tasks.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(tasks.map((t) => t.id)));
-  };
-
-  const toggleSelect = (id: number) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
+  const handleUpdateTask = async () => {
+    if (!selectedTask) return;
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/internal-tasks/${selectedTask.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: editStatus,
+          comment: editComment,
+          username: staffUser?.username || 'Staff',
+        }),
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setEditModalOpen(false);
+        setEditComment('');
+        setSelectedTask(null);
+        loadTasks();
+      } else {
+        alert(data?.error || 'Failed to update task');
+      }
+    } catch {
+      alert('Network error while updating task');
+    }
   };
 
   const openEditModal = (task: InternalTask) => {
@@ -279,14 +224,6 @@ export default function CrmInternalTasksPage() {
         <table className="w-full">
           <thead className="bg-[#1B365D] text-white">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.size === tasks.length && tasks.length > 0}
-                  onChange={toggleSelectAll}
-                  className="rounded"
-                />
-              </th>
               <th className="px-4 py-3 text-left font-semibold">Task Name</th>
               <th className="px-4 py-3 text-left font-semibold">Added By</th>
               <th className="px-4 py-3 text-left font-semibold">Assigned To</th>
@@ -298,27 +235,19 @@ export default function CrmInternalTasksPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                   Loading...
                 </td>
               </tr>
             ) : filteredTasks.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                   No tasks found
                 </td>
               </tr>
             ) : (
               filteredTasks.map((task) => (
                 <tr key={task.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(task.id)}
-                      onChange={() => toggleSelect(task.id)}
-                      className="rounded"
-                    />
-                  </td>
                   <td className="px-4 py-3 font-medium">{task.taskName}</td>
                   <td className="px-4 py-3 text-slate-600">{task.addedBy}</td>
                   <td className="px-4 py-3">
@@ -345,13 +274,6 @@ export default function CrmInternalTasksPage() {
                         title="Edit"
                       >
                         <Edit className="w-4 h-4 text-slate-600" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTask(task.id)}
-                        className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
                       </button>
                     </div>
                   </td>

@@ -37,6 +37,7 @@ interface OperationTask {
   assignedToId?: number | null;
   isAssign: number;
   addedBy: string;
+  assignBy?: string;
   assignDate: string;
   dueDate: string;
   status:
@@ -300,6 +301,7 @@ export default function CrmTasksPage() {
             assignedToId: t.assign_to || null,
             isAssign: Number(t.is_assign) || 0,
             addedBy: t.added_by_name || 'Super Admin',
+            assignBy: t.assign_by_name || 'N/A',
             assignDate: t.assign_date ? t.assign_date.split(' ')[0] : 'N/A',
             dueDate: t.due_date ? t.due_date.split(' ')[0] : 'N/A',
             status:
@@ -878,23 +880,41 @@ export default function CrmTasksPage() {
                     />
                   </th>
                 )}
-                <th className="py-2.5 px-3 font-bold">Task Name</th>
-                <th className="py-2.5 px-3 font-bold">Customer Name</th>
-                <th className="py-2.5 px-3 font-bold">Company Name</th>
-                <th className="py-2.5 px-3 font-bold">Service</th>
-                <th className="py-2.5 px-3 font-bold">Assign To</th>
-                <th className="py-2.5 px-3 font-bold">Added By</th>
-                <th className="py-2.5 px-3 font-bold">Assign Date</th>
-                <th className="py-2.5 px-3 font-bold">Due Date</th>
-                <th className="py-2.5 px-3 font-bold">Status</th>
-                <th className="py-2.5 px-3 font-bold text-center">Action</th>
+                {isOpsEmployee ? (
+                  <>
+                    <th className="py-2.5 px-3 font-bold">Assign By</th>
+                    <th className="py-2.5 px-3 font-bold">Assign Date</th>
+                    <th className="py-2.5 px-3 font-bold">Added By</th>
+                    <th className="py-2.5 px-3 font-bold">Name</th>
+                    <th className="py-2.5 px-3 font-bold">Company Name</th>
+                    <th className="py-2.5 px-3 font-bold">Task</th>
+                    <th className="py-2.5 px-3 font-bold">Mobile</th>
+                    <th className="py-2.5 px-3 font-bold">Service</th>
+                    <th className="py-2.5 px-3 font-bold">Status</th>
+                    <th className="py-2.5 px-3 font-bold">Due Date</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="py-2.5 px-3 font-bold">Task Name</th>
+                    <th className="py-2.5 px-3 font-bold">Customer Name</th>
+                    <th className="py-2.5 px-3 font-bold">Contact Number</th>
+                    <th className="py-2.5 px-3 font-bold">Company Name</th>
+                    <th className="py-2.5 px-3 font-bold">Service</th>
+                    <th className="py-2.5 px-3 font-bold">Assign To</th>
+                    <th className="py-2.5 px-3 font-bold">Added By</th>
+                    <th className="py-2.5 px-3 font-bold">Assign Date</th>
+                    <th className="py-2.5 px-3 font-bold">Due Date</th>
+                    <th className="py-2.5 px-3 font-bold">Status</th>
+                    <th className="py-2.5 px-3 font-bold text-center">Action</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
                   <td
-                    colSpan={isOpsEmployee ? 10 : 11}
+                    colSpan={isOpsEmployee ? 10 : 12}
                     className="py-12 text-center text-xs text-slate-500"
                   >
                     <div className="flex items-center justify-center gap-2">
@@ -906,7 +926,7 @@ export default function CrmTasksPage() {
               ) : filteredTasks.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={isOpsEmployee ? 10 : 11}
+                    colSpan={isOpsEmployee ? 10 : 12}
                     className="py-10 text-center text-xs text-slate-400"
                   >
                     No tasks found in database matching your filter.
@@ -934,127 +954,224 @@ export default function CrmTasksPage() {
                           />
                         </td>
                       )}
-                      <td className="py-2.5 px-3">
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => {
-                              if (expandedId === task.id) {
-                                setExpandedId(null);
-                              } else {
-                                setExpandedId(task.id);
-                                loadTableTimeline(task.id);
-                              }
-                            }}
-                            className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center font-bold text-[11px]"
-                            title="Expand timeline"
-                          >
-                            {expandedId === task.id ? '-' : '+'}
-                          </button>
-                          <button
-                            onClick={() => setEffortModalTask(task)}
-                            className="font-semibold text-slate-900 hover:text-[#0284c7] text-left hover:underline"
-                          >
-                            {task.taskName}
-                          </button>
-                        </div>
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-800 font-medium">
-                        {task.customerName}
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-600">{task.companyName}</td>
-                      <td className="py-2.5 px-3 text-slate-700 font-medium">{task.service}</td>
-                      <td className="py-2.5 px-3 font-medium">
-                        {task.assignTo === 'Un-Assign' ||
-                        task.isAssign === 0 ||
-                        !task.assignedToId ? (
-                          <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs">
-                            Un-Assign
-                          </span>
-                        ) : (
-                          <span className="text-slate-800 font-semibold">{task.assignTo}</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-600">{task.addedBy}</td>
-                      <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
-                        {task.assignDate ? task.assignDate.split('T')[0] : 'N/A'}
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
-                        {task.dueDate ? task.dueDate.split('T')[0] : 'N/A'}
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            task.status === 'completed'
-                              ? 'bg-[#16A34A] text-white'
-                              : task.status === 'wip'
-                                ? 'bg-[#2563EB] text-white'
-                                : task.status === 'pendingfromclient'
-                                  ? 'bg-[#D97706] text-white'
-                                  : task.status === 'invoiced'
-                                    ? 'bg-[#7C3AED] text-white'
-                                    : task.status === 'returnback'
-                                      ? 'bg-[#0891B2] text-white'
-                                      : task.status === 'cancel'
-                                        ? 'bg-[#6B7280] text-white'
-                                        : task.status === 'feespending'
-                                          ? 'bg-[#EA580C] text-white'
-                                          : task.status === 'onhold'
-                                            ? 'bg-[#B45309] text-white'
-                                            : 'bg-[#DC2626] text-white'
-                          }`}
-                        >
-                          {task.status === 'completed'
-                            ? 'Completed'
-                            : task.status === 'wip'
-                              ? 'Work In Progress'
-                              : task.status === 'pendingfromclient'
-                                ? 'Pending From Client'
-                                : task.status === 'invoiced'
-                                  ? 'Invoiced'
-                                  : task.status === 'returnback'
-                                    ? 'Return Back'
-                                    : task.status === 'cancel'
-                                      ? 'Cancelled'
-                                      : task.status === 'feespending'
-                                        ? 'Fees Pending'
-                                        : task.status === 'onhold'
-                                          ? 'On Hold'
-                                          : 'Not Started'}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          {!isOpsEmployee && (
-                            <button
-                              onClick={() => {
-                                setAssignTargetTask(task);
-                                setAssignModalOpen(true);
-                              }}
-                              className="w-6 h-6 rounded-full bg-[#003A66] hover:bg-[#002B4D] text-white flex items-center justify-center"
-                              title="Assign"
+                      {isOpsEmployee ? (
+                        <>
+                          <td className="py-2.5 px-3 text-slate-700 font-medium">
+                            {task.assignBy}
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                            {task.assignDate ? task.assignDate.split('T')[0] : 'N/A'}
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600">{task.addedBy}</td>
+                          <td className="py-2.5 px-3 text-slate-800 font-medium">
+                            {task.customerName}
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600">{task.companyName}</td>
+                          <td className="py-2.5 px-3">
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  if (expandedId === task.id) {
+                                    setExpandedId(null);
+                                  } else {
+                                    setExpandedId(task.id);
+                                    loadTableTimeline(task.id);
+                                  }
+                                }}
+                                className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center font-bold text-[11px]"
+                                title="Expand timeline"
+                              >
+                                {expandedId === task.id ? '-' : '+'}
+                              </button>
+                              <button
+                                onClick={() => setEffortModalTask(task)}
+                                className="font-semibold text-slate-900 hover:text-[#0284c7] text-left hover:underline"
+                              >
+                                {task.taskName}
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-700 whitespace-nowrap">
+                            {task.phone || 'N/A'}
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-700 font-medium">{task.service}</td>
+                          <td className="py-2.5 px-3">
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                task.status === 'completed'
+                                  ? 'bg-[#16A34A] text-white'
+                                  : task.status === 'wip'
+                                    ? 'bg-[#2563EB] text-white'
+                                    : task.status === 'pendingfromclient'
+                                      ? 'bg-[#D97706] text-white'
+                                      : task.status === 'invoiced'
+                                        ? 'bg-[#7C3AED] text-white'
+                                        : task.status === 'returnback'
+                                          ? 'bg-[#0891B2] text-white'
+                                          : task.status === 'cancel'
+                                            ? 'bg-[#6B7280] text-white'
+                                            : task.status === 'feespending'
+                                              ? 'bg-[#EA580C] text-white'
+                                              : task.status === 'onhold'
+                                                ? 'bg-[#B45309] text-white'
+                                                : 'bg-[#DC2626] text-white'
+                              }`}
                             >
-                              <Plus className="w-3.5 h-3.5" />
-                            </button>
+                              {task.status === 'completed'
+                                ? 'Completed'
+                                : task.status === 'wip'
+                                  ? 'Work In Progress'
+                                  : task.status === 'pendingfromclient'
+                                    ? 'Pending From Client'
+                                    : task.status === 'invoiced'
+                                      ? 'Invoiced'
+                                      : task.status === 'returnback'
+                                        ? 'Return Back'
+                                        : task.status === 'cancel'
+                                          ? 'Cancelled'
+                                          : task.status === 'feespending'
+                                            ? 'Fees Pending'
+                                            : task.status === 'onhold'
+                                              ? 'On Hold'
+                                              : 'Not Started'}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                            {task.dueDate ? task.dueDate.split('T')[0] : 'N/A'}
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="py-2.5 px-3">
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  if (expandedId === task.id) {
+                                    setExpandedId(null);
+                                  } else {
+                                    setExpandedId(task.id);
+                                    loadTableTimeline(task.id);
+                                  }
+                                }}
+                                className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 flex items-center justify-center font-bold text-[11px]"
+                                title="Expand timeline"
+                              >
+                                {expandedId === task.id ? '-' : '+'}
+                              </button>
+                              <button
+                                onClick={() => setEffortModalTask(task)}
+                                className="font-semibold text-slate-900 hover:text-[#0284c7] text-left hover:underline"
+                              >
+                                {task.taskName}
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-800 font-medium">
+                            {task.customerName}
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-700 whitespace-nowrap">
+                            {task.phone || 'N/A'}
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600">{task.companyName}</td>
+                          <td className="py-2.5 px-3 text-slate-700 font-medium">{task.service}</td>
+                          {!isOpsEmployee && (
+                            <td className="py-2.5 px-3 font-medium">
+                              {task.assignTo === 'Un-Assign' ||
+                              task.isAssign === 0 ||
+                              !task.assignedToId ? (
+                                <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs">
+                                  Un-Assign
+                                </span>
+                              ) : (
+                                <span className="text-slate-800 font-semibold">
+                                  {task.assignTo}
+                                </span>
+                              )}
+                            </td>
                           )}
-                          <button
-                            onClick={() => {
-                              if (confirm(`Delete task ${task.taskName}?`)) {
-                                setTasks((prev) => prev.filter((t) => t.id !== task.id));
-                              }
-                            }}
-                            className="w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
+                          <td className="py-2.5 px-3 text-slate-600">{task.addedBy}</td>
+                          <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                            {task.assignDate ? task.assignDate.split('T')[0] : 'N/A'}
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                            {task.dueDate ? task.dueDate.split('T')[0] : 'N/A'}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                task.status === 'completed'
+                                  ? 'bg-[#16A34A] text-white'
+                                  : task.status === 'wip'
+                                    ? 'bg-[#2563EB] text-white'
+                                    : task.status === 'pendingfromclient'
+                                      ? 'bg-[#D97706] text-white'
+                                      : task.status === 'invoiced'
+                                        ? 'bg-[#7C3AED] text-white'
+                                        : task.status === 'returnback'
+                                          ? 'bg-[#0891B2] text-white'
+                                          : task.status === 'cancel'
+                                            ? 'bg-[#6B7280] text-white'
+                                            : task.status === 'feespending'
+                                              ? 'bg-[#EA580C] text-white'
+                                              : task.status === 'onhold'
+                                                ? 'bg-[#B45309] text-white'
+                                                : 'bg-[#DC2626] text-white'
+                              }`}
+                            >
+                              {task.status === 'completed'
+                                ? 'Completed'
+                                : task.status === 'wip'
+                                  ? 'Work In Progress'
+                                  : task.status === 'pendingfromclient'
+                                    ? 'Pending From Client'
+                                    : task.status === 'invoiced'
+                                      ? 'Invoiced'
+                                      : task.status === 'returnback'
+                                        ? 'Return Back'
+                                        : task.status === 'cancel'
+                                          ? 'Cancelled'
+                                          : task.status === 'feespending'
+                                            ? 'Fees Pending'
+                                            : task.status === 'onhold'
+                                              ? 'On Hold'
+                                              : 'Not Started'}
+                            </span>
+                          </td>
+                          {!isOpsEmployee && (
+                            <td className="py-2.5 px-3 text-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    setAssignTargetTask(task);
+                                    setAssignModalOpen(true);
+                                  }}
+                                  className="w-6 h-6 rounded-full bg-[#003A66] hover:bg-[#002B4D] text-white flex items-center justify-center"
+                                  title="Assign"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`Delete task ${task.taskName}?`)) {
+                                      setTasks((prev) => prev.filter((t) => t.id !== task.id));
+                                    }
+                                  }}
+                                  className="w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          )}
+                        </>
+                      )}
                     </tr>
 
                     {/* --- Expandable Visual Stepper Timeline --- */}
                     {expandedId === task.id && (
                       <tr className="bg-[#FAF9F5]">
-                        <td colSpan={isOpsEmployee ? 10 : 11} className="p-5">
+                        <td colSpan={isOpsEmployee ? 10 : 12} className="p-5">
                           <div className="bg-white rounded-2xl p-5 border border-[#EAE6DD] shadow-xs">
                             <h4 className="text-xs font-bold text-[#1B365D] uppercase mb-4 flex items-center gap-2">
                               <Clock className="w-4 h-4 text-emerald-600" />
