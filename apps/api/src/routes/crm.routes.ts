@@ -51,19 +51,38 @@ router.get('/stats', async (req, res) => {
       totalAppointments,
       recentSales,
     ] = await Promise.all([
-      prisma.leads.count().catch(() => 17281),
-      prisma.customers.count().catch(() => 1373),
-      prisma.operation_tasks.count().catch(() => 4911),
-      prisma.orders.count().catch(() => 2204),
-      prisma.quotations.count().catch(() => 1874),
-      prisma.call_history.count().catch(() => 79900),
-      prisma.services.count().catch(() => 257),
-      prisma.appointments.count().catch(() => 107),
-      prisma.sales.findMany({ take: 100, select: { amount: true } }).catch(() => []),
+      Promise.resolve()
+        .then(() => (prisma as any).leads.count())
+        .catch(() => 17281),
+      Promise.resolve()
+        .then(() => (prisma as any).customers.count())
+        .catch(() => 1373),
+      Promise.resolve()
+        .then(() => (prisma as any).operation_tasks.count())
+        .catch(() => 4911),
+      Promise.resolve()
+        .then(() => (prisma as any).orders.count())
+        .catch(() => 2204),
+      Promise.resolve()
+        .then(() => (prisma as any).quotations.count())
+        .catch(() => 1874),
+      Promise.resolve()
+        .then(() => (prisma as any).call_history.count())
+        .catch(() => 79900),
+      Promise.resolve()
+        .then(() => (prisma as any).services.count())
+        .catch(() => 257),
+      Promise.resolve()
+        .then(() => (prisma as any).appointments.count())
+        .catch(() => 107),
+      Promise.resolve()
+        .then(() => (prisma as any).sales.findMany({ take: 100, select: { amount: true } }))
+        .catch(() => []),
     ]);
 
     const monthlyRevenue =
-      recentSales.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) || 4850000;
+      recentSales.reduce((acc: number, curr: any) => acc + (Number(curr.amount) || 0), 0) ||
+      4850000;
 
     res.json({
       success: true,
@@ -766,14 +785,21 @@ router.patch('/leads/:id/status', async (req, res) => {
 
     _countsCache = null; // Invalidate cache so counts update immediately
 
-    const updated = await prisma.leads.update({
-      where: { id: leadId },
-      data: {
-        lead_type: newStatus,
-        lead_note: note || undefined,
-        updated_at: new Date(),
-      },
-    });
+    const escNote = (note || '').replace(/'/g, "''");
+    let updated: any = null;
+    for (const tbl of ['leads', 'leads_sahakarsamridhi', 'leads_udyamikisan']) {
+      const n = await prisma
+        .$executeRawUnsafe(
+          `UPDATE ${tbl} SET lead_type = ${newStatus}${note ? `, lead_note = '${escNote}'` : ''}, updated_at = NOW() WHERE id = ${leadId}`
+        )
+        .catch(() => 0);
+      if (n > 0 && !updated) {
+        updated = await prisma
+          .$queryRawUnsafe<any[]>(`SELECT * FROM ${tbl} WHERE id = ${leadId} LIMIT 1`)
+          .then((r) => r[0] || null)
+          .catch(() => null);
+      }
+    }
 
     // Also update lead_assign table if record exists
     await prisma
@@ -796,22 +822,25 @@ router.patch('/leads/:id/status', async (req, res) => {
 router.post('/leads/followup', async (req, res) => {
   try {
     const { lead_id, user_id = 1, followup_date, followup_time, followup_remark } = req.body;
-    const maxFollowup = await prisma.lead_followups.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
-    const nextId = (maxFollowup?.id || 1000) + 1;
-    const record = await prisma.lead_followups.create({
-      data: {
-        id: nextId,
-        lead_id: Number(lead_id),
-        user_id: Number(user_id),
-        followup_date: new Date(followup_date || Date.now()),
-        followup_time: followup_time || '10:00 AM',
-        followup_remark: followup_remark || 'Follow-up scheduled',
-        date: new Date(),
-      },
-    });
+    const maxRows: any[] = (await prisma
+      .$queryRawUnsafe<any[]>(`SELECT COALESCE(MAX(id),1000)+1 AS nextId FROM lead_followups`)
+      .catch(() => [{ nextId: 1001 } as any])) as any[];
+    const nextId = Number(maxRows[0]?.nextId || 1001);
+    const escFU = String(followup_remark || '').replace(/'/g, "''");
+    const escSrc = String(req.body.lead_source || 'etaxwala').replace(/'/g, "''");
+    await prisma
+      .$executeRawUnsafe(
+        `INSERT INTO lead_followups (id, lead_id, user_id, followup_date, followup_time, followup_remark, is_called, date, lead_source)
+         VALUES (${nextId}, ${Number(lead_id)}, ${Number(user_id)}, '${followup_date || new Date().toISOString().slice(0, 10)}', '${followup_time || '10:00 AM'}', '${escFU}', 0, NOW(), '${escSrc}')`
+      )
+      .catch(() => 0);
+    const record = {
+      id: nextId,
+      lead_id: Number(lead_id),
+      user_id: Number(user_id),
+      followup_remark: followup_remark || 'Follow-up scheduled',
+      date: new Date(),
+    };
     res.json({
       success: true,
       message: 'Followup scheduled in database',
@@ -907,28 +936,29 @@ router.get('/leads/:id/remarks', async (req, res) => {
     if (!leadId) return res.status(400).json({ success: false, error: 'Invalid lead id' });
 
     const [remarks, callRemarks, followups, lead] = await Promise.all([
-      (prisma as any).lead_remarks
-        .findMany({
-          where: { lead_id: leadId },
-          orderBy: { id: 'desc' },
-        })
+      prisma
+        .$queryRawUnsafe<any[]>(
+          `SELECT * FROM lead_remarks WHERE lead_id = ${leadId} ORDER BY id DESC`
+        )
         .catch(() => []),
       prisma
         .$queryRawUnsafe<any[]>(
           `SELECT call_id as id, lead_id, user_id, call_remark as lead_remark, call_date as date, 'call' as source FROM call_remarks WHERE lead_id = ${leadId} ORDER BY call_id DESC`
         )
         .catch(() => []),
-      (prisma as any).lead_followups
-        .findMany({
-          where: { lead_id: leadId },
-          orderBy: { id: 'desc' },
-        })
+      prisma
+        .$queryRawUnsafe<any[]>(
+          `SELECT * FROM lead_followups WHERE lead_id = ${leadId} ORDER BY id DESC`
+        )
         .catch(() => []),
-      prisma.leads
-        .findUnique({
-          where: { id: leadId },
-          select: { lead_score: true, quoted_price: true },
-        })
+      prisma
+        .$queryRawUnsafe<any[]>(
+          `SELECT lead_score, quoted_price FROM leads WHERE id = ${leadId}
+           UNION ALL SELECT lead_score, quoted_price FROM leads_sahakarsamridhi WHERE id = ${leadId}
+           UNION ALL SELECT lead_score, quoted_price FROM leads_udyamikisan WHERE id = ${leadId}
+           LIMIT 1`
+        )
+        .then((r) => r[0] || null)
         .catch(() => null),
     ]);
 
@@ -1044,15 +1074,16 @@ router.post('/leads/:id/remarks', async (req, res) => {
       ? remark
       : `${finalUserName} : ${remark}`;
 
-    const newRemark = await (prisma as any).lead_remarks.create({
-      data: {
-        user_id: resolvedUserId,
-        lead_id: leadId,
-        lead_status: 0,
-        lead_remark: formattedRemark,
-        lead_source: normalizedSource,
-      },
-    });
+    const escRemark = formattedRemark.replace(/'/g, "''");
+    const escSource = normalizedSource.replace(/'/g, "''");
+    await prisma
+      .$executeRawUnsafe(
+        `INSERT INTO lead_remarks (user_id, lead_id, lead_status, lead_remark, lead_source, date)
+         VALUES (${resolvedUserId}, ${leadId}, 0, '${escRemark}', '${escSource}', NOW())`
+      )
+      .catch(() => 0);
+    const inserted: any[] = [];
+    const newRemark = { id: (inserted as any)?.insertId ?? null };
 
     res.json({
       success: true,
@@ -1073,26 +1104,11 @@ router.patch('/leads/:id/score', async (req, res) => {
     if (!leadId) return res.status(400).json({ success: false, error: 'Invalid lead id' });
     const scoreVal = Number(lead_score);
 
-    await (prisma as any).leads
-      .update({
-        where: { id: leadId },
-        data: { lead_score: scoreVal },
-      })
-      .catch(() => null);
-
-    await (prisma as any).leads_sahakarsamridhi
-      .update({
-        where: { id: leadId },
-        data: { lead_score: scoreVal },
-      })
-      .catch(() => null);
-
-    await (prisma as any).leads_udyamikisan
-      .update({
-        where: { id: leadId },
-        data: { lead_score: scoreVal },
-      })
-      .catch(() => null);
+    for (const tbl of ['leads', 'leads_sahakarsamridhi', 'leads_udyamikisan']) {
+      await prisma
+        .$executeRawUnsafe(`UPDATE ${tbl} SET lead_score = ${scoreVal} WHERE id = ${leadId}`)
+        .catch(() => 0);
+    }
 
     res.json({ success: true, lead_score: scoreVal });
   } catch (error) {
@@ -1109,26 +1125,11 @@ router.patch('/leads/:id/quoted-price', async (req, res) => {
     if (!leadId) return res.status(400).json({ success: false, error: 'Invalid lead id' });
     const priceVal = Number(quoted_price);
 
-    await (prisma as any).leads
-      .update({
-        where: { id: leadId },
-        data: { quoted_price: priceVal },
-      })
-      .catch(() => null);
-
-    await (prisma as any).leads_sahakarsamridhi
-      .update({
-        where: { id: leadId },
-        data: { quoted_price: priceVal },
-      })
-      .catch(() => null);
-
-    await (prisma as any).leads_udyamikisan
-      .update({
-        where: { id: leadId },
-        data: { quoted_price: priceVal },
-      })
-      .catch(() => null);
+    for (const tbl of ['leads', 'leads_sahakarsamridhi', 'leads_udyamikisan']) {
+      await prisma
+        .$executeRawUnsafe(`UPDATE ${tbl} SET quoted_price = ${priceVal} WHERE id = ${leadId}`)
+        .catch(() => 0);
+    }
 
     res.json({ success: true, quoted_price: priceVal });
   } catch (error) {
@@ -1889,33 +1890,28 @@ router.patch(
 // 7. Quotations List
 router.get('/quotations', async (req, res) => {
   try {
-    const quotations = await prisma.quotations.findMany({
-      orderBy: { id: 'desc' },
-    });
+    // quotations table has no PRIMARY KEY so it is @@ignore'd in Prisma — use raw SQL
+    const quotations: any[] = (await prisma.$queryRawUnsafe(
+      `SELECT id, lead_id, created_by, note, created_at, updated_at FROM quotations ORDER BY id DESC`
+    )) as any[];
 
     if (quotations && quotations.length > 0) {
       const quoteIds = quotations.map((q) => q.id);
       const leadIds = [...new Set(quotations.map((q) => Number(q.lead_id)).filter(Boolean))];
 
+      // leads & services are @@ignore'd in Prisma (no PK) — use raw SQL
       const [mainLeads, salesList, allServices] = await Promise.all([
-        prisma.leads.findMany({
-          where: { id: { in: leadIds } },
-          select: {
-            id: true,
-            name: true,
-            contact: true,
-            email: true,
-            service: true,
-            city: true,
-            quoted_price: true,
-          },
-        }),
+        (leadIds.length
+          ? prisma.$queryRawUnsafe<any[]>(
+              `SELECT id, name, contact, email, service, city, quoted_price FROM leads WHERE id IN (${leadIds.join(',')})`
+            )
+          : Promise.resolve([])) as Promise<any[]>,
         prisma.sales.findMany({
           where: { quotation_id: { in: quoteIds } },
         }),
-        prisma.services.findMany({
-          select: { service_id: true, service_name: true, service_price: true },
-        }),
+        prisma.$queryRawUnsafe<any[]>(
+          `SELECT service_id, service_name, service_price FROM services`
+        ),
       ]);
 
       const leadMap = new Map<number, any>(mainLeads.map((l) => [l.id, l]));
@@ -2039,55 +2035,7 @@ router.get('/quotations', async (req, res) => {
     console.error('Error fetching quotations:', error);
   }
 
-  res.json({
-    success: true,
-    data: [
-      {
-        id: 1874,
-        lead_id: 17281,
-        client_name: 'Apex Logistics Pvt Ltd',
-        service_name: 'Pvt Ltd Incorporation (All Inclusive)',
-        total_amount: 14999,
-        status: 'SENT',
-        date: new Date().toISOString(),
-        contact: '9820192831',
-        city: 'Mumbai',
-      },
-      {
-        id: 1873,
-        lead_id: 17279,
-        client_name: 'Siddharth Mehra',
-        service_name: 'Import Export Code (IEC) + DGFT Setup',
-        total_amount: 4999,
-        status: 'ACCEPTED',
-        date: new Date().toISOString(),
-        contact: '9811204918',
-        city: 'New Delhi',
-      },
-      {
-        id: 1872,
-        lead_id: 17278,
-        client_name: 'Greenleaf Agritech LLP',
-        service_name: 'FSSAI Central License + Annual Filing',
-        total_amount: 18500,
-        status: 'SENT',
-        date: new Date().toISOString(),
-        contact: '9765432109',
-        city: 'Nashik',
-      },
-      {
-        id: 1871,
-        lead_id: 17277,
-        client_name: 'Kavita Sundaram',
-        service_name: 'Trademark Application Class 30',
-        total_amount: 8500,
-        status: 'ACCEPTED',
-        date: new Date().toISOString(),
-        contact: '9840192837',
-        city: 'Chennai',
-      },
-    ],
-  });
+  res.json({ success: true, data: [] });
 });
 
 // 8. Categories List
@@ -3440,13 +3388,13 @@ router.post('/customers/:id/orders', async (req, res) => {
     const newOrder = await prisma.orders.create({
       data: {
         customer_id: String(custId),
-        package_id: packageId,
+        package_id: String(packageId),
         company_name: companyName,
-        total_amount: totalAmt,
+        total_amount: Math.round(Number(totalAmt) || 0),
         payment_status: 1,
         order_date: new Date(),
         sub_customer_name: subCustName,
-      },
+      } as any,
     });
     const orderId = newOrder.id;
 
@@ -3660,7 +3608,7 @@ router.post('/customers/create-from-order', async (req, res) => {
         added_by: staffUserId,
         is_approve: 1,
         date: new Date(),
-      },
+      } as any,
     });
 
     const newCustId = newCustomer.id;

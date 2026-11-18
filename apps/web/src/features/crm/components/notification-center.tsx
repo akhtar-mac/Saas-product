@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/auth-store';
+import { API_BASE_URL } from '@/lib/api-base';
 import {
   Bell,
   X,
@@ -21,17 +24,12 @@ interface Notification {
   urgent?: boolean;
 }
 
-const DEMO_NOTIFICATIONS: Notification[] = [
-  { id: '1', type: 'lead', title: 'New Inbound Lead', detail: 'Mahesh Patil (9822011223) inquired about Pvt Ltd Registration from Google Ads.', time: '2 min ago', isRead: false },
-  { id: '2', type: 'payment', title: 'Bank NEFT Payment Received', detail: '₹16,499 confirmed for Order #2201 — GST Registration (Pune) via HDFC Bank.', time: '14 min ago', isRead: false },
-  { id: '3', type: 'sla', title: 'SLA Overdue Warning', detail: 'Task #4809 (FSSAI License) has breached the 48-hour SLA deadline. Escalate to Operations Manager.', time: '30 min ago', isRead: false, urgent: true },
-  { id: '4', type: 'qc', title: 'QC Review Requested', detail: 'CA Pooja Kulkarni submitted Order #2204 for QC sign-off before delivery.', time: '1 hr ago', isRead: false },
-  { id: '5', type: 'system', title: 'Flutter App Sync Complete', detail: '148 call logs from sales mobile agents synced successfully.', time: '2 hr ago', isRead: true },
-  { id: '6', type: 'lead', title: 'Bulk Lead Import', detail: '342 new leads imported from the October Google Ads campaign.', time: '3 hr ago', isRead: true },
-  { id: '7', type: 'payment', title: 'UPI Payment Received', detail: '₹8,999 received via UPI for Order #2196 — Trademark Registration.', time: '5 hr ago', isRead: true },
-];
+const DEMO_NOTIFICATIONS: Notification[] = [];
 
-const typeConfig: Record<Notification['type'], { icon: React.ElementType; bg: string; color: string }> = {
+const typeConfig: Record<
+  Notification['type'],
+  { icon: React.ElementType; bg: string; color: string }
+> = {
   lead: { icon: PhoneCall, bg: 'bg-blue-50', color: 'text-blue-600' },
   payment: { icon: DollarSign, bg: 'bg-emerald-50', color: 'text-emerald-600' },
   sla: { icon: AlertTriangle, bg: 'bg-red-50', color: 'text-red-600' },
@@ -48,8 +46,43 @@ interface NotificationCenterProps {
 }
 
 export default function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
-  const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
+  const { staffToken } = useAuthStore();
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [tab, setTab] = useState<FilterTab>('all');
+
+  const API_BASE = API_BASE_URL;
+
+  const loadChatNotifications = () => {
+    if (!staffToken) return;
+    fetch(`${API_BASE}/v1/chat/conversations`, {
+      headers: { Authorization: `Bearer ${staffToken}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data?.success || !Array.isArray(data.data)) return;
+        const mapped: Notification[] = data.data
+          .filter((c: any) => Number(c.unreadCount) > 0)
+          .map((c: any) => ({
+            id: `chat-${c.id}`,
+            type: 'lead' as const,
+            title: c.participant?.name || c.title || 'Staff Member',
+            detail:
+              c.lastMessage?.content ||
+              (c.lastMessage?.messageType === 'file' ? 'Sent an attachment' : 'New message'),
+            time: c.updatedAt ? new Date(c.updatedAt).toLocaleString() : '',
+            isRead: false,
+            conversationId: c.id,
+          }));
+        setNotifications(mapped);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    if (isOpen) loadChatNotifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, staffToken]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -69,8 +102,8 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
     tab === 'unread'
       ? notifications.filter((n) => !n.isRead)
       : tab === 'urgent'
-      ? notifications.filter((n) => n.urgent)
-      : notifications;
+        ? notifications.filter((n) => n.urgent)
+        : notifications;
 
   if (!isOpen) return null;
 
@@ -114,9 +147,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
               key={t}
               onClick={() => setTab(t)}
               className={`px-3 py-1 rounded-lg text-[11px] font-semibold capitalize transition-colors ${
-                tab === t
-                  ? 'bg-brand-navy text-white'
-                  : 'text-slate-500 hover:bg-slate-100'
+                tab === t ? 'bg-brand-navy text-white' : 'text-slate-500 hover:bg-slate-100'
               }`}
             >
               {t}
@@ -132,7 +163,11 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
           {filtered.length === 0 ? (
             <div className="text-center py-10 text-xs text-slate-400">
               <Bell className="w-6 h-6 mx-auto mb-2 opacity-30" />
-              {tab === 'unread' ? 'All caught up!' : tab === 'urgent' ? 'No urgent alerts' : 'No notifications'}
+              {tab === 'unread'
+                ? 'All caught up!'
+                : tab === 'urgent'
+                  ? 'No urgent alerts'
+                  : 'No notifications'}
             </div>
           ) : (
             filtered.map((notif) => {
@@ -141,20 +176,35 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
               return (
                 <div
                   key={notif.id}
-                  onClick={() => markRead(notif.id)}
+                  onClick={() => {
+                    markRead(notif.id);
+                    const convId = (notif as any).conversationId;
+                    if (convId) {
+                      fetch(`${API_BASE}/v1/chat/conversations/${convId}/read`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${staffToken}` },
+                      }).catch(() => {});
+                      onClose();
+                      navigate(`/crm/chat?conversationId=${convId}`);
+                    }
+                  }}
                   className={`flex gap-3 px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors group ${
                     !notif.isRead ? 'bg-blue-50/30' : ''
                   }`}
                 >
                   {/* Icon */}
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}>
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}
+                  >
                     <Icon className={`w-4 h-4 ${cfg.color}`} />
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <p className={`text-xs font-bold leading-tight ${!notif.isRead ? 'text-slate-800' : 'text-slate-600'}`}>
+                      <p
+                        className={`text-xs font-bold leading-tight ${!notif.isRead ? 'text-slate-800' : 'text-slate-600'}`}
+                      >
                         {notif.title}
                         {notif.urgent && (
                           <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 text-[9px] font-bold">
@@ -163,17 +213,24 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
                         )}
                       </p>
                       <button
-                        onClick={(e) => { e.stopPropagation(); dismiss(notif.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          dismiss(notif.id);
+                        }}
                         className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-slate-200 text-slate-400 transition-all shrink-0"
                       >
                         <X className="w-3 h-3" />
                       </button>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5 leading-snug line-clamp-2">{notif.detail}</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5 leading-snug line-clamp-2">
+                      {notif.detail}
+                    </p>
                     <div className="flex items-center gap-1 mt-1 text-[10px] text-slate-400">
                       <Clock className="w-3 h-3" />
                       {notif.time}
-                      {!notif.isRead && <span className="w-1.5 h-1.5 rounded-full bg-blue-500 ml-1" />}
+                      {!notif.isRead && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 ml-1" />
+                      )}
                     </div>
                   </div>
                 </div>

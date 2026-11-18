@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
@@ -382,6 +382,8 @@ export default function CrmLeadsPage() {
   // Form states inside Details Modal
   const [editStatus, setEditStatus] = useState('Interested');
   const [editRemark, setEditRemark] = useState('');
+  const [editLeadScore, setEditLeadScore] = useState('50');
+  const [editQuotedPrice, setEditQuotedPrice] = useState('');
   const [followupDate, setFollowupDate] = useState('2026-09-05');
   const [followupTime, setFollowupTime] = useState('11:00');
   const [followupRemark, setFollowupRemark] = useState('');
@@ -401,6 +403,34 @@ export default function CrmLeadsPage() {
   const [scoreInputValue, setScoreInputValue] = useState('80');
   const [quotedPriceModalOpen, setQuotedPriceModalOpen] = useState(false);
   const [priceInputValue, setPriceInputValue] = useState('15000');
+
+  // Lead → Customer modal (Add New Customer with lead pre-fill)
+  const [convertModalOpen, setConvertModalOpen] = useState(false);
+  const [convName, setConvName] = useState('');
+  const [convBusiness, setConvBusiness] = useState('');
+  const [convEmail, setConvEmail] = useState('');
+  const [convMobile, setConvMobile] = useState('');
+  const [convState, setConvState] = useState('');
+  const [convCity, setConvCity] = useState('');
+  const [isCustomPkg, setIsCustomPkg] = useState('0');
+  const [customPkgName, setCustomPkgName] = useState('');
+  const [selectedCustomServiceIds, setSelectedCustomServiceIds] = useState<number[]>([]);
+  const [isCustomDropdownOpen, setIsCustomDropdownOpen] = useState(false);
+  const [customServiceSearchTerm, setCustomServiceSearchTerm] = useState('');
+  const customDropdownRef = useRef<HTMLDivElement | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [finalTotalAmount, setFinalTotalAmount] = useState(0);
+  const [basePriceTotal, setBasePriceTotal] = useState(0);
+  const [paymentMode, setPaymentMode] = useState('1');
+  const [paidAmount, setPaidAmount] = useState(0);
+  const [emi1Amount, setEmi1Amount] = useState(0);
+  const [emi2Amount, setEmi2Amount] = useState(0);
+  const [dueDate1, setDueDate1] = useState('');
+  const [dueDate2, setDueDate2] = useState('');
+  const [comment, setComment] = useState('');
+  const [allDbServices, setAllDbServices] = useState<any[]>([]);
+  const [convSubmitting, setConvSubmitting] = useState(false);
 
   // New lead form state
   const [newLeadName, setNewLeadName] = useState('');
@@ -602,6 +632,77 @@ export default function CrmLeadsPage() {
     };
   };
 
+  // Reset status-tab fields whenever a different lead is opened
+  useEffect(() => {
+    if (detailsModalLead) {
+      const sc = detailsModalLead.leadScore
+        ? String(detailsModalLead.leadScore).replace('%', '')
+        : '50';
+      setEditLeadScore(sc);
+      setEditQuotedPrice(
+        detailsModalLead.quotedPrice != null ? String(detailsModalLead.quotedPrice) : ''
+      );
+      setEditStatus(detailsModalLead.status || 'Interested');
+      setEditRemark('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detailsModalLead?.id]);
+
+  // Load services when convert modal opens
+  useEffect(() => {
+    if (convertModalOpen) {
+      fetch(`${API_BASE}/v1/crm/services`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.success) setAllDbServices(d.data || []);
+        });
+    }
+  }, [convertModalOpen]);
+
+  // Calculate custom package total
+  useEffect(() => {
+    if (isCustomPkg === '1') {
+      const total = selectedCustomServiceIds.reduce((sum, id) => {
+        const s = allDbServices.find((x) => x.service_id === id);
+        return sum + (s?.service_price || 0);
+      }, 0);
+      setBasePriceTotal(total);
+      setFinalTotalAmount(total - discountAmount);
+    }
+  }, [selectedCustomServiceIds, allDbServices, isCustomPkg, discountAmount]);
+  // Recalculate final total when discount changes
+  useEffect(() => {
+    setFinalTotalAmount(basePriceTotal - discountAmount);
+  }, [discountAmount, basePriceTotal]);
+
+  // Calculate EMI amounts based on payment mode
+  useEffect(() => {
+    const payable = finalTotalAmount - paidAmount;
+    if (paymentMode === '2') {
+      setEmi1Amount(Math.ceil(payable / 2));
+      setEmi2Amount(0);
+    } else if (paymentMode === '3') {
+      setEmi1Amount(Math.ceil(payable / 3));
+      setEmi2Amount(Math.ceil(payable / 3));
+    } else {
+      setEmi1Amount(0);
+      setEmi2Amount(0);
+    }
+  }, [paymentMode, finalTotalAmount, paidAmount]);
+
+  // Close custom dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (customDropdownRef.current && !customDropdownRef.current.contains(e.target as Node)) {
+        setIsCustomDropdownOpen(false);
+      }
+    };
+    if (isCustomDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isCustomDropdownOpen]);
+
   // Fetch live remarks from DB when detailsModalLead is opened
   useEffect(() => {
     if (!detailsModalLead?.id) return;
@@ -720,9 +821,7 @@ export default function CrmLeadsPage() {
     if (!detailsModalLead) return;
 
     if (editStatus === 'Customer') {
-      const targetLeadId = detailsModalLead.id;
-      setDetailsModalLead(null);
-      navigate(`/crm/leads/${targetLeadId}/won`);
+      openConvertCustomer(detailsModalLead);
       return;
     }
 
@@ -738,6 +837,34 @@ export default function CrmLeadsPage() {
           lead_source: detailsModalLead.leadSource || 'etaxwala',
         }),
       });
+
+      // Lead Score slider — same rule as old CRM
+      const SCORE_STATUSES = ['Interested', 'Negotiation', 'Quotation', 'Meetings', 'Hot'];
+      let savedScore: string | null = null;
+      let savedPrice: string | null = null;
+      if (SCORE_STATUSES.includes(editStatus)) {
+        const sc = parseInt(editLeadScore, 10);
+        if (!isNaN(sc) && sc >= 10 && sc <= 100) {
+          await fetch(`${API_BASE}/v1/crm/leads/${detailsModalLead.id}/score`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lead_score: sc }),
+          }).catch(() => {});
+          savedScore = `${sc}%`;
+        }
+      }
+      // Quoted price
+      if (editQuotedPrice.trim() !== '') {
+        const pr = parseFloat(editQuotedPrice);
+        if (!isNaN(pr) && pr > 0) {
+          await fetch(`${API_BASE}/v1/crm/leads/${detailsModalLead.id}/quoted-price`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quoted_price: pr }),
+          }).catch(() => {});
+          savedPrice = String(pr);
+        }
+      }
 
       await fetch(`${API_BASE}/v1/crm/calls/log`, {
         method: 'POST',
@@ -771,6 +898,8 @@ export default function CrmLeadsPage() {
                 ...l,
                 status: editStatus,
                 remarks: [newEntry, ...(l.remarks || [])],
+                leadScore: savedScore || l.leadScore,
+                quotedPrice: savedPrice || l.quotedPrice,
               }
             : l
         )
@@ -780,6 +909,8 @@ export default function CrmLeadsPage() {
           ...detailsModalLead,
           status: editStatus,
           remarks: [newEntry, ...(detailsModalLead.remarks || [])],
+          leadScore: savedScore || detailsModalLead.leadScore,
+          quotedPrice: savedPrice || detailsModalLead.quotedPrice,
         });
       }
       setEditRemark('');
@@ -873,22 +1004,28 @@ export default function CrmLeadsPage() {
   };
 
   const handleSaveLeadScoreModal = async () => {
-    if (!remarksModalLead) return;
+    const scoreLead = remarksModalLead || detailsModalLead;
+    if (!scoreLead) return;
     const scoreNum = parseInt(scoreInputValue, 10);
     if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
       alert('Please enter a valid percentage between 0 and 100');
       return;
     }
     try {
-      await fetch(`${API_BASE}/v1/crm/leads/${remarksModalLead.id}/score`, {
+      await fetch(`${API_BASE}/v1/crm/leads/${scoreLead.id}/score`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead_score: scoreNum }),
       });
       const newScore = `${scoreNum}%`;
-      setRemarksModalLead((prev) => (prev ? { ...prev, leadScore: newScore } : null));
+      setRemarksModalLead((prev) =>
+        prev && prev.id === scoreLead.id ? { ...prev, leadScore: newScore } : prev
+      );
+      setDetailsModalLead((prev) =>
+        prev && prev.id === scoreLead.id ? { ...prev, leadScore: newScore } : prev
+      );
       setLeads((prev) =>
-        prev.map((l) => (l.id === remarksModalLead.id ? { ...l, leadScore: newScore } : l))
+        prev.map((l) => (l.id === scoreLead.id ? { ...l, leadScore: newScore } : l))
       );
       setLeadScoreModalOpen(false);
     } catch (err) {
@@ -905,27 +1042,99 @@ export default function CrmLeadsPage() {
   };
 
   const handleSaveQuotedPriceModal = async () => {
-    if (!remarksModalLead) return;
+    const priceLead = remarksModalLead || detailsModalLead;
+    if (!priceLead) return;
     const priceNum = parseFloat(priceInputValue);
     if (isNaN(priceNum) || priceNum < 0) {
       alert('Please enter a valid price');
       return;
     }
     try {
-      await fetch(`${API_BASE}/v1/crm/leads/${remarksModalLead.id}/quoted-price`, {
+      await fetch(`${API_BASE}/v1/crm/leads/${priceLead.id}/quoted-price`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ quoted_price: priceNum }),
       });
       const newPrice = String(priceNum);
-      setRemarksModalLead((prev) => (prev ? { ...prev, quotedPrice: newPrice } : null));
+      setRemarksModalLead((prev) =>
+        prev && prev.id === priceLead.id ? { ...prev, quotedPrice: newPrice } : prev
+      );
+      setDetailsModalLead((prev) =>
+        prev && prev.id === priceLead.id ? { ...prev, quotedPrice: newPrice } : prev
+      );
       setLeads((prev) =>
-        prev.map((l) => (l.id === remarksModalLead.id ? { ...l, quotedPrice: newPrice } : l))
+        prev.map((l) => (l.id === priceLead.id ? { ...l, quotedPrice: newPrice } : l))
       );
       setQuotedPriceModalOpen(false);
     } catch (err) {
       console.error(err);
       alert('Failed to update quoted price');
+    }
+  };
+
+  const openConvertCustomer = (lead: Lead) => {
+    setConvName(lead.name || '');
+    setConvBusiness((lead as any).company_name || (lead as any).business || '');
+    setConvEmail(lead.email || '');
+    setConvMobile(lead.contact || (lead as any).mobile || '');
+    setConvState(lead.state || '');
+    setConvCity(lead.city || '');
+    setConvertModalOpen(true);
+  };
+
+  const toggleCustomService = (id: number) => {
+    setSelectedCustomServiceIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleConvertSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!convName.trim() || !convMobile.trim()) {
+      alert('Name and Mobile are required');
+      return;
+    }
+    setConvSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('customer_name', convName.trim());
+      formData.append('customer_businessName', convBusiness.trim() || convName.trim());
+      if (convEmail.trim()) formData.append('customer_email', convEmail.trim());
+      formData.append('customer_mobile', convMobile.trim());
+      if (convState.trim()) formData.append('customer_state', convState.trim());
+      if (convCity.trim()) formData.append('customer_city', convCity.trim());
+      formData.append('is_custom', isCustomPkg);
+      if (isCustomPkg === '1') {
+        formData.append('custom_package_name', customPkgName.trim() || 'Custom Package');
+        selectedCustomServiceIds.forEach((id) =>
+          formData.append('custom_package_services[]', String(id))
+        );
+      }
+      formData.append('customer_total_service_price', String(basePriceTotal));
+      formData.append('coupon_code', couponCode.trim());
+      formData.append('discount_amount', String(discountAmount));
+      formData.append('customer_payment_mode', paymentMode);
+      formData.append('customer_paid_amount', String(paidAmount));
+      formData.append('customer_unpaid_amount', String(Math.max(finalTotalAmount - paidAmount, 0)));
+      formData.append('customer_due_date', dueDate1);
+      formData.append('customer_comment', comment.trim());
+
+      const res = await fetch(`${API_BASE}/v1/crm/customers/add-offline`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setConvertModalOpen(false);
+        setDetailsModalLead(null);
+        alert('Customer created successfully!');
+      } else {
+        alert(data?.error || 'Failed to create customer');
+      }
+    } catch {
+      alert('Failed to create customer');
+    } finally {
+      setConvSubmitting(false);
     }
   };
 
@@ -1614,18 +1823,42 @@ export default function CrmLeadsPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Lead Score badge */}
-                {detailsModalLead.leadScore && (
-                  <span className="badge badge-navy text-[11px] font-bold px-2 py-0.5">
-                    Score: {detailsModalLead.leadScore}
-                  </span>
-                )}
-                {/* Quoted Price badge */}
-                {detailsModalLead.quotedPrice && (
-                  <span className="badge badge-gold text-[11px] font-bold px-2 py-0.5">
-                    ₹ {Number(detailsModalLead.quotedPrice).toLocaleString('en-IN')}
-                  </span>
-                )}
+                {/* Lead Score badge — click to update */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cur = detailsModalLead.leadScore
+                      ? String(detailsModalLead.leadScore).replace('%', '')
+                      : '50';
+                    setScoreInputValue(cur);
+                    setLeadScoreModalOpen(true);
+                  }}
+                  className="badge badge-navy text-[11px] font-bold px-2 py-0.5 hover:opacity-80 cursor-pointer"
+                  title="Click to update lead score"
+                >
+                  Score: {detailsModalLead.leadScore || 'N/A'}
+                </button>
+                {/* Quoted Price badge — always visible, click to update (leads.quoted_price) */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPriceInputValue(
+                      detailsModalLead.quotedPrice != null &&
+                        !isNaN(Number(detailsModalLead.quotedPrice))
+                        ? String(detailsModalLead.quotedPrice)
+                        : ''
+                    );
+                    setQuotedPriceModalOpen(true);
+                  }}
+                  className="badge badge-gold text-[11px] font-bold px-2 py-0.5 hover:opacity-80 cursor-pointer"
+                  title="Click to update quoted price"
+                >
+                  {detailsModalLead.quotedPrice != null &&
+                  detailsModalLead.quotedPrice !== '' &&
+                  !isNaN(Number(detailsModalLead.quotedPrice))
+                    ? `₹ ${Number(detailsModalLead.quotedPrice).toLocaleString('en-IN')}`
+                    : '₹ Add Price'}
+                </button>
                 <button
                   onClick={() => setDetailsModalLead(null)}
                   className="w-7 h-7 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
@@ -1773,23 +2006,7 @@ export default function CrmLeadsPage() {
                     >
                       <span>Update Lead</span>
                     </button>
-                    <button
-                      onClick={() => {
-                        const targetId = detailsModalLead.id;
-                        setDetailsModalLead(null);
-                        navigate(`/crm/leads/${targetId}/won`);
-                      }}
-                      className="btn-multicolor py-1.5 px-4 rounded-full text-xs font-bold shadow-xs cursor-pointer"
-                      style={
-                        {
-                          '--c-base': '#7C3AED',
-                          '--c-light': '#A78BFA',
-                          '--c-dark': '#5B21B6',
-                        } as React.CSSProperties
-                      }
-                    >
-                      <span>Convert to Customer</span>
-                    </button>
+
                     <button
                       onClick={() => {
                         const targetLead = detailsModalLead;
@@ -1846,6 +2063,17 @@ export default function CrmLeadsPage() {
                       onChange={(e) => setEditStatus(e.target.value)}
                       className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
                     >
+                      {![
+                        'Interested',
+                        'Not Interested',
+                        'Prospect',
+                        'Hot',
+                        'Quotation',
+                        'Meetings',
+                        'Customer',
+                        'Not Connected',
+                        'Negotiation',
+                      ].includes(editStatus) && <option value={editStatus}>{editStatus}</option>}
                       <option value="Interested">Interested</option>
                       <option value="Not Interested">Not Interested</option>
                       <option value="Prospect">Prospect</option>
@@ -1858,19 +2086,42 @@ export default function CrmLeadsPage() {
                     </select>
                   </div>
 
-                  {/* Show Quoted Price field when status is Quotation */}
-                  {editStatus === 'Quotation' && (
+                  {/* Lead Score slider — same statuses as old CRM */}
+                  {['Interested', 'Negotiation', 'Quotation', 'Meetings', 'Hot'].includes(
+                    editStatus
+                  ) && (
                     <div>
                       <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                        Quoted Price (₹) <span className="text-red-500">*</span>
+                        Lead Score:{' '}
+                        <span className="text-[#7C3AED] font-bold">{editLeadScore}%</span>
                       </label>
                       <input
-                        type="number"
-                        placeholder="Enter quoted price"
-                        className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                        type="range"
+                        min="10"
+                        max="100"
+                        step="10"
+                        value={editLeadScore}
+                        onChange={(e) => setEditLeadScore(e.target.value)}
+                        className="w-full accent-[#7C3AED] cursor-pointer"
                       />
                     </div>
                   )}
+
+                  {/* Quoted Price — available for every status (leads.quoted_price) */}
+                  {
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                        Quoted Price (₹)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter quoted price"
+                        value={editQuotedPrice}
+                        onChange={(e) => setEditQuotedPrice(e.target.value)}
+                        className="w-full text-xs bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"
+                      />
+                    </div>
+                  }
 
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-700 mb-1">
@@ -2662,7 +2913,7 @@ export default function CrmLeadsPage() {
       )}
 
       {/* ─── CUSTOM WIZARD MODAL 1: LEAD SCORE ─── */}
-      {leadScoreModalOpen && remarksModalLead && (
+      {leadScoreModalOpen && (remarksModalLead || detailsModalLead) && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in">
             <div className="h-1 bg-multicolor" />
@@ -2737,7 +2988,7 @@ export default function CrmLeadsPage() {
       )}
 
       {/* ─── CUSTOM WIZARD MODAL 2: QUOTED PRICE ─── */}
-      {quotedPriceModalOpen && remarksModalLead && (
+      {quotedPriceModalOpen && (remarksModalLead || detailsModalLead) && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in">
             <div className="h-1 bg-multicolor" />
@@ -2811,6 +3062,374 @@ export default function CrmLeadsPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lead → Customer Modal (Add New Customer with lead pre-fill) */}
+      {convertModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in max-h-[90vh] overflow-y-auto">
+            <div className="h-1 bg-multicolor" />
+            <div className="p-4 bg-white border-b border-[#EAE6DD] flex items-center justify-between">
+              <div>
+                <h3 className="font-extrabold text-sm text-[#1B365D]">Add New Customer</h3>
+                <p className="text-[10px] text-slate-400">
+                  <strong>Note:</strong> If you don't have any details please mention NA
+                </p>
+              </div>
+              <button
+                onClick={() => setConvertModalOpen(false)}
+                className="w-6 h-6 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConvertSubmit} className="p-6 space-y-4 text-xs">
+              {/* Row 1: Name, Company/Shop Name, Email */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={convName}
+                    onChange={(e) => setConvName(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Company/Shop Name
+                  </label>
+                  <input
+                    type="text"
+                    value={convBusiness}
+                    onChange={(e) => setConvBusiness(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={convEmail}
+                    onChange={(e) => setConvEmail(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Mobile No, State, City */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Mobile No
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={convMobile}
+                    onChange={(e) => setConvMobile(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    value={convState}
+                    onChange={(e) => setConvState(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    value={convCity}
+                    onChange={(e) => setConvCity(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Custom Package toggle */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Custom Package
+                  </label>
+                  <select
+                    value={isCustomPkg}
+                    onChange={(e) => setIsCustomPkg(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                  >
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Custom Package fields */}
+              {isCustomPkg === '1' ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Package Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. pvt ltd"
+                      value={customPkgName}
+                      onChange={(e) => setCustomPkgName(e.target.value)}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none"
+                    />
+                  </div>
+                  <div className="relative" ref={customDropdownRef}>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Select Custom Services
+                    </label>
+                    <div
+                      onClick={() => setIsCustomDropdownOpen(!isCustomDropdownOpen)}
+                      className="w-full min-h-[38px] bg-white border border-[#CBD5E1] rounded-xl px-2 py-1.5 flex flex-wrap gap-1 items-center cursor-pointer"
+                    >
+                      {selectedCustomServiceIds.length === 0 && (
+                        <span className="text-[10px] text-slate-400">
+                          Click to select services...
+                        </span>
+                      )}
+                      {selectedCustomServiceIds.map((id) => {
+                        const serv = allDbServices.find((s) => s.service_id === id);
+                        return serv ? (
+                          <span
+                            key={id}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-slate-300 flex items-center gap-1"
+                          >
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCustomService(id);
+                              }}
+                            >
+                              ×
+                            </span>
+                            {serv.service_name}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                    {isCustomDropdownOpen && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto p-1">
+                        <div className="p-2 border-b border-slate-200">
+                          <input
+                            type="text"
+                            placeholder="Search services..."
+                            value={customServiceSearchTerm}
+                            onChange={(e) => setCustomServiceSearchTerm(e.target.value)}
+                            className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg focus:outline-none"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        {allDbServices
+                          .filter((s) =>
+                            s.service_name
+                              .toLowerCase()
+                              .includes(customServiceSearchTerm.toLowerCase())
+                          )
+                          .map((s) => (
+                            <div
+                              key={s.service_id}
+                              onClick={() => toggleCustomService(s.service_id)}
+                              className={`p-2 rounded-lg text-xs cursor-pointer font-medium flex items-center justify-between ${
+                                selectedCustomServiceIds.includes(s.service_id)
+                                  ? 'bg-sky-100 text-sky-900 font-bold'
+                                  : 'hover:bg-slate-50 text-slate-700'
+                              }`}
+                            >
+                              <span>{s.service_name}</span>
+                              <span className="text-[10px] text-slate-500">₹{s.service_price}</span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Total Amount
+                    </label>
+                    <input
+                      type="number"
+                      readOnly
+                      value={basePriceTotal}
+                      className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600">
+                  Select <strong>Custom Package = Yes</strong> to choose services manually
+                </div>
+              )}
+
+              {/* Row 4: Apply Coupon, Discount, Payment Mode */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Apply Coupon
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="enter coupon code if any"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 uppercase focus:outline-none text-xs font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Discount Amount
+                  </label>
+                  <input
+                    type="number"
+                    value={discountAmount}
+                    onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
+                    className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Payment Mode
+                  </label>
+                  <select
+                    value={paymentMode}
+                    onChange={(e) => setPaymentMode(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                  >
+                    <option value="1">No EMI</option>
+                    <option value="2">2 EMI</option>
+                    <option value="3">3 EMI</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 5: Paid Amount, 1st EMI, 1st Due Date */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Paid Amount
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={paidAmount}
+                    onChange={(e) => setPaidAmount(Number(e.target.value) || 0)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    1st EMI
+                  </label>
+                  <input
+                    type="number"
+                    readOnly
+                    value={emi1Amount}
+                    className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    1st Due Date
+                  </label>
+                  <input
+                    type="date"
+                    value={dueDate1}
+                    onChange={(e) => setDueDate1(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* 2nd EMI row if 3 EMI */}
+              {paymentMode === '3' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-sky-50/50 p-3 rounded-xl border border-sky-100">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      2nd EMI
+                    </label>
+                    <input
+                      type="number"
+                      readOnly
+                      value={emi2Amount}
+                      className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      2nd Due Date
+                    </label>
+                    <input
+                      type="date"
+                      value={dueDate2}
+                      onChange={(e) => setDueDate2(e.target.value)}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-medium focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Row 6: Comment & Screenshot */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Comment Box
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Comment..."
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="w-full bg-white border border-[#CBD5E1] rounded-xl p-3 text-slate-900 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Payment Screenshot
+                  </label>
+                  <div className="bg-white border border-[#CBD5E1] rounded-xl p-2">
+                    <input type="file" className="text-xs text-slate-600 w-full" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={convSubmitting}
+                  className="bg-[#1B365D] hover:bg-[#0F2444] text-white font-bold py-2.5 px-8 rounded-xl shadow-md transition-colors text-xs cursor-pointer disabled:opacity-50"
+                >
+                  {convSubmitting ? 'Adding...' : 'Add'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConvertModalOpen(false)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-6 rounded-xl transition-colors text-xs cursor-pointer border border-slate-200"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

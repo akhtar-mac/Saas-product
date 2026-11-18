@@ -36,7 +36,7 @@ export function useChatNotification() {
 export function ChatNotificationProvider({ children }: { children: React.ReactNode }) {
   const { staffUser, staffToken } = useAuthStore();
   const [popups, setPopups] = useState<StaffChatPopupNotificationData[]>([]);
-  const [unreadChatCount, setUnreadChatCount] = useState(2);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const socketRef = useRef<Socket | null>(null);
 
   // Initialize background Socket.IO connection for real-time Staff Chat popups
@@ -58,14 +58,22 @@ export function ChatNotificationProvider({ children }: { children: React.ReactNo
       console.log('🔔 Global Staff Chat Notification Socket connected:', socket.id);
     });
 
-    // Listen for incoming messages
-    socket.on('message:new', (data: { conversationId: number; message: any }) => {
-      if (!data?.message) return;
-      const msg = data.message;
+    const currentUserId = staffUser?.id || (staffUser as any)?.user_id;
+
+    const pushChatPopup = (payload: {
+      conversationId: number;
+      senderId?: number;
+      senderName?: string;
+      senderRole?: string;
+      senderAvatar?: string;
+      messageText?: string;
+      message?: any;
+    }) => {
+      const msg = payload.message || {};
 
       // Don't notify if user is the sender
-      const currentUserId = staffUser?.id || (staffUser as any)?.user_id;
-      if (msg.senderId && currentUserId && Number(msg.senderId) === Number(currentUserId)) {
+      const senderId = payload.senderId ?? msg.senderId;
+      if (senderId && currentUserId && Number(senderId) === Number(currentUserId)) {
         return;
       }
 
@@ -75,27 +83,54 @@ export function ChatNotificationProvider({ children }: { children: React.ReactNo
       // 2. Add floating Staff Chat popup
       const newPopup: StaffChatPopupNotificationData = {
         id: `staff-${Date.now()}-${Math.random()}`,
-        conversationId: data.conversationId,
-        senderId: msg.senderId || 0,
-        senderName: msg.sender?.name || msg.senderName || 'Staff Member',
-        senderRole: msg.sender?.role || msg.senderRole || 'Operations Specialist',
-        senderAvatar: msg.sender?.avatar || msg.senderAvatar,
-        messageText: msg.messageText || (msg.fileUrl ? 'Sent an attachment 📎' : 'New message'),
+        conversationId: payload.conversationId,
+        senderId: senderId || 0,
+        senderName: payload.senderName || msg.senderName || msg.sender?.name || 'Staff Member',
+        senderRole: payload.senderRole || msg.senderRole || msg.sender?.role || 'Staff',
+        senderAvatar: payload.senderAvatar || msg.senderAvatar || msg.sender?.avatar,
+        messageText:
+          payload.messageText ||
+          msg.messageText ||
+          msg.content ||
+          (msg.fileUrl ? 'Sent an attachment 📎' : 'New message'),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-      setPopups((prev) => [newPopup, ...prev.slice(0, 4)]);
+      // Same conversation: replace older popup so only the latest message shows on top
+      setPopups((prev) => [
+        newPopup,
+        ...prev.filter((p) => p.conversationId !== payload.conversationId).slice(0, 4),
+      ]);
       setUnreadChatCount((prev) => prev + 1);
 
       // 3. Desktop OS Notification
       showDesktopNotification({
         title: `ETaxwala Staff • ${newPopup.senderName}`,
         body: newPopup.messageText,
-        tag: `staff-conv-${data.conversationId}`,
+        tag: `staff-conv-${payload.conversationId}`,
         onClick: () => {
-          window.location.href = `/crm/chat?conversationId=${data.conversationId}`;
+          window.location.href = `/crm/chat?conversationId=${payload.conversationId}`;
         },
       });
+    };
+
+    // Listen for incoming messages broadcast to conversation rooms
+    socket.on('message:new', (data: { conversationId: number; message: any }) => {
+      if (!data?.message) return;
+      pushChatPopup({
+        conversationId: data.conversationId,
+        senderId: data.message.senderId,
+        senderName: data.message.senderName,
+        senderAvatar: data.message.senderAvatar,
+        messageText: data.message.content || data.message.messageText,
+        message: data.message,
+      });
+    });
+
+    // Listen for personal-room chat alerts (global popup even outside the chat room)
+    socket.on('notification:chat', (data: any) => {
+      if (!data?.conversationId) return;
+      pushChatPopup(data);
     });
 
     return () => {
@@ -118,7 +153,7 @@ export function ChatNotificationProvider({ children }: { children: React.ReactNo
             'Content-Type': 'application/json',
             Authorization: `Bearer ${staffToken}`,
           },
-          body: JSON.stringify({ messageText: text.trim() }),
+          body: JSON.stringify({ content: text.trim() }),
         });
 
         if (res.ok) {
@@ -130,7 +165,11 @@ export function ChatNotificationProvider({ children }: { children: React.ReactNo
         if (socketRef.current?.connected) {
           socketRef.current.emit('message:send', {
             conversationId,
-            messageText: text.trim(),
+            message: {
+              content: text.trim(),
+              senderId: staffUser?.id,
+              senderName: staffUser?.username,
+            },
           });
           playStaffMessageSentChime();
           return true;
@@ -141,7 +180,11 @@ export function ChatNotificationProvider({ children }: { children: React.ReactNo
         if (socketRef.current?.connected) {
           socketRef.current.emit('message:send', {
             conversationId,
-            messageText: text.trim(),
+            message: {
+              content: text.trim(),
+              senderId: staffUser?.id,
+              senderName: staffUser?.username,
+            },
           });
           playStaffMessageSentChime();
           return true;

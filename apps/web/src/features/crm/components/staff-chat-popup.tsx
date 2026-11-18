@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   MessageSquare,
@@ -47,7 +47,7 @@ export function StaffChatPopupContainer({
       className="fixed top-5 right-5 z-[999999] flex flex-col gap-3 max-w-sm w-full pointer-events-none"
       aria-live="polite"
     >
-      {notifications.slice(0, 3).map((item) => (
+      {notifications.map((item) => (
         <StaffChatPopupItem
           key={item.id}
           data={item}
@@ -75,30 +75,6 @@ function StaffChatPopupItem({
   const [sentSuccess, setSentSuccess] = useState(false);
   const [soundOn, setSoundOn] = useState(() => isStaffChatSoundEnabled());
   const [isHovered, setIsHovered] = useState(false);
-
-  // Auto-dismiss countdown (8 seconds)
-  const DURATION = 8000;
-  const [progress, setProgress] = useState(100);
-  const elapsedRef = useRef(0);
-
-  useEffect(() => {
-    let animFrame: number;
-    const updateProgress = () => {
-      if (!isHovered && !replyOpen) {
-        elapsedRef.current += 50;
-        const remaining = Math.max(0, 100 - (elapsedRef.current / DURATION) * 100);
-        setProgress(remaining);
-        if (remaining <= 0) {
-          onDismiss();
-          return;
-        }
-      }
-      animFrame = setTimeout(updateProgress, 50) as unknown as number;
-    };
-
-    animFrame = setTimeout(updateProgress, 50) as unknown as number;
-    return () => clearTimeout(animFrame);
-  }, [isHovered, replyOpen, onDismiss]);
 
   const handleOpenChat = () => {
     onDismiss();
@@ -276,14 +252,6 @@ function StaffChatPopupItem({
             )}
           </div>
         )}
-      </div>
-
-      {/* Auto-dismiss countdown bar (Multicolor strip) */}
-      <div className="w-full h-1 bg-slate-100 dark:bg-slate-800">
-        <div
-          className="h-full bg-gradient-to-r from-[#0084D1] via-[#7C3AED] to-[#E11D48] transition-all ease-linear"
-          style={{ width: `${progress}%` }}
-        />
       </div>
     </div>
   );

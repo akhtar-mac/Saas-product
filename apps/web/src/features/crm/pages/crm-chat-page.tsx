@@ -238,6 +238,33 @@ export default function CrmChatPage() {
     };
   }, [staffToken, activeConversationId, activeParticipant]);
 
+  // Silent polling fallback so messages appear in real time even if the
+  // socket event is missed — merges by id, no visible reload.
+  useEffect(() => {
+    if (!activeConversationId || !staffToken) return;
+    const poll = async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE}/v1/chat/conversations/${activeConversationId}/messages`,
+          { headers: authHeaders }
+        );
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.data)) {
+          setMessages((prev) => {
+            const map = new Map<number, any>();
+            [...prev, ...data.data].forEach((m: any) => map.set(m.id, m));
+            return Array.from(map.values()).sort(
+              (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            );
+          });
+        }
+      } catch {}
+    };
+    const t = setInterval(poll, 4000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConversationId, staffToken]);
+
   const scrollToBottom = () => {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -446,11 +473,7 @@ export default function CrmChatPage() {
 
       const data = await res.json();
       if (data.success && data.data) {
-        // Emit via socket for instant peer delivery
-        socketRef.current?.emit('message:send', {
-          conversationId: activeConversationId,
-          message: data.data,
-        });
+        // Server already broadcasts message:new + notification:chat via Socket.IO
 
         // Add to local message list immediately
         setMessages((prev) => [...prev, data.data]);

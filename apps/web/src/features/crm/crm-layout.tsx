@@ -50,19 +50,159 @@ function CrmLayoutContent() {
     quotationsSub: false,
     tasksSub: false,
     opsEmployee: true,
+    franchise: true,
   });
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const bellRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLElement | null>(null);
+  const [sidebarEditMode, setSidebarEditMode] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { staffUser, activeRole, setStaffRole, logoutStaff } = useAuthStore();
-  const { unreadChatCount, triggerTestWhatsAppNotification } = useChatNotification();
+  const { unreadChatCount } = useChatNotification();
   const UNREAD_COUNT = 4;
 
   const toggleSection = (section: string) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
+
+  // ─── Sidebar drag-to-reorder (Edit mode) ──────────────────────────────────
+  // Stable signature: always based on the FIRST button/link inside the element
+  // (accordion toggle label), so it does not change when dropdown opens/closes.
+  const getSidebarSignature = (el: Element): string => {
+    let target: Element = el;
+    if (el.tagName !== 'A' && el.tagName !== 'BUTTON') {
+      target = el.querySelector('button, a') || el;
+    }
+    const href = target.tagName === 'A' ? target.getAttribute('href') || '' : '';
+    const txt = (target.textContent || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .replace(/\d+/g, '#')
+      .slice(0, 80);
+    return `${href}||${txt}`;
+  };
+
+  const [initialSubOrder] = useState<Record<string, string[]>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('etax-sidebar-suborder') || '{}');
+    } catch {
+      return {};
+    }
+  });
+  const sidebarSubOrderRef = useRef<Record<string, string[]>>(initialSubOrder);
+  const [sidebarOrderVersion, setSidebarOrderVersion] = useState(0);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    // Collect reorderable containers: nav itself + every descendant div whose
+    // element children are all links/divs (menu items), never raw buttons.
+    const containers: { el: Element; key: string }[] = [{ el: nav, key: '__root__' }];
+    const allDivs = Array.from(nav.querySelectorAll('div'));
+    allDivs.forEach((d) => {
+      const ch = Array.from(d.children);
+      if (ch.length >= 2 && ch.every((c) => c.tagName === 'A' || c.tagName === 'DIV')) {
+        // parent key = chain of ancestor signatures (stable-ish, unique per menu)
+        const parts: string[] = [];
+        let cur: Element | null = d.parentElement;
+        while (cur && cur !== nav) {
+          parts.unshift(getSidebarSignature(cur));
+          cur = cur.parentElement;
+        }
+        containers.push({ el: d, key: parts.join('>') || '__root2__' });
+      }
+    });
+
+    const cleanups: Array<() => void> = [];
+
+    containers.forEach(({ el: container, key }) => {
+      const children = Array.from(container.children) as HTMLElement[];
+      if (children.length < 2) return;
+      const savedOrder = sidebarSubOrderRef.current[key] || [];
+      const orderMap = new Map<string, number>();
+      savedOrder.forEach((sig, i) => {
+        if (!orderMap.has(sig)) orderMap.set(sig, i);
+      });
+
+      // `order` only works in flex containers — force column flex on menu lists
+      if (container !== nav) {
+        (container as HTMLElement).style.display = 'flex';
+        (container as HTMLElement).style.flexDirection = 'column';
+      }
+
+      const sigs = children.map(getSidebarSignature);
+      children.forEach((child, i) => {
+        const saved = orderMap.get(sigs[i]);
+        child.style.order = saved !== undefined ? String(saved) : String(1000 + i);
+        child.draggable = sidebarEditMode;
+        child.style.cursor = sidebarEditMode ? 'grab' : '';
+      });
+
+      if (!sidebarEditMode) return;
+
+      let dragIdx: number | null = null;
+      const clearIndicator = () =>
+        children.forEach((c) => c.classList.remove('ring-2', 'ring-[#0084D1]', 'ring-inset'));
+
+      const onDragStart = (e: DragEvent) => {
+        dragIdx = children.indexOf(e.currentTarget as HTMLElement);
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', String(dragIdx));
+        }
+      };
+      const onDragOver = (e: DragEvent) => {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        clearIndicator();
+        (e.currentTarget as HTMLElement).classList.add('ring-2', 'ring-[#0084D1]', 'ring-inset');
+      };
+      const onDrop = (e: DragEvent) => {
+        e.preventDefault();
+        clearIndicator();
+        if (dragIdx === null) return;
+        const target = e.currentTarget as HTMLElement;
+        const rect = target.getBoundingClientRect();
+        const before = e.clientY < rect.top + rect.height / 2;
+        const currentSigs = Array.from(container.children).map(getSidebarSignature);
+        const draggedSig = currentSigs[dragIdx];
+        const without = currentSigs.filter((_, i) => i !== dragIdx);
+        const targetPos = without.indexOf(getSidebarSignature(target));
+        const insertAt = before ? Math.max(0, targetPos) : targetPos + 1;
+        const newOrder = [...without.slice(0, insertAt), draggedSig, ...without.slice(insertAt)];
+        sidebarSubOrderRef.current[key] = newOrder;
+        try {
+          localStorage.setItem('etax-sidebar-suborder', JSON.stringify(sidebarSubOrderRef.current));
+        } catch {}
+        setSidebarOrderVersion((v) => v + 1);
+        dragIdx = null;
+      };
+      const onDragEnd = () => {
+        dragIdx = null;
+        clearIndicator();
+      };
+
+      children.forEach((child) => {
+        child.addEventListener('dragstart', onDragStart);
+        child.addEventListener('dragover', onDragOver);
+        child.addEventListener('drop', onDrop);
+        child.addEventListener('dragend', onDragEnd);
+      });
+      cleanups.push(() => {
+        children.forEach((child) => {
+          child.removeEventListener('dragstart', onDragStart);
+          child.removeEventListener('dragover', onDragOver);
+          child.removeEventListener('drop', onDrop);
+          child.removeEventListener('dragend', onDragEnd);
+        });
+      });
+    });
+
+    return () => cleanups.forEach((fn) => fn());
+  }, [sidebarEditMode, sidebarOrderVersion, location.pathname, openSections]);
 
   // Global Cmd+K / Ctrl+K shortcut
   useEffect(() => {
@@ -332,9 +472,8 @@ function CrmLayoutContent() {
       can('accounts:view'));
 
   const showSalesSection =
-    !isFranchiseManager &&
     !isFranchiseEmployee &&
-    (isSuperAdmin || isSalesManager) &&
+    (isSuperAdmin || (!isFranchiseManager && isSalesManager)) &&
     (isSuperAdmin ||
       can('sales:view') ||
       can('leads:view') ||
@@ -420,6 +559,18 @@ function CrmLayoutContent() {
             <Link to="/" className="flex items-center gap-2.5">
               <img src="/logo_black.png" alt="ETaxwala" className="h-8 w-auto" />
             </Link>
+            <button
+              type="button"
+              onClick={() => setSidebarEditMode((v) => !v)}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                sidebarEditMode
+                  ? 'bg-[#1B365D] text-white'
+                  : 'bg-[#FAF9F5] border border-[#EAE6DD] text-slate-600 hover:text-[#1B365D]'
+              }`}
+              title={sidebarEditMode ? 'Done reordering' : 'Drag tabs to reorder sidebar'}
+            >
+              {sidebarEditMode ? 'Done' : 'Edit'}
+            </button>
           </div>
 
           {/* Current Staff User Card with Quick Switcher */}
@@ -459,7 +610,12 @@ function CrmLayoutContent() {
           </div>
 
           {/* Navigation Accordion Menus */}
-          <nav className="p-3 space-y-1.5 flex-1 overflow-y-auto text-xs">
+          <nav
+            ref={navRef}
+            className={`p-3 space-y-1.5 flex-1 overflow-y-auto text-xs flex flex-col${
+              sidebarEditMode ? ' sidebar-edit-mode' : ''
+            }`}
+          >
             {/* 1. Main Dashboard */}
             {can('dashboard:view') && (
               <Link
@@ -505,11 +661,14 @@ function CrmLayoutContent() {
             )}
 
             {/* Department Hubs: HR Desk, Marketing Suite, IT Command Center — hide for ops/franchise employees */}
-            {!isFranchiseEmployee && !isFranchiseManager && !showOpsEmployeeSection && (
-              <div className="pt-2 pb-1 px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                Department Hubs
-              </div>
-            )}
+            {!isFranchiseEmployee &&
+              !isFranchiseManager &&
+              !showOpsEmployeeSection &&
+              !isSalesEmployee && (
+                <div className="pt-2 pb-1 px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                  Department Hubs
+                </div>
+              )}
 
             {/* Super Admin / Admin — Manage All Employees - Hide for Franchise Manager and Franchise Employee */}
             {!isFranchiseManager && !isFranchiseEmployee && isSuperAdmin && (
@@ -547,74 +706,83 @@ function CrmLayoutContent() {
                   <Users
                     className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/workforce' ? 'text-white' : 'text-emerald-600'}`}
                   />
-                  <span>Manage Partners</span>
+                  <span>Manage Employees</span>
                 </div>
                 <span className="badge badge-gold text-[9px] px-1.5 py-0.2">120+</span>
               </Link>
             )}
 
             {/* HR & Accounts - Hide for Franchise Manager, Franchise Employee, and Ops Employee */}
-            {!isFranchiseManager && !isFranchiseEmployee && !showOpsEmployeeSection && (
-              <Link
-                to="/crm/hr"
-                onClick={handleNavClick}
-                className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
-                  location.pathname === '/crm/hr'
-                    ? 'bg-[#1B365D] text-white shadow-sm'
-                    : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Users
-                    className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/hr' ? 'text-white' : 'text-[#D97706]'}`}
-                  />
-                  <span>HR & Accounts</span>
-                </div>
-                <span className="badge badge-gold text-[9px] px-1.5 py-0.2">Careers ATS</span>
-              </Link>
-            )}
+            {!isFranchiseManager &&
+              !isFranchiseEmployee &&
+              !showOpsEmployeeSection &&
+              !isSalesEmployee && (
+                <Link
+                  to="/crm/hr"
+                  onClick={handleNavClick}
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                    location.pathname === '/crm/hr'
+                      ? 'bg-[#1B365D] text-white shadow-sm'
+                      : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Users
+                      className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/hr' ? 'text-white' : 'text-[#D97706]'}`}
+                    />
+                    <span>HR & Accounts</span>
+                  </div>
+                  <span className="badge badge-gold text-[9px] px-1.5 py-0.2">Careers ATS</span>
+                </Link>
+              )}
 
             {/* Marketing Hub - Hide for Franchise Manager, Franchise Employee, and Ops Employee */}
-            {!isFranchiseManager && !isFranchiseEmployee && !showOpsEmployeeSection && (
-              <Link
-                to="/crm/marketing"
-                onClick={handleNavClick}
-                className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
-                  location.pathname === '/crm/marketing'
-                    ? 'bg-[#1B365D] text-white shadow-sm'
-                    : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Target
-                    className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/marketing' ? 'text-white' : 'text-pink-600'}`}
-                  />
-                  <span>Marketing Hub</span>
-                </div>
-                <span className="badge badge-navy text-[9px] px-1.5 py-0.2">Social & Ads</span>
-              </Link>
-            )}
+            {!isFranchiseManager &&
+              !isFranchiseEmployee &&
+              !showOpsEmployeeSection &&
+              !isSalesEmployee && (
+                <Link
+                  to="/crm/marketing"
+                  onClick={handleNavClick}
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                    location.pathname === '/crm/marketing'
+                      ? 'bg-[#1B365D] text-white shadow-sm'
+                      : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Target
+                      className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/marketing' ? 'text-white' : 'text-pink-600'}`}
+                    />
+                    <span>Marketing Hub</span>
+                  </div>
+                  <span className="badge badge-navy text-[9px] px-1.5 py-0.2">Social & Ads</span>
+                </Link>
+              )}
 
             {/* IT Command Center - Hide for Franchise Manager, Franchise Employee, and Ops Employee */}
-            {!isFranchiseManager && !isFranchiseEmployee && !showOpsEmployeeSection && (
-              <Link
-                to="/crm/it-command"
-                onClick={handleNavClick}
-                className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
-                  location.pathname === '/crm/it-command'
-                    ? 'bg-[#1B365D] text-white shadow-sm'
-                    : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Terminal
-                    className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/it-command' ? 'text-white' : 'text-[#0084D1]'}`}
-                  />
-                  <span>IT Command Center</span>
-                </div>
-                <span className="badge badge-green text-[9px] px-1.5 py-0.2">Super Tech</span>
-              </Link>
-            )}
+            {!isFranchiseManager &&
+              !isFranchiseEmployee &&
+              !showOpsEmployeeSection &&
+              !isSalesEmployee && (
+                <Link
+                  to="/crm/it-command"
+                  onClick={handleNavClick}
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                    location.pathname === '/crm/it-command'
+                      ? 'bg-[#1B365D] text-white shadow-sm'
+                      : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Terminal
+                      className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/it-command' ? 'text-white' : 'text-[#0084D1]'}`}
+                    />
+                    <span>IT Command Center</span>
+                  </div>
+                  <span className="badge badge-green text-[9px] px-1.5 py-0.2">Super Tech</span>
+                </Link>
+              )}
 
             {/* 2. OPERATION MANAGER ACCORDION */}
             {showOpsSection && (
@@ -875,129 +1043,148 @@ function CrmLayoutContent() {
               </div>
             )}
 
-            {/* 5. FRANCHISE MANAGER - Direct Tabs (No Accordion) */}
+            {/* 5. FRANCHISE MANAGER - Accordion */}
             {isFranchiseManager && (
-              <>
-                {/* Dashboard */}
-                <Link
-                  to="/crm/franchise-manager-dashboard"
-                  onClick={handleNavClick}
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
-                    location.pathname === '/crm/franchise-manager-dashboard'
-                      ? 'bg-[#1B365D] text-white shadow-sm'
-                      : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-                  }`}
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => toggleSection('franchise')}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <LayoutDashboard
-                      className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/franchise-manager-dashboard' ? 'text-white' : 'text-[#1B365D]'}`}
-                    />
-                    <span>Dashboard</span>
+                  <div className="flex items-center gap-2.5">
+                    <Building className="w-4 h-4 text-[#00A896] shrink-0" />
+                    <span>Franchise Manager</span>
                   </div>
-                </Link>
+                  {openSections.franchise ? (
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  )}
+                </button>
 
-                {/* Manage Partners Orders */}
-                {can('franchise:partners') && (
-                  <Link
-                    to="/crm/franchise-manage-partners-orders"
-                    onClick={handleNavClick}
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
-                      location.pathname === '/crm/franchise-manage-partners-orders'
-                        ? 'bg-[#1B365D] text-white shadow-sm'
-                        : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <ClipboardList
-                        className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/franchise-manage-partners-orders' ? 'text-white' : 'text-[#00A896]'}`}
-                      />
-                      <span>Manage Partners Orders</span>
-                    </div>
-                  </Link>
-                )}
+                {openSections.franchise && (
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
+                    {/* Dashboard */}
+                    <Link
+                      to="/crm/franchise-manager-dashboard"
+                      onClick={handleNavClick}
+                      className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                        location.pathname === '/crm/franchise-manager-dashboard'
+                          ? 'bg-[#1B365D] text-white shadow-sm'
+                          : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <LayoutDashboard
+                          className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/franchise-manager-dashboard' ? 'text-white' : 'text-[#1B365D]'}`}
+                        />
+                        <span>Dashboard</span>
+                      </div>
+                    </Link>
 
-                {/* Manage Inquiries */}
-                {can('franchise:inquiries') && (
-                  <Link
-                    to="/crm/franchise-manage-inquiries"
-                    onClick={handleNavClick}
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
-                      location.pathname === '/crm/franchise-manage-inquiries'
-                        ? 'bg-[#1B365D] text-white shadow-sm'
-                        : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <MessageSquare
-                        className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/franchise-manage-inquiries' ? 'text-white' : 'text-[#7C3AED]'}`}
-                      />
-                      <span>Manage Inquiries</span>
-                    </div>
-                  </Link>
-                )}
+                    {/* Manage Partners Orders */}
+                    {can('franchise:partners') && (
+                      <Link
+                        to="/crm/franchise-manage-partners-orders"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                          location.pathname === '/crm/franchise-manage-partners-orders'
+                            ? 'bg-[#1B365D] text-white shadow-sm'
+                            : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <ClipboardList
+                            className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/franchise-manage-partners-orders' ? 'text-white' : 'text-[#00A896]'}`}
+                          />
+                          <span>Manage Partners Orders</span>
+                        </div>
+                      </Link>
+                    )}
 
-                {/* Partners Leads */}
-                {can('franchise:partners') && (
-                  <Link
-                    to="/crm/franchise-partners-leads"
-                    onClick={handleNavClick}
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
-                      location.pathname === '/crm/franchise-partners-leads'
-                        ? 'bg-[#1B365D] text-white shadow-sm'
-                        : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Users
-                        className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/franchise-partners-leads' ? 'text-white' : 'text-emerald-600'}`}
-                      />
-                      <span>Partners Leads</span>
-                    </div>
-                  </Link>
-                )}
+                    {/* Manage Inquiries */}
+                    {can('franchise:inquiries') && (
+                      <Link
+                        to="/crm/franchise-manage-inquiries"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                          location.pathname === '/crm/franchise-manage-inquiries'
+                            ? 'bg-[#1B365D] text-white shadow-sm'
+                            : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <MessageSquare
+                            className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/franchise-manage-inquiries' ? 'text-white' : 'text-[#7C3AED]'}`}
+                          />
+                          <span>Manage Inquiries</span>
+                        </div>
+                      </Link>
+                    )}
 
-                {/* Training Videos */}
-                {can('franchise:training') && (
-                  <Link
-                    to="/portal/videos"
-                    onClick={handleNavClick}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-800 hover:bg-slate-100 hover:text-[#1B365D] transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Monitor className="w-4 h-4 shrink-0 text-pink-600" />
-                      <span>Training Videos</span>
-                    </div>
-                  </Link>
-                )}
+                    {/* Partners Leads */}
+                    {can('franchise:partners') && (
+                      <Link
+                        to="/crm/franchise-partners-leads"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
+                          location.pathname === '/crm/franchise-partners-leads'
+                            ? 'bg-[#1B365D] text-white shadow-sm'
+                            : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Users
+                            className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/franchise-partners-leads' ? 'text-white' : 'text-emerald-600'}`}
+                          />
+                          <span>Partners Leads</span>
+                        </div>
+                      </Link>
+                    )}
 
-                {/* Service Documents */}
-                {can('franchise:training') && (
-                  <Link
-                    to="/portal/documents"
-                    onClick={handleNavClick}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-800 hover:bg-slate-100 hover:text-[#1B365D] transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FileCheck2 className="w-4 h-4 shrink-0 text-amber-600" />
-                      <span>Service Documents</span>
-                    </div>
-                  </Link>
-                )}
+                    {/* Training Videos */}
+                    {can('franchise:training') && (
+                      <Link
+                        to="/portal/videos"
+                        onClick={handleNavClick}
+                        className="flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-800 hover:bg-slate-100 hover:text-[#1B365D] transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Monitor className="w-4 h-4 shrink-0 text-pink-600" />
+                          <span>Training Videos</span>
+                        </div>
+                      </Link>
+                    )}
 
-                {/* All Services */}
-                {can('franchise:view') && (
-                  <Link
-                    to="/crm/franchise-all-services"
-                    onClick={handleNavClick}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-800 hover:bg-slate-100 hover:text-[#1B365D] transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <BarChart3 className="w-4 h-4 shrink-0 text-indigo-600" />
-                      <span>All Services</span>
-                    </div>
-                  </Link>
+                    {/* Service Documents */}
+                    {can('franchise:training') && (
+                      <Link
+                        to="/portal/documents"
+                        onClick={handleNavClick}
+                        className="flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-800 hover:bg-slate-100 hover:text-[#1B365D] transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <FileCheck2 className="w-4 h-4 shrink-0 text-amber-600" />
+                          <span>Service Documents</span>
+                        </div>
+                      </Link>
+                    )}
+
+                    {/* All Services */}
+                    {can('franchise:view') && (
+                      <Link
+                        to="/crm/franchise-all-services"
+                        onClick={handleNavClick}
+                        className="flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-800 hover:bg-slate-100 hover:text-[#1B365D] transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <BarChart3 className="w-4 h-4 shrink-0 text-indigo-600" />
+                          <span>All Services</span>
+                        </div>
+                      </Link>
+                    )}
+                  </div>
                 )}
-              </>
+              </div>
             )}
 
             {/* 6. FRANCHISE EMPLOYEE - Direct Tabs (No Accordion) */}
@@ -1774,9 +1961,9 @@ function CrmLayoutContent() {
             {/* ETaxwala Live Staff Chat Alert Pill */}
             <button
               type="button"
-              onClick={() => triggerTestWhatsAppNotification()}
+              onClick={() => setNotifOpen((prev) => !prev)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50/90 hover:bg-blue-100 border border-blue-200 text-blue-900 text-xs font-bold transition-all shadow-xs cursor-pointer shrink-0 whitespace-nowrap group active:scale-95"
-              title="Click to test Staff Chat Popup Notification & Chime"
+              title="View unread staff chat alerts"
               id="staff-test-notif-btn"
             >
               <div className="relative w-4 h-4 rounded-md bg-gradient-to-tr from-[#1B365D] to-[#0084D1] flex items-center justify-center text-white shadow-2xs shrink-0">
