@@ -1,8 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../config/db.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
+import { verifyJWT } from '../middleware/auth.middleware.js';
 
 const router = Router();
+
+// The mobile-compat routes list and edit leads, customers and quotations and the
+// /login here hands out a fixed placeholder token. Require a real staff JWT.
+router.use(verifyJWT);
 
 // ─── 0. Universal Public Web Inquiries ───────────────────────────────────────
 router.post(

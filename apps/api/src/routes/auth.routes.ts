@@ -379,7 +379,11 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
 
     // 3. Builtin account fallback if user is not in database
     if (!staffUser) {
-      const builtin = BUILTIN_ACCOUNTS.find((a) => a.email.toLowerCase() === cleanEmail);
+      // Built-in demo accounts (fixed password) exist for local/dev only.
+      const builtin =
+        env.NODE_ENV !== 'production'
+          ? BUILTIN_ACCOUNTS.find((a) => a.email.toLowerCase() === cleanEmail)
+          : undefined;
       if (builtin) {
         staffUser = {
           id: builtin.id,
@@ -575,6 +579,10 @@ router.post('/staff/refresh', async (req: Request, res: Response) => {
       staffUser = null;
     }
 
+    if (!staffUser && env.NODE_ENV === 'production') {
+      // Never fall back to a built-in (super admin) account in production.
+      return res.status(401).json({ success: false, error: 'Invalid or expired refresh token.' });
+    }
     if (!staffUser) {
       const builtin = BUILTIN_ACCOUNTS.find((a) => a.id === decoded.user_id) || BUILTIN_ACCOUNTS[0];
       staffUser = {

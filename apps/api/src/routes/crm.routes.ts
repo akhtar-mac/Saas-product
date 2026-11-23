@@ -30,6 +30,10 @@ const uploadSingle = multer({ storage }).single('customer_docs');
 
 const router = Router();
 
+// Every /v1/crm/* and /v1/staff/* route exposes lead, customer or payment data:
+// require a valid staff JWT for all of them (none are used by the public site).
+router.use(verifyJWT);
+
 // Helper to serialize BigInt fields to JSON
 function serializeBigInt(obj: any): any {
   return JSON.parse(
@@ -2220,16 +2224,22 @@ router.get('/customers', async (req, res) => {
     const skip = (pageNum - 1) * take;
 
     const whereConditions: string[] = ['o.payment_status = 1', 'c.is_approve = 1'];
+    const whereParams: string[] = [];
     if (search) {
-      const q = String(search).trim().replace(/'/g, "''");
+      // Bound parameters, never string-built SQL; % and _ in the input match literally.
+      const like = `%${String(search)
+        .trim()
+        .replace(/[\\%_]/g, (m) => `\\${m}`)}%`;
       whereConditions.push(
-        `(c.name LIKE '%${q}%' OR c.business LIKE '%${q}%' OR c.contact LIKE '%${q}%' OR c.email LIKE '%${q}%' OR c.city LIKE '%${q}%')`
+        '(c.name LIKE ? OR c.business LIKE ? OR c.contact LIKE ? OR c.email LIKE ? OR c.city LIKE ?)'
       );
+      whereParams.push(like, like, like, like, like);
     }
     const whereSql = whereConditions.join(' AND ');
 
     const countRes = await prisma.$queryRawUnsafe<any[]>(
-      `SELECT COUNT(*) as total FROM orders o LEFT JOIN customers c ON o.customer_id = c.id WHERE ${whereSql}`
+      `SELECT COUNT(*) as total FROM orders o LEFT JOIN customers c ON o.customer_id = c.id WHERE ${whereSql}`,
+      ...whereParams
     );
     const total = Number(countRes[0]?.total || 0);
 
@@ -2269,7 +2279,7 @@ router.get('/customers', async (req, res) => {
        ORDER BY o.id DESC 
        LIMIT ${take} OFFSET ${skip}`;
     console.log('Customers SQL:', query);
-    const custsRaw = await prisma.$queryRawUnsafe<any[]>(query);
+    const custsRaw = await prisma.$queryRawUnsafe<any[]>(query, ...whereParams);
     console.log('Customers Query Result:', custsRaw.length);
 
     const typeMap: Record<number, string> = {
@@ -3241,16 +3251,22 @@ router.get('/customer-details-list', async (req, res) => {
     const skip = (pageNum - 1) * take;
 
     const whereConditions: string[] = ['c.is_active = 1'];
+    const whereParams: string[] = [];
     if (search) {
-      const q = String(search).trim().replace(/'/g, "''");
+      // Bound parameters, never string-built SQL; % and _ in the input match literally.
+      const like = `%${String(search)
+        .trim()
+        .replace(/[\\%_]/g, (m) => `\\${m}`)}%`;
       whereConditions.push(
-        `(c.name LIKE '%${q}%' OR c.email LIKE '%${q}%' OR c.contact LIKE '%${q}%' OR c.state LIKE '%${q}%' OR c.city LIKE '%${q}%')`
+        '(c.name LIKE ? OR c.email LIKE ? OR c.contact LIKE ? OR c.state LIKE ? OR c.city LIKE ?)'
       );
+      whereParams.push(like, like, like, like, like);
     }
     const whereSql = whereConditions.join(' AND ');
 
     const countRes = await prisma.$queryRawUnsafe<any[]>(
-      `SELECT COUNT(*) as total FROM customers c WHERE ${whereSql}`
+      `SELECT COUNT(*) as total FROM customers c WHERE ${whereSql}`,
+      ...whereParams
     );
     const total = Number(countRes[0]?.total || 0);
 
@@ -3274,7 +3290,8 @@ router.get('/customer-details-list', async (req, res) => {
        LEFT JOIN services s ON s.service_id = c.service
        WHERE ${whereSql}
        ORDER BY c.id DESC
-       LIMIT ${take} OFFSET ${skip}`
+       LIMIT ${take} OFFSET ${skip}`,
+      ...whereParams
     );
     console.log('Customer Details List - Total records:', customers.length);
     res.json({ success: true, data: serializeBigInt(customers), total });
@@ -5098,16 +5115,22 @@ router.get('/customers', async (req, res) => {
     const skip = (pageNum - 1) * take;
 
     const whereConditions: string[] = ['1=1'];
+    const whereParams: string[] = [];
     if (search) {
-      const q = String(search).trim().replace(/'/g, "''");
+      // Bound parameters, never string-built SQL; % and _ in the input match literally.
+      const like = `%${String(search)
+        .trim()
+        .replace(/[\\%_]/g, (m) => `\\${m}`)}%`;
       whereConditions.push(
-        `(c.name LIKE '%${q}%' OR c.business LIKE '%${q}%' OR c.contact LIKE '%${q}%' OR c.email LIKE '%${q}%' OR c.city LIKE '%${q}%' OR c.service LIKE '%${q}%')`
+        '(c.name LIKE ? OR c.business LIKE ? OR c.contact LIKE ? OR c.email LIKE ? OR c.city LIKE ? OR c.service LIKE ?)'
       );
+      whereParams.push(like, like, like, like, like, like);
     }
     const whereSql = whereConditions.join(' AND ');
 
     const countRes = await prisma.$queryRawUnsafe<any[]>(
-      `SELECT COUNT(*) as total FROM customers c WHERE ${whereSql}`
+      `SELECT COUNT(*) as total FROM customers c WHERE ${whereSql}`,
+      ...whereParams
     );
     const total = Number(countRes[0]?.total || 0);
 
@@ -5125,7 +5148,8 @@ router.get('/customers', async (req, res) => {
        WHERE ${whereSql}
        GROUP BY c.id
        ORDER BY c.id DESC 
-       LIMIT ${take} OFFSET ${skip}`
+       LIMIT ${take} OFFSET ${skip}`,
+      ...whereParams
     );
 
     const ids = custsRaw.map((c) => Number(c.id)).filter(Boolean);

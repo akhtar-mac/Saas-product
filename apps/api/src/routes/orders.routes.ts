@@ -506,24 +506,15 @@ router.post(
           },
         });
 
-        // Record in customer_dues (temporarily disabled - model not in schema)
-        // const maxDue = await prisma.customer_dues.findFirst({
-        //   orderBy: { cd_id: 'desc' },
-        //   select: { cd_id: true },
-        // });
-        // await prisma.customer_dues.create({
-        //   data: {
-        //     cd_id: (maxDue?.cd_id || 1000) + 1,
-        //     emi_id: emi.emi_id,
-        //     customer_id: task.cust_id,
-        //     paid_amount: Number(paid_amount),
-        //     unpaid_amount: newUnpaid,
-        //     payment_screenshot: payment_screenshot_url || '',
-        //     added_by: req.user!.user_id,
-        //     is_approve: 0,
-        //     date: new Date(),
-        //   },
-        // });
+        // Record in customer_dues (old flow: every payment is a due row awaiting approval).
+        // The Prisma model is @@ignore'd (no unique id in the schema file), so write it with
+        // bound raw SQL; cd_id is AUTO_INCREMENT in the database.
+        await prisma.$executeRaw`
+          INSERT INTO customer_dues
+            (emi_id, customer_id, paid_amount, unpaid_amount, payment_screenshot, added_by, is_approve, date)
+          VALUES
+            (${emi.emi_id}, ${task.cust_id}, ${Number(paid_amount)}, ${newUnpaid},
+             ${payment_screenshot_url || ''}, ${req.user!.user_id}, 0, NOW())`;
 
         res.json({
           success: true,

@@ -20,3 +20,7 @@ export const env = {
   COMPANY_LEGAL_NAME: 'ETaxwala Business Solution Pvt Ltd',
   PRIMARY_UPI_ID: 'etaxwalabusiness@icici',
 };
+// Production must never run on the development JWT secret.
+if (env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || env.JWT_SECRET === 'dev-secret')) {
+  throw new Error('JWT_SECRET must be set in production.');
+}
