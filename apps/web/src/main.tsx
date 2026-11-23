@@ -7,6 +7,7 @@ import App from './app/App';
 import ErrorBoundary from './components/error-boundary';
 import { installStaffAuthFetch } from './lib/staff-auth-fetch';
 import './styles/globals.css';
+import './styles/theme-mnc.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -142,7 +142,7 @@ export default function QuickEnquiryModal({
 
               <button
                 onClick={onClose}
-                className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                className="btn-multicolor w-full py-2.5 text-xs font-bold transition-all cursor-pointer"
               >
                 Close
               </button>

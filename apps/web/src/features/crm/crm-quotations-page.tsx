@@ -864,7 +864,7 @@ export function CrmQuotationsPage() {
 
             <button
               onClick={handleCreateNew}
-              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-md transition-all cursor-pointer"
+              className="btn-multicolor inline-flex items-center justify-center gap-2 px-5 py-2.5 font-semibold text-sm transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               Create New Quotation
@@ -1134,7 +1134,7 @@ export function CrmQuotationsPage() {
               </button>
               <button
                 onClick={handleSaveQuotation}
-                className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-xs font-semibold shadow-md transition-all"
+                className="btn-multicolor inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold transition-all"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Save Quotation

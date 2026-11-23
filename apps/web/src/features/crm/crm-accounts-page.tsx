@@ -2215,7 +2215,7 @@ export default function CrmAccountsPage() {
               <div className="flex items-center gap-3 pt-2">
                 <button
                   type="submit"
-                  className="bg-[#1B365D] hover:bg-[#0F2444] text-white font-bold py-2.5 px-8 rounded-xl shadow-md transition-colors text-xs cursor-pointer"
+                  className="btn-multicolor font-bold py-2.5 px-8 text-xs cursor-pointer"
                 >
                   Add Customer
                 </button>
@@ -2643,7 +2643,7 @@ export default function CrmAccountsPage() {
                       type="button"
                       onClick={handleValidateOrderCoupon}
                       disabled={isValidatingOrderCoupon}
-                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold cursor-pointer transition-colors text-xs"
+                      className="btn-multicolor px-3 py-2 font-bold cursor-pointer text-xs"
                     >
                       {isValidatingOrderCoupon ? '...' : 'Apply'}
                     </button>
@@ -3441,7 +3441,7 @@ export default function CrmAccountsPage() {
                       type="button"
                       onClick={handleValidateCreateCoupon}
                       disabled={isValidatingCreateCoupon}
-                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold cursor-pointer transition-colors text-xs"
+                      className="btn-multicolor px-3 py-2 font-bold cursor-pointer text-xs"
                     >
                       {isValidatingCreateCoupon ? '...' : 'Apply'}
                     </button>
@@ -3933,7 +3933,7 @@ export default function CrmAccountsPage() {
                   type="button"
                   onClick={handleDeleteOrder}
                   disabled={isDeletingOrder}
-                  className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-xs flex items-center gap-1.5"
+                  className="btn-danger px-5 py-2 font-bold text-xs flex items-center gap-1.5"
                 >
                   {isDeletingOrder ? (
                     <Loader2 className="w-4 h-4 animate-spin text-white" />

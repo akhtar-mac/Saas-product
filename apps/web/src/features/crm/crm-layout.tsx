@@ -520,7 +520,7 @@ function CrmLayoutContent() {
       isActiveRole(RoleType.OPERATIONS_EMPLOYEE));
 
   return (
-    <div className="h-screen bg-[#FAF9F5] text-slate-800 flex flex-col md:flex-row font-sans overflow-hidden">
+    <div className="crm-shell h-screen bg-[#FAF9F5] text-slate-800 flex flex-col md:flex-row font-sans overflow-hidden">
       {/* Mobile Top Bar */}
       <div className="md:hidden flex items-center justify-between p-4 bg-[#FFFDF9] border-b border-[#EAE6DD] sticky top-0 z-30 shadow-xs">
         <Link to="/crm" className="flex items-center gap-2">
@@ -547,7 +547,7 @@ function CrmLayoutContent() {
 
       {/* Sidebar Navigation matching the exact hierarchy from staff screenshots */}
       <aside
-        className={`fixed md:sticky inset-y-0 left-0 z-40 bg-[#FFFDF9] border-r border-[#EAE6DD] flex flex-col justify-between transition-all duration-300 shadow-xs h-screen shrink-0 ${
+        className={`fixed md:sticky inset-y-0 left-0 z-40 bg-[#FFFDF9] border-r border-[#EAE6DD] flex flex-col justify-between transition-[transform,opacity] duration-200 ease-out shadow-xs h-screen shrink-0 ${
           sidebarOpen
             ? 'w-64 translate-x-0 opacity-100'
             : '-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 overflow-hidden border-none'
@@ -2003,6 +2003,7 @@ function CrmLayoutContent() {
               onClick={() => setNotifOpen((prev) => !prev)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50/90 hover:bg-blue-100 border border-blue-200 text-blue-900 text-xs font-bold transition-all shadow-xs cursor-pointer shrink-0 whitespace-nowrap group active:scale-95"
               title="View unread staff chat alerts"
+              aria-label="Staff Alerts"
               id="staff-test-notif-btn"
             >
               <div className="relative w-4 h-4 rounded-md bg-gradient-to-tr from-[#1B365D] to-[#0084D1] flex items-center justify-center text-white shadow-2xs shrink-0">
@@ -2026,6 +2027,7 @@ function CrmLayoutContent() {
                   : 'bg-[#FAF9F5] border border-[#EAE6DD] text-slate-700 hover:text-[#1B365D]'
               }`}
               title="Staff Internal Chat"
+              aria-label="Staff Chat"
               id="header-chat-btn"
             >
               <MessageSquare className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />

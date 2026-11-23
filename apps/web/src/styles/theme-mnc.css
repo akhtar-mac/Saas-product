@@ -1,0 +1,682 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   ETaxwala "MNC" theme  (see apps/web/DESIGN-THEME.md)
+   1. Design tokens
+   2. Border-gradient button (css-buttons.com #54, in ETaxwala logo colours)
+   3. CRM shell surfaces: page, cards, header, sidebar, tables, inputs
+   4. Motion: transform/opacity only, 120-200 ms, reduced-motion respected
+   Loaded after globals.css (main.tsx). Styling only: no logic depends on it.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. Tokens ─────────────────────────────────────────────────────── */
+:root {
+  /* brand */
+  --etx-navy: #003a66;
+  --etx-navy-900: #0b2545;
+  --etx-cyan: #0084d1;
+  --etx-violet: #7c3aed;
+  --etx-crimson: #e11d48;
+  --etx-coral: #f97316;
+
+  /* neutrals (cool slate, like Stripe / Polaris / Fluent) */
+  --etx-ink: #0f172a; /* primary text  16.1:1 on white */
+  --etx-ink-2: #334155; /* body text     10.4:1 */
+  --etx-ink-3: #64748b; /* muted text     4.8:1 (AA) */
+  --etx-page: #f5f7fa; /* app background */
+  --etx-surface: #ffffff; /* cards, header, sidebar */
+  --etx-surface-2: #f8fafc; /* table header, subtle fills */
+  --etx-hover: #f1f5f9; /* row / item hover */
+  --etx-line: #e3e8ef; /* 1px borders */
+  --etx-line-strong: #cbd5e1;
+
+  /* radius: tight and crisp */
+  --etx-r-xs: 4px;
+  --etx-r-sm: 6px;
+  --etx-r-md: 8px;
+  --etx-r-lg: 10px;
+  --etx-r-xl: 12px;
+  --etx-r-pill: 9999px;
+
+  /* elevation: hairline + soft, never blurred glows on surfaces */
+  --etx-shadow-1: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --etx-shadow-2: 0 1px 2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.06);
+  --etx-shadow-3: 0 12px 32px -8px rgba(15, 23, 42, 0.18), 0 4px 10px -4px rgba(15, 23, 42, 0.08);
+
+  /* motion (Fluent 2 durations / curves) */
+  --etx-fast: 120ms;
+  --etx-normal: 160ms;
+  --etx-slow: 200ms;
+  --etx-ease-out: cubic-bezier(0.33, 0, 0.1, 1);
+  --etx-ease: cubic-bezier(0.33, 0, 0.67, 1);
+
+  /* focus */
+  --etx-focus: 0 0 0 2px #ffffff, 0 0 0 4px var(--etx-cyan);
+
+  /* button (border-gradient #54) */
+  --btn-fill: #ffffff;
+  --btn-ink: var(--etx-ink);
+  --btn-ring: radial-gradient(circle at left top, #0084d1, #7c3aed 55%, #e11d48);
+  --btn-glow: rgba(0, 132, 209, 0.45);
+  --btn-fill-selected: #eef6ff;
+}
+
+/* ─── 2. Border-gradient button ─────────────────────────────────────── */
+/* Every shared button class gets the same look: white fill, 2px gradient
+   border (background-clip trick, no pseudo layers), pill shape, soft glow
+   on hover. The glow lives on ::before and only its opacity animates, so
+   hover never repaints the button or re-runs layout. */
+:is(
+  .btn-galaxy,
+  .btn-multicolor,
+  .btn-theme,
+  .btn-outline-multicolor,
+  .btn-hover-multicolor,
+  .btn-secondary-outline,
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline,
+  .wizard-btn,
+  .btn-gold,
+  .btn-accent,
+  .btn-single-moving,
+  .btn-single-moving-solid,
+  .btn-ca-call,
+  .btn-panda,
+  .btn-danger,
+  .btn-etx,
+  .btn[class*='bg-']
+) {
+  position: relative !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  isolation: isolate;
+  overflow: visible !important;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap !important;
+  text-decoration: none;
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  color: var(--btn-ink) !important;
+  border: 2px solid transparent !important;
+  border-radius: var(--etx-r-pill) !important;
+  background: none !important;
+  background-image: linear-gradient(var(--btn-fill), var(--btn-fill)), var(--btn-ring) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+  /* keep Tailwind ring-* / shadow-* utilities working (used for "selected") */
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow, 0 0 #0000) !important;
+  animation: none !important;
+  transition: transform var(--etx-fast) var(--etx-ease-out) !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* glow layer (was: rotating blurred conic gradient on every button) */
+:is(
+  .btn-galaxy,
+  .btn-multicolor,
+  .btn-theme,
+  .btn-outline-multicolor,
+  .btn-hover-multicolor,
+  .btn-secondary-outline,
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline,
+  .wizard-btn,
+  .btn-gold,
+  .btn-accent,
+  .btn-single-moving,
+  .btn-single-moving-solid,
+  .btn-ca-call,
+  .btn-panda,
+  .btn-danger,
+  .btn-etx,
+  .btn[class*='bg-']
+)::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: -2px !important;
+  z-index: -1 !important;
+  border-radius: inherit !important;
+  background: none !important;
+  filter: none !important;
+  animation: none !important;
+  box-shadow: 0 0 16px 0 var(--btn-glow) !important;
+  opacity: 0 !important;
+  pointer-events: none;
+  transition: opacity var(--etx-normal) var(--etx-ease) !important;
+}
+:is(
+  .btn-galaxy,
+  .btn-multicolor,
+  .btn-theme,
+  .btn-outline-multicolor,
+  .btn-hover-multicolor,
+  .btn-secondary-outline,
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline,
+  .wizard-btn,
+  .btn-gold,
+  .btn-accent,
+  .btn-single-moving,
+  .btn-single-moving-solid,
+  .btn-ca-call,
+  .btn-panda,
+  .btn-danger,
+  .btn-etx,
+  .btn[class*='bg-']
+)::after {
+  content: none !important;
+  display: none !important;
+}
+
+:is(
+    .btn-galaxy,
+    .btn-multicolor,
+    .btn-theme,
+    .btn-outline-multicolor,
+    .btn-hover-multicolor,
+    .btn-secondary-outline,
+    .btn-primary,
+    .btn-secondary,
+    .btn-outline,
+    .wizard-btn,
+    .btn-gold,
+    .btn-accent,
+    .btn-single-moving,
+    .btn-single-moving-solid,
+    .btn-ca-call,
+    .btn-panda,
+    .btn-danger,
+    .btn-etx,
+    .btn[class*='bg-']
+  ):hover::before {
+  opacity: 1 !important;
+}
+
+:is(
+    .btn-galaxy,
+    .btn-multicolor,
+    .btn-theme,
+    .btn-outline-multicolor,
+    .btn-hover-multicolor,
+    .btn-secondary-outline,
+    .btn-primary,
+    .btn-secondary,
+    .btn-outline,
+    .wizard-btn,
+    .btn-gold,
+    .btn-accent,
+    .btn-single-moving,
+    .btn-single-moving-solid,
+    .btn-ca-call,
+    .btn-panda,
+    .btn-danger,
+    .btn-etx,
+    .btn[class*='bg-']
+  ):active:not(:disabled) {
+  transform: scale(0.97) !important;
+}
+
+/* text stays solid ink (old rule painted hover text with a gradient) */
+:is(
+    .btn-galaxy,
+    .btn-multicolor,
+    .btn-theme,
+    .btn-outline-multicolor,
+    .btn-hover-multicolor,
+    .btn-secondary-outline,
+    .btn-primary,
+    .btn-secondary,
+    .btn-outline,
+    .wizard-btn,
+    .btn-gold,
+    .btn-accent,
+    .btn-single-moving,
+    .btn-single-moving-solid,
+    .btn-ca-call,
+    .btn-panda,
+    .btn-danger,
+    .btn-etx,
+    .btn[class*='bg-']
+  )
+  > *:not([class*='bg-']):not([style*='background']):not([class*='text-white']) {
+  position: relative;
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+  background: none;
+}
+
+:is(
+  .btn-galaxy,
+  .btn-multicolor,
+  .btn-theme,
+  .btn-outline-multicolor,
+  .btn-hover-multicolor,
+  .btn-secondary-outline,
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline,
+  .wizard-btn,
+  .btn-gold,
+  .btn-accent,
+  .btn-single-moving,
+  .btn-single-moving-solid,
+  .btn-ca-call,
+  .btn-panda,
+  .btn-danger,
+  .btn-etx,
+  .btn[class*='bg-']
+):focus-visible {
+  outline: 2px solid var(--etx-cyan) !important;
+  outline-offset: 2px !important;
+}
+
+/* selected / pressed (status pills use ring-2, tabs use aria/data state) */
+:is(
+  .btn-galaxy,
+  .btn-multicolor,
+  .btn-theme,
+  .btn-outline-multicolor,
+  .btn-hover-multicolor,
+  .btn-secondary-outline,
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline,
+  .wizard-btn,
+  .btn-gold,
+  .btn-accent,
+  .btn-single-moving,
+  .btn-single-moving-solid,
+  .btn-ca-call,
+  .btn-panda,
+  .btn-danger,
+  .btn-etx,
+  .btn[class*='bg-']
+):is(.active, .ring-2, [aria-pressed='true'], [aria-selected='true'], [data-state='active']) {
+  --btn-fill: var(--btn-fill-selected);
+  --btn-ink: var(--etx-navy-900);
+  --tw-ring-color: rgba(0, 132, 209, 0.35) !important;
+}
+
+/* disabled, as in the reference: flat grey, no glow */
+:is(
+  .btn-galaxy,
+  .btn-multicolor,
+  .btn-theme,
+  .btn-outline-multicolor,
+  .btn-hover-multicolor,
+  .btn-secondary-outline,
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline,
+  .wizard-btn,
+  .btn-gold,
+  .btn-accent,
+  .btn-single-moving,
+  .btn-single-moving-solid,
+  .btn-ca-call,
+  .btn-panda,
+  .btn-danger,
+  .btn-etx,
+  .btn[class*='bg-']
+):is(:disabled, [aria-disabled='true']) {
+  --btn-fill: #e5e7eb;
+  --btn-ring: linear-gradient(#d1d5db, #d1d5db);
+  --btn-ink: #6b7280;
+  opacity: 0.75;
+  cursor: not-allowed !important;
+}
+:is(
+    .btn-galaxy,
+    .btn-multicolor,
+    .btn-theme,
+    .btn-outline-multicolor,
+    .btn-hover-multicolor,
+    .btn-secondary-outline,
+    .btn-primary,
+    .btn-secondary,
+    .btn-outline,
+    .wizard-btn,
+    .btn-gold,
+    .btn-accent,
+    .btn-single-moving,
+    .btn-single-moving-solid,
+    .btn-ca-call,
+    .btn-panda,
+    .btn-danger,
+    .btn-etx,
+    .btn[class*='bg-']
+  ):is(:disabled, [aria-disabled='true'])::before {
+  opacity: 0 !important;
+}
+[aria-busy='true']:is(.btn-multicolor, .btn-danger, .btn-etx, .btn-outline-multicolor) {
+  cursor: progress !important;
+}
+
+/* variants */
+.btn-danger {
+  --btn-ring: radial-gradient(circle at left top, #f97316, #e11d48 60%, #be123c);
+  --btn-glow: rgba(225, 29, 72, 0.4);
+  --btn-ink: #9f1239;
+}
+.btn-success {
+  --btn-ring: radial-gradient(circle at left top, #10b981, #0084d1 70%);
+  --btn-glow: rgba(16, 185, 129, 0.4);
+}
+.btn-gold {
+  --btn-ring: radial-gradient(circle at left top, #f0b82a, #d49d0e 50%, #e11d48);
+  --btn-glow: rgba(212, 157, 14, 0.4);
+}
+/* buttons that used to be solid (dark navy etc.) keep the same shape */
+.btn-single-moving-solid > * {
+  color: inherit !important;
+}
+
+/* sizes (Button component / utility) */
+.btn-sm {
+  padding: 0.3rem 0.8rem !important;
+  font-size: 0.75rem !important;
+}
+.btn-md {
+  padding: 0.45rem 1.1rem !important;
+  font-size: 0.8125rem !important;
+}
+.btn-lg {
+  padding: 0.65rem 1.5rem !important;
+  font-size: 0.9rem !important;
+}
+.btn-icon {
+  padding: 0.4rem !important;
+  aspect-ratio: 1 / 1;
+}
+
+/* leftovers of the old galaxy button */
+.btn-galaxy__stars {
+  display: none !important;
+}
+.btn-ca-call__text,
+.btn-ca-call span,
+.btn-panda span {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+/* ghost (Button variant="ghost"): no ring, subtle hover */
+.btn-ghost-etx {
+  border-radius: var(--etx-r-pill);
+  background: transparent;
+  color: var(--etx-ink-2);
+  transition: background-color var(--etx-fast) var(--etx-ease);
+}
+.btn-ghost-etx:hover {
+  background: var(--etx-hover);
+}
+.btn-ghost-etx:focus-visible {
+  outline: 2px solid var(--etx-cyan);
+  outline-offset: 2px;
+}
+
+/* ─── 3. CRM shell ──────────────────────────────────────────────────── */
+.crm-shell {
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  font-size: 14px;
+  color: var(--etx-ink-2);
+  background: var(--etx-page) !important;
+}
+.crm-shell :is(h1, h2, h3, h4, h5, h6) {
+  font-family: inherit;
+  letter-spacing: -0.011em;
+}
+
+/* cream palette -> cool neutral palette (same classes, new values) */
+.crm-shell :is(.bg-\[\#FAF9F5\], .bg-\[\#faf9f5\], .bg-\[\#F5F3EC\], .bg-\[\#f5f3ec\]) {
+  background-color: var(--etx-surface-2) !important;
+}
+.crm-shell > .bg-\[\#FAF9F5\],
+.crm-shell main {
+  background-color: var(--etx-page);
+}
+.crm-shell :is(.bg-\[\#FFFDF9\], .bg-\[\#fffdf9\]) {
+  background-color: var(--etx-surface) !important;
+}
+.crm-shell :is(.hover\:bg-\[\#FAF9F5\], .hover\:bg-\[\#FFFDF9\]):hover {
+  background-color: var(--etx-hover) !important;
+}
+.crm-shell
+  :is(
+    .border-\[\#EAE6DD\],
+    .border-\[\#eae6dd\],
+    .border-slate-200,
+    .border-gray-200,
+    .border-slate-100
+  ) {
+  border-color: var(--etx-line) !important;
+}
+
+/* crisp corners: cards 12/10px, controls 8px */
+.crm-shell .rounded-3xl {
+  border-radius: var(--etx-r-xl) !important;
+}
+.crm-shell .rounded-2xl {
+  border-radius: var(--etx-r-lg) !important;
+}
+.crm-shell .rounded-xl {
+  border-radius: var(--etx-r-md) !important;
+}
+
+/* hairline elevation instead of soft blobs */
+.crm-shell :is(.shadow-xs, .shadow-2xs, .shadow-sm, .shadow) {
+  --tw-shadow: var(--etx-shadow-1) !important;
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--etx-shadow-1);
+}
+.crm-shell :is(.shadow-md, .shadow-lg) {
+  box-shadow: var(--etx-shadow-2);
+}
+.crm-shell :is(.shadow-xl, .shadow-2xl) {
+  box-shadow: var(--etx-shadow-3);
+}
+.crm-shell
+  :is(.shadow-xs, .shadow-2xs, .shadow-sm, .shadow, .shadow-md, .shadow-lg):is(
+    .btn-multicolor,
+    .btn-outline-multicolor,
+    .btn-theme,
+    .btn-primary,
+    .btn-danger,
+    .btn-etx
+  ) {
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000) !important;
+}
+
+/* header + sidebar: white, 1px line, no glass */
+.crm-shell > aside,
+.crm-shell header {
+  background-color: var(--etx-surface) !important;
+  border-color: var(--etx-line) !important;
+  box-shadow: none !important;
+}
+.crm-shell > aside nav a,
+.crm-shell > aside nav button:not([class*='btn-']) {
+  transition:
+    background-color var(--etx-fast) var(--etx-ease),
+    color var(--etx-fast) var(--etx-ease) !important;
+}
+
+/* tables: one header style everywhere (light, like Stripe / Lightning),
+   1px row lines, tabular numbers, cheap row hover (background only) */
+.crm-shell table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.crm-shell.crm-shell table thead,
+.crm-shell.crm-shell table thead tr {
+  background: var(--etx-surface-2) !important;
+}
+.crm-shell.crm-shell table thead th {
+  background: var(--etx-surface-2) !important;
+  color: var(--etx-ink-3) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em !important;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--etx-line) !important;
+}
+.crm-shell.crm-shell table thead :is(tr, th) :not(input):not(svg *) {
+  color: inherit !important;
+}
+.crm-shell.crm-shell table thead tr {
+  color: var(--etx-ink-3) !important;
+}
+.crm-shell table tbody td {
+  border-bottom: 1px solid #eef1f5;
+}
+.crm-shell table tbody tr {
+  transition: background-color var(--etx-fast) var(--etx-ease);
+}
+.crm-shell table tbody tr:hover > td {
+  background-color: #f7faff;
+}
+.crm-shell .table-crm.table-crm tbody tr:nth-child(even) {
+  background: #fcfdfe;
+}
+.crm-shell :is(.table-crm-wrapper, .overflow-x-auto:has(> table)) {
+  border-color: var(--etx-line) !important;
+  border-radius: var(--etx-r-lg) !important;
+  box-shadow: var(--etx-shadow-1) !important;
+}
+
+/* inputs: 1px line, cyan focus ring, same height as before */
+.crm-shell
+  :is(input:not([type='checkbox']):not([type='radio']):not([type='range']), select, textarea) {
+  border-color: var(--etx-line-strong);
+  transition:
+    border-color var(--etx-fast) var(--etx-ease),
+    box-shadow var(--etx-fast) var(--etx-ease);
+}
+.crm-shell
+  :is(
+    input:not([type='checkbox']):not([type='radio']):not([type='range']),
+    select,
+    textarea
+  ):focus {
+  outline: none;
+  border-color: var(--etx-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(0, 132, 209, 0.16) !important;
+}
+.crm-shell :is(input[type='checkbox'], input[type='radio']) {
+  accent-color: var(--etx-navy);
+}
+
+/* links / icon buttons keep a visible keyboard focus */
+.crm-shell :is(a, button, [role='button'], [role='tab']):focus-visible {
+  outline: 2px solid var(--etx-cyan);
+  outline-offset: 2px;
+}
+
+/* badges: squarer, quieter */
+.crm-shell .badge {
+  border-radius: var(--etx-r-sm);
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+/* ─── 4. Motion / 60fps ─────────────────────────────────────────────── */
+/* No glass on scrolling content: backdrop-filter only on fixed overlays. */
+.crm-shell main [class*='backdrop-blur']:not(.fixed) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+/* Tailwind transition-all on dashboard cards animates layout props; limit it
+   to paint-cheap properties. */
+.crm-shell main .transition-all:not([class*='btn-']) {
+  transition-property:
+    color, background-color, border-color, opacity, transform, box-shadow !important;
+  transition-duration: var(--etx-normal) !important;
+}
+/* Lift effects in the CRM become a 1px move (transform only). */
+.crm-shell
+  main
+  :is(
+    .hover\:-translate-y-1,
+    .hover\:-translate-y-0\.5,
+    .hover\:scale-105,
+    .hover\:scale-\[1\.02\]
+  ):hover {
+  --tw-translate-y: -1px;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Small phones: page titles stay on one or two lines instead of four. */
+@media (max-width: 480px) {
+  .crm-shell main h1 {
+    font-size: 1.25rem !important;
+    line-height: 1.3 !important;
+  }
+}
+
+/* Header stays on one line at every width: labels collapse to icons
+   (title + aria-label keep the names) before anything is clipped. */
+@media (max-width: 1679px) {
+  .crm-shell header :is(#staff-test-notif-btn, #header-chat-btn) > span.whitespace-nowrap {
+    display: none;
+  }
+}
+@media (max-width: 1535px) {
+  .crm-shell header span.max-w-\[220px\],
+  .crm-shell header span.text-slate-300 {
+    display: none !important;
+  }
+  .crm-shell header select.max-w-\[190px\] {
+    max-width: 150px;
+  }
+  .crm-shell header {
+    gap: 0.5rem;
+  }
+}
+@media (max-width: 1279px) {
+  .crm-shell header > div.lg\:flex {
+    display: none !important;
+  }
+  .crm-shell header select.max-w-\[190px\] {
+    max-width: 120px;
+  }
+}
+@media (max-width: 1023px) {
+  .crm-shell header > div:first-child span.font-bold.text-sm {
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .crm-shell header > .ml-auto {
+    gap: 0.375rem;
+  }
+}

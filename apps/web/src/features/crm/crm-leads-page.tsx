@@ -2679,7 +2679,7 @@ export default function CrmLeadsPage() {
                 {/* Lead Score Button */}
                 <button
                   onClick={handleOpenLeadScoreModal}
-                  className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-2.5 py-1 rounded transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
+                  className="btn-multicolor font-bold text-xs px-2.5 py-1 cursor-pointer flex items-center gap-1"
                   title="Click to calculate/update Lead Score %"
                 >
                   <span>{remarksModalLead.leadScore || '--%'}</span>
@@ -2843,7 +2843,7 @@ export default function CrmLeadsPage() {
                 <div className="flex justify-start">
                   <button
                     onClick={handleSaveInModalRemark}
-                    className="bg-[#16A34A] hover:bg-green-700 text-white font-bold text-xs px-5 py-2 rounded-xl shadow-xs transition-colors cursor-pointer"
+                    className="btn-multicolor font-bold text-xs px-5 py-2 cursor-pointer"
                   >
                     Save Remark
                   </button>
@@ -3777,7 +3777,7 @@ export default function CrmLeadsPage() {
                 <button
                   type="submit"
                   disabled={convSubmitting}
-                  className="bg-[#1B365D] hover:bg-[#0F2444] text-white font-bold py-2.5 px-8 rounded-xl shadow-md transition-colors text-xs cursor-pointer disabled:opacity-50"
+                  className="btn-multicolor font-bold py-2.5 px-8 text-xs cursor-pointer disabled:opacity-50"
                 >
                   {convSubmitting ? 'Adding...' : 'Add'}
                 </button>

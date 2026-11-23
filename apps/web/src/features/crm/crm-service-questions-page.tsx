@@ -485,10 +485,7 @@ export default function CrmServiceQuestionsPage() {
               >
                 Cancel
               </button>
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700"
-              >
+              <button onClick={handleDelete} className="btn-danger px-4 py-2 text-xs font-semibold">
                 Delete
               </button>
             </div>

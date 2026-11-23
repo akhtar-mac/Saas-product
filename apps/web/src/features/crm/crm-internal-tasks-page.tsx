@@ -325,10 +325,7 @@ export default function CrmInternalTasksPage() {
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A896]"
                 />
               </div>
-              <button
-                onClick={handleCreateTask}
-                className="w-full py-2 bg-[#1B365D] text-white rounded-lg hover:bg-[#00A896] transition-colors"
-              >
+              <button onClick={handleCreateTask} className="btn-multicolor w-full py-2">
                 Add Task
               </button>
             </div>
@@ -374,10 +371,7 @@ export default function CrmInternalTasksPage() {
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00A896]"
                 />
               </div>
-              <button
-                onClick={handleUpdateTask}
-                className="w-full py-2 bg-[#1B365D] text-white rounded-lg hover:bg-[#00A896] transition-colors"
-              >
+              <button onClick={handleUpdateTask} className="btn-multicolor w-full py-2">
                 Update
               </button>
             </div>

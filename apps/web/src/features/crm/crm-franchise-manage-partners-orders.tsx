@@ -338,9 +338,7 @@ export default function CrmFranchiseManagePartnersOrders() {
                       placeholder="Type Message ..."
                       className="flex-1 px-4 py-2 border border-slate-300 rounded-lg"
                     />
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                      Send
-                    </button>
+                    <button className="btn-multicolor px-4 py-2">Send</button>
                   </div>
                 </div>
               )}
@@ -425,9 +423,7 @@ export default function CrmFranchiseManagePartnersOrders() {
                           className="w-full px-4 py-2 border border-slate-300 rounded-lg"
                         />
                       </div>
-                      <button className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        Pay Now
-                      </button>
+                      <button className="btn-multicolor w-full py-2">Pay Now</button>
                     </div>
                   </div>
                 </div>

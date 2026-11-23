@@ -13,7 +13,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
     | 'call'
     | 'ca-call'
     | 'gold';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'icon';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -34,7 +34,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    // All galaxy variants: white bg + rotating nebula border (light theme)
+    // Border-gradient button (theme-mnc.css): one shape, tone set by the class
     const variants = {
       primary: 'btn-multicolor',
       theme: 'btn-multicolor',
@@ -45,36 +45,26 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       call: 'btn-ca-call',
       'ca-call': 'btn-ca-call',
       gold: 'btn-gold',
-      ghost:
-        'relative cursor-pointer overflow-hidden rounded-xl bg-transparent hover:bg-[#FAF9F5] text-slate-700 transition-colors duration-200 font-semibold',
-      danger:
-        'relative cursor-pointer overflow-hidden rounded-xl bg-rose-600 hover:bg-rose-700 text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 disabled:opacity-60 font-semibold',
+      ghost: 'btn-ghost-etx font-semibold',
+      danger: 'btn-danger',
     };
 
     const sizes = {
-      sm: 'px-3.5 py-1.5 text-xs',
-      md: 'px-5 py-2.5 text-sm',
-      lg: 'px-7 py-3.5 text-base',
+      sm: 'btn-sm',
+      md: 'btn-md',
+      lg: 'btn-lg',
+      icon: 'btn-icon',
     };
-
-    const isGalaxy =
-      variant === 'primary' ||
-      variant === 'theme' ||
-      variant === 'multicolor' ||
-      variant === 'secondary' ||
-      variant === 'outline';
 
     return (
       <button
         ref={ref}
         disabled={disabled || isLoading}
+        aria-busy={isLoading || undefined}
         className={`inline-flex items-center justify-center whitespace-nowrap shrink-0 disabled:opacity-60 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
         {...props}
       >
-        {/* Floating star particles (galaxy variants only) */}
-        {isGalaxy && <span className="btn-galaxy__stars" aria-hidden="true" />}
-
-        {/* Content — z-[2] sits above the ::after white mask */}
+        {/* Content */}
         <span className="relative z-[2] inline-flex items-center justify-center gap-2">
           {isLoading ? (
             <svg
@@ -100,7 +90,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           ) : leftIcon ? (
             <span className="btn-galaxy__icon shrink-0">{leftIcon}</span>
           ) : null}
-          <span>{children}</span>
+          {children != null && <span>{children}</span>}
           {!isLoading && rightIcon ? (
             <span className="btn-galaxy__icon shrink-0">{rightIcon}</span>
           ) : null}

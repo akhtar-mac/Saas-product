@@ -1225,7 +1225,7 @@ export default function CrmChatPage() {
                   disabled={
                     sending || uploadingAttachment || (!messageText.trim() && !selectedFile)
                   }
-                  className="px-4 py-2 rounded-xl bg-[#1B365D] hover:bg-[#152a48] text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 shrink-0 shadow-xs"
+                  className="btn-multicolor px-4 py-2 text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 shrink-0"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>

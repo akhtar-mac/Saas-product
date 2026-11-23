@@ -237,7 +237,7 @@ function StaffChatPopupItem({
                 <button
                   type="submit"
                   disabled={sending || !replyText.trim()}
-                  className="px-3 py-1.5 rounded-lg bg-[#0084D1] hover:bg-[#0070B3] disabled:opacity-50 text-white text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                  className="btn-multicolor px-3 py-1.5 disabled:opacity-50 text-xs font-bold flex items-center gap-1 cursor-pointer"
                 >
                   {sending ? '...' : <Send className="w-3.5 h-3.5" />}
                 </button>
