@@ -1415,11 +1415,8 @@ export default function CrmLeadsPage() {
                   setActiveFollowup(null);
                   setCurrentPage(1);
                 }}
-                className={`btn-multicolor py-1 px-3 transition-all ${
-                  activeStatusKpi === kpi.id
-                    ? 'ring-2 ring-slate-800 scale-105 shadow-md'
-                    : 'shadow-2xs'
-                }`}
+                className={`etx-filter-pill py-1 px-3 ${activeStatusKpi === kpi.id ? 'is-selected' : ''}`}
+                aria-pressed={activeStatusKpi === kpi.id}
                 title={`Filter leads by ${kpi.label}`}
               >
                 <div className="flex items-center gap-1.5">
@@ -1427,8 +1424,8 @@ export default function CrmLeadsPage() {
                     {kpi.label}
                   </span>
                   <span
-                    className="text-[11px] font-mono font-bold px-1.5 rounded-full text-white shadow-2xs"
-                    style={{ background: kpi.cBase }}
+                    className="etx-pill-count text-[11px] font-mono font-bold px-1.5 rounded-full"
+                    style={{ '--tone': kpi.cBase } as React.CSSProperties}
                   >
                     {kpiCounts[kpi.id] != null ? Number(kpiCounts[kpi.id]).toLocaleString() : '--'}
                   </span>
@@ -1452,11 +1449,8 @@ export default function CrmLeadsPage() {
                   setActiveStatusKpi(null);
                   setCurrentPage(1);
                 }}
-                className={`btn-multicolor py-1 px-3 transition-all ${
-                  activeFollowup === f.id
-                    ? 'ring-2 ring-slate-800 scale-105 shadow-md'
-                    : 'shadow-2xs'
-                }`}
+                className={`etx-filter-pill py-1 px-3 ${activeFollowup === f.id ? 'is-selected' : ''}`}
+                aria-pressed={activeFollowup === f.id}
                 title={`Show ${f.label}`}
               >
                 <div className="flex items-center gap-1.5">
@@ -1464,8 +1458,8 @@ export default function CrmLeadsPage() {
                     {f.label}
                   </span>
                   <span
-                    className="text-[11px] font-mono font-bold px-1.5 rounded-full text-white shadow-2xs"
-                    style={{ background: f.cBase }}
+                    className="etx-pill-count text-[11px] font-mono font-bold px-1.5 rounded-full"
+                    style={{ '--tone': f.cBase } as React.CSSProperties}
                   >
                     {f.id === 'today' && kpiCounts['followup_today'] != null
                       ? Number(kpiCounts['followup_today']).toLocaleString()

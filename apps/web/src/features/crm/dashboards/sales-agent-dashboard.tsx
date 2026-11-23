@@ -326,7 +326,7 @@ export default function SalesAgentDashboard() {
       {/* 1️⃣ OVERALL STATS CARDS (6 Cards Gradient Theme matching old CRM) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Total Calls */}
-        <div className="bg-emerald-700 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
+        <div className="etx-stat-tile etx-tone-emerald p-4 rounded-2xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-emerald-100 uppercase tracking-wider">
               Total Calls
@@ -337,7 +337,7 @@ export default function SalesAgentDashboard() {
         </div>
 
         {/* Incoming */}
-        <div className="bg-sky-600 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
+        <div className="etx-stat-tile etx-tone-sky p-4 rounded-2xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-sky-100 uppercase tracking-wider">
               Incoming
@@ -348,7 +348,7 @@ export default function SalesAgentDashboard() {
         </div>
 
         {/* Outgoing */}
-        <div className="bg-amber-600 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
+        <div className="etx-stat-tile etx-tone-amber p-4 rounded-2xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-amber-100 uppercase tracking-wider">
               Outgoing
@@ -359,7 +359,7 @@ export default function SalesAgentDashboard() {
         </div>
 
         {/* Missed */}
-        <div className="bg-rose-600 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
+        <div className="etx-stat-tile etx-tone-rose p-4 rounded-2xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-rose-100 uppercase tracking-wider">
               Missed
@@ -370,7 +370,7 @@ export default function SalesAgentDashboard() {
         </div>
 
         {/* Total Duration */}
-        <div className="bg-slate-700 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
+        <div className="etx-stat-tile etx-tone-slate p-4 rounded-2xl flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-slate-200 uppercase tracking-wider">
               Total Duration
@@ -384,7 +384,7 @@ export default function SalesAgentDashboard() {
 
         {/* Answered */}
         <div
-          className="bg-slate-900 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between"
+          className="etx-stat-tile etx-tone-navy p-4 rounded-2xl flex flex-col justify-between"
           title="Connected calls: incoming + outgoing (total minus missed)"
         >
           <div className="flex items-center justify-between">

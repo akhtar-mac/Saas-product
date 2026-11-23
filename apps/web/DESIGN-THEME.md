@@ -5,19 +5,19 @@ No component logic, API call or data shape depends on it.
 
 ## What we borrowed and from where
 
-| Area              | Reference                                                    | What we took                                                                                                                                            |
-| ----------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Type              | Shopify Polaris, Stripe, Linear                              | Inter in the CRM. 13–14px body, 11px uppercase table headers, tabular numbers in tables                                                                 |
-| Spacing / density | Polaris (4px scale, 8×12 cell padding), Salesforce Lightning | Kept the existing padding. Dense tables with 1px row lines                                                                                              |
-| Colour            | Stripe / Fluent neutrals                                     | Cool slate neutrals (`#f5f7fa` page, white surfaces, `#e3e8ef` lines) replace the cream. Navy `#003A66` and the logo spectrum stay as the brand colours |
-| Corners / depth   | Linear, Vercel, Atlassian                                    | Cards 10–12px, controls 8px, hairline shadows. No blurred glows on surfaces                                                                             |
-| Tables            | Stripe, Lightning                                            | One light header style everywhere (was a mix of navy, cream and grey)                                                                                   |
-| Motion            | Microsoft Fluent 2 tokens                                    | 120 / 160 / 200 ms with decelerate curves. Only `transform` and `opacity` animate. `prefers-reduced-motion` turns motion off                            |
+| Area              | Reference                                                    | What we took                                                                                                                                                                                                      |
+| ----------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type              | Shopify Polaris, Stripe, Linear                              | Inter in the CRM. 13–14px body, 11px uppercase table headers, tabular numbers in tables                                                                                                                           |
+| Spacing / density | Polaris (4px scale, 8×12 cell padding), Salesforce Lightning | Kept the existing padding. Dense tables with 1px row lines                                                                                                                                                        |
+| Colour            | Stripe / Fluent neutrals                                     | Soft warm light grey page `#f4f3ef`, near-white cards `#fcfcfa`, low-contrast `#e6e3dc` lines, near-black slate text `#1e293b` (muted text `#5b6676`: 5.2:1 or better, AA). Navy `#003A66` stays the brand colour |
+| Corners / depth   | Linear, Vercel, Atlassian                                    | Cards 10–12px, controls 8px, hairline shadows. No blurred glows on surfaces                                                                                                                                       |
+| Tables            | Stripe, Lightning                                            | One light header style everywhere (was a mix of navy, cream and grey)                                                                                                                                             |
+| Motion            | Microsoft Fluent 2 tokens                                    | 120 / 160 / 200 ms with decelerate curves. Only `transform` and `opacity` animate. `prefers-reduced-motion` turns motion off                                                                                      |
 
 ## Buttons: border-gradient (css-buttons.com #54)
 
 - The reference uses a white fill, a 2px gradient border and a pill shape (`background-clip: padding-box, border-box`), with a glow on hover.
-- Our gradient follows the logo: cyan `#0084D1`, then violet `#7C3AED`, then crimson `#E11D48`.
+- Our gradient is a muted take on the logo colours: slate-blue `#5b7a9d`, then muted violet `#7a6f9e`, then dusty rose `#a87a88`. The edge is 1.5px, and the hover glow is very faint (10px at 16% opacity).
 - All shared button classes (`btn-multicolor`, `btn-outline-multicolor`, `btn-primary`, `btn-ca-call`, `btn-gold`, `.btn[class*=bg-]` …) and the `Button` component now get this look. Pages did not need rewriting.
 - 17 buttons that had a solid one-off colour now use `btn-multicolor`, or `btn-danger` for red ones.
 - Variants:
@@ -47,3 +47,9 @@ No component logic, API call or data shape depends on it.
 - Table header colour: edit the `.crm-shell.crm-shell table thead` rules.
 - Cream background: delete the "cream palette" block.
 - Old buttons: remove the `theme-mnc.css` import. This alone won't bring the old galaxy rules back; you also need to revert the globals.css part of the commit.
+
+## Calm pass (eye comfort)
+
+- **Lead status and follow-up pills** (`etx-filter-pill`): a neutral 1px border with a soft tinted count, taken from each status colour with `color-mix`. Only the selected pill is highlighted, with a navy-tinted fill and edge. It also gets `aria-pressed`.
+- **Sales Workstation stat tiles** (`etx-stat-tile etx-tone-*`): a soft tint with a coloured 3px left accent and a coloured icon. Numbers are near-black instead of white on a saturated colour.
+- **Danger, gold and success edges** are desaturated to match.

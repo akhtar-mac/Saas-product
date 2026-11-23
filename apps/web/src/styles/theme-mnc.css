@@ -18,15 +18,15 @@
   --etx-coral: #f97316;
 
   /* neutrals (cool slate, like Stripe / Polaris / Fluent) */
-  --etx-ink: #0f172a; /* primary text  16.1:1 on white */
-  --etx-ink-2: #334155; /* body text     10.4:1 */
-  --etx-ink-3: #64748b; /* muted text     4.8:1 (AA) */
-  --etx-page: #f5f7fa; /* app background */
-  --etx-surface: #ffffff; /* cards, header, sidebar */
-  --etx-surface-2: #f8fafc; /* table header, subtle fills */
-  --etx-hover: #f1f5f9; /* row / item hover */
-  --etx-line: #e3e8ef; /* 1px borders */
-  --etx-line-strong: #cbd5e1;
+  --etx-ink: #1e293b; /* primary text, near-black slate */
+  --etx-ink-2: #334155; /* body text */
+  --etx-ink-3: #5b6676; /* muted text, AA on page and cards */
+  --etx-page: #f4f3ef; /* soft warm light grey */
+  --etx-surface: #fcfcfa; /* gentle near-white cards, header, sidebar */
+  --etx-surface-2: #f6f5f1; /* table header, subtle fills */
+  --etx-hover: #efede8; /* row / item hover */
+  --etx-line: #e6e3dc; /* 1px borders, low contrast */
+  --etx-line-strong: #d4d0c7;
 
   /* radius: tight and crisp */
   --etx-r-xs: 4px;
@@ -49,14 +49,19 @@
   --etx-ease: cubic-bezier(0.33, 0, 0.67, 1);
 
   /* focus */
-  --etx-focus: 0 0 0 2px #ffffff, 0 0 0 4px var(--etx-cyan);
+  --etx-focus: 0 0 0 2px #ffffff, 0 0 0 4px #3f6f9f;
 
   /* button (border-gradient #54) */
-  --btn-fill: #ffffff;
+  --btn-fill: #fdfdfb;
   --btn-ink: var(--etx-ink);
-  --btn-ring: radial-gradient(circle at left top, #0084d1, #7c3aed 55%, #e11d48);
-  --btn-glow: rgba(0, 132, 209, 0.45);
-  --btn-fill-selected: #eef6ff;
+  --btn-ring: radial-gradient(
+    circle at left top,
+    #5b7a9d,
+    #7a6f9e 55%,
+    #a87a88
+  ); /* slate-blue, muted violet, dusty rose */
+  --btn-glow: rgba(71, 85, 105, 0.16);
+  --btn-fill-selected: #e9eef5;
 }
 
 /* ─── 2. Border-gradient button ─────────────────────────────────────── */
@@ -102,7 +107,7 @@
   font-size: 0.8rem;
   line-height: 1.25;
   color: var(--btn-ink) !important;
-  border: 2px solid transparent !important;
+  border: 1.5px solid transparent !important;
   border-radius: var(--etx-r-pill) !important;
   background: none !important;
   background-image: linear-gradient(var(--btn-fill), var(--btn-fill)), var(--btn-ring) !important;
@@ -141,13 +146,13 @@
 )::before {
   content: '' !important;
   position: absolute !important;
-  inset: -2px !important;
+  inset: -1.5px !important;
   z-index: -1 !important;
   border-radius: inherit !important;
   background: none !important;
   filter: none !important;
   animation: none !important;
-  box-shadow: 0 0 16px 0 var(--btn-glow) !important;
+  box-shadow: 0 0 10px 0 var(--btn-glow) !important;
   opacity: 0 !important;
   pointer-events: none;
   transition: opacity var(--etx-normal) var(--etx-ease) !important;
@@ -275,7 +280,7 @@
   .btn-etx,
   .btn[class*='bg-']
 ):focus-visible {
-  outline: 2px solid var(--etx-cyan) !important;
+  outline: 2px solid #3f6f9f !important;
   outline-offset: 2px !important;
 }
 
@@ -303,7 +308,7 @@
 ):is(.active, .ring-2, [aria-pressed='true'], [aria-selected='true'], [data-state='active']) {
   --btn-fill: var(--btn-fill-selected);
   --btn-ink: var(--etx-navy-900);
-  --tw-ring-color: rgba(0, 132, 209, 0.35) !important;
+  --tw-ring-color: rgba(63, 111, 159, 0.3) !important;
 }
 
 /* disabled, as in the reference: flat grey, no glow */
@@ -363,17 +368,17 @@
 
 /* variants */
 .btn-danger {
-  --btn-ring: radial-gradient(circle at left top, #f97316, #e11d48 60%, #be123c);
-  --btn-glow: rgba(225, 29, 72, 0.4);
-  --btn-ink: #9f1239;
+  --btn-ring: radial-gradient(circle at left top, #c08a72, #b06a78 60%, #9b5566);
+  --btn-glow: rgba(155, 85, 102, 0.16);
+  --btn-ink: #8a3346;
 }
 .btn-success {
-  --btn-ring: radial-gradient(circle at left top, #10b981, #0084d1 70%);
-  --btn-glow: rgba(16, 185, 129, 0.4);
+  --btn-ring: radial-gradient(circle at left top, #6f9a86, #5b7a9d 70%);
+  --btn-glow: rgba(71, 105, 90, 0.16);
 }
 .btn-gold {
-  --btn-ring: radial-gradient(circle at left top, #f0b82a, #d49d0e 50%, #e11d48);
-  --btn-glow: rgba(212, 157, 14, 0.4);
+  --btn-ring: radial-gradient(circle at left top, #c9a35a, #b08a4a 50%, #a87a88);
+  --btn-glow: rgba(150, 120, 60, 0.16);
 }
 /* buttons that used to be solid (dark navy etc.) keep the same shape */
 .btn-single-moving-solid > * {
@@ -420,7 +425,7 @@
   background: var(--etx-hover);
 }
 .btn-ghost-etx:focus-visible {
-  outline: 2px solid var(--etx-cyan);
+  outline: 2px solid #3f6f9f;
   outline-offset: 2px;
 }
 
@@ -545,16 +550,16 @@
   color: var(--etx-ink-3) !important;
 }
 .crm-shell table tbody td {
-  border-bottom: 1px solid #eef1f5;
+  border-bottom: 1px solid #eeece7;
 }
 .crm-shell table tbody tr {
   transition: background-color var(--etx-fast) var(--etx-ease);
 }
 .crm-shell table tbody tr:hover > td {
-  background-color: #f7faff;
+  background-color: #f3f1ec;
 }
 .crm-shell .table-crm.table-crm tbody tr:nth-child(even) {
-  background: #fcfdfe;
+  background: #faf9f6;
 }
 .crm-shell :is(.table-crm-wrapper, .overflow-x-auto:has(> table)) {
   border-color: var(--etx-line) !important;
@@ -577,8 +582,8 @@
     textarea
   ):focus {
   outline: none;
-  border-color: var(--etx-cyan) !important;
-  box-shadow: 0 0 0 3px rgba(0, 132, 209, 0.16) !important;
+  border-color: #5b7a9d !important;
+  box-shadow: 0 0 0 3px rgba(63, 111, 159, 0.15) !important;
 }
 .crm-shell :is(input[type='checkbox'], input[type='radio']) {
   accent-color: var(--etx-navy);
@@ -586,7 +591,7 @@
 
 /* links / icon buttons keep a visible keyboard focus */
 .crm-shell :is(a, button, [role='button'], [role='tab']):focus-visible {
-  outline: 2px solid var(--etx-cyan);
+  outline: 2px solid #3f6f9f;
   outline-offset: 2px;
 }
 
@@ -679,4 +684,96 @@
   .crm-shell header > .ml-auto {
     gap: 0.375rem;
   }
+}
+
+/* ─── 5. Calm layer (eye comfort) ───────────────────────────────────── */
+/* Cards in the CRM content: gentle near-white instead of stark white. */
+.crm-shell main .bg-white {
+  background-color: var(--etx-surface) !important;
+}
+.crm-shell {
+  color: var(--etx-ink-2);
+}
+.crm-shell :is(.text-slate-900, .text-black, .text-gray-900) {
+  color: var(--etx-ink) !important;
+}
+
+/* Filter pills (lead status / follow-up): neutral 1px border, tinted count,
+   only the selected one is highlighted. */
+.etx-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--etx-line-strong);
+  border-radius: var(--etx-r-pill);
+  background: var(--etx-surface);
+  color: var(--etx-ink-2);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--etx-fast) var(--etx-ease),
+    border-color var(--etx-fast) var(--etx-ease),
+    transform var(--etx-fast) var(--etx-ease-out);
+}
+.etx-filter-pill:hover {
+  background: var(--etx-hover);
+  border-color: #c4bfb4;
+}
+.etx-filter-pill:active {
+  transform: scale(0.97);
+}
+.etx-filter-pill:focus-visible {
+  outline: 2px solid #3f6f9f;
+  outline-offset: 2px;
+}
+.etx-filter-pill.is-selected {
+  background: #e9eef5;
+  border-color: #5b7a9d;
+  color: var(--etx-navy-900);
+  box-shadow: inset 0 0 0 1px #5b7a9d;
+}
+.etx-pill-count {
+  color: color-mix(in srgb, var(--tone, #475569) 60%, #0f172a);
+  background: color-mix(in srgb, var(--tone, #475569) 13%, #ffffff);
+}
+.etx-filter-pill.is-selected .etx-pill-count {
+  background: color-mix(in srgb, var(--tone, #475569) 20%, #ffffff);
+}
+
+/* Stat tiles (Sales Workstation): soft tint, coloured accent bar + icon,
+   near-black numbers instead of white-on-saturated. */
+.etx-stat-tile {
+  --tone: #475569;
+  position: relative;
+  background: color-mix(in srgb, var(--tone) 7%, var(--etx-surface));
+  border: 1px solid color-mix(in srgb, var(--tone) 18%, var(--etx-line));
+  box-shadow: inset 3px 0 0 0 color-mix(in srgb, var(--tone) 70%, #ffffff);
+  color: var(--etx-ink);
+}
+.etx-stat-tile span {
+  color: var(--etx-ink-3) !important;
+}
+.etx-stat-tile svg {
+  color: color-mix(in srgb, var(--tone) 85%, #1e293b) !important;
+}
+.etx-stat-tile p {
+  color: var(--etx-ink) !important;
+}
+.etx-tone-emerald {
+  --tone: #2f8f6b;
+}
+.etx-tone-sky {
+  --tone: #3f7fb0;
+}
+.etx-tone-amber {
+  --tone: #b7832f;
+}
+.etx-tone-rose {
+  --tone: #b4566a;
+}
+.etx-tone-slate {
+  --tone: #5b6676;
+}
+.etx-tone-navy {
+  --tone: #003a66;
 }
