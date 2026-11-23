@@ -6,8 +6,12 @@ import { verifyJWT } from '../middleware/auth.middleware.js';
 const router = Router();
 
 // The mobile-compat routes list and edit leads, customers and quotations and the
-// /login here hands out a fixed placeholder token. Require a real staff JWT.
-router.use(verifyJWT);
+// /login here hands out a fixed placeholder token. Require a real staff JWT,
+// except for the public website inquiry form (POST /api/add-inquiry-lead).
+const PUBLIC_PATHS = new Set(['/add-inquiry-lead']);
+router.use((req: Request, res: Response, next) =>
+  PUBLIC_PATHS.has(req.path) ? next() : verifyJWT(req, res, next)
+);
 
 // ─── 0. Universal Public Web Inquiries ───────────────────────────────────────
 router.post(

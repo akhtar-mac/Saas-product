@@ -863,11 +863,48 @@ function CrmLayoutContent() {
                               Session Report
                             </Link>
                             <Link
-                              to="/crm/desktop-report"
+                              to="/crm/desktrack-live"
                               onClick={handleNavClick}
-                              className="block py-1 px-2 text-slate-600 hover:text-[#1B365D]"
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/desktrack-live'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              Live Now
+                            </Link>
+                            <Link
+                              to="/crm/block-websites"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/block-websites'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
                             >
                               Block Website
+                            </Link>
+                            <Link
+                              to="/crm/desktop-users"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/desktop-users'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              Desktop Users
+                            </Link>
+                            <Link
+                              to="/crm/manage-ips"
+                              onClick={handleNavClick}
+                              className={`block py-1 px-2 rounded-md ${
+                                location.pathname === '/crm/manage-ips'
+                                  ? 'bg-[#1B365D] text-white font-bold'
+                                  : 'text-slate-600 hover:text-[#1B365D]'
+                              }`}
+                            >
+                              Manage IPs
                             </Link>
                           </div>
                         )}
@@ -1857,20 +1894,22 @@ function CrmLayoutContent() {
               </div>
             )}
 
-            {/* Desktrack Live Indicator */}
-            <div className="p-2.5 mt-2 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-              <div className="flex items-center justify-between text-[11px] font-bold text-[#1B365D]">
-                <span className="flex items-center gap-1.5">
-                  <MonitorCheck className="w-3.5 h-3.5 text-emerald-600" /> Desktrack Status
-                </span>
-                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded">
-                  Active (Live)
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-500">
-                Staff session, idle & call logging active.
-              </p>
-            </div>
+            {/* Desktrack live board shortcut (polled page, no fake status) */}
+            {can('desktop_tracking:view') && (
+              <Link
+                to="/crm/desktrack-live"
+                onClick={handleNavClick}
+                className="block p-2.5 mt-2 rounded-xl bg-slate-50 border border-slate-200 space-y-1 hover:border-[#1B365D]"
+              >
+                <div className="flex items-center justify-between text-[11px] font-bold text-[#1B365D]">
+                  <span className="flex items-center gap-1.5">
+                    <MonitorCheck className="w-3.5 h-3.5 text-emerald-600" /> Desktrack
+                  </span>
+                  <span className="text-[10px]">Live Now →</span>
+                </div>
+                <p className="text-[10px] text-slate-500">Who is logged in, idle or on lunch.</p>
+              </Link>
+            )}
           </nav>
 
           {/* Footer controls */}

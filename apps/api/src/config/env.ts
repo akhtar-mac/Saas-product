@@ -19,6 +19,9 @@ export const env = {
   BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL || 'support@etaxwala.com',
   COMPANY_LEGAL_NAME: 'ETaxwala Business Solution Pvt Ltd',
   PRIMARY_UPI_ID: 'etaxwalabusiness@icici',
+  // Old desktop-client endpoints (/api/log-event, /api/upload-screenshot, ...).
+  // Off by default: the installed client keeps posting to etaxwala.com (same DB).
+  DESKTRACK_CLIENT_API_ENABLED: process.env.DESKTRACK_CLIENT_API_ENABLED === 'true',
 };
 // Production must never run on the development JWT secret.
 if (env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || env.JWT_SECRET === 'dev-secret')) {

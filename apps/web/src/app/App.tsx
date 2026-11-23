@@ -171,6 +171,10 @@ export default function App() {
           <Route path="locations" element={<CrmAccountsPage />} />
           <Route path="desktop-report" element={<CrmDesktopTrackingPage />} />
           <Route path="desktop-report-idle" element={<CrmDesktopTrackingPage />} />
+          <Route path="desktrack-live" element={<CrmDesktopTrackingPage />} />
+          <Route path="block-websites" element={<CrmDesktopTrackingPage />} />
+          <Route path="desktop-users" element={<CrmDesktopTrackingPage />} />
+          <Route path="manage-ips" element={<CrmDesktopTrackingPage />} />
           <Route path="operation-manage-employee" element={<HrWorkforcePage />} />
           <Route path="workforce" element={<HrWorkforcePage />} />
 

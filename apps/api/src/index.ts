@@ -24,6 +24,8 @@ import itDeskRoutes from './routes/it-desk.routes.js';
 import infrastructureRoutes from './routes/infrastructure.routes.js';
 import aiAutomationRoutes from './routes/ai-automation.routes.js';
 import disbursementRoutes from './routes/disbursement.routes.js';
+import desktrackRoutes from './routes/desktrack.routes.js';
+import desktopClientRoutes from './routes/desktop-client.routes.js';
 import { initChatSocket } from './socket/chat.socket.js';
 import { prisma } from './config/db.js';
 import { authRateLimit, apiRateLimit } from './middleware/rate-limit.middleware.js';
@@ -102,6 +104,10 @@ app.use('/v1/admin/users', usersRoutes);
 app.use('/v1/chat', chatRoutes);
 
 // ─── CRM Business Logic: Won form, lead lifecycle, orders, coupons ────────────
+// ─── Desktrack (old DesktopController parity; polled, no WebSockets) ─────────
+app.use('/v1/crm/desktrack', desktrackRoutes);
+app.use('/v1/staff/desktrack', desktrackRoutes);
+
 app.use('/v1/crm', crmRoutes);
 
 // ─── Call Analytics: Flutter sync + analytics endpoints ──────────────────────
@@ -109,6 +115,8 @@ app.use('/v1/call-logs', callAnalyticsRoutes);
 
 // ─── Legacy API compatibility routes ─────────────────────────────────────────
 // 1. Flutter Mobile App API (application-api.etaxwala.com/api/* and /v1/mobile/*)
+// Old Desktrack desktop-client endpoints (off unless DESKTRACK_CLIENT_API_ENABLED=true)
+app.use('/api', desktopClientRoutes);
 app.use('/api', flutterCompatRoutes);
 app.use('/v1/mobile', flutterCompatRoutes);
 
