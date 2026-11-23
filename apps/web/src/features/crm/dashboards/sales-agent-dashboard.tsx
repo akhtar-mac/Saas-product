@@ -34,7 +34,8 @@ interface CallHistoryRow {
   lead_id: number | null;
   lead_name: string;
   lead_contact: string;
-  lead_source: string;
+  lead_source: string | null;
+  lead_source_label?: string;
   phone_number: string;
   direction: string;
   status: string;
@@ -42,6 +43,33 @@ interface CallHistoryRow {
   duration_seconds: number;
   called_at: string;
 }
+
+// Call records are stamped in India time; keep dates and clocks in IST whatever the browser zone.
+const IST = 'Asia/Kolkata';
+const istDate = (d: Date) =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: IST,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+
+const CALL_TYPE_LABELS: Record<string, string> = {
+  incoming: 'Incoming',
+  outgoing: 'Outgoing',
+  incoming_missed: 'Incoming Missed',
+  outgoing_missed: 'Outgoing Missed',
+};
+
+// Same format as the old dashboard cards: "285h 29m", "31 min", "45 sec"
+const formatDurationCard = (seconds: number) => {
+  const s = Math.max(0, Math.floor(Number(seconds) || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m} min`;
+  return `${s} sec`;
+};
 
 export default function SalesAgentDashboard() {
   const { staffToken, staffUser } = useAuthStore();
@@ -67,11 +95,10 @@ export default function SalesAgentDashboard() {
   const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   // Filters State
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const [fromDate, setFromDate] = useState(thirtyDaysAgo.toISOString().split('T')[0]);
-  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  const [fromDate, setFromDate] = useState(istDate(new Date(Date.now() - 30 * 86400000)));
+  const [toDate, setToDate] = useState(istDate(new Date()));
   const [callTypeFilter, setCallTypeFilter] = useState('');
+  const [leadSourceFilter, setLeadSourceFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Call History State
@@ -167,11 +194,11 @@ export default function SalesAgentDashboard() {
   const fetchStats = async () => {
     setIsLoadingStats(true);
     try {
-      const res = await fetch('/api/v1/call-logs/summary', {
+      const res = await fetch(`${API_BASE_URL}/v1/call-logs/summary`, {
         headers: { Authorization: `Bearer ${staffToken}` },
       });
       const data = await res.json();
-      if (data.success && data.data) {
+      if (res.ok && data.success && data.data) {
         setTotalStats(data.data.total);
         setTodayStats(data.data.today);
       }
@@ -193,13 +220,14 @@ export default function SalesAgentDashboard() {
       if (fromDate) params.append('from', fromDate);
       if (toDate) params.append('to', toDate);
       if (callTypeFilter) params.append('call_type', callTypeFilter);
-      if (searchQuery) params.append('search', searchQuery);
+      if (leadSourceFilter) params.append('lead_source', leadSourceFilter);
+      if (searchQuery) params.append('search', searchQuery.trim());
 
-      const res = await fetch(`/api/v1/call-logs/history?${params.toString()}`, {
+      const res = await fetch(`${API_BASE_URL}/v1/call-logs/history?${params.toString()}`, {
         headers: { Authorization: `Bearer ${staffToken}` },
       });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setCallHistory(data.data || []);
         if (data.pagination) setPagination(data.pagination);
       }
@@ -231,7 +259,7 @@ export default function SalesAgentDashboard() {
     setIsLeadDetailsOpen(true);
     setSelectedLeadModal(null);
     try {
-      const res = await fetch(`/api/v1/call-logs/lead-details/${leadId}`, {
+      const res = await fetch(`${API_BASE_URL}/v1/call-logs/lead-details/${leadId}`, {
         headers: { Authorization: `Bearer ${staffToken}` },
       });
       const data = await res.json();
@@ -258,10 +286,13 @@ export default function SalesAgentDashboard() {
     fetchHistory(1);
   };
 
+  // Row durations, same as the old call history table: "1h 2m 3s", "1m 4s", "9s"
   const formatDuration = (seconds: number) => {
-    if (!seconds) return '0 min';
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const t = Math.max(0, Math.floor(Number(seconds) || 0));
+    const h = Math.floor(t / 3600);
+    const mins = Math.floor((t % 3600) / 60);
+    const secs = t % 60;
+    if (h > 0) return `${h}h ${mins}m ${secs}s`;
     return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
   };
 
@@ -347,12 +378,15 @@ export default function SalesAgentDashboard() {
             <Clock className="w-4 h-4 text-slate-300" />
           </div>
           <p className="text-xl font-display font-bold mt-2">
-            {formatDuration(totalStats.total_duration)}
+            {formatDurationCard(totalStats.total_duration)}
           </p>
         </div>
 
         {/* Answered */}
-        <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between">
+        <div
+          className="bg-slate-900 text-white p-4 rounded-2xl shadow-sm flex flex-col justify-between"
+          title="Connected calls: incoming + outgoing (total minus missed)"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider">
               Answered
@@ -374,6 +408,7 @@ export default function SalesAgentDashboard() {
                 day: '2-digit',
                 month: 'short',
                 year: 'numeric',
+                timeZone: IST,
               })}
               )
             </h3>
@@ -410,12 +445,15 @@ export default function SalesAgentDashboard() {
           <div className="bg-purple-50 border border-purple-100 p-3.5 rounded-xl text-center">
             <p className="text-[11px] font-semibold text-purple-800">Today Duration</p>
             <p className="text-lg font-bold text-purple-900 mt-1">
-              {formatDuration(todayStats.total_duration)}
+              {formatDurationCard(todayStats.total_duration)}
             </p>
           </div>
 
           {/* Today Answered */}
-          <div className="bg-teal-50 border border-teal-100 p-3.5 rounded-xl text-center">
+          <div
+            className="bg-teal-50 border border-teal-100 p-3.5 rounded-xl text-center"
+            title="Connected calls today: incoming + outgoing"
+          >
             <p className="text-[11px] font-semibold text-teal-800">Today Answered</p>
             <p className="text-xl font-bold text-teal-900 mt-1">{todayStats.answered_calls}</p>
           </div>
@@ -449,7 +487,7 @@ export default function SalesAgentDashboard() {
         {/* Filter Form */}
         <form
           onSubmit={handleFilterSubmit}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200"
+          className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200"
         >
           <div>
             <label className="block text-[11px] font-semibold text-slate-600 mb-1">From Date</label>
@@ -487,6 +525,22 @@ export default function SalesAgentDashboard() {
 
           <div>
             <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+              Lead Source
+            </label>
+            <select
+              value={leadSourceFilter}
+              onChange={(e) => setLeadSourceFilter(e.target.value)}
+              className="input text-xs py-1.5 font-semibold"
+            >
+              <option value="">All Sources</option>
+              <option value="ETax1">ETax</option>
+              <option value="SAHAKAR01">Sahakar Samridhi</option>
+              <option value="UDYAMI1">Udyami Kisan</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
               Search Lead
             </label>
             <input
@@ -512,6 +566,7 @@ export default function SalesAgentDashboard() {
               <tr>
                 <th className="text-white">Lead Name</th>
                 <th className="text-white">Lead Contact</th>
+                <th className="text-white">Source</th>
                 <th className="text-white">Call Type</th>
                 <th className="text-white">Duration</th>
                 <th className="text-white">Date & Time</th>
@@ -521,14 +576,14 @@ export default function SalesAgentDashboard() {
             <tbody>
               {isLoadingHistory ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-slate-400">
+                  <td colSpan={7} className="text-center py-8 text-slate-400">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-brand-navy" />
                     Loading call history...
                   </td>
                 </tr>
               ) : callHistory.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-slate-400">
+                  <td colSpan={7} className="text-center py-8 text-slate-400">
                     No call records found for the selected filter criteria.
                   </td>
                 </tr>
@@ -537,10 +592,14 @@ export default function SalesAgentDashboard() {
                   <tr key={row.id}>
                     <td>
                       <p className="font-bold text-slate-800 text-xs">{row.lead_name}</p>
-                      <span className="badge badge-navy text-[9px] mt-0.5">{row.lead_source}</span>
                     </td>
                     <td className="text-xs font-mono font-bold text-brand-navy">
                       {row.lead_contact}
+                    </td>
+                    <td>
+                      <span className="badge badge-navy text-[9px]">
+                        {row.lead_source_label || row.lead_source || '-'}
+                      </span>
                     </td>
                     <td>
                       <span
@@ -552,11 +611,7 @@ export default function SalesAgentDashboard() {
                               : 'bg-rose-100 text-rose-800'
                         }`}
                       >
-                        {row.call_type === 'outgoing'
-                          ? 'Outgoing'
-                          : row.call_type === 'incoming'
-                            ? 'Incoming'
-                            : 'Missed'}
+                        {CALL_TYPE_LABELS[row.call_type] || 'Missed'}
                       </span>
                     </td>
                     <td className="text-xs text-slate-600 font-medium">
@@ -569,6 +624,8 @@ export default function SalesAgentDashboard() {
                         year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit',
+                        second: '2-digit',
+                        timeZone: IST,
                       })}
                     </td>
                     <td className="text-center">
@@ -587,6 +644,33 @@ export default function SalesAgentDashboard() {
             </tbody>
           </table>
         </div>
+        {pagination.total > 0 && (
+          <div className="flex items-center justify-between text-xs text-slate-500">
+            <span>
+              Showing {(pagination.page - 1) * pagination.limit + 1}–
+              {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
+              {pagination.total.toLocaleString('en-IN')} calls
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                disabled={isLoadingHistory || pagination.page <= 1}
+                onClick={() => fetchHistory(pagination.page - 1)}
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                disabled={isLoadingHistory || pagination.page >= pagination.totalPages}
+                onClick={() => fetchHistory(pagination.page + 1)}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 4️⃣ ACTIVE ASSIGNED QUEUE (TELECALLING WORKBENCH) */}
@@ -749,6 +833,7 @@ export default function SalesAgentDashboard() {
                             </td>
                             <td className="text-slate-500">
                               {new Date(c.call_timestamp).toLocaleString('en-IN', {
+                                timeZone: IST,
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
