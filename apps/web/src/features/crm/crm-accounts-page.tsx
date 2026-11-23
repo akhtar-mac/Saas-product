@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
@@ -74,10 +74,14 @@ export default function CrmAccountsPage() {
       !(staffUser?.roles || []).includes(RoleType.OPERATIONS_EMPLOYEE));
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Dynamic categories & services from DB
   const [dbCategories, setDbCategories] = useState<CategoryItem[]>([]);
@@ -100,10 +104,17 @@ export default function CrmAccountsPage() {
 
   // Fetch real customers from database
   const fetchCustomers = useCallback(() => {
-    setLoading(true);
+    if (debouncedSearchTerm) {
+      setSearchLoading(true);
+    } else {
+      setLoading(true);
+    }
     const limitParam = pageSize === -1 ? 'all' : pageSize;
     const pageParam = currentPage;
-    fetch(`${API_BASE}/v1/crm/customers?limit=${limitParam}&page=${pageParam}`)
+    const searchParam = debouncedSearchTerm
+      ? `&search=${encodeURIComponent(debouncedSearchTerm)}`
+      : '';
+    fetch(`${API_BASE}/v1/crm/customers?limit=${limitParam}&page=${pageParam}${searchParam}`)
       .then((res) => res.json())
       .then((data) => {
         if (data?.success && Array.isArray(data?.data)) {
@@ -113,12 +124,37 @@ export default function CrmAccountsPage() {
         }
       })
       .catch((err) => console.error('Failed to fetch customers', err))
-      .finally(() => setLoading(false));
-  }, [API_BASE, pageSize, currentPage]);
+      .finally(() => {
+        setLoading(false);
+        setSearchLoading(false);
+      });
+  }, [API_BASE, pageSize, currentPage, debouncedSearchTerm]);
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms debounce
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Fetch customers when debounced search or pagination changes
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
+
+  // Close action dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setActiveMenuId(null);
+      }
+    };
+    if (activeMenuId) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [activeMenuId]);
 
   // Click outside to close custom package dropdown
   useEffect(() => {
@@ -557,13 +593,8 @@ export default function CrmAccountsPage() {
   };
 
   const filtered = customers.filter((c) => {
-    const matchSearch =
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.mobile.includes(searchTerm) ||
-      c.service.toLowerCase().includes(searchTerm.toLowerCase());
     const matchType = cpTypeFilter === 0 || c.cp_type === cpTypeFilter;
-    return matchSearch && matchType;
+    return matchType;
   });
 
   // Staff users list for assigning tasks (same source as tasks page)
@@ -1322,10 +1353,12 @@ export default function CrmAccountsPage() {
               <option value={5}>Custom</option>
             </select>
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Search Data..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onBlur={() => searchInputRef.current?.focus()}
               className="text-xs bg-white border border-slate-300 rounded px-3 py-1 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#003A66] w-48"
             />
           </div>
@@ -1351,7 +1384,7 @@ export default function CrmAccountsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {loading ? (
+              {loading && !searchLoading ? (
                 <tr>
                   <td colSpan={11} className="py-12 text-center text-xs text-slate-500">
                     <div className="flex items-center justify-center gap-2">
@@ -1369,7 +1402,7 @@ export default function CrmAccountsPage() {
               ) : (
                 filtered.map((item, idx) => (
                   <tr
-                    key={item.id}
+                    key={item.orderId || item.id}
                     className={
                       idx % 2 === 0
                         ? 'bg-white hover:bg-sky-50/40'
@@ -1378,10 +1411,7 @@ export default function CrmAccountsPage() {
                   >
                     <td className="py-2.5 px-3 font-medium text-slate-900">
                       <button
-                        onClick={() => {
-                          setActiveCustomer(item);
-                          setIsUpdateCustomerOpen(true);
-                        }}
+                        onClick={() => openEditCustomer(item)}
                         className="hover:text-[#0284c7] hover:underline font-bold text-left"
                       >
                         {item.name}
@@ -1451,7 +1481,10 @@ export default function CrmAccountsPage() {
                         const uniqueId = item.orderId ? `${item.id}-${item.orderId}` : `${item.id}`;
                         return activeMenuId === uniqueId;
                       })() && (
-                        <div className="absolute right-0 top-6 z-50 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 text-left text-xs">
+                        <div
+                          ref={menuRef}
+                          className={`absolute right-0 z-50 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 text-left text-xs max-h-[70vh] overflow-y-auto ${idx === filtered.length - 1 ? 'bottom-6' : 'top-6'}`}
+                        >
                           {/* 1. Manage Tasks (AddWorkEffort) */}
                           {!isSalesEmployeeView && (
                             <button
@@ -1621,8 +1654,14 @@ export default function CrmAccountsPage() {
 
       {/* ─── ADD NEW CUSTOMER MODAL (Old CRM Replica matching Screenshots 1 & 2) ─── */}
       {isAddCustomerOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start justify-center p-4 overflow-y-auto">
-          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl w-full max-w-3xl animate-scale-in my-4">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start justify-center p-4 overflow-y-auto"
+          onClick={() => setIsAddCustomerOpen(false)}
+        >
+          <div
+            className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl w-full max-w-3xl animate-scale-in my-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="h-1 bg-multicolor" />
             {/* Header — matches Add New Order style */}
             <div className="px-6 py-4 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
@@ -2207,8 +2246,14 @@ export default function CrmAccountsPage() {
 
       {/* ─── 1. ADD NEW ORDER MODAL ─── */}
       {isAddOrderOpen && activeCustomer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start justify-center p-4 overflow-y-auto">
-          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden w-full max-w-3xl animate-scale-in my-4">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start justify-center p-4 overflow-y-auto"
+          onClick={() => setIsAddOrderOpen(false)}
+        >
+          <div
+            className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden w-full max-w-3xl animate-scale-in my-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="h-1 bg-multicolor" />
             {/* Header */}
             <div className="px-6 py-4 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
@@ -2794,8 +2839,14 @@ export default function CrmAccountsPage() {
 
       {/* ─── 1. UPDATE CUSTOMER MODAL (Website Clean UI Style) ─── */}
       {isUpdateCustomerOpen && activeCustomer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-xl w-full animate-scale-in">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setIsUpdateCustomerOpen(false)}
+        >
+          <div
+            className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-xl w-full animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="h-1 bg-multicolor" />
 
             <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
@@ -2970,8 +3021,14 @@ export default function CrmAccountsPage() {
 
       {/* ─── 2. CREATE CUSTOMER MODAL ─── */}
       {isCreateCustomerOpen && activeCustomer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start justify-center p-4 overflow-y-auto">
-          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden w-full max-w-3xl animate-scale-in my-4">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start justify-center p-4 overflow-y-auto"
+          onClick={() => setIsCreateCustomerOpen(false)}
+        >
+          <div
+            className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden w-full max-w-3xl animate-scale-in my-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="h-1 bg-multicolor" />
             {/* Header */}
             <div className="px-6 py-4 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
@@ -3592,8 +3649,14 @@ export default function CrmAccountsPage() {
 
       {/* ─── 3. EDIT SUB CUSTOMER MODAL (Website Clean UI Style) ─── */}
       {isEditSubCustomerOpen && activeCustomer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-sm w-full animate-scale-in">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setIsEditSubCustomerOpen(false)}
+        >
+          <div
+            className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-sm w-full animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="h-1 bg-multicolor" />
 
             <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
@@ -3648,8 +3711,14 @@ export default function CrmAccountsPage() {
 
       {/* ─── 4. ADD NEW APPOINTMENT MODAL (Website Clean UI Style) ─── */}
       {isAddAppointmentOpen && activeCustomer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-md w-full animate-scale-in">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setIsAddAppointmentOpen(false)}
+        >
+          <div
+            className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-md w-full animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="h-1 bg-multicolor" />
 
             <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">
@@ -3810,8 +3879,14 @@ export default function CrmAccountsPage() {
 
       {/* ─── 5. DELETE ORDER CONFIRMATION MODAL ─── */}
       {isDeleteConfirmOpen && activeCustomer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-md w-full animate-scale-in">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setIsDeleteConfirmOpen(false)}
+        >
+          <div
+            className="rounded-3xl border border-[#EAE6DD] bg-white shadow-2xl overflow-hidden max-w-md w-full animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="h-1 bg-red-500" />
 
             <div className="p-4 px-6 border-b border-[#EAE6DD] flex items-center justify-between bg-white">

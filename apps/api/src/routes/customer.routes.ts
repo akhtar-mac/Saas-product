@@ -143,7 +143,9 @@ router.post('/auth/register', validateBody(CustomerRegisterSchema), async (req, 
       return res.status(err.statusCode).json({ success: false, error: err.message });
     }
     console.error('Customer register error:', err);
-    return res.status(500).json({ success: false, error: 'Registration failed: ' + (err.message || 'database error') });
+    return res
+      .status(500)
+      .json({ success: false, error: 'Registration failed: ' + (err.message || 'database error') });
   }
 });
 
@@ -180,7 +182,7 @@ router.post('/auth/login', validateBody(CustomerLoginSchema), async (req, res) =
         if (user) {
           customer = {
             id: user.id,
-            lead_id: user.id + 10000,
+            lead_id: Number(user.id) + 10000,
             name: user.username,
             business: `${user.username}'s Business`,
             email: user.email || `${clean}@customer.etaxwala.in`,
@@ -285,7 +287,9 @@ router.post('/auth/login', validateBody(CustomerLoginSchema), async (req, res) =
       return res.status(err.statusCode).json({ success: false, error: err.message });
     }
     console.error('Customer login error:', err);
-    return res.status(500).json({ success: false, error: 'Login failed: ' + (err.message || 'database error') });
+    return res
+      .status(500)
+      .json({ success: false, error: 'Login failed: ' + (err.message || 'database error') });
   }
 });
 
@@ -312,7 +316,9 @@ router.use((req, res, next) => {
     if (err instanceof ApiError) {
       return res.status(err.statusCode).json({ success: false, error: err.message });
     }
-    return res.status(401).json({ success: false, error: 'Authentication required. Please login.' });
+    return res
+      .status(401)
+      .json({ success: false, error: 'Authentication required. Please login.' });
   }
 });
 

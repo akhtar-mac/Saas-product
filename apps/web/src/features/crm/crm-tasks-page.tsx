@@ -154,6 +154,17 @@ export default function CrmTasksPage() {
     8: 'Fees Pending',
     9: 'On Hold',
   };
+  const STATUS_SHORT_MAP: Record<string, string> = {
+    completed: 'Completed',
+    wip: 'WIP',
+    pendingfromclient: 'Pending Client',
+    invoiced: 'Invoiced',
+    returnback: 'Return',
+    cancel: 'Cancelled',
+    feespending: 'Fees Pend.',
+    onhold: 'On Hold',
+    notstarted: 'Not Started',
+  };
   const STATUS_COLORS_MAP: Record<number, string> = {
     1: '#dc2626',
     2: '#2563eb',
@@ -997,6 +1008,25 @@ export default function CrmTasksPage() {
                           <td className="py-2.5 px-3 text-slate-700 font-medium">{task.service}</td>
                           <td className="py-2.5 px-3">
                             <span
+                              title={
+                                task.status === 'completed'
+                                  ? 'Completed'
+                                  : task.status === 'wip'
+                                    ? 'Work In Progress'
+                                    : task.status === 'pendingfromclient'
+                                      ? 'Pending From Client'
+                                      : task.status === 'invoiced'
+                                        ? 'Invoiced'
+                                        : task.status === 'returnback'
+                                          ? 'Return Back'
+                                          : task.status === 'cancel'
+                                            ? 'Cancelled'
+                                            : task.status === 'feespending'
+                                              ? 'Fees Pending'
+                                              : task.status === 'onhold'
+                                                ? 'On Hold'
+                                                : 'Not Started'
+                              }
                               className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                 task.status === 'completed'
                                   ? 'bg-[#16A34A] text-white'
@@ -1017,23 +1047,7 @@ export default function CrmTasksPage() {
                                                 : 'bg-[#DC2626] text-white'
                               }`}
                             >
-                              {task.status === 'completed'
-                                ? 'Completed'
-                                : task.status === 'wip'
-                                  ? 'Work In Progress'
-                                  : task.status === 'pendingfromclient'
-                                    ? 'Pending From Client'
-                                    : task.status === 'invoiced'
-                                      ? 'Invoiced'
-                                      : task.status === 'returnback'
-                                        ? 'Return Back'
-                                        : task.status === 'cancel'
-                                          ? 'Cancelled'
-                                          : task.status === 'feespending'
-                                            ? 'Fees Pending'
-                                            : task.status === 'onhold'
-                                              ? 'On Hold'
-                                              : 'Not Started'}
+                              {STATUS_SHORT_MAP[task.status] || 'Not Started'}
                             </span>
                           </td>
                           <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
@@ -1098,6 +1112,25 @@ export default function CrmTasksPage() {
                           </td>
                           <td className="py-2.5 px-3">
                             <span
+                              title={
+                                task.status === 'completed'
+                                  ? 'Completed'
+                                  : task.status === 'wip'
+                                    ? 'Work In Progress'
+                                    : task.status === 'pendingfromclient'
+                                      ? 'Pending From Client'
+                                      : task.status === 'invoiced'
+                                        ? 'Invoiced'
+                                        : task.status === 'returnback'
+                                          ? 'Return Back'
+                                          : task.status === 'cancel'
+                                            ? 'Cancelled'
+                                            : task.status === 'feespending'
+                                              ? 'Fees Pending'
+                                              : task.status === 'onhold'
+                                                ? 'On Hold'
+                                                : 'Not Started'
+                              }
                               className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                 task.status === 'completed'
                                   ? 'bg-[#16A34A] text-white'
@@ -1118,23 +1151,7 @@ export default function CrmTasksPage() {
                                                 : 'bg-[#DC2626] text-white'
                               }`}
                             >
-                              {task.status === 'completed'
-                                ? 'Completed'
-                                : task.status === 'wip'
-                                  ? 'Work In Progress'
-                                  : task.status === 'pendingfromclient'
-                                    ? 'Pending From Client'
-                                    : task.status === 'invoiced'
-                                      ? 'Invoiced'
-                                      : task.status === 'returnback'
-                                        ? 'Return Back'
-                                        : task.status === 'cancel'
-                                          ? 'Cancelled'
-                                          : task.status === 'feespending'
-                                            ? 'Fees Pending'
-                                            : task.status === 'onhold'
-                                              ? 'On Hold'
-                                              : 'Not Started'}
+                              {STATUS_SHORT_MAP[task.status] || 'Not Started'}
                             </span>
                           </td>
                           {!isOpsEmployee && (

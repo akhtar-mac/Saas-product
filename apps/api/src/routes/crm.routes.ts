@@ -3235,13 +3235,22 @@ router.get('/customers/:id/orders', async (req, res) => {
 // 13e-e. Customer Details List (Customer-centric, not order-centric)
 router.get('/customer-details-list', async (req, res) => {
   try {
-    const { limit = 50, page = 1 } = req.query;
+    const { limit = 50, page = 1, search } = req.query;
     const take = limit === 'all' ? 10000 : Math.min(Math.max(Number(limit) || 50, 1), 10000);
     const pageNum = Math.max(Number(page) || 1, 1);
     const skip = (pageNum - 1) * take;
 
+    const whereConditions: string[] = ['c.is_active = 1'];
+    if (search) {
+      const q = String(search).trim().replace(/'/g, "''");
+      whereConditions.push(
+        `(c.name LIKE '%${q}%' OR c.email LIKE '%${q}%' OR c.contact LIKE '%${q}%' OR c.state LIKE '%${q}%' OR c.city LIKE '%${q}%')`
+      );
+    }
+    const whereSql = whereConditions.join(' AND ');
+
     const countRes = await prisma.$queryRawUnsafe<any[]>(
-      `SELECT COUNT(*) as total FROM customers c WHERE c.is_active = 1`
+      `SELECT COUNT(*) as total FROM customers c WHERE ${whereSql}`
     );
     const total = Number(countRes[0]?.total || 0);
 
@@ -3263,7 +3272,7 @@ router.get('/customer-details-list', async (req, res) => {
        FROM customers c
        LEFT JOIN users u ON u.id = c.added_by
        LEFT JOIN services s ON s.service_id = c.service
-       WHERE c.is_active = 1
+       WHERE ${whereSql}
        ORDER BY c.id DESC
        LIMIT ${take} OFFSET ${skip}`
     );
@@ -3385,8 +3394,15 @@ router.post('/customers/:id/orders', async (req, res) => {
     // Now use normal Prisma create since AUTO_INCREMENT is fixed
     const subCustName = sub_customer_name || null;
     const companyName = customer_businessName || customer.business || customer.name || 'NA';
+    // Get next order ID
+    const maxOrder = await prisma.$queryRawUnsafe<{ max_id: number }[]>(
+      'SELECT MAX(id) as max_id FROM orders'
+    );
+    const nextOrderId = (maxOrder[0]?.max_id || 0) + 1;
+
     const newOrder = await prisma.orders.create({
       data: {
+        id: nextOrderId,
         customer_id: String(custId),
         package_id: String(packageId),
         company_name: companyName,
@@ -3590,9 +3606,15 @@ router.post('/customers/create-from-order', async (req, res) => {
     );
     const leadId = lead[0]?.id;
 
-    // 2. Create New Customer
+    // 2. Create New Customer (with manual ID since not auto-increment)
+    const maxCust = await prisma.$queryRawUnsafe<{ max_id: number }[]>(
+      'SELECT MAX(id) as max_id FROM customers'
+    );
+    const nextCustId = (maxCust[0]?.max_id || 0) + 1;
+
     const newCustomer = await prisma.customers.create({
       data: {
+        id: nextCustId,
         lead_id: leadId,
         name: customer_name,
         business: customer_businessName || '',
@@ -4767,15 +4789,15 @@ router.get('/om/dashboard-stats', async (_req, res) => {
     const taskStats = await prisma.$queryRawUnsafe<any[]>(
       `SELECT
         COUNT(*) as total,
-        SUM(CASE WHEN ta.task_status = 2 OR ta.task_status = 6 THEN 1 ELSE 0 END) as over_dues,
-        SUM(CASE WHEN ta.task_status = 9 THEN 1 ELSE 0 END) as on_hold,
-        SUM(CASE WHEN ta.task_status = 1 THEN 1 ELSE 0 END) as not_started,
-        SUM(CASE WHEN ta.task_status = 2 THEN 1 ELSE 0 END) as wip,
-        SUM(CASE WHEN ta.task_status = 3 THEN 1 ELSE 0 END) as pending_from_client,
-        SUM(CASE WHEN ta.task_status = 4 THEN 1 ELSE 0 END) as invoiced,
-        SUM(CASE WHEN ta.task_status = 5 THEN 1 ELSE 0 END) as completed,
-        SUM(CASE WHEN ta.task_status = 7 THEN 1 ELSE 0 END) as cancelled,
-        SUM(CASE WHEN ta.task_status = 8 THEN 1 ELSE 0 END) as fees_pending
+        SUM(CASE WHEN ta.actual_task_status = 2 OR ta.actual_task_status = 6 THEN 1 ELSE 0 END) as over_dues,
+        SUM(CASE WHEN ta.actual_task_status = 9 THEN 1 ELSE 0 END) as on_hold,
+        SUM(CASE WHEN ta.actual_task_status = 1 THEN 1 ELSE 0 END) as not_started,
+        SUM(CASE WHEN ta.actual_task_status = 2 THEN 1 ELSE 0 END) as wip,
+        SUM(CASE WHEN ta.actual_task_status = 3 THEN 1 ELSE 0 END) as pending_from_client,
+        SUM(CASE WHEN ta.actual_task_status = 4 THEN 1 ELSE 0 END) as invoiced,
+        SUM(CASE WHEN ta.actual_task_status = 5 THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN ta.actual_task_status = 7 THEN 1 ELSE 0 END) as cancelled,
+        SUM(CASE WHEN ta.actual_task_status = 8 THEN 1 ELSE 0 END) as fees_pending
        FROM operation_tasks ot
        LEFT JOIN task_assign ta ON ot.task_id = ta.task_id`
     );
@@ -4793,11 +4815,19 @@ router.get('/om/dashboard-stats', async (_req, res) => {
 // 4. Coupons List (Supported for OM, SM, and generic CRM callers)
 router.get(['/sm/coupons', '/om/coupons', '/coupons'], async (_req, res) => {
   try {
-    const couponList = await prisma.coupons
-      .findMany({
-        orderBy: { coupon_id: 'desc' },
-      })
-      .catch(() => []);
+    const couponList = await prisma.coupons.findMany({
+      orderBy: { coupon_id: 'desc' },
+      select: {
+        coupon_id: true,
+        coupon_type: true,
+        coupon_name: true,
+        coupon_discount: true,
+        coupon_validity: true,
+        coupon_uses: true,
+        coupon_remaining: true,
+        is_active: true,
+      },
+    });
     res.json({
       success: true,
       data: serializeBigInt(couponList || []),
@@ -4820,6 +4850,7 @@ router.get(
       const existing = await prisma.coupons
         .findFirst({
           where: { coupon_name: String(coupon_name) },
+          select: { coupon_id: true },
         })
         .catch(() => null);
       if (existing) {
@@ -4844,6 +4875,7 @@ router.post(['/sm/coupons', '/om/coupons', '/coupons'], async (req, res) => {
 
     const existing = await prisma.coupons.findFirst({
       where: { coupon_name: String(coupon_name) },
+      select: { coupon_id: true },
     });
     if (existing) {
       return res.status(400).json({ success: false, error: 'Coupon name already exists' });
@@ -4861,6 +4893,16 @@ router.post(['/sm/coupons', '/om/coupons', '/coupons'], async (req, res) => {
         is_active: 0,
         date: new Date(),
       },
+      select: {
+        coupon_id: true,
+        coupon_type: true,
+        coupon_name: true,
+        coupon_discount: true,
+        coupon_validity: true,
+        coupon_uses: true,
+        coupon_remaining: true,
+        is_active: true,
+      },
     });
 
     res.json({
@@ -4871,6 +4913,73 @@ router.post(['/sm/coupons', '/om/coupons', '/coupons'], async (req, res) => {
   } catch (error) {
     console.error('Error creating coupon:', error);
     res.status(500).json({ success: false, error: 'Failed to create coupon' });
+  }
+});
+
+// 6.5 Validate Coupon Code
+router.post('/coupons/validate', async (req, res) => {
+  try {
+    const { code, total_amount } = req.body;
+    if (!code) {
+      return res.status(400).json({ success: false, error: 'Coupon code is required' });
+    }
+
+    const couponName = String(code).trim().toUpperCase();
+    const coupon = await prisma.coupons.findFirst({
+      where: { coupon_name: couponName },
+      select: {
+        coupon_id: true,
+        coupon_type: true,
+        coupon_name: true,
+        coupon_discount: true,
+        coupon_validity: true,
+        coupon_uses: true,
+        coupon_remaining: true,
+        is_active: true,
+      },
+    });
+
+    if (!coupon) {
+      return res.status(404).json({ success: false, error: 'Invalid coupon code' });
+    }
+
+    // Check if coupon is active
+    if (coupon.is_active === 1) {
+      return res.status(400).json({ success: false, error: 'Coupon has been used up' });
+    }
+
+    // Check validity date
+    const today = new Date().toISOString().split('T')[0];
+    if (coupon.coupon_validity && coupon.coupon_validity < today) {
+      return res.status(400).json({ success: false, error: 'Coupon has expired' });
+    }
+
+    // Calculate discount
+    let discountAmount = 0;
+    const total = Number(total_amount) || 0;
+
+    if (coupon.coupon_type === 1) {
+      // Percentage discount
+      discountAmount = Math.round((total * Number(coupon.coupon_discount)) / 100);
+    } else {
+      // Fixed/Amount discount
+      discountAmount = Number(coupon.coupon_discount);
+    }
+
+    // Ensure discount doesn't exceed total
+    discountAmount = Math.min(discountAmount, total);
+
+    res.json({
+      success: true,
+      data: {
+        discount_amount: discountAmount,
+        coupon_id: coupon.coupon_id,
+        message: `Coupon Applied! Saved ₹${discountAmount}`,
+      },
+    });
+  } catch (error) {
+    console.error('Error validating coupon:', error);
+    res.status(500).json({ success: false, error: 'Failed to validate coupon' });
   }
 });
 

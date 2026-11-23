@@ -322,7 +322,7 @@ const FOLLOWUP_FILTERS = [
 export default function CrmLeadsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { staffUser, activeRole } = useAuthStore();
+  const { staffUser, staffToken, activeRole } = useAuthStore();
 
   // Mode: 'list' (Lead List) vs 'details' (Leads Details) vs 'inquiry' (Customer Inquiries)
   const isDetailsView =
@@ -418,16 +418,61 @@ export default function CrmLeadsPage() {
   const [isCustomDropdownOpen, setIsCustomDropdownOpen] = useState(false);
   const [customServiceSearchTerm, setCustomServiceSearchTerm] = useState('');
   const customDropdownRef = useRef<HTMLDivElement | null>(null);
+  // Category/Service selection for Custom Package = No
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+  const [dbServicesByCategory, setDbServicesByCategory] = useState<any[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [selectedCpId, setSelectedCpId] = useState(0);
+  const [selectedServiceName, setSelectedServiceName] = useState('');
+  const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
+  const [serviceSearchTerm, setServiceSearchTerm] = useState('');
+  const serviceDropdownRef = useRef<HTMLDivElement | null>(null);
   const [couponCode, setCouponCode] = useState('');
+  const cpTypeBadge = (cpType?: number) => {
+    if (cpType === 1)
+      return (
+        <span className="ml-1.5 inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500 text-white">
+          Basic
+        </span>
+      );
+    if (cpType === 2)
+      return (
+        <span className="ml-1.5 inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-500 text-white">
+          Standard
+        </span>
+      );
+    if (cpType === 3)
+      return (
+        <span className="ml-1.5 inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500 text-white">
+          Premium
+        </span>
+      );
+    if (cpType === 4)
+      return (
+        <span className="ml-1.5 inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-600 text-white">
+          Diamond
+        </span>
+      );
+    return null;
+  };
+
+  const [couponMessage, setCouponMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [finalTotalAmount, setFinalTotalAmount] = useState(0);
   const [basePriceTotal, setBasePriceTotal] = useState(0);
   const [paymentMode, setPaymentMode] = useState('1');
   const [paidAmount, setPaidAmount] = useState(0);
-  const [emi1Amount, setEmi1Amount] = useState(0);
-  const [emi2Amount, setEmi2Amount] = useState(0);
-  const [dueDate1, setDueDate1] = useState('');
-  const [dueDate2, setDueDate2] = useState('');
+  // EMI amounts are computed below, not state
+  const [dueDate1, setDueDate1] = useState(
+    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+  const [dueDate2, setDueDate2] = useState(
+    new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
   const [comment, setComment] = useState('');
   const [allDbServices, setAllDbServices] = useState<any[]>([]);
   const [convSubmitting, setConvSubmitting] = useState(false);
@@ -612,7 +657,7 @@ export default function CrmLeadsPage() {
 
   // Helper to parse staff names from remarks
   const parseRemarkItem = (r: any) => {
-    const text = r.lead_remark || r.remark || '';
+    const text = r.lead_remark || r.remark || r.followup_remark || '';
     const parts = text.split(' : ');
     let staffName = r.staff_name;
     let noteText = text;
@@ -648,6 +693,28 @@ export default function CrmLeadsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detailsModalLead?.id]);
 
+  // Load categories when convert modal opens
+  useEffect(() => {
+    if (convertModalOpen) {
+      fetch(`${API_BASE}/v1/crm/categories`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.success) setDbCategories(d.data || []);
+        });
+    }
+  }, [convertModalOpen]);
+
+  // Load services when category changes
+  useEffect(() => {
+    if (selectedCategoryId && convertModalOpen) {
+      fetch(`${API_BASE}/v1/crm/services-by-category/${selectedCategoryId}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.success) setDbServicesByCategory(d.data || []);
+        });
+    }
+  }, [selectedCategoryId, convertModalOpen]);
+
   // Load services when convert modal opens
   useEffect(() => {
     if (convertModalOpen) {
@@ -656,10 +723,13 @@ export default function CrmLeadsPage() {
         .then((d) => {
           if (d?.success) setAllDbServices(d.data || []);
         });
+      // Reset due dates to defaults when modal opens
+      setDueDate1(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+      setDueDate2(new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
     }
   }, [convertModalOpen]);
 
-  // Calculate custom package total
+  // Calculate total for both custom and non-custom package
   useEffect(() => {
     if (isCustomPkg === '1') {
       const total = selectedCustomServiceIds.reduce((sum, id) => {
@@ -668,27 +738,54 @@ export default function CrmLeadsPage() {
       }, 0);
       setBasePriceTotal(total);
       setFinalTotalAmount(total - discountAmount);
+    } else if (isCustomPkg === '0' && selectedCpId) {
+      const service = dbServicesByCategory.find((s) => (s.cp_id || s.service_id) === selectedCpId);
+      const price = service?.service_price || 0;
+      setBasePriceTotal(price);
+      setFinalTotalAmount(price - discountAmount);
     }
-  }, [selectedCustomServiceIds, allDbServices, isCustomPkg, discountAmount]);
+  }, [
+    selectedCustomServiceIds,
+    allDbServices,
+    isCustomPkg,
+    discountAmount,
+    selectedCpId,
+    dbServicesByCategory,
+  ]);
   // Recalculate final total when discount changes
   useEffect(() => {
     setFinalTotalAmount(basePriceTotal - discountAmount);
   }, [discountAmount, basePriceTotal]);
 
-  // Calculate EMI amounts based on payment mode
+  // Auto-set paidAmount to finalTotalAmount when No EMI
   useEffect(() => {
-    const payable = finalTotalAmount - paidAmount;
-    if (paymentMode === '2') {
-      setEmi1Amount(Math.ceil(payable / 2));
-      setEmi2Amount(0);
-    } else if (paymentMode === '3') {
-      setEmi1Amount(Math.ceil(payable / 3));
-      setEmi2Amount(Math.ceil(payable / 3));
-    } else {
-      setEmi1Amount(0);
-      setEmi2Amount(0);
+    if (paymentMode === '1') {
+      setPaidAmount(finalTotalAmount);
     }
-  }, [paymentMode, finalTotalAmount, paidAmount]);
+  }, [paymentMode, finalTotalAmount]);
+
+  // Calculate EMI amounts based on payment mode (matching accounts page)
+  const remainingUnpaid = Math.max(finalTotalAmount - paidAmount, 0);
+  const emi1Amount =
+    paymentMode === '1'
+      ? 0
+      : paymentMode === '3'
+        ? Math.round(remainingUnpaid / 2)
+        : remainingUnpaid;
+  const emi2Amount = paymentMode === '3' ? remainingUnpaid - emi1Amount : 0;
+
+  // Close service dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (serviceDropdownRef.current && !serviceDropdownRef.current.contains(e.target as Node)) {
+        setIsServiceDropdownOpen(false);
+      }
+    };
+    if (isServiceDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isServiceDropdownOpen]);
 
   // Close custom dropdown on outside click
   useEffect(() => {
@@ -1073,12 +1170,15 @@ export default function CrmLeadsPage() {
   };
 
   const openConvertCustomer = (lead: Lead) => {
-    setConvName(lead.name || '');
-    setConvBusiness((lead as any).company_name || (lead as any).business || '');
-    setConvEmail(lead.email || '');
-    setConvMobile(lead.contact || (lead as any).mobile || '');
-    setConvState(lead.state || '');
-    setConvCity(lead.city || '');
+    if (!lead) return;
+    const name = String(lead.name || '').trim();
+    const mobile = String(lead.contact || (lead as any).mobile || '').trim();
+    setConvName(name);
+    setConvBusiness(String((lead as any).company_name || (lead as any).business || '').trim());
+    setConvEmail(String(lead.email || '').trim());
+    setConvMobile(mobile);
+    setConvState(String(lead.state || '').trim());
+    setConvCity(String(lead.city || '').trim());
     setConvertModalOpen(true);
   };
 
@@ -1088,43 +1188,111 @@ export default function CrmLeadsPage() {
     );
   };
 
+  const handleApplyCoupon = async (codeToUse?: string) => {
+    const code = (codeToUse !== undefined ? codeToUse : couponCode).trim();
+    if (!code) {
+      setDiscountAmount(0);
+      setCouponMessage(null);
+      return;
+    }
+    if (basePriceTotal <= 0) {
+      setCouponMessage({ type: 'error', text: 'Please select service first' });
+      return;
+    }
+    setIsValidatingCoupon(true);
+    setCouponMessage(null);
+    try {
+      const res = await fetch(`${API_BASE}/v1/crm/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, total_amount: basePriceTotal }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.discount_amount !== undefined) {
+        setDiscountAmount(data.data.discount_amount);
+        setCouponMessage({
+          type: 'success',
+          text: String(data.data.message || `Coupon Applied! Saved ₹${data.data.discount_amount}`),
+        });
+      } else {
+        setDiscountAmount(0);
+        setCouponMessage({
+          type: 'error',
+          text: String(data.error || 'Invalid or expired coupon code'),
+        });
+      }
+    } catch {
+      setDiscountAmount(0);
+      setCouponMessage({ type: 'error', text: 'Failed to validate coupon code' });
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
   const handleConvertSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!convName.trim() || !convMobile.trim()) {
-      alert('Name and Mobile are required');
+    const nameVal = convName?.trim() || '';
+    const mobileVal = convMobile?.trim() || '';
+    if (!nameVal) {
+      alert('Customer Name is required');
+      return;
+    }
+    if (!mobileVal) {
+      alert('Mobile Number is required');
       return;
     }
     setConvSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('customer_name', convName.trim());
-      formData.append('customer_businessName', convBusiness.trim() || convName.trim());
-      if (convEmail.trim()) formData.append('customer_email', convEmail.trim());
-      formData.append('customer_mobile', convMobile.trim());
-      if (convState.trim()) formData.append('customer_state', convState.trim());
-      if (convCity.trim()) formData.append('customer_city', convCity.trim());
-      formData.append('is_custom', isCustomPkg);
+      const payload: any = {
+        customer_name: nameVal,
+        customer_businessName: convBusiness.trim() || nameVal,
+        customer_email: convEmail.trim() || undefined,
+        customer_mobile: mobileVal,
+        customer_state: convState.trim() || undefined,
+        customer_city: convCity.trim() || undefined,
+        is_custom: isCustomPkg,
+        customer_total_service_price: basePriceTotal,
+        coupon_code: couponCode.trim() || undefined,
+        discount_amount: discountAmount,
+        customer_payment_mode: paymentMode,
+        customer_paid_amount: paidAmount,
+        customer_unpaid_amount: remainingUnpaid,
+        customer_unpaid_amount2: emi2Amount,
+        customer_due_date: dueDate1,
+        customer_due_date2: dueDate2,
+        customer_comment: comment.trim() || undefined,
+      };
+
       if (isCustomPkg === '1') {
-        formData.append('custom_package_name', customPkgName.trim() || 'Custom Package');
-        selectedCustomServiceIds.forEach((id) =>
-          formData.append('custom_package_services[]', String(id))
-        );
+        payload.custom_package_name = customPkgName.trim() || 'Custom Package';
+        payload.custom_package_services = selectedCustomServiceIds;
+      } else {
+        payload.customer_category_id = selectedCategoryId;
+        payload.customer_cp_id = selectedCpId;
+        payload.customer_service = selectedServiceName;
       }
-      formData.append('customer_total_service_price', String(basePriceTotal));
-      formData.append('coupon_code', couponCode.trim());
-      formData.append('discount_amount', String(discountAmount));
-      formData.append('customer_payment_mode', paymentMode);
-      formData.append('customer_paid_amount', String(paidAmount));
-      formData.append('customer_unpaid_amount', String(Math.max(finalTotalAmount - paidAmount, 0)));
-      formData.append('customer_due_date', dueDate1);
-      formData.append('customer_comment', comment.trim());
 
       const res = await fetch(`${API_BASE}/v1/crm/customers/add-offline`, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(staffToken ? { Authorization: `Bearer ${staffToken}` } : {}),
+        },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data?.success) {
+        // Update lead status to Customer (5)
+        if (detailsModalLead?.id) {
+          await fetch(`${API_BASE}/v1/crm/leads/${detailsModalLead.id}/status`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(staffToken ? { Authorization: `Bearer ${staffToken}` } : {}),
+            },
+            body: JSON.stringify({ status: 5 }),
+          }).catch(() => {});
+        }
         setConvertModalOpen(false);
         setDetailsModalLead(null);
         alert('Customer created successfully!');
@@ -1803,8 +1971,14 @@ export default function CrmLeadsPage() {
 
       {/* ─── LEAD DETAILS MODAL (Exact match with Screenshots 111120, 111130, 111137, 111149) ─── */}
       {detailsModalLead && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setDetailsModalLead(null)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Signature Top Multicolor Strip */}
             <div className="h-1 bg-multicolor" />
 
@@ -2477,8 +2651,14 @@ export default function CrmLeadsPage() {
 
       {/* ─── LEAD REMARKS MODAL (Exact match with Old CRM Screenshot) ─── */}
       {remarksModalLead && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full overflow-hidden shadow-2xl border border-slate-200 animate-scale-in">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setRemarksModalLead(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-xl w-full overflow-hidden shadow-2xl border border-slate-200 animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header: Deep Red matching screenshot */}
             <div className="bg-[#B91C1C] text-white p-3.5 sm:p-4 flex items-center justify-between">
               <h3 className="font-extrabold text-base tracking-wide text-white flex items-center gap-2">
@@ -2767,8 +2947,14 @@ export default function CrmLeadsPage() {
 
       {/* ─── ADD LEAD MODAL ─── */}
       {addLeadModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setServiceQAModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Signature Top Multicolor Strip */}
             <div className="h-1 bg-multicolor" />
 
@@ -2914,8 +3100,14 @@ export default function CrmLeadsPage() {
 
       {/* ─── CUSTOM WIZARD MODAL 1: LEAD SCORE ─── */}
       {leadScoreModalOpen && (remarksModalLead || detailsModalLead) && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setLeadScoreModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="h-1 bg-multicolor" />
             <div className="p-4 bg-white border-b border-[#EAE6DD] flex items-center justify-between">
               <h3 className="font-extrabold text-sm text-[#1B365D]">
@@ -2989,8 +3181,14 @@ export default function CrmLeadsPage() {
 
       {/* ─── CUSTOM WIZARD MODAL 2: QUOTED PRICE ─── */}
       {quotedPriceModalOpen && (remarksModalLead || detailsModalLead) && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setQuotedPriceModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="h-1 bg-multicolor" />
             <div className="p-4 bg-white border-b border-[#EAE6DD] flex items-center justify-between">
               <h3 className="font-extrabold text-sm text-[#1B365D]">Enter Quoted Price</h3>
@@ -3068,8 +3266,14 @@ export default function CrmLeadsPage() {
 
       {/* Lead → Customer Modal (Add New Customer with lead pre-fill) */}
       {convertModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl border border-[#EAE6DD] animate-scale-in max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setConvertModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-[#EAE6DD] animate-scale-in max-h-[95vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="h-1 bg-multicolor" />
             <div className="p-4 bg-white border-b border-[#EAE6DD] flex items-center justify-between">
               <div>
@@ -3086,7 +3290,10 @@ export default function CrmLeadsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleConvertSubmit} className="p-6 space-y-4 text-xs">
+            <form
+              onSubmit={handleConvertSubmit}
+              className="p-6 space-y-4 text-xs overflow-y-auto flex-1 min-h-0"
+            >
               {/* Row 1: Name, Company/Shop Name, Email */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -3180,6 +3387,120 @@ export default function CrmLeadsPage() {
                 </div>
               </div>
 
+              {/* Category/Service for Custom Package = No */}
+              {isCustomPkg === '0' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={selectedCategoryId}
+                      onChange={(e) => {
+                        setSelectedCategoryId(e.target.value);
+                        setSelectedCpId(0);
+                        setSelectedServiceName('');
+                      }}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold focus:outline-none"
+                    >
+                      <option value="">Select Category</option>
+                      {dbCategories.map((cat) => (
+                        <option key={cat.category_id} value={cat.category_id}>
+                          {cat.category_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="relative" ref={serviceDropdownRef}>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Service
+                    </label>
+                    <div
+                      onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 font-semibold cursor-pointer flex items-center justify-between min-h-[38px]"
+                    >
+                      {selectedServiceName ? (
+                        <span className="text-xs">{String(selectedServiceName || '')}</span>
+                      ) : (
+                        <span className="text-slate-400 text-xs">
+                          {selectedCategoryId ? 'Select Service' : 'Select category first...'}
+                        </span>
+                      )}
+                      <svg
+                        className="w-4 h-4 text-slate-400 ml-1 flex-shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+                    {isServiceDropdownOpen && dbServicesByCategory.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl z-[200] max-h-56 overflow-y-auto p-1">
+                        <div className="p-2 border-b border-slate-200">
+                          <input
+                            type="text"
+                            placeholder="Search services..."
+                            value={serviceSearchTerm}
+                            onChange={(e) => setServiceSearchTerm(e.target.value)}
+                            className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg focus:outline-none"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        {dbServicesByCategory
+                          .filter((s) =>
+                            String(s.service_name || '')
+                              .toLowerCase()
+                              .includes(serviceSearchTerm.toLowerCase())
+                          )
+                          .map((s) => (
+                            <div
+                              key={s.cp_id || s.service_id}
+                              onClick={() => {
+                                setSelectedCpId(s.cp_id || s.service_id);
+                                setSelectedServiceName(String(s.service_name || ''));
+                                setIsServiceDropdownOpen(false);
+                                setServiceSearchTerm('');
+                              }}
+                              className={`p-2 rounded-lg text-xs cursor-pointer font-medium ${
+                                selectedCpId === (s.cp_id || s.service_id)
+                                  ? 'bg-sky-100 text-sky-900 font-bold'
+                                  : 'hover:bg-slate-50 text-slate-700'
+                              }`}
+                            >
+                              <span className="flex items-center">
+                                {String(s.service_name || '')}
+                                {cpTypeBadge(s.cp_type)}
+                              </span>
+                              {s.service_price && (
+                                <span className="text-[10px] text-slate-500 ml-2">
+                                  ₹{Number(s.service_price || 0)}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Total Amount
+                    </label>
+                    <input
+                      type="number"
+                      readOnly
+                      value={basePriceTotal}
+                      className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Custom Package fields */}
               {isCustomPkg === '1' ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -3223,7 +3544,7 @@ export default function CrmLeadsPage() {
                             >
                               ×
                             </span>
-                            {serv.service_name}
+                            {String(serv.service_name || '')}
                           </span>
                         ) : null;
                       })}
@@ -3242,7 +3563,7 @@ export default function CrmLeadsPage() {
                         </div>
                         {allDbServices
                           .filter((s) =>
-                            s.service_name
+                            String(s.service_name || '')
                               .toLowerCase()
                               .includes(customServiceSearchTerm.toLowerCase())
                           )
@@ -3256,8 +3577,10 @@ export default function CrmLeadsPage() {
                                   : 'hover:bg-slate-50 text-slate-700'
                               }`}
                             >
-                              <span>{s.service_name}</span>
-                              <span className="text-[10px] text-slate-500">₹{s.service_price}</span>
+                              <span>{String(s.service_name || '')}</span>
+                              <span className="text-[10px] text-slate-500">
+                                ₹{Number(s.service_price || 0)}
+                              </span>
                             </div>
                           ))}
                       </div>
@@ -3287,13 +3610,45 @@ export default function CrmLeadsPage() {
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1">
                     Apply Coupon
                   </label>
-                  <input
-                    type="text"
-                    placeholder="enter coupon code if any"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 uppercase focus:outline-none text-xs font-semibold"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="enter coupon code if any"
+                      value={couponCode}
+                      onChange={(e) => {
+                        const val = e.target.value.toUpperCase();
+                        setCouponCode(val);
+                        if (!val.trim()) {
+                          setDiscountAmount(0);
+                          setCouponMessage(null);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleApplyCoupon();
+                        }
+                      }}
+                      className="w-full bg-white border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-800 uppercase focus:outline-none text-xs font-semibold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleApplyCoupon()}
+                      disabled={isValidatingCoupon}
+                      className="bg-[#003A66] hover:bg-[#002B4D] text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors shrink-0 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isValidatingCoupon ? 'Checking...' : 'Apply'}
+                    </button>
+                  </div>
+                  {couponMessage && (
+                    <div
+                      className={`text-[11px] font-semibold mt-1.5 ${
+                        couponMessage.type === 'success' ? 'text-emerald-600' : 'text-rose-600'
+                      }`}
+                    >
+                      {couponMessage.text}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1">
@@ -3305,6 +3660,11 @@ export default function CrmLeadsPage() {
                     onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
                     className="w-full bg-[#E2E8F0] border border-[#CBD5E1] rounded-xl px-3 py-2 text-slate-900 font-bold"
                   />
+                  {discountAmount > 0 && (
+                    <span className="text-[10px] text-emerald-600 font-semibold mt-1 block">
+                      Final Payable: ₹{finalTotalAmount.toLocaleString('en-IN')}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1">

@@ -9,21 +9,30 @@ export default function CrmCustomerDetailsPage() {
   const { staffUser, staffToken } = useAuthStore();
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
-    fetchCustomers();
+    const timer = setTimeout(() => {
+      fetchCustomers();
+    }, 500); // Debounce search by 500ms
+    return () => clearTimeout(timer);
   }, [currentPage, pageSize, searchTerm]);
 
   const fetchCustomers = async () => {
     try {
-      setLoading(true);
+      if (searchTerm) {
+        setSearchLoading(true);
+      } else {
+        setLoading(true);
+      }
       const limitParam = pageSize === -1 ? 'all' : pageSize;
+      const searchParam = searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : '';
       const response = await fetch(
-        `${API_BASE_URL}/v1/crm/customer-details-list?limit=${limitParam}&page=${currentPage}`,
+        `${API_BASE_URL}/v1/crm/customer-details-list?limit=${limitParam}&page=${currentPage}${searchParam}`,
         {
           headers: {
             Authorization: `Bearer ${staffToken}`,
@@ -39,22 +48,16 @@ export default function CrmCustomerDetailsPage() {
       console.error('Error fetching customers:', error);
     } finally {
       setLoading(false);
+      setSearchLoading(false);
     }
   };
 
-  const filteredCustomers = customers.filter(
-    (c) =>
-      c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.contact?.includes(searchTerm) ||
-      c.state?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.city?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCustomers = customers; // API already filters
 
   const totalPages = pageSize === -1 ? 1 : Math.ceil(totalCount / pageSize);
   const displayedCustomers = filteredCustomers;
 
-  if (loading) {
+  if (loading && !searchLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-slate-500">Loading...</div>
@@ -144,12 +147,14 @@ export default function CrmCustomerDetailsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {loading ? (
+              {loading || searchLoading ? (
                 <tr>
                   <td colSpan={10} className="py-12 text-center text-xs text-slate-500">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-[#1E3A8A] border-t-transparent rounded-full animate-spin" />
-                      Loading live SQL customer records from database...
+                      {searchLoading
+                        ? 'Searching...'
+                        : 'Loading live SQL customer records from database...'}
                     </div>
                   </td>
                 </tr>

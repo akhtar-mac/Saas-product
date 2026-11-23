@@ -506,24 +506,24 @@ router.post(
           },
         });
 
-        // Record in customer_dues
-        const maxDue = await prisma.customer_dues.findFirst({
-          orderBy: { cd_id: 'desc' },
-          select: { cd_id: true },
-        });
-        await prisma.customer_dues.create({
-          data: {
-            cd_id: (maxDue?.cd_id || 1000) + 1,
-            emi_id: emi.emi_id,
-            customer_id: task.cust_id,
-            paid_amount: Number(paid_amount),
-            unpaid_amount: newUnpaid,
-            payment_screenshot: payment_screenshot_url || '',
-            added_by: req.user!.user_id,
-            is_approve: 0,
-            date: new Date(),
-          },
-        });
+        // Record in customer_dues (temporarily disabled - model not in schema)
+        // const maxDue = await prisma.customer_dues.findFirst({
+        //   orderBy: { cd_id: 'desc' },
+        //   select: { cd_id: true },
+        // });
+        // await prisma.customer_dues.create({
+        //   data: {
+        //     cd_id: (maxDue?.cd_id || 1000) + 1,
+        //     emi_id: emi.emi_id,
+        //     customer_id: task.cust_id,
+        //     paid_amount: Number(paid_amount),
+        //     unpaid_amount: newUnpaid,
+        //     payment_screenshot: payment_screenshot_url || '',
+        //     added_by: req.user!.user_id,
+        //     is_approve: 0,
+        //     date: new Date(),
+        //   },
+        // });
 
         res.json({
           success: true,
