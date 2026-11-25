@@ -1030,14 +1030,22 @@ function BlockedTab() {
         </div>
       </div>
       <p className="text-[11px] text-slate-500">
-        The desktop app downloads this list for each staff member
-        (blocked-websites/&#123;user_id&#125;).
+        Enter a domain like www.youtube.com (a full URL is reduced to the host). The Windows app
+        still reads this list from etaxwala.com as JSON domains for that staff member&apos;s login
+        id. Pick the same account they use to sign in on the desktop app.
       </p>
       {msg && <ToneBadge tone={msg.tone}>{msg.text}</ToneBadge>}
       <Table head={['Name', 'Website', 'Added', 'Actions']} empty={!rows.length}>
         {rows.map((r) => (
           <tr key={r.id} className="hover:bg-slate-50">
-            <td className={`${tdCls} font-semibold`}>{staffName(r.staff_name, r.user_id)}</td>
+            <td className={`${tdCls} font-semibold`}>
+              <div>{staffName(r.staff_name, r.user_id)}</div>
+              {!(r.staff_exists ?? Boolean(r.staff_name)) && (
+                <div className="text-[10px] font-medium text-rose-700 whitespace-normal max-w-[220px]">
+                  No matching staff login — the desktop app will not apply this block
+                </div>
+              )}
+            </td>
             <td className={tdCls}>
               {edit?.id === r.id ? (
                 <input

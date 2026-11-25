@@ -99,11 +99,14 @@ test('screenshot MIME is sniffed from the BLOB like finfo', () => {
   assert.equal(sniffImageMime(null), 'application/octet-stream');
 });
 
-test('blocked website accepts the old www.youtube.com style and rejects junk', () => {
+test('blocked website stores a host-only domain like the live row www.youtube.com', () => {
   assert.equal(normaliseBlockedSite(' www.youtube.com '), 'www.youtube.com');
-  assert.equal(normaliseBlockedSite('https://facebook.com/'), 'https://facebook.com/');
+  assert.equal(normaliseBlockedSite('https://facebook.com/'), 'facebook.com');
+  assert.equal(normaliseBlockedSite('HTTPS://WWW.YouTube.com/watch?v=abc'), 'www.youtube.com');
+  assert.equal(normaliseBlockedSite('http://instagram.com'), 'instagram.com');
   assert.equal(normaliseBlockedSite('not a url'), null);
   assert.equal(normaliseBlockedSite('localhost'), null);
+  assert.equal(normaliseBlockedSite('youtube'), null);
   assert.equal(normaliseBlockedSite(''), null);
 });
 
