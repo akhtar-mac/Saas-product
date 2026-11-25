@@ -29,6 +29,8 @@ import desktopClientRoutes from './routes/desktop-client.routes.js';
 import { rbacGuard } from './rbac/route-guard.js';
 import { auditTrail } from './rbac/audit-trail.js';
 import accessRoutes from './rbac/access.routes.js';
+import profileRoutes from './hrms/profile.routes.js';
+import hrmsRoutes from './hrms/hrms.routes.js';
 import auditLogRoutes from './rbac/logs.routes.js';
 import { recycleBinRouter, deleteRoutes } from './rbac/recycle-bin.routes.js';
 import { initChatSocket } from './socket/chat.socket.js';
@@ -123,6 +125,10 @@ app.use('/v1/crm/recycle-bin', recycleBinRouter);
 app.use('/v1/crm', deleteRoutes);
 app.use('/v1/staff', deleteRoutes);
 
+app.use('/v1/crm/profile', profileRoutes);
+app.use('/v1/staff/profile', profileRoutes);
+app.use('/v1/crm/hrms', hrmsRoutes);
+app.use('/v1/staff/hrms', hrmsRoutes);
 app.use('/v1/crm/desktrack', desktrackRoutes);
 app.use('/v1/staff/desktrack', desktrackRoutes);
 

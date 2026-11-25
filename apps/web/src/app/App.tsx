@@ -54,6 +54,11 @@ const HrWorkforcePage = lazy(() => import('@/features/crm/hr-workforce-page'));
 const CrmUserManagementPage = lazy(() => import('@/features/crm/crm-user-management-page'));
 const CrmUsersAccessPage = lazy(() => import('@/features/crm/access/users-access-page'));
 const CrmActivityLogsPage = lazy(() => import('@/features/crm/access/activity-logs-page'));
+const MyProfilePage = lazy(() => import('@/features/crm/hrms/my-profile-page'));
+const HrAttendancePage = lazy(() => import('@/features/crm/hrms/hr-attendance-page'));
+const HrLeavesPage = lazy(() => import('@/features/crm/hrms/hr-leaves-page'));
+const HrHolidaysPage = lazy(() => import('@/features/crm/hrms/hr-holidays-page'));
+const HrEmployeesPage = lazy(() => import('@/features/crm/hrms/hr-employees-page'));
 const CrmRecycleBinPage = lazy(() => import('@/features/crm/access/recycle-bin-page'));
 const CrmWonFormPage = lazy(() => import('@/features/crm/crm-won-form-page'));
 const CrmCallAnalyticsPage = lazy(() => import('@/features/crm/crm-call-analytics-page'));
@@ -187,6 +192,50 @@ export default function App() {
 
           {/* Call Analytics — Sales team + Admin */}
           <Route path="call-analytics" element={<CrmCallAnalyticsPage />} />
+
+          {/* My Profile (every staff member) and the HR desk (HR options) */}
+          <Route path="profile" element={<MyProfilePage />} />
+          <Route
+            path="hr/attendance"
+            element={
+              <CrmProtectedRoute
+                allowedRoleIds={[1, 2, 14]}
+                requiredPermission={['hr:attendance_view', 'hr:attendance_manage']}
+              >
+                <HrAttendancePage />
+              </CrmProtectedRoute>
+            }
+          />
+          <Route
+            path="hr/leaves"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2, 14]} requiredPermission="hr:leaves_approve">
+                <HrLeavesPage />
+              </CrmProtectedRoute>
+            }
+          />
+          <Route
+            path="hr/holidays"
+            element={
+              <CrmProtectedRoute
+                allowedRoleIds={[1, 2, 14]}
+                requiredPermission="hr:holidays_manage"
+              >
+                <HrHolidaysPage />
+              </CrmProtectedRoute>
+            }
+          />
+          <Route
+            path="hr/employees"
+            element={
+              <CrmProtectedRoute
+                allowedRoleIds={[1, 2, 14]}
+                requiredPermission="hr:employees_manage"
+              >
+                <HrEmployeesPage />
+              </CrmProtectedRoute>
+            }
+          />
 
           {/* Users & Access — one screen for create/edit, role defaults and extra options */}
           <Route

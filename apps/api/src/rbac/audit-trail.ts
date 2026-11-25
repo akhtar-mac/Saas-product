@@ -21,6 +21,9 @@ const QUIET = [
 ];
 
 const MODULES: Array<[RegExp, string]> = [
+  // before /users: HR paths carry /employees/users/:id
+  [/\/(crm|staff)\/profile\//, 'Profile'],
+  [/\/(crm|staff)\/hrms\//, 'HR'],
   [/\/access\b|\/users\b|\/admin\/users/, 'Users & Access'],
   [/\/recycle-bin/, 'Recycle Bin'],
   [/\/sub-brands|\/leads|\/lead-question-answers/, 'Leads'],

@@ -16,6 +16,11 @@ const WATCHED = [
   'leads',
   'leads_udyamikisan',
   'leads_sahakarsamridhi',
+  // HRMS / profile (MIGRATION-HRMS-PROFILE.sql)
+  'staff_profiles',
+  'hr_attendance_records',
+  'hr_holidays',
+  'hr_leave_requests',
 ];
 
 async function load(): Promise<Map<string, Set<string>>> {

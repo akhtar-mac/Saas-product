@@ -32,6 +32,11 @@ import {
   ScrollText,
   Trash2,
   KeyRound,
+  UserRound,
+  CalendarCheck2,
+  Plane,
+  CalendarDays,
+  Contact,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
@@ -688,17 +693,22 @@ function CrmLayoutContent() {
 
           {/* Current Staff User Card with Quick Switcher */}
           <div className="p-3 m-3 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DD]">
-            <div className="flex items-center gap-2.5">
+            <Link
+              to="/crm/profile"
+              onClick={handleNavClick}
+              className="flex items-center gap-2.5 rounded-xl -m-1 p-1 hover:bg-white transition"
+              title="My Profile"
+            >
               <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#1B365D] via-[#0084D1] to-[#00A896] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
                 {displayStaffName.charAt(0).toUpperCase()}
               </div>
               <div className="overflow-hidden min-w-0">
                 <p className="text-xs font-bold text-slate-900 truncate">{displayStaffName}</p>
                 <p className="text-[10px] text-slate-500 truncate font-medium">
-                  {currentRoleInfo.label}
+                  {currentRoleInfo.label} · My Profile
                 </p>
               </div>
-            </div>
+            </Link>
 
             {/* Quick Role Switcher */}
             <div className="mt-2.5 pt-2 border-t border-slate-200">
@@ -771,6 +781,83 @@ function CrmLayoutContent() {
                   </span>
                 </span>
               </Link>
+            )}
+
+            {/* My Profile — every staff member */}
+            <Link
+              to="/crm/profile"
+              onClick={handleNavClick}
+              className={`flex items-center gap-3 px-3 py-2 rounded-xl font-bold transition-all ${
+                location.pathname === '/crm/profile'
+                  ? 'bg-[#1B365D] text-white shadow-sm'
+                  : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
+              }`}
+            >
+              <UserRound
+                className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/profile' ? 'text-white' : 'text-[#1B365D]'}`}
+              />
+              <span>My Profile</span>
+            </Link>
+
+            {/* HR Management — shown to anyone holding an HR option */}
+            {(can('hr:attendance_view') ||
+              can('hr:attendance_manage') ||
+              can('hr:leaves_approve') ||
+              can('hr:holidays_manage') ||
+              can('hr:employees_manage')) && (
+              <div className="pt-2 mt-1 border-t border-[#EAE6DD] space-y-0.5">
+                <p className="px-3 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                  HR Management
+                </p>
+                {[
+                  {
+                    to: '/crm/hr/attendance',
+                    label: 'Attendance',
+                    icon: CalendarCheck2,
+                    show: can('hr:attendance_view') || can('hr:attendance_manage'),
+                  },
+                  {
+                    to: '/crm/hr/leaves',
+                    label: 'Leave Approvals',
+                    icon: Plane,
+                    show: can('hr:leaves_approve'),
+                  },
+                  {
+                    to: '/crm/hr/holidays',
+                    label: 'Holidays',
+                    icon: CalendarDays,
+                    show: can('hr:holidays_manage'),
+                  },
+                  {
+                    to: '/crm/hr/employees',
+                    label: 'Employees',
+                    icon: Contact,
+                    show: can('hr:employees_manage'),
+                  },
+                ]
+                  .filter((l) => l.show)
+                  .map((l) => {
+                    const active = location.pathname === l.to;
+                    const Icon = l.icon;
+                    return (
+                      <Link
+                        key={l.to}
+                        to={l.to}
+                        onClick={handleNavClick}
+                        className={`flex items-center gap-3 px-3 py-1.5 rounded-xl font-semibold transition-all ${
+                          active
+                            ? 'bg-[#1B365D] text-white shadow-sm'
+                            : 'text-slate-700 hover:bg-slate-100 hover:text-[#1B365D]'
+                        }`}
+                      >
+                        <Icon
+                          className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-[#0F766E]'}`}
+                        />
+                        <span>{l.label}</span>
+                      </Link>
+                    );
+                  })}
+              </div>
             )}
 
             {/* Department Hubs section hidden from sidebar (pages/routes remain intact) */}
@@ -2155,13 +2242,15 @@ function CrmLayoutContent() {
               />
             </div>
 
-            {/* Profile Avatar */}
-            <div
-              className="w-8 h-8 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0"
-              title={displayStaffName}
+            {/* Profile Avatar -> My Profile */}
+            <Link
+              to="/crm/profile"
+              className="w-8 h-8 rounded-full bg-[#1B365D] text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0 hover:ring-2 hover:ring-[#1B365D]/20"
+              title={`${displayStaffName} · My Profile`}
+              aria-label="My Profile"
             >
               {displayStaffName.charAt(0).toUpperCase()}
-            </div>
+            </Link>
           </div>
         </header>
 

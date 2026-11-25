@@ -123,6 +123,29 @@ export const RULES: Rule[] = [
   C('POST', '/recycle-bin/:id/restore', ['recycle_bin:restore']),
   C('DELETE', '/recycle-bin/:id', ['recycle_bin:purge']),
 
+  // ── My Profile (every signed-in staff member, own data only) ─────────────
+  C('*', '/profile/**', ['__any']),
+
+  // ── HRMS (HR desk). Writes first; the router re-checks each key. ─────────
+  C('PUT|POST', '/hrms/attendance/**', ['hr:attendance_manage']),
+  C('GET', '/hrms/attendance/**', ['hr:attendance_view', 'hr:attendance_manage']),
+  C('POST', '/hrms/leaves/**', ['hr:leaves_approve']),
+  C('GET', '/hrms/leaves', ['hr:leaves_approve', 'hr:attendance_view']),
+  C('POST|PATCH|DELETE', '/hrms/holidays/**', ['hr:holidays_manage']),
+  C('POST', '/hrms/holidays', ['hr:holidays_manage']),
+  C('GET', '/hrms/holidays', ['hr:holidays_manage', 'hr:attendance_view', 'hr:view']),
+  C('PATCH|POST', '/hrms/employees/**', ['hr:employees_manage']),
+  C('GET', '/hrms/employees/**', ['hr:employees_manage', 'hr:attendance_view']),
+  C('GET', '/hrms/employees', ['hr:employees_manage', 'hr:attendance_view']),
+  C('GET', '/hrms/overview', [
+    'hr:view',
+    'hr:attendance_view',
+    'hr:attendance_manage',
+    'hr:leaves_approve',
+    'hr:employees_manage',
+  ]),
+  R('GET', '/v1/hr/workforce-summary', ['hr:view', 'hr:attendance_view']),
+
   // ── Dashboard & shared pickers ───────────────────────────────────────────
   C('GET', '/stats', ANY_STAFF),
   C('GET', '/notifications', ANY_STAFF),
@@ -263,7 +286,7 @@ export const RULES: Rule[] = [
   C('DELETE', '/users/:id', ['users:deactivate']),
   C('GET', '/settings', ['admin:view']),
   C('PUT', '/settings', ['admin:view']),
-  C('GET', '/attendance', ['hr:view', 'admin:view']),
+  C('GET', '/attendance', ['hr:view', 'admin:view', 'hr:attendance_view']),
   C('GET', '/payroll', ['hr:view', 'admin:view']),
   R('GET', '/v1/admin/users', ['users:view']),
   R('POST', '/v1/admin/users', ['users:create']),

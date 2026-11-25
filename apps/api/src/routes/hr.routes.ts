@@ -10,6 +10,7 @@ import { recordAuditLog } from '../services/audit.service.js';
 import { sendNotification, broadcastRoleNotification } from '../services/notification.service.js';
 import { getPagination, formatPaginatedResponse } from '../services/pagination.util.js';
 import { generateStorageKey } from '../services/storage.service.js';
+import { overview as hrmsOverview } from '../hrms/hrms-service.js';
 
 const router = Router();
 
@@ -928,38 +929,25 @@ router.get(
   verifyJWT,
   requireRole(HR_ALLOWED_ROLES),
   asyncHandler(async (_req: Request, res: Response) => {
-    const [totalStaff, activeStaff] = await Promise.all([
-      (prisma as any).staff_users.count(),
-      (prisma as any).staff_users.count({ where: { is_active: true } }),
-    ]);
-
+    // Real numbers from the HRMS tables (payroll / accounts are not tracked here yet).
+    const o = await hrmsOverview();
     res.json({
       success: true,
       data: {
-        totalStaff: totalStaff || 218,
-        presentToday: activeStaff || 209,
-        attendanceRate: '96.4%',
-        departments: [
-          { name: 'Audit & Tax (Chartered Accountants)', count: 46, onLeave: 1 },
-          { name: 'Corporate Sales & Business Dev', count: 68, onLeave: 3 },
-          { name: 'Operations & ROC Filings', count: 54, onLeave: 2 },
-          { name: 'IT & Software Engineering', count: 18, onLeave: 0 },
-          { name: 'Marketing, Social & Media Hub', count: 12, onLeave: 1 },
-          { name: 'HR, Payroll & Accounts Desk', count: 20, onLeave: 2 },
-        ],
-        payrollSummary: {
-          totalMonthlyPayout: '₹54,80,000',
-          disbursedThisMonth: '₹51,20,000',
-          pendingIncentives: '₹3,60,000',
-          commissionOwedSales: '₹2,10,000',
-          commissionOwedFranchise: '₹1,50,000',
-        },
-        accountsSummary: {
-          receivablesPending: '₹14,25,000',
-          collectionsToday: '₹3,80,000',
-          activeClientInvoices: 142,
-          overdueInvoices: 11,
-        },
+        totalStaff: o.total_staff,
+        presentToday: o.present_today,
+        attendanceRate: o.attendance_rate === null ? null : `${o.attendance_rate}%`,
+        onLeaveToday: o.on_leave_today,
+        pendingLeaves: o.pending_leaves,
+        date: o.date,
+        departments: o.departments.map((d) => ({
+          name: d.department,
+          count: d.total,
+          present: d.present,
+        })),
+        payrollSummary: null,
+        accountsSummary: null,
+        tables_ready: o.tables_ready,
       },
     });
   })

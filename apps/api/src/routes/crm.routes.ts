@@ -16,6 +16,8 @@ import {
   sanitizeProofFilename,
   saveEmiProofToDisk,
 } from '../utils/emi-uploads.js';
+import { overview as hrmsOverview } from '../hrms/hrms-service.js';
+import { attendanceFor as hrmsAttendanceFor } from '../hrms/hrms-data.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -5912,16 +5914,40 @@ router.put('/settings', (req, res) => {
 });
 
 // 4.14.22 & 4.14.23: HR Attendance & Payroll
-router.get('/attendance', (_req, res) => {
-  res.json({
-    success: true,
-    data: {
-      presentToday: 31,
-      onLeave: 1,
-      totalStaff: 32,
-      averageClockIn: '09:28 AM',
-    },
-  });
+// Real attendance snapshot (HRMS tables; zeros + tables_ready:false when not added yet).
+router.get('/attendance', async (_req, res) => {
+  try {
+    const o = await hrmsOverview();
+    const today = await hrmsAttendanceFor(o.date, o.date);
+    const ins = today
+      .map((r) => r.check_in)
+      .filter((t): t is string => !!t)
+      .map((t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)));
+    const avg = ins.length ? Math.round(ins.reduce((a, b) => a + b, 0) / ins.length) : null;
+    const avgLabel =
+      avg === null
+        ? null
+        : `${String(((Math.floor(avg / 60) + 11) % 12) + 1).padStart(2, '0')}:${String(avg % 60).padStart(2, '0')} ${
+            avg >= 720 ? 'PM' : 'AM'
+          }`;
+    return res.json({
+      success: true,
+      data: {
+        presentToday: o.present_today,
+        onLeave: o.counts.leave,
+        totalStaff: o.total_staff,
+        averageClockIn: avgLabel,
+        lateToday: o.counts.late,
+        unmarked: o.unmarked,
+        attendanceRate: o.attendance_rate,
+        pendingLeaves: o.pending_leaves,
+        date: o.date,
+        tables_ready: o.tables_ready,
+      },
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 router.get('/payroll', (_req, res) => {
