@@ -52,6 +52,9 @@ const CrmQuotationsPage = lazy(() => import('@/features/crm/crm-quotations-page'
 const CrmAccountsPage = lazy(() => import('@/features/crm/crm-accounts-page'));
 const HrWorkforcePage = lazy(() => import('@/features/crm/hr-workforce-page'));
 const CrmUserManagementPage = lazy(() => import('@/features/crm/crm-user-management-page'));
+const CrmUsersAccessPage = lazy(() => import('@/features/crm/access/users-access-page'));
+const CrmActivityLogsPage = lazy(() => import('@/features/crm/access/activity-logs-page'));
+const CrmRecycleBinPage = lazy(() => import('@/features/crm/access/recycle-bin-page'));
 const CrmWonFormPage = lazy(() => import('@/features/crm/crm-won-form-page'));
 const CrmCallAnalyticsPage = lazy(() => import('@/features/crm/crm-call-analytics-page'));
 const CrmLocationsPage = lazy(() => import('@/features/crm/crm-locations-page'));
@@ -185,12 +188,38 @@ export default function App() {
           {/* Call Analytics — Sales team + Admin */}
           <Route path="call-analytics" element={<CrmCallAnalyticsPage />} />
 
-          {/* User Management — Admin, Super Admin, Ops Manager, HR */}
+          {/* Users & Access — one screen for create/edit, role defaults and extra options */}
           <Route
             path="users"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2, 3, 14]}>
+              <CrmProtectedRoute allowedRoleIds={[1, 2, 14]} requiredPermission="users:view">
+                <CrmUsersAccessPage />
+              </CrmProtectedRoute>
+            }
+          />
+          {/* Previous user screen kept reachable while staff move over */}
+          <Route
+            path="users-legacy"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2]} requiredPermission="users:edit">
                 <CrmUserManagementPage />
+              </CrmProtectedRoute>
+            }
+          />
+          {/* Activity Logs (all users) and Recycle Bin — Super Admin / Admin */}
+          <Route
+            path="logs"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2]} requiredPermission="logs:view">
+                <CrmActivityLogsPage />
+              </CrmProtectedRoute>
+            }
+          />
+          <Route
+            path="recycle-bin"
+            element={
+              <CrmProtectedRoute allowedRoleIds={[1, 2]} requiredPermission="recycle_bin:view">
+                <CrmRecycleBinPage />
               </CrmProtectedRoute>
             }
           />
@@ -199,7 +228,7 @@ export default function App() {
           <Route
             path="manage-categories"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2]}>
+              <CrmProtectedRoute allowedRoleIds={[1, 2]} requiredPermission="categories:manage">
                 <CrmManageCategoryPage />
               </CrmProtectedRoute>
             }
@@ -207,7 +236,7 @@ export default function App() {
           <Route
             path="manage-services"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2]}>
+              <CrmProtectedRoute allowedRoleIds={[1, 2]} requiredPermission="services:manage">
                 <CrmManageServicesPage />
               </CrmProtectedRoute>
             }
@@ -215,7 +244,7 @@ export default function App() {
           <Route
             path="manage-packages"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2]}>
+              <CrmProtectedRoute allowedRoleIds={[1, 2]} requiredPermission="packages:manage">
                 <CrmManagePackagesPage />
               </CrmProtectedRoute>
             }
@@ -223,7 +252,7 @@ export default function App() {
           <Route
             path="manage-blogs"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2, 15]}>
+              <CrmProtectedRoute allowedRoleIds={[1, 2, 15]} requiredPermission="blogs:manage">
                 <CrmManageBlogsPage />
               </CrmProtectedRoute>
             }
@@ -231,7 +260,10 @@ export default function App() {
           <Route
             path="appointments"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2, 3, 7, 8]}>
+              <CrmProtectedRoute
+                allowedRoleIds={[1, 2, 3, 7, 8]}
+                requiredPermission="appointments:view"
+              >
                 <CrmAppointmentsPage />
               </CrmProtectedRoute>
             }
@@ -239,7 +271,10 @@ export default function App() {
           <Route
             path="internal-tasks"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2, 3, 7, 8]}>
+              <CrmProtectedRoute
+                allowedRoleIds={[1, 2, 3, 7, 8]}
+                requiredPermission="operations:internal_tasks_view"
+              >
                 <CrmInternalTasksPage />
               </CrmProtectedRoute>
             }
@@ -262,7 +297,10 @@ export default function App() {
           <Route
             path="franchise-manager-dashboard"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2, 5]}>
+              <CrmProtectedRoute
+                allowedRoleIds={[1, 2, 5]}
+                requiredPermission="franchise:partners_manage"
+              >
                 <FranchiseManagerDashboard />
               </CrmProtectedRoute>
             }
@@ -270,7 +308,7 @@ export default function App() {
           <Route
             path="franchise-employee-dashboard"
             element={
-              <CrmProtectedRoute allowedRoleIds={[1, 2, 8]}>
+              <CrmProtectedRoute allowedRoleIds={[1, 2, 8]} requiredPermission="franchise:view">
                 <FranchiseEmployeeDashboard />
               </CrmProtectedRoute>
             }

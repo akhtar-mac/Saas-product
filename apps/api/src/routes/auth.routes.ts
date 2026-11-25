@@ -6,6 +6,9 @@ import { env } from '../config/env.js';
 import { verifyJWT, JwtPayload } from '../middleware/auth.middleware.js';
 import { validateBody } from '../middleware/validate.middleware.js';
 import { StaffLoginSchema } from '../schemas/auth.schema.js';
+import { getAccessProfile, RBAC_SENTINEL, UserSource } from '../rbac/rbac.service.js';
+import { ROLE_BY_ID } from '../rbac/catalog.js';
+import { recordAuditLog } from '../services/audit.service.js';
 
 const router = Router();
 
@@ -437,6 +440,21 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
     }
 
     if (!isValid) {
+      void recordAuditLog({
+        actorId: Number(staffUser.id) || undefined,
+        actorEmail: cleanEmail,
+        actorName: staffUser.name,
+        actorSource: fromUsersTable ? 'users' : 'staff_users',
+        action: 'login_failed',
+        resource: 'auth',
+        module: 'Auth',
+        summary: `Failed sign-in for ${cleanEmail}`,
+        statusCode: 401,
+        method: 'POST',
+        path: req.path,
+        ipAddress: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip,
+        userAgent: req.headers['user-agent'],
+      });
       return res.status(401).json({
         success: false,
         error: 'Invalid email or password.',
@@ -502,16 +520,57 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
       userPermissions = ['*'];
     }
 
+    // RBAC: role defaults + per-user extra grants / revokes (rbac/rbac.service.ts).
+    // Falls back to the values above when the user row cannot be read.
+    const userSource: UserSource = fromUsersTable ? 'users' : 'staff_users';
+    let access = await getAccessProfile(userSource, Number(staffUser.id), { fresh: true }).catch(
+      () => null
+    );
+    if (
+      access &&
+      String(access.email || '').toLowerCase() !== String(staffUser.email || '').toLowerCase()
+    ) {
+      access = null; // dev built-in account whose id collides with a real row
+    }
+    if (access) {
+      assignedRoleIds = access.roleIds;
+      userPermissions = [...access.effective, RBAC_SENTINEL];
+      staffUser.role_id = access.primaryRoleId;
+      staffUser.role_name = access.roleKey;
+    }
+    const finalRoleName = access ? access.roleKey : effectiveRoleName;
+    const finalRoleNames = access
+      ? access.roleIds.map((id) => ROLE_BY_ID.get(id)?.key || 'staff')
+      : roleNames;
+
     const payload: JwtPayload = {
       user_id: staffUser.id,
       role_id: staffUser.role_id,
       role_ids: assignedRoleIds,
-      role_name: effectiveRoleName,
-      roles: roleNames,
+      role_name: finalRoleName,
+      roles: finalRoleNames,
       permissions: userPermissions,
       username: staffUser.name,
       email: staffUser.email,
+      user_source: userSource,
     };
+
+    void recordAuditLog({
+      actorId: Number(staffUser.id),
+      actorEmail: staffUser.email,
+      actorName: staffUser.name,
+      actorRole: finalRoleName,
+      actorSource: userSource,
+      action: 'login',
+      resource: 'auth',
+      module: 'Auth',
+      summary: `Signed in (${access?.roleName || finalRoleName})`,
+      statusCode: 200,
+      method: 'POST',
+      path: req.path,
+      ipAddress: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip,
+      userAgent: req.headers['user-agent'],
+    });
 
     const tokens = signTokens(payload);
     return res.json({
@@ -525,9 +584,13 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
           email: staffUser.email,
           role_id: staffUser.role_id,
           role_ids: assignedRoleIds,
-          role_name: effectiveRoleName,
-          roles: roleNames,
+          role_name: finalRoleName,
+          roles: finalRoleNames,
           permissions: userPermissions,
+          user_source: userSource,
+          access: access
+            ? { grants: access.grants, revokes: access.revokes, role_label: access.roleName }
+            : null,
           profile_photo: staffUser.profile_photo,
           position: staffUser.position,
           department: staffUser.department,
@@ -555,8 +618,33 @@ router.post('/staff/refresh', async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, error: 'Invalid or expired refresh token.' });
     }
 
-    // New-style refresh tokens carry the full JWT claims — re-issue directly.
+    // New-style refresh tokens carry the full JWT claims — re-issue directly,
+    // with the user's live RBAC role/permissions (so changes apply on next refresh).
     if (decoded && decoded.role_name && decoded.user_id) {
+      if (decoded.user_source === 'users' || decoded.user_source === 'staff_users') {
+        const access = await getAccessProfile(decoded.user_source, Number(decoded.user_id), {
+          fresh: true,
+        }).catch(() => null);
+        if (access && !access.active) {
+          return res
+            .status(403)
+            .json({ success: false, error: 'This staff account has been deactivated.' });
+        }
+        if (access) {
+          const fresh: JwtPayload = {
+            user_id: decoded.user_id,
+            role_id: access.primaryRoleId,
+            role_ids: access.roleIds,
+            role_name: access.roleKey,
+            roles: access.roleIds.map((id) => ROLE_BY_ID.get(id)?.key || 'staff'),
+            permissions: [...access.effective, RBAC_SENTINEL],
+            username: decoded.username,
+            email: decoded.email,
+            user_source: decoded.user_source,
+          };
+          return res.json({ success: true, data: signTokens(fresh) });
+        }
+      }
       const payload: JwtPayload = {
         user_id: decoded.user_id,
         role_id: decoded.role_id,
@@ -667,7 +755,24 @@ router.get('/staff/me', verifyJWT, async (req: Request, res: Response) => {
 });
 
 // ─── POST /v1/auth/staff/logout ───────────────────────────────────────────────
-router.post('/staff/logout', verifyJWT, (_req: Request, res: Response) => {
+router.post('/staff/logout', verifyJWT, (req: Request, res: Response) => {
+  const u = req.user!;
+  void recordAuditLog({
+    actorId: u.user_id,
+    actorEmail: u.email,
+    actorName: u.username,
+    actorRole: u.role_name,
+    actorSource: u.user_source,
+    action: 'logout',
+    resource: 'auth',
+    module: 'Auth',
+    summary: 'Signed out',
+    statusCode: 200,
+    method: 'POST',
+    path: req.path,
+    ipAddress: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip,
+    userAgent: req.headers['user-agent'],
+  });
   res.json({ success: true, message: 'Logged out successfully.' });
 });
 

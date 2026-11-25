@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { hasColumn } from '../rbac/schema-features.js';
 import { prisma } from '../config/db.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
 import { verifyJWT } from '../middleware/auth.middleware.js';
@@ -135,11 +136,22 @@ router.post('/refresh', (_req: Request, res: Response) => {
 });
 
 // ─── 2. Mobile Leads ─────────────────────────────────────────────────────────
+// Leads moved to the Recycle Bin keep their row (deleted_at set); hide them here too.
+async function binnedLeadIds(): Promise<number[]> {
+  if (!(await hasColumn('leads', 'deleted_at'))) return [];
+  const rows = await prisma.$queryRawUnsafe<any[]>(
+    'SELECT id FROM leads WHERE deleted_at IS NOT NULL'
+  );
+  return rows.map((r) => Number(r.id));
+}
+
 router.get(
   '/get_all_leads',
   asyncHandler(async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string, 10) || 50;
+    const binned = await binnedLeadIds();
     const leads = await prisma.leads.findMany({
+      where: binned.length ? { id: { notIn: binned } } : undefined,
       take: limit,
       orderBy: { id: 'desc' },
       select: {
@@ -173,7 +185,7 @@ router.get(
       where: { id: leadId },
     });
 
-    if (!lead) {
+    if (!lead || (await binnedLeadIds()).includes(leadId)) {
       res.status(404).json({ status: false, message: 'Lead not found' });
       return;
     }
