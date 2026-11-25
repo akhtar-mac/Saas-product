@@ -41,7 +41,7 @@ import {
   writeAttendance,
 } from './hrms-data.js';
 import { audit, h, HttpError, Me, meOf, requirePerm, tablesMissing } from './hrms-http.js';
-import { leaveBalance, leaveDaysFor, monthCalendar, overview } from './hrms-service.js';
+import { leaveUsedByType, leaveDaysFor, monthCalendar, overview } from './hrms-service.js';
 import { saveStaffPhoto, staffPhotoUpload } from './staff-photos.js';
 
 const router = Router();
@@ -686,7 +686,7 @@ router.get(
         profile: row,
         attendance: await monthCalendar(row, month),
         leaves: await leavesQuery({ who }),
-        balance: await leaveBalance(who, year),
+        used_by_type: await leaveUsedByType(who, year),
       },
     });
   })

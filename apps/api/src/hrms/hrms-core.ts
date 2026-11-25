@@ -14,7 +14,7 @@ export const SHIFT_HOURS = 9;
 export const SHIFT_STEP_MINUTES = 15;
 export const DEFAULT_LATE_GRACE_MINUTES = (() => {
   const n = Number(process.env.HR_LATE_GRACE_MINUTES);
-  return Number.isFinite(n) && n >= 0 && n <= 120 ? Math.round(n) : 15;
+  return Number.isFinite(n) && n >= 0 && n <= 120 ? Math.round(n) : 30;
 })();
 
 export const toMinutes = (hhmm: string): number => {
@@ -65,7 +65,7 @@ export function time12(hhmm: string | null | undefined): string {
 
 /**
  * Minutes late = check-in after (own shift start + grace). Grace is a cut-off,
- * not a deduction: 09:30 shift, 15 min grace, in at 09:50 -> 20 min late.
+ * not a deduction: 09:30 shift, 30 min grace, in at 10:05 -> 35 min late.
  * No shift chosen or no check-in -> null (cannot tell).
  */
 export function lateMinutes(
@@ -125,21 +125,11 @@ export const LEAVE_TYPES = [
 ] as const;
 export const LEAVE_TYPE_KEYS = LEAVE_TYPES.map((l) => l.key) as string[];
 
-/**
- * Yearly leave quota used for the "balance" display. Proposal only (owner to
- * confirm); override with HR_LEAVE_QUOTAS="CL:12,SL:6,EL:15". Types not listed
- * show "used" only, no balance.
+/*
+ * No leave quotas: the company has no fixed yearly limits, so the app only shows
+ * days used per leave type. Nothing is enforced. (If quotas are wanted later, add
+ * a quota map here and compare in hrms-service.leaveUsedByType.)
  */
-export function leaveQuotas(): Record<string, number> {
-  const raw = process.env.HR_LEAVE_QUOTAS ?? 'CL:12,SL:6';
-  const out: Record<string, number> = {};
-  for (const part of raw.split(',')) {
-    const [k, v] = part.split(':').map((s) => s.trim().toUpperCase());
-    const n = Number(v);
-    if (k && LEAVE_TYPE_KEYS.includes(k) && Number.isFinite(n) && n >= 0) out[k] = n;
-  }
-  return out;
-}
 
 /**
  * When HR saves a mark: a 'present' with a late check-in becomes 'late';

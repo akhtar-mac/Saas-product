@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_LATE_GRACE_MINUTES,
   countLeaveDays,
   ddmmyyyy,
   holidaySchema,
@@ -55,6 +56,11 @@ describe('late minutes (own shift + grace)', () => {
   it('uses each person’s own shift', () => {
     expect(lateMinutes('08:30', '09:00', 15)).toBe(30);
     expect(lateMinutes('10:30', '09:00', 15)).toBe(0);
+  });
+  it('defaults to a 30-minute grace period', () => {
+    expect(DEFAULT_LATE_GRACE_MINUTES).toBe(30);
+    expect(lateMinutes('09:30', '10:00')).toBe(0);
+    expect(lateMinutes('09:30', '10:01')).toBe(31);
   });
   it('cannot tell without a shift or check-in', () => {
     expect(lateMinutes(null, '10:00')).toBeNull();

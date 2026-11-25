@@ -19,9 +19,9 @@ The API works before the tables exist: My Profile shows the old details, HR scre
 ## Rules
 
 - Office window 08:30–19:30 IST; each person picks a 9-hour shift starting 08:30…10:30 (15-minute steps) on My Profile. HR can override or lock it on Employees. Every change is in Activity Logs.
-- Late = check-in after own shift start + grace (`late_grace_minutes` per person, else `HR_LATE_GRACE_MINUTES`, default 15). No shift chosen → late not worked out.
+- Late = check-in after own shift start + grace (`late_grace_minutes` per person, else `HR_LATE_GRACE_MINUTES`, default 30). No shift chosen → late not worked out.
 - Leave days skip the person's weekly off (default Sunday) and holidays. Approving leave marks those days on the sheet (never over a day HR marked present / WFH).
-- Leave balance display uses `HR_LEAVE_QUOTAS` (default `CL:12,SL:6`, per calendar year) — proposal, owner to confirm.
+- No leave quotas: My Profile shows approved leave days used per type this year only. No balance, no limit enforced.
 
 ## Access (Users & Access → Options → HR)
 

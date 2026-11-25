@@ -26,7 +26,7 @@ import {
   ddmmyyyy,
   fmtIST,
   Holiday,
-  LeaveBalance,
+  LeaveUsed,
   LeaveRequest,
   LEAVE_LABEL,
   MeResponse,
@@ -555,7 +555,7 @@ export const LeaveStatus = ({ s }: { s: LeaveRequest['status'] }) => (
 function LeaveTab({ me, toast }: { me: MeResponse; toast: ReturnType<typeof useToast> }) {
   const [d, setD] = useState<{
     requests: LeaveRequest[];
-    balance: LeaveBalance[];
+    used_by_type: LeaveUsed[];
     year: number;
   } | null>(null);
   const [open, setOpen] = useState(false);
@@ -625,17 +625,13 @@ function LeaveTab({ me, toast }: { me: MeResponse; toast: ReturnType<typeof useT
       </div>
       {d && (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5">
-          {d.balance.map((b) => (
+          {d.used_by_type.map((b) => (
             <StatTile
               key={b.key}
               label={b.label}
               tone={b.key === 'CL' ? 'navy' : b.key === 'SL' ? 'sky' : 'slate'}
-              value={b.balance === null ? b.used : `${b.balance}`}
-              sub={
-                b.quota === null
-                  ? `${b.used} day(s) used in ${d.year}`
-                  : `left of ${b.quota} · ${b.used} used`
-              }
+              value={b.used}
+              sub={`day(s) used in ${d.year}`}
             />
           ))}
         </div>

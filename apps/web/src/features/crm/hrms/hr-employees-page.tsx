@@ -222,7 +222,7 @@ function EditEmployee({
                   className={inputCls}
                   value={f.late_grace_minutes}
                   onChange={set('late_grace_minutes')}
-                  placeholder="Company default (15)"
+                  placeholder="Company default (30)"
                 />
               </label>
             </div>

@@ -5,7 +5,6 @@ import {
   addDays,
   countLeaveDays,
   eachDate,
-  leaveQuotas,
   monthRange,
   summarize,
   todayIST,
@@ -95,16 +94,10 @@ export async function monthCalendar(staff: StaffRow, month: string) {
   };
 }
 
-export async function leaveBalance(who: Principal, year: number) {
+/** Approved leave days used per type in a year. No quota / balance (none exists). */
+export async function leaveUsedByType(who: Principal, year: number) {
   const used = await leaveUsed(who, year);
-  const quota = leaveQuotas();
-  return LEAVE_TYPES.map((t) => ({
-    key: t.key,
-    label: t.label,
-    quota: quota[t.key] ?? null,
-    used: used[t.key] ?? 0,
-    balance: quota[t.key] === undefined ? null : Math.max(0, quota[t.key] - (used[t.key] ?? 0)),
-  }));
+  return LEAVE_TYPES.map((t) => ({ key: t.key, label: t.label, used: used[t.key] ?? 0 }));
 }
 
 /** Working days for a leave request, using the person's weekly offs + holiday calendar. */

@@ -25,7 +25,7 @@ import {
 } from './hrms-core.js';
 import { holidaysBetween, hrmsTables, leavesQuery, loadOne, upsertProfile } from './hrms-data.js';
 import { audit, h, HttpError, meOf, tablesMissing } from './hrms-http.js';
-import { leaveBalance, leaveDaysFor, monthCalendar } from './hrms-service.js';
+import { leaveUsedByType, leaveDaysFor, monthCalendar } from './hrms-service.js';
 import { resolveStaffPhoto, saveStaffPhoto, staffPhotoUpload } from './staff-photos.js';
 
 const router = Router();
@@ -249,7 +249,7 @@ router.get(
       success: true,
       data: {
         requests: await leavesQuery({ who }),
-        balance: await leaveBalance(who, year),
+        used_by_type: await leaveUsedByType(who, year),
         year,
         tables_ready: (await hrmsTables()).leaves,
       },

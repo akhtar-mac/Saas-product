@@ -130,12 +130,11 @@ export interface LeaveRequest {
   review_remark: string | null;
   created_at: string;
 }
-export interface LeaveBalance {
+/** Days used per leave type this year (no quota / balance — none exists). */
+export interface LeaveUsed {
   key: string;
   label: string;
-  quota: number | null;
   used: number;
-  balance: number | null;
 }
 
 // ─── Formatting (India) ──────────────────────────────────────────────────────
