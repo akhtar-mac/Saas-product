@@ -26,6 +26,11 @@ import aiAutomationRoutes from './routes/ai-automation.routes.js';
 import disbursementRoutes from './routes/disbursement.routes.js';
 import desktrackRoutes from './routes/desktrack.routes.js';
 import desktopClientRoutes from './routes/desktop-client.routes.js';
+import { rbacGuard } from './rbac/route-guard.js';
+import { auditTrail } from './rbac/audit-trail.js';
+import accessRoutes from './rbac/access.routes.js';
+import auditLogRoutes from './rbac/logs.routes.js';
+import { recycleBinRouter, deleteRoutes } from './rbac/recycle-bin.routes.js';
 import { initChatSocket } from './socket/chat.socket.js';
 import { prisma } from './config/db.js';
 import { authRateLimit, apiRateLimit } from './middleware/rate-limit.middleware.js';
@@ -68,6 +73,11 @@ app.use('/Docs', express.static(path.join(process.cwd(), 'public/Docs')));
 app.use(requestLogger);
 app.use('/v1', apiRateLimit);
 
+// ─── RBAC: per-route permissions (role defaults + per-user grants/revokes) ────
+// and the all-user activity log. Both skip /api, /v1/mobile, /v1/customer, /v1/auth.
+app.use(rbacGuard);
+app.use(auditTrail);
+
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get(['/health', '/v1/health'], async (_req, res) => {
   let db: 'connected' | 'disconnected' = 'disconnected';
@@ -105,6 +115,14 @@ app.use('/v1/chat', chatRoutes);
 
 // ─── CRM Business Logic: Won form, lead lifecycle, orders, coupons ────────────
 // ─── Desktrack (old DesktopController parity; polled, no WebSockets) ─────────
+// ─── Users & Access, Activity Logs, Recycle Bin (admin) ───────────────────────
+app.use('/v1/crm/access', accessRoutes);
+app.use('/v1/crm/audit-logs', auditLogRoutes);
+app.use('/v1/crm/recycle-bin', recycleBinRouter);
+// DELETE endpoints now move rows to the Recycle Bin (before crm.routes.ts handlers)
+app.use('/v1/crm', deleteRoutes);
+app.use('/v1/staff', deleteRoutes);
+
 app.use('/v1/crm/desktrack', desktrackRoutes);
 app.use('/v1/staff/desktrack', desktrackRoutes);
 

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../config/db.js';
 import { validateBody } from '../middleware/validate.middleware.js';
 import { verifyJWT } from '../middleware/auth.middleware.js';
+import { hasColumn } from '../rbac/schema-features.js';
 import { CreateLeadSchema, UpdateTaskStatusSchema } from '../schemas/crm.schema.js';
 import multer from 'multer';
 import path from 'path';
@@ -385,6 +386,11 @@ router.get('/leads', async (req, res) => {
       }
     }
 
+    // Leads moved to the Recycle Bin stay in the table (call_history cascades) but are hidden here.
+    if (await hasColumn(tableName, 'deleted_at')) {
+      whereConditions.push(`l.deleted_at IS NULL`);
+    }
+
     if (unassigned === '1' || unassigned === 'true') {
       whereConditions.push(`l.is_assign = 0`);
     }
@@ -636,6 +642,12 @@ router.get('/leads/counts', async (req, res) => {
     if (filterByUser) {
       whereClause = `WHERE l.id IN (SELECT lead_id FROM lead_assign WHERE assign_to = ${uid})`;
       followupWhere = `WHERE followup_date IS NOT NULL AND lead_id IN (SELECT lead_id FROM lead_assign WHERE assign_to = ${uid})`;
+    }
+    if (await hasColumn('leads', 'deleted_at')) {
+      // Recycle Bin: leave deleted leads out of the KPI counts
+      whereClause = whereClause
+        ? `${whereClause} AND l.deleted_at IS NULL`
+        : 'WHERE l.deleted_at IS NULL';
     }
 
     // Effective status counts: JOIN lead_assign to get authoritative status for assigned leads
