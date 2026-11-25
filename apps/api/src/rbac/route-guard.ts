@@ -166,6 +166,7 @@ export const RULES: Rule[] = [
   R('GET', '/v1/call-logs/analytics/me', ['calls:view_own', 'calls:view_all']),
   R('GET', '/v1/call-logs/analytics/team', ['calls:view_all']),
   R('GET', '/v1/call-logs/analytics/admin', ['calls:view_all']),
+  R('GET', '/v1/call-logs/analytics/all', ['calls:view_all']),
   R('GET', '/v1/call-logs/staff', ['calls:view_all']),
   R('GET', '/v1/call-logs/**', ['calls:view_own', 'calls:view_all'], ownCalls),
 
@@ -208,6 +209,7 @@ export const RULES: Rule[] = [
   ]),
   C('GET', '/locations', ['operations:locations_view']),
   C('POST', '/locations', ['operations:locations_view']),
+  C('GET', '/locations/**', ['operations:locations_view']),
   C('GET', '/om/dashboard-stats', ['operations:view', 'operations:customers_view']),
   C('GET', '/reports/**', ['reports:view']),
 

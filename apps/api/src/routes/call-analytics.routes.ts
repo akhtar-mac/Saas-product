@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../config/db.js';
+import { reqHas } from '../rbac/route-guard.js';
 import {
   getCallStats,
   getCallHistory,
@@ -276,11 +277,12 @@ router.get('/staff', verifyJWT, requireRole(CALL_MANAGERS), async (req: Request,
 
 // ─── Who may see whose calls ──────────────────────────────────────────────────
 // Managers/admins (roles 1, 2, 3, 4) may pass ?user_id= (users.id) or see everyone.
-// Everyone else (sales/ops employees) only ever sees their own calls.
+// Everyone else (sales/ops employees) only ever sees their own calls, unless an admin
+// gave them the "See all calls" option (calls:view_all) on the Users & Access page.
 async function resolveCallScope(req: Request): Promise<{ userId?: number; denied?: boolean }> {
   const roles =
     req.user!.role_ids && req.user!.role_ids.length ? req.user!.role_ids : [req.user!.role_id];
-  if (roles.some((r) => CALL_MANAGERS.includes(r))) {
+  if (roles.some((r) => CALL_MANAGERS.includes(r)) || reqHas(req, 'calls:view_all')) {
     const q = Number(req.query.user_id);
     return { userId: Number.isInteger(q) && q > 0 ? q : undefined };
   }
