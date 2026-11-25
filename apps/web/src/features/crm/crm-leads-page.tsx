@@ -1808,12 +1808,12 @@ export default function CrmLeadsPage() {
                   {/* Column 4: Lead Source */}
                   <td className="py-2.5 px-3">
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                      className={`inline-flex items-center whitespace-nowrap border text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                         item.leadSource?.toLowerCase().includes('udyami')
-                          ? 'bg-amber-500 text-white'
+                          ? 'bg-amber-50 text-amber-800 border-amber-200'
                           : item.leadSource?.toLowerCase().includes('sahakar')
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-[#0284c7] text-white'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-sky-50 text-sky-700 border-sky-200'
                       }`}
                     >
                       {item.leadSource?.toLowerCase().includes('udyami')
@@ -1862,9 +1862,29 @@ export default function CrmLeadsPage() {
 
                   {/* Column 13: Status */}
                   <td className="py-2.5 px-3">
-                    <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-                      {item.status}
-                    </span>
+                    {(() => {
+                      const st = (item.status || '').toLowerCase();
+                      const cls =
+                        st.includes('won') || st.includes('convert') || st.includes('approv')
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : st.includes('lost') ||
+                              st.includes('not interest') ||
+                              st.includes('invalid') ||
+                              st.includes('reject')
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : st.includes('follow') || st.includes('pend') || st.includes('hold')
+                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              : st.includes('quot') || st.includes('invoic')
+                                ? 'bg-violet-50 text-violet-700 border-violet-200'
+                                : 'bg-sky-50 text-sky-700 border-sky-200';
+                      return (
+                        <span
+                          className={`inline-flex items-center whitespace-nowrap border text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${cls}`}
+                        >
+                          {item.status}
+                        </span>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}

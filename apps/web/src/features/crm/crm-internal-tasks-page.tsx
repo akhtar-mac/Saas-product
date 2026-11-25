@@ -34,14 +34,14 @@ const STATUS_LABELS: Record<number, string> = {
 };
 
 const STATUS_COLORS: Record<number, string> = {
-  1: 'bg-red-100 text-red-700',
-  2: 'bg-yellow-100 text-yellow-700',
-  3: 'bg-orange-100 text-orange-700',
-  4: 'bg-blue-100 text-blue-700',
-  5: 'bg-green-100 text-green-700',
-  6: 'bg-purple-100 text-purple-700',
-  7: 'bg-gray-100 text-gray-700',
-  8: 'bg-pink-100 text-pink-700',
+  1: 'bg-rose-50 text-rose-700 border-rose-200',
+  2: 'bg-sky-50 text-sky-700 border-sky-200',
+  3: 'bg-amber-50 text-amber-800 border-amber-200',
+  4: 'bg-violet-50 text-violet-700 border-violet-200',
+  5: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  6: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+  7: 'bg-slate-100 text-slate-600 border-slate-200',
+  8: 'bg-orange-50 text-orange-700 border-orange-200',
 };
 
 export default function CrmInternalTasksPage() {
@@ -261,7 +261,7 @@ export default function CrmInternalTasksPage() {
                   <td className="px-4 py-3 text-slate-600">{task.createdAt}</td>
                   <td className="px-4 py-3">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[task.status]}`}
+                      className={`inline-flex items-center whitespace-nowrap border px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_COLORS[task.status]}`}
                     >
                       {STATUS_LABELS[task.status]}
                     </span>

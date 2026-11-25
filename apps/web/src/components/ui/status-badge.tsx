@@ -9,11 +9,20 @@ interface TaskStatusBadgeProps {
 
 export function TaskStatusBadge({ status, className = '' }: TaskStatusBadgeProps) {
   const statusNum = typeof status === 'number' ? status : Number(status);
-  
-  const statusConfig: Record<number, { label: string; variant: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral' }> = {
+
+  const statusConfig: Record<
+    number,
+    {
+      label: string;
+      variant: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+    }
+  > = {
     [TaskStatus.DOCUMENTS_PENDING]: { label: 'Documents Pending', variant: 'warning' },
     [TaskStatus.DOCUMENTS_COLLECTED]: { label: 'Docs Collected', variant: 'info' },
-    [TaskStatus.VERIFICATION_IN_PROGRESS]: { label: 'Verification In Progress', variant: 'primary' },
+    [TaskStatus.VERIFICATION_IN_PROGRESS]: {
+      label: 'Verification In Progress',
+      variant: 'primary',
+    },
     [TaskStatus.VERIFICATION_COMPLETED]: { label: 'Verified', variant: 'success' },
     [TaskStatus.GOVT_FILING_IN_PROGRESS]: { label: 'Govt Filing In Progress', variant: 'primary' },
     [TaskStatus.GOVT_QUERY_RECEIVED]: { label: 'Govt Query / Resubmit', variant: 'danger' },
@@ -30,7 +39,7 @@ export function TaskStatusBadge({ status, className = '' }: TaskStatusBadgeProps
 
   return (
     <Badge variant={current.variant} className={className}>
-      <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current opacity-75 animate-pulse" />
+      <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current opacity-75" />
       {current.label}
     </Badge>
   );
@@ -44,7 +53,13 @@ interface LeadStatusBadgeProps {
 export function LeadStatusBadge({ status, className = '' }: LeadStatusBadgeProps) {
   const statusNum = typeof status === 'number' ? status : Number(status);
 
-  const statusConfig: Record<number, { label: string; variant: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral' }> = {
+  const statusConfig: Record<
+    number,
+    {
+      label: string;
+      variant: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+    }
+  > = {
     [LeadStatus.NEW]: { label: 'New Lead', variant: 'info' },
     [LeadStatus.ASSIGNED]: { label: 'Assigned', variant: 'primary' },
     [LeadStatus.CONTACTED]: { label: 'Contacted', variant: 'secondary' },

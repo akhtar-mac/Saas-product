@@ -20,6 +20,10 @@ import {
   Tag,
   Loader2,
   ShieldAlert,
+  Clock,
+  MessageSquare,
+  History,
+  IndianRupee,
 } from 'lucide-react';
 
 interface CustomerItem {
@@ -213,6 +217,16 @@ export default function CrmAccountsPage() {
   const [isTasksDrawerOpen, setIsTasksDrawerOpen] = useState(
     new URLSearchParams(location.search).get('drawer') === '1'
   );
+
+  // Customer Details Modal (Work Timeline, Service Price, Direct Chat)
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [detailsTab, setDetailsTab] = useState<'timeline' | 'price' | 'chat'>('timeline');
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsTasks, setDetailsTasks] = useState<any[]>([]);
+  const [selectedTimelineTaskId, setSelectedTimelineTaskId] = useState<string>('all');
+  const [detailsTimeline, setDetailsTimeline] = useState<any[]>([]);
+  const [detailsPrice, setDetailsPrice] = useState<{ summary: any; emis: any[] } | null>(null);
+  const [detailsChat, setDetailsChat] = useState<any[]>([]);
 
   // Form states
   const [subCustomerName, setSubCustomerName] = useState('');
@@ -783,6 +797,63 @@ export default function CrmAccountsPage() {
       })
       .finally(() => setLoadingTasks(false));
   };
+
+  const openCustomerDetails = async (
+    item: CustomerItem,
+    initialTab: 'timeline' | 'price' | 'chat' = 'timeline'
+  ) => {
+    setActiveCustomer(item);
+    setDetailsTab(initialTab);
+    setSelectedTimelineTaskId('all');
+    setDetailsTasks([]);
+    setDetailsTimeline([]);
+    setDetailsPrice(null);
+    setDetailsChat([]);
+    setIsDetailsOpen(true);
+    setDetailsLoading(true);
+    const qsOrder = item.orderId ? `order_id=${item.orderId}` : '';
+    const qsService = item.serviceId ? `service_id=${item.serviceId}` : '';
+    const tlParams = [qsOrder, qsService].filter(Boolean).join('&');
+    try {
+      const [tlRes, priceRes, chatRes] = await Promise.all([
+        fetch(`${API_BASE}/v1/crm/customers/${item.id}/timeline${tlParams ? `?${tlParams}` : ''}`),
+        fetch(
+          `${API_BASE}/v1/crm/customers/${item.id}/service-price${qsOrder ? `?${qsOrder}` : ''}`
+        ),
+        fetch(
+          `${API_BASE}/v1/crm/customers/${item.id}/direct-chat${qsService ? `?${qsService}` : ''}`
+        ),
+      ]);
+      const [tlJson, priceJson, chatJson] = await Promise.all([
+        tlRes.json().catch(() => null),
+        priceRes.json().catch(() => null),
+        chatRes.json().catch(() => null),
+      ]);
+      if (tlJson?.success && tlJson.data) {
+        setDetailsTasks(tlJson.data.tasks || []);
+        setDetailsTimeline(tlJson.data.timeline || []);
+      }
+      if (priceJson?.success && priceJson.data) {
+        setDetailsPrice(priceJson.data);
+      }
+      if (chatJson?.success && Array.isArray(chatJson.data)) {
+        setDetailsChat(chatJson.data);
+      }
+    } catch (err) {
+      console.error('Error loading customer details:', err);
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isDetailsOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsDetailsOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isDetailsOpen]);
 
   const openEditCustomer = (item: CustomerItem) => {
     setActiveCustomer(item);
@@ -1411,8 +1482,9 @@ export default function CrmAccountsPage() {
                   >
                     <td className="py-2.5 px-3 font-medium text-slate-900">
                       <button
-                        onClick={() => openEditCustomer(item)}
+                        onClick={() => openCustomerDetails(item, 'timeline')}
                         className="hover:text-[#0284c7] hover:underline font-bold text-left"
+                        title="View Work Timeline, Service Price & Direct Chat"
                       >
                         {item.name}
                       </button>
@@ -1430,32 +1502,32 @@ export default function CrmAccountsPage() {
                     </td>
                     <td className="py-2.5 px-3">
                       {item.cp_type === 1 && (
-                        <span className="inline-block bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                        <span className="inline-flex items-center whitespace-nowrap bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold px-2 py-0.5 rounded-full">
                           Basic
                         </span>
                       )}
                       {item.cp_type === 2 && (
-                        <span className="inline-block bg-slate-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                        <span className="inline-flex items-center whitespace-nowrap bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold px-2 py-0.5 rounded-full">
                           Standard
                         </span>
                       )}
                       {item.cp_type === 3 && (
-                        <span className="inline-block bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                        <span className="inline-flex items-center whitespace-nowrap bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold px-2 py-0.5 rounded-full">
                           Premium
                         </span>
                       )}
                       {item.cp_type === 4 && (
-                        <span className="inline-block bg-rose-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                        <span className="inline-flex items-center whitespace-nowrap bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-semibold px-2 py-0.5 rounded-full">
                           Diamond
                         </span>
                       )}
                       {item.cp_type === 5 && (
-                        <span className="inline-block bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                        <span className="inline-flex items-center whitespace-nowrap bg-violet-50 text-violet-700 border border-violet-200 text-[10px] font-semibold px-2 py-0.5 rounded-full">
                           Custom
                         </span>
                       )}
                       {(!item.cp_type || item.cp_type === 0) && (
-                        <span className="text-slate-400 text-[9px]">—</span>
+                        <span className="text-slate-400 text-[10px]">—</span>
                       )}
                     </td>
                     <td className="py-2.5 px-3 text-slate-600">{item.addedBy || '-'}</td>
@@ -1483,8 +1555,20 @@ export default function CrmAccountsPage() {
                       })() && (
                         <div
                           ref={menuRef}
-                          className={`absolute right-0 z-50 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 text-left text-xs max-h-[70vh] overflow-y-auto ${idx === filtered.length - 1 ? 'bottom-6' : 'top-6'}`}
+                          className={`absolute right-0 z-50 w-52 bg-white rounded-lg shadow-lg border border-slate-200 py-1 text-left text-xs max-h-[70vh] overflow-y-auto ${idx === filtered.length - 1 ? 'bottom-6' : 'top-6'}`}
                         >
+                          {/* 0. Timeline & Service Price (Work Timeline + EMI Breakdown + Direct Chat) */}
+                          <button
+                            onClick={() => {
+                              openCustomerDetails(item, 'timeline');
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 hover:bg-slate-50 text-slate-800 font-semibold flex items-center gap-2 cursor-pointer"
+                          >
+                            <History className="w-3.5 h-3.5 text-sky-600" />
+                            Timeline & Service Price
+                          </button>
+
                           {/* 1. Manage Tasks (AddWorkEffort) */}
                           {!isSalesEmployeeView && (
                             <button
@@ -4204,6 +4288,461 @@ export default function CrmAccountsPage() {
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>{confirmDialog.confirmLabel || 'Delete'}</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── CUSTOMER DETAILS MODAL (Work Timeline, Service Price, Direct Chat) ─── */}
+      {isDetailsOpen && activeCustomer && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setIsDetailsOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Customer Timeline and Service Price"
+        >
+          <div
+            className="bg-white rounded-2xl border border-[#EAE6DD] shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="h-1 bg-multicolor shrink-0" />
+            <div className="px-5 py-4 border-b border-slate-200 flex items-start justify-between gap-3 shrink-0">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base font-bold text-slate-900 truncate">
+                    {activeCustomer.name}
+                  </h3>
+                  {activeCustomer.subCustomer && (
+                    <span className="inline-flex items-center whitespace-nowrap bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                      {activeCustomer.subCustomer}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {activeCustomer.company !== '—' ? `${activeCustomer.company} • ` : ''}
+                  {activeCustomer.service} • {activeCustomer.mobile}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {!isSalesEmployeeView && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDetailsOpen(false);
+                      openEditCustomer(activeCustomer);
+                    }}
+                    className="btn-outline btn-sm text-xs"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    Edit
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsDetailsOpen(false)}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="px-5 pt-3 border-b border-slate-200 flex items-center gap-2 bg-slate-50/70 shrink-0">
+              <button
+                type="button"
+                onClick={() => setDetailsTab('timeline')}
+                className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
+                  detailsTab === 'timeline'
+                    ? 'border-[#1B365D] text-[#1B365D] bg-white rounded-t-lg'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <History className="w-3.5 h-3.5" />
+                Work Timeline ({detailsTimeline.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailsTab('price')}
+                className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
+                  detailsTab === 'price'
+                    ? 'border-[#1B365D] text-[#1B365D] bg-white rounded-t-lg'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <IndianRupee className="w-3.5 h-3.5" />
+                Service Price
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailsTab('chat')}
+                className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
+                  detailsTab === 'chat'
+                    ? 'border-[#1B365D] text-[#1B365D] bg-white rounded-t-lg'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                Direct Chat ({detailsChat.length})
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 overflow-y-auto flex-1 space-y-4">
+              {detailsLoading ? (
+                <div className="py-12 flex items-center justify-center gap-2 text-xs text-slate-500">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#1B365D]" />
+                  Loading customer timeline and pricing...
+                </div>
+              ) : detailsTab === 'timeline' ? (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div>
+                      <p className="text-xs font-bold text-slate-700">Filter by Task</p>
+                      <p className="text-[11px] text-slate-500">
+                        {detailsTasks.length} operation{' '}
+                        {detailsTasks.length === 1 ? 'task' : 'tasks'} linked to this customer
+                      </p>
+                    </div>
+                    <select
+                      value={selectedTimelineTaskId}
+                      onChange={(e) => setSelectedTimelineTaskId(e.target.value)}
+                      className="input text-xs py-1.5 sm:w-72"
+                    >
+                      <option value="all">All Tasks ({detailsTimeline.length} updates)</option>
+                      {detailsTasks.map((t) => (
+                        <option key={t.task_id} value={String(t.task_id)}>
+                          {t.task_name} {t.assigned_user_name ? `(${t.assigned_user_name})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {(() => {
+                    const visibleTimeline =
+                      selectedTimelineTaskId === 'all'
+                        ? detailsTimeline
+                        : detailsTimeline.filter(
+                            (r) => String(r.task_id) === selectedTimelineTaskId
+                          );
+                    if (visibleTimeline.length === 0) {
+                      return (
+                        <div className="py-10 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-xl">
+                          No work timeline entries recorded yet for this customer
+                          {selectedTimelineTaskId !== 'all' ? ' / selected task' : ''}.
+                        </div>
+                      );
+                    }
+                    const tlStatusCfg = (st: number) => {
+                      switch (st) {
+                        case 5:
+                          return {
+                            label: 'Completed',
+                            cls: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                          };
+                        case 2:
+                          return {
+                            label: 'Work In Progress',
+                            cls: 'bg-sky-50 text-sky-700 border-sky-200',
+                          };
+                        case 3:
+                          return {
+                            label: 'Pending From Client',
+                            cls: 'bg-amber-50 text-amber-800 border-amber-200',
+                          };
+                        case 4:
+                          return {
+                            label: 'Invoiced',
+                            cls: 'bg-violet-50 text-violet-700 border-violet-200',
+                          };
+                        case 6:
+                          return {
+                            label: 'Return Back',
+                            cls: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+                          };
+                        case 7:
+                          return {
+                            label: 'Cancelled',
+                            cls: 'bg-slate-100 text-slate-600 border-slate-200',
+                          };
+                        case 8:
+                          return {
+                            label: 'Fees Pending',
+                            cls: 'bg-orange-50 text-orange-700 border-orange-200',
+                          };
+                        case 9:
+                          return {
+                            label: 'On Hold',
+                            cls: 'bg-amber-50 text-amber-800 border-amber-200',
+                          };
+                        default:
+                          return {
+                            label: 'Not Started',
+                            cls: 'bg-rose-50 text-rose-700 border-rose-200',
+                          };
+                      }
+                    };
+                    const fmtSecs = (secs: number) => {
+                      if (!secs || secs <= 0) return null;
+                      const h = Math.floor(secs / 3600);
+                      const m = Math.floor((secs % 3600) / 60);
+                      const s = secs % 60;
+                      return `${h > 0 ? `${h}h ` : ''}${m > 0 ? `${m}m ` : ''}${s}s`;
+                    };
+                    return (
+                      <div className="relative pl-5 space-y-3 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                        {visibleTimeline.map((entry) => {
+                          const st = tlStatusCfg(Number(entry.status));
+                          const dur = fmtSecs(Number(entry.work_seconds));
+                          return (
+                            <div
+                              key={entry.id}
+                              className="relative bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs"
+                            >
+                              <span className="absolute -left-[17px] top-4 w-2.5 h-2.5 rounded-full bg-[#3f6f9f] border-2 border-white" />
+                              <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span
+                                    className={`inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full border text-[11px] font-semibold ${st.cls}`}
+                                  >
+                                    {st.label}
+                                  </span>
+                                  <span className="text-xs font-bold text-slate-800">
+                                    {entry.task_name}
+                                  </span>
+                                  {entry.service_name && (
+                                    <span className="text-[11px] text-slate-500">
+                                      • {entry.service_name}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[11px] text-slate-500 whitespace-nowrap">
+                                  {entry.date || '—'} {entry.time ? `• ${entry.time}` : ''}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-700 leading-relaxed">
+                                {entry.work || 'Status updated'}
+                              </p>
+                              <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
+                                <span className="font-semibold text-slate-700">
+                                  By: {entry.username || 'Staff'}
+                                </span>
+                                {entry.start_time && entry.end_time && (
+                                  <span className="inline-flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {entry.start_time} – {entry.end_time}
+                                  </span>
+                                )}
+                                {dur && (
+                                  <span className="inline-flex items-center gap-1 font-medium text-slate-600">
+                                    Logged: {dur}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : detailsTab === 'price' ? (
+                <div className="space-y-4">
+                  {(() => {
+                    const s = detailsPrice?.summary;
+                    const totalAmt = s?.total_amount ?? activeCustomer.total ?? 0;
+                    const paidAmt = s?.paid_amount ?? activeCustomer.paid ?? 0;
+                    const unpaidAmt = s?.unpaid_amount ?? activeCustomer.unpaid ?? 0;
+                    const planNames: Record<number, string> = {
+                      1: 'Basic',
+                      2: 'Standard',
+                      3: 'Premium',
+                      4: 'Diamond',
+                      5: 'Custom',
+                    };
+                    return (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                            <p className="text-[11px] font-semibold text-slate-500 uppercase">
+                              Total Amount
+                            </p>
+                            <p className="text-lg font-bold text-slate-900 mt-0.5">
+                              ₹{Number(totalAmt).toLocaleString('en-IN')}
+                            </p>
+                          </div>
+                          <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                            <p className="text-[11px] font-semibold text-emerald-700 uppercase">
+                              Paid Amount
+                            </p>
+                            <p className="text-lg font-bold text-emerald-800 mt-0.5">
+                              ₹{Number(paidAmt).toLocaleString('en-IN')}
+                            </p>
+                          </div>
+                          <div
+                            className={`p-3.5 rounded-xl border ${
+                              Number(unpaidAmt) > 0
+                                ? 'bg-rose-50/70 border-rose-200'
+                                : 'bg-slate-50 border-slate-200'
+                            }`}
+                          >
+                            <p
+                              className={`text-[11px] font-semibold uppercase ${
+                                Number(unpaidAmt) > 0 ? 'text-rose-700' : 'text-slate-500'
+                              }`}
+                            >
+                              Unpaid Amount
+                            </p>
+                            <p
+                              className={`text-lg font-bold mt-0.5 ${
+                                Number(unpaidAmt) > 0 ? 'text-rose-700' : 'text-slate-700'
+                              }`}
+                            >
+                              {Number(unpaidAmt) > 0
+                                ? `₹${Number(unpaidAmt).toLocaleString('en-IN')}`
+                                : 'No Pending Payment'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white border border-slate-200 rounded-xl p-4 text-xs">
+                          <div>
+                            <span className="text-slate-500 block">Service & Category</span>
+                            <span className="font-bold text-slate-900">
+                              {s?.service_name || activeCustomer.service}
+                            </span>
+                            {(s?.category_name || activeCustomer.category) && (
+                              <span className="text-slate-500 ml-1">
+                                ({s?.category_name || activeCustomer.category})
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block">
+                              Package Tier & Catalog Price
+                            </span>
+                            <span className="font-bold text-slate-900">
+                              {s?.cp_type
+                                ? planNames[s.cp_type] || 'Standard'
+                                : planNames[activeCustomer.cp_type] || 'Standard'}
+                              {s?.service_price !== null && s?.service_price !== undefined
+                                ? ` • ₹${Number(s.service_price).toLocaleString('en-IN')}`
+                                : ''}
+                            </span>
+                            {s?.cp_discount > 0 && (
+                              <span className="text-emerald-700 ml-1.5 font-semibold">
+                                (-₹{Number(s.cp_discount).toLocaleString('en-IN')} pkg discount)
+                              </span>
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block">2nd EMI & Due Date</span>
+                            <span className="font-semibold text-slate-800">
+                              ₹{Number(s?.second_emi_amount ?? 0).toLocaleString('en-IN')} •{' '}
+                              {s?.second_due_date || activeCustomer.dueDate || 'NA'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block">3rd EMI & Due Date</span>
+                            <span className="font-semibold text-slate-800">
+                              {s?.third_emi_amount
+                                ? `₹${Number(s.third_emi_amount).toLocaleString('en-IN')}`
+                                : 'NA'}{' '}
+                              • {s?.third_due_date || 'NA'}
+                            </span>
+                          </div>
+                          <div className="sm:col-span-2 pt-2 border-t border-slate-100">
+                            <span className="text-slate-500 block">Payment / EMI Comment</span>
+                            <span className="text-slate-800 font-medium">
+                              {s?.emi_comment || 'No comment recorded.'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {(detailsPrice?.emis?.length || 0) > 1 && (
+                          <div className="border border-slate-200 rounded-xl overflow-hidden">
+                            <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-700">
+                              All EMI Records ({detailsPrice?.emis.length})
+                            </div>
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="bg-slate-50 text-slate-500 text-left">
+                                  <th className="px-3 py-2">Order #</th>
+                                  <th className="px-3 py-2">Total</th>
+                                  <th className="px-3 py-2">Paid</th>
+                                  <th className="px-3 py-2">Unpaid</th>
+                                  <th className="px-3 py-2">Due Date</th>
+                                  <th className="px-3 py-2">Comment</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {detailsPrice!.emis.map((e) => (
+                                  <tr key={e.emi_id}>
+                                    <td className="px-3 py-2 font-mono">{e.order_id}</td>
+                                    <td className="px-3 py-2 font-semibold">
+                                      ₹{e.emi_total_amount.toLocaleString('en-IN')}
+                                    </td>
+                                    <td className="px-3 py-2 text-emerald-700 font-semibold">
+                                      ₹{e.emi_paid_amount.toLocaleString('en-IN')}
+                                    </td>
+                                    <td className="px-3 py-2 text-rose-600 font-semibold">
+                                      ₹
+                                      {(e.emi_unpaid_amount + (e.second_emi || 0)).toLocaleString(
+                                        'en-IN'
+                                      )}
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                      {e.emi_due_date || '—'}
+                                    </td>
+                                    <td className="px-3 py-2 text-slate-600">
+                                      {e.emi_comment || '—'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {detailsChat.length === 0 ? (
+                    <div className="py-10 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-xl">
+                      No direct chat messages recorded for this customer.
+                    </div>
+                  ) : (
+                    detailsChat.map((msg) => (
+                      <div
+                        key={msg.chat_id}
+                        className={`flex flex-col ${
+                          msg.is_from_customer ? 'items-start' : 'items-end'
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-xs border ${
+                            msg.is_from_customer
+                              ? 'bg-slate-50 border-slate-200 text-slate-800'
+                              : 'bg-sky-50 border-sky-200 text-slate-900'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1 text-[10px] text-slate-500">
+                            <span className="font-bold text-slate-700">{msg.from_name}</span>
+                            <span>→</span>
+                            <span>{msg.to_name}</span>
+                            {msg.date && <span>• {msg.date}</span>}
+                          </div>
+                          <p className="leading-relaxed">{msg.chat_msg}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

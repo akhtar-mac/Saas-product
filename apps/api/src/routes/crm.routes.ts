@@ -3171,6 +3171,351 @@ router.get('/customers/:id/tasks', async (req, res) => {
   }
 });
 
+// 13b-2. Manage Customer: Full Work Timeline (tasks + customer_work_timeline)
+router.get('/customers/:id/timeline', async (req, res) => {
+  try {
+    const custId = Number(req.params.id);
+    if (!Number.isInteger(custId) || custId <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid customer id' });
+    }
+    const orderId = Number(req.query.order_id);
+    const serviceId = Number(req.query.service_id);
+    const taskId = Number(req.query.task_id);
+
+    const tasks: any[] = await prisma.$queryRawUnsafe(
+      `SELECT ot.task_id, ot.cust_id, ot.service_id, ot.order_id, ot.task_name,
+              ot.original_task_status, ot.is_assign, ot.is_return, ot.assign_date, ot.created_at,
+              ta.assign_to, ta.due_date, ta.task_status, ta.actual_task_status,
+              u.username AS assigned_user_name,
+              s.service_name
+       FROM operation_tasks ot
+       LEFT JOIN task_assign ta ON ta.task_id = ot.task_id
+       LEFT JOIN users u ON u.id = ta.assign_to
+       LEFT JOIN services s ON s.service_id = ot.service_id
+       WHERE ot.cust_id = ?
+       ORDER BY
+         ${Number.isInteger(orderId) && orderId > 0 ? `(ot.order_id = ?) DESC,` : ''}
+         ${Number.isInteger(serviceId) && serviceId > 0 ? `(ot.service_id = ?) DESC,` : ''}
+         ot.task_id DESC`,
+      ...(Number.isInteger(orderId) && orderId > 0
+        ? Number.isInteger(serviceId) && serviceId > 0
+          ? [custId, orderId, serviceId]
+          : [custId, orderId]
+        : Number.isInteger(serviceId) && serviceId > 0
+          ? [custId, serviceId]
+          : [custId])
+    );
+
+    const timelineParams: any[] = [];
+    let timelineWhere = '';
+    if (Number.isInteger(taskId) && taskId > 0) {
+      timelineWhere = 'cwt.task_id = ?';
+      timelineParams.push(taskId);
+    } else {
+      const taskIds = tasks
+        .map((t) => Number(t.task_id))
+        .filter((id) => Number.isInteger(id) && id > 0);
+      if (taskIds.length > 0) {
+        const placeholders = taskIds.map(() => '?').join(',');
+        timelineWhere = `(cwt.cust_id = ? OR cwt.task_id IN (${placeholders}))`;
+        timelineParams.push(custId, ...taskIds);
+      } else {
+        timelineWhere = 'cwt.cust_id = ?';
+        timelineParams.push(custId);
+      }
+    }
+
+    const timeline: any[] = await prisma.$queryRawUnsafe(
+      `SELECT cwt.id, cwt.cust_id, cwt.service_id, cwt.task_id, cwt.work,
+              cwt.work_hour, cwt.work_minute, cwt.work_seconds, cwt.status,
+              cwt.added_by, cwt.date, cwt.time, TIME_FORMAT(cwt.start_time, '%H:%i:%s') AS start_time, TIME_FORMAT(cwt.end_time, '%H:%i:%s') AS end_time,
+              u.username,
+              ot.task_name,
+              s.service_name
+       FROM customer_work_timeline cwt
+       LEFT JOIN users u ON u.id = cwt.added_by
+       LEFT JOIN operation_tasks ot ON ot.task_id = cwt.task_id
+       LEFT JOIN services s ON s.service_id = COALESCE(NULLIF(cwt.service_id, 0), ot.service_id)
+       WHERE ${timelineWhere}
+       ORDER BY cwt.id DESC
+       LIMIT 200`,
+      ...timelineParams
+    );
+
+    res.json({
+      success: true,
+      data: serializeBigInt({
+        tasks: tasks.map((t) => ({
+          id: Number(t.task_id),
+          task_id: Number(t.task_id),
+          cust_id: Number(t.cust_id),
+          service_id: Number(t.service_id || 0),
+          order_id: t.order_id ? Number(t.order_id) : null,
+          task_name: t.task_name,
+          service_name: t.service_name || null,
+          assigned_user_name: t.assigned_user_name || null,
+          due_date: t.due_date || null,
+          actual_task_status: t.actual_task_status ?? t.original_task_status ?? 1,
+        })),
+        timeline: timeline.map((row) => ({
+          id: Number(row.id),
+          cust_id: Number(row.cust_id),
+          service_id: Number(row.service_id || 0),
+          task_id: Number(row.task_id),
+          task_name: row.task_name || `Task #${Number(row.task_id)}`,
+          service_name: row.service_name || null,
+          work: row.work || '',
+          status: Number(row.status || 1),
+          added_by: Number(row.added_by || 0),
+          username: row.username || 'Staff',
+          date: row.date || '',
+          time: row.time || '',
+          start_time: row.start_time ? String(row.start_time) : null,
+          end_time: row.end_time ? String(row.end_time) : null,
+          work_seconds: Number(row.work_seconds || 0),
+        })),
+      }),
+    });
+  } catch (error: any) {
+    console.error('Error fetching customer timeline:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch customer timeline' });
+  }
+});
+
+// 13b-3. Manage Customer: Service Price & EMI Breakdown (customer_emi + orders + services)
+router.get('/customers/:id/service-price', async (req, res) => {
+  try {
+    const custId = Number(req.params.id);
+    if (!Number.isInteger(custId) || custId <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid customer id' });
+    }
+    const orderId = Number(req.query.order_id);
+
+    let emiRows: any[] = [];
+    if (Number.isInteger(orderId) && orderId > 0) {
+      emiRows = await prisma.$queryRawUnsafe<any[]>(
+        `SELECT emi_id, customer_id, order_id, emi_type, emi_total_amount,
+                emi_paid_amount, emi_unpaid_amount, emi_due_date,
+                second_emi, second_emi_due_date, emi_comment, payment_screenshot, date
+         FROM customer_emi
+         WHERE order_id = ?
+         ORDER BY emi_id DESC`,
+        orderId
+      );
+    }
+    if (emiRows.length === 0) {
+      emiRows = await prisma.$queryRawUnsafe<any[]>(
+        `SELECT emi_id, customer_id, order_id, emi_type, emi_total_amount,
+                emi_paid_amount, emi_unpaid_amount, emi_due_date,
+                second_emi, second_emi_due_date, emi_comment, payment_screenshot, date
+         FROM customer_emi
+         WHERE customer_id = ?
+         ORDER BY emi_id DESC`,
+        custId
+      );
+    }
+
+    const orderRows: any[] =
+      Number.isInteger(orderId) && orderId > 0
+        ? await prisma.$queryRawUnsafe<any[]>(
+            `SELECT o.id AS order_id, o.customer_id, o.package_id, o.total_amount, o.payment_status,
+                  o.order_date, o.sub_customer_name,
+                  cp.cp_id, cp.cp_type, cp.cp_discount,
+                  s.service_id, s.service_name, s.service_price,
+                  cat.category_name,
+                  c.name AS customer_name, c.business AS company_name
+           FROM orders o
+           LEFT JOIN combo_packages cp ON o.package_id = cp.cp_id
+           LEFT JOIN services s ON cp.cp_title = s.service_id
+           LEFT JOIN categories cat ON s.category_id = cat.category_id
+           LEFT JOIN customers c ON o.customer_id = c.id
+           WHERE o.id = ?
+           LIMIT 1`,
+            orderId
+          )
+        : await prisma.$queryRawUnsafe<any[]>(
+            `SELECT o.id AS order_id, o.customer_id, o.package_id, o.total_amount, o.payment_status,
+                  o.order_date, o.sub_customer_name,
+                  cp.cp_id, cp.cp_type, cp.cp_discount,
+                  s.service_id, s.service_name, s.service_price,
+                  cat.category_name,
+                  c.name AS customer_name, c.business AS company_name
+           FROM orders o
+           LEFT JOIN combo_packages cp ON o.package_id = cp.cp_id
+           LEFT JOIN services s ON cp.cp_title = s.service_id
+           LEFT JOIN categories cat ON s.category_id = cat.category_id
+           LEFT JOIN customers c ON o.customer_id = c.id
+           WHERE o.customer_id = ?
+           ORDER BY o.id DESC
+           LIMIT 1`,
+            custId
+          );
+
+    const order = orderRows[0] || null;
+    const primaryEmi = emiRows[0] || null;
+    const totalAmount = primaryEmi
+      ? Number(primaryEmi.emi_total_amount ?? 0)
+      : Number(order?.total_amount ?? order?.service_price ?? 0);
+    const paidAmount = primaryEmi
+      ? Number(primaryEmi.emi_paid_amount ?? 0)
+      : Number(order?.total_amount ?? 0);
+    const secondInstallment = primaryEmi ? Number(primaryEmi.emi_unpaid_amount ?? 0) : 0;
+    const thirdInstallment = primaryEmi ? Number(primaryEmi.second_emi ?? 0) : 0;
+    const unpaidAmount = primaryEmi
+      ? secondInstallment + thirdInstallment
+      : Math.max(totalAmount - paidAmount, 0);
+
+    res.json({
+      success: true,
+      data: serializeBigInt({
+        summary: {
+          order_id: order
+            ? Number(order.order_id)
+            : primaryEmi
+              ? Number(primaryEmi.order_id)
+              : null,
+          customer_name: order?.customer_name || null,
+          company_name: order?.company_name || null,
+          category_name: order?.category_name || null,
+          service_name: order?.service_name || null,
+          service_price:
+            order?.service_price !== null && order?.service_price !== undefined
+              ? Number(order.service_price)
+              : null,
+          cp_type:
+            order?.cp_type !== null && order?.cp_type !== undefined ? Number(order.cp_type) : null,
+          cp_discount:
+            order?.cp_discount !== null && order?.cp_discount !== undefined
+              ? Number(order.cp_discount)
+              : 0,
+          emi_type: primaryEmi ? Number(primaryEmi.emi_type) : 1,
+          total_amount: totalAmount,
+          paid_amount: paidAmount,
+          unpaid_amount: unpaidAmount,
+          second_emi_amount: secondInstallment,
+          second_due_date: primaryEmi?.emi_due_date
+            ? String(primaryEmi.emi_due_date).split('T')[0]
+            : null,
+          third_emi_amount: thirdInstallment,
+          third_due_date: primaryEmi?.second_emi_due_date
+            ? String(primaryEmi.second_emi_due_date).split('T')[0]
+            : null,
+          emi_comment: primaryEmi?.emi_comment || '',
+          order_date: order?.order_date ? String(order.order_date) : null,
+        },
+        emis: emiRows.map((e) => ({
+          emi_id: Number(e.emi_id),
+          customer_id: Number(e.customer_id),
+          order_id: Number(e.order_id),
+          emi_type: Number(e.emi_type),
+          emi_total_amount: Number(e.emi_total_amount ?? 0),
+          emi_paid_amount: Number(e.emi_paid_amount ?? 0),
+          emi_unpaid_amount: Number(e.emi_unpaid_amount ?? 0),
+          emi_due_date: e.emi_due_date ? String(e.emi_due_date).split('T')[0] : null,
+          second_emi:
+            e.second_emi !== null && e.second_emi !== undefined ? Number(e.second_emi) : 0,
+          second_emi_due_date: e.second_emi_due_date
+            ? String(e.second_emi_due_date).split('T')[0]
+            : null,
+          emi_comment: e.emi_comment || '',
+          date: e.date ? String(e.date) : null,
+        })),
+      }),
+    });
+  } catch (error: any) {
+    console.error('Error fetching customer service price:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch customer service price' });
+  }
+});
+
+// 13b-4. Manage Customer: Direct Chat history (customer_chatting)
+router.get('/customers/:id/direct-chat', async (req, res) => {
+  try {
+    const custId = Number(req.params.id);
+    if (!Number.isInteger(custId) || custId <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid customer id' });
+    }
+    const serviceId = Number(req.query.service_id);
+
+    const params: any[] = [custId, custId];
+    let serviceFilter = '';
+    if (Number.isInteger(serviceId) && serviceId > 0) {
+      serviceFilter = ' AND cc.service_id = ?';
+      params.push(serviceId);
+    }
+
+    let rows: any[] = await prisma.$queryRawUnsafe(
+      `SELECT cc.chat_id, cc.service_id, cc.chat_from, cc.chat_to, cc.chat_msg, cc.date,
+              CASE
+                WHEN cc.chat_to = 0 THEN COALESCE(cf.name, 'Customer')
+                ELSE COALESCE(uf.username, 'Staff')
+              END AS from_name,
+              CASE
+                WHEN cc.chat_to = 0 THEN COALESCE(ut.username, 'ETaxwala Team')
+                ELSE COALESCE(ct.name, 'Customer')
+              END AS to_name,
+              s.service_name
+       FROM customer_chatting cc
+       LEFT JOIN users uf ON uf.id = cc.chat_from
+       LEFT JOIN users ut ON ut.id = cc.chat_to
+       LEFT JOIN customers cf ON cf.id = cc.chat_from
+       LEFT JOIN customers ct ON ct.id = cc.chat_to
+       LEFT JOIN services s ON s.service_id = cc.service_id
+       WHERE ((cc.chat_from = ? AND cc.chat_to = 0) OR cc.chat_to = ?)${serviceFilter}
+       ORDER BY cc.chat_id ASC
+       LIMIT 200`,
+      ...params
+    );
+
+    if (rows.length === 0 && serviceFilter) {
+      rows = await prisma.$queryRawUnsafe(
+        `SELECT cc.chat_id, cc.service_id, cc.chat_from, cc.chat_to, cc.chat_msg, cc.date,
+                CASE
+                  WHEN cc.chat_to = 0 THEN COALESCE(cf.name, 'Customer')
+                  ELSE COALESCE(uf.username, 'Staff')
+                END AS from_name,
+                CASE
+                  WHEN cc.chat_to = 0 THEN COALESCE(ut.username, 'ETaxwala Team')
+                  ELSE COALESCE(ct.name, 'Customer')
+                END AS to_name,
+                s.service_name
+         FROM customer_chatting cc
+         LEFT JOIN users uf ON uf.id = cc.chat_from
+         LEFT JOIN users ut ON ut.id = cc.chat_to
+         LEFT JOIN customers cf ON cf.id = cc.chat_from
+         LEFT JOIN customers ct ON ct.id = cc.chat_to
+         LEFT JOIN services s ON s.service_id = cc.service_id
+         WHERE (cc.chat_from = ? AND cc.chat_to = 0) OR cc.chat_to = ?
+         ORDER BY cc.chat_id ASC
+         LIMIT 200`,
+        custId,
+        custId
+      );
+    }
+
+    res.json({
+      success: true,
+      data: serializeBigInt(
+        rows.map((r) => ({
+          chat_id: Number(r.chat_id),
+          service_id: Number(r.service_id || 0),
+          service_name: r.service_name || null,
+          chat_from: Number(r.chat_from),
+          chat_to: Number(r.chat_to),
+          is_from_customer: Number(r.chat_to) === 0,
+          from_name: r.from_name,
+          to_name: r.to_name,
+          chat_msg: r.chat_msg || '',
+          date: r.date ? String(r.date) : null,
+        }))
+      ),
+    });
+  } catch (error: any) {
+    console.error('Error fetching customer direct chat:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch customer chat' });
+  }
+});
+
 // 13c. Manage Customer Action: Add New Task for Customer
 router.post('/customers/:id/tasks', async (req, res) => {
   try {
@@ -4528,38 +4873,198 @@ router.get('/payroll', (_req, res) => {
   });
 });
 
-// 4.14.24 & 4.14.25: Locations
-router.get('/locations', (_req, res) => {
-  res.json({
-    success: true,
-    data: [
-      {
-        id: 1,
-        name: 'Head Office',
-        city: 'Chhatrapati Sambhaji Nagar',
-        address: 'Plot 42, Town Centre, CIDCO',
-        phone: '080-6902-9999',
-      },
-      {
-        id: 2,
-        name: 'Branch Office',
-        city: 'Ambad (Jalna)',
-        address: 'Main Road, Near Bus Stand',
-        phone: '+91 98220 99887',
-      },
-      {
-        id: 3,
-        name: 'Regional Desk',
-        city: 'Pune',
-        address: 'Shivaji Nagar, Pune',
-        phone: '+91 94230 11223',
-      },
-    ],
-  });
+// 4.14.24 & 4.14.25: Field Staff Locations (read-only parity with LocationController)
+router.get('/locations', async (_req, res) => {
+  try {
+    const users = (await prisma.$queryRawUnsafe(
+      `SELECT u.id,
+              u.username,
+              u.email,
+              CAST(COUNT(l.id) AS SIGNED) AS total_pings,
+              DATE_FORMAT(MAX(l.created_at), '%Y-%m-%d %H:%i:%s') AS last_ping_at,
+              DATE_FORMAT(MAX(l.created_at), '%d-%m-%Y %H:%i') AS last_ping_dmy,
+              DATE_FORMAT(MAX(l.created_at), '%Y-%m-%d') AS last_date,
+              (SELECT l2.mode FROM sales_user_locations l2 WHERE l2.user_id = u.id ORDER BY l2.created_at DESC, l2.id DESC LIMIT 1) AS last_mode,
+              (SELECT l2.latitude FROM sales_user_locations l2 WHERE l2.user_id = u.id ORDER BY l2.created_at DESC, l2.id DESC LIMIT 1) AS last_latitude,
+              (SELECT l2.longitude FROM sales_user_locations l2 WHERE l2.user_id = u.id ORDER BY l2.created_at DESC, l2.id DESC LIMIT 1) AS last_longitude
+       FROM users u
+       INNER JOIN sales_user_locations l ON l.user_id = u.id
+       GROUP BY u.id, u.username, u.email
+       ORDER BY MAX(l.created_at) DESC, u.username ASC`
+    )) as any[];
+
+    return res.json({ success: true, data: serializeBigInt(users) });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-router.post('/locations', (req, res) => {
-  res.json({ success: true, message: 'Office location added', location_id: Date.now() });
+router.get('/locations/users/:userId', async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+    if (!Number.isFinite(userId) || userId <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid user id' });
+    }
+
+    const userRows = (await prisma.$queryRawUnsafe(
+      `SELECT id, username, email FROM users WHERE id = ? LIMIT 1`,
+      userId
+    )) as any[];
+
+    if (!userRows.length) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const date =
+      typeof req.query.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date)
+        ? req.query.date
+        : '';
+    const mode =
+      req.query.mode === 'foreground' || req.query.mode === 'background' ? req.query.mode : '';
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(500, Math.max(10, Number(req.query.limit) || 50));
+    const offset = (page - 1) * limit;
+
+    const whereParts: string[] = ['user_id = ?'];
+    const params: any[] = [userId];
+    if (date) {
+      whereParts.push('DATE(created_at) = ?');
+      params.push(date);
+    }
+    if (mode) {
+      whereParts.push('mode = ?');
+      params.push(mode);
+    }
+    const whereClause = whereParts.join(' AND ');
+
+    const [countRows, rows, dateRows] = await Promise.all([
+      prisma.$queryRawUnsafe(
+        `SELECT CAST(COUNT(*) AS SIGNED) AS total FROM sales_user_locations WHERE ${whereClause}`,
+        ...params
+      ) as Promise<any[]>,
+      prisma.$queryRawUnsafe(
+        `SELECT id,
+                user_id,
+                latitude,
+                longitude,
+                accuracy,
+                speed,
+                battery_level,
+                COALESCE(mode, 'foreground') AS mode,
+                DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
+                DATE_FORMAT(created_at, '%d-%m-%Y %H:%i') AS created_at_dmy,
+                DATE_FORMAT(created_at, '%Y-%m-%d') AS date_str
+         FROM sales_user_locations
+         WHERE ${whereClause}
+         ORDER BY created_at DESC, id DESC
+         LIMIT ? OFFSET ?`,
+        ...params,
+        limit,
+        offset
+      ) as Promise<any[]>,
+      prisma.$queryRawUnsafe(
+        `SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS date_str,
+                DATE_FORMAT(created_at, '%d-%m-%Y') AS date_dmy,
+                CAST(COUNT(*) AS SIGNED) AS count
+         FROM sales_user_locations
+         WHERE user_id = ?
+         GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d'), DATE_FORMAT(created_at, '%d-%m-%Y')
+         ORDER BY date_str DESC
+         LIMIT 30`,
+        userId
+      ) as Promise<any[]>,
+    ]);
+
+    const total = Number(countRows[0]?.total || 0);
+    const serializedDates = serializeBigInt(dateRows);
+
+    return res.json({
+      success: true,
+      user: serializeBigInt(userRows[0]),
+      data: serializeBigInt(rows),
+      latestDate: serializedDates[0]?.date_str || null,
+      availableDates: serializedDates,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.get('/locations/users/:userId/route', async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+    if (!Number.isFinite(userId) || userId <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid user id' });
+    }
+
+    const userRows = (await prisma.$queryRawUnsafe(
+      `SELECT id, username, email FROM users WHERE id = ? LIMIT 1`,
+      userId
+    )) as any[];
+
+    if (!userRows.length) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const todayIst = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+
+    const date =
+      typeof req.query.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date)
+        ? req.query.date
+        : todayIst;
+
+    const [rows, dateRows] = await Promise.all([
+      prisma.$queryRawUnsafe(
+        `SELECT id,
+                user_id,
+                latitude,
+                longitude,
+                accuracy,
+                speed,
+                battery_level,
+                COALESCE(mode, 'foreground') AS mode,
+                DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
+                DATE_FORMAT(created_at, '%d-%m-%Y %H:%i') AS created_at_dmy
+         FROM sales_user_locations
+         WHERE user_id = ? AND DATE(created_at) = ?
+         ORDER BY created_at ASC, id ASC`,
+        userId,
+        date
+      ) as Promise<any[]>,
+      prisma.$queryRawUnsafe(
+        `SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS date_str,
+                DATE_FORMAT(created_at, '%d-%m-%Y') AS date_dmy,
+                CAST(COUNT(*) AS SIGNED) AS count
+         FROM sales_user_locations
+         WHERE user_id = ?
+         GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d'), DATE_FORMAT(created_at, '%d-%m-%Y')
+         ORDER BY date_str DESC
+         LIMIT 30`,
+        userId
+      ) as Promise<any[]>,
+    ]);
+
+    return res.json({
+      success: true,
+      user: serializeBigInt(userRows[0]),
+      date,
+      data: serializeBigInt(rows),
+      availableDates: serializeBigInt(dateRows),
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // ─── 4.14.26: Desktop Activity & Session Tracking ────────────────────────────

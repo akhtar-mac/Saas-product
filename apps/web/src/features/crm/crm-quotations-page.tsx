@@ -980,12 +980,12 @@ export function CrmQuotationsPage() {
                           </td>
                           <td className="py-3.5 px-4">
                             <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                              className={`inline-flex items-center whitespace-nowrap border px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                                 q.status === 'Sent'
-                                  ? 'bg-blue-100 text-blue-700'
+                                  ? 'bg-sky-50 text-sky-700 border-sky-200'
                                   : q.status === 'Accepted'
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : 'bg-slate-100 text-slate-700'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : 'bg-slate-100 text-slate-700 border-slate-200'
                               }`}
                             >
                               {q.status}

@@ -16,95 +16,96 @@ import {
 
 const router = Router();
 
+// Roles allowed to view call reports across all staff & filter by ?user_id=
+// 1: super_admin, 2: admin, 3: operations_manager, 4: sales_manager
+const CALL_MANAGERS = [1, 2, 3, 4];
+// Roles allowed on call endpoints (managers + sales/ops callers)
+const CALL_VIEWERS = [1, 2, 3, 4, 7, 13];
+
 // ─── POST /v1/call-logs/sync ─────────────────────────────────────────────────
 // Flutter Android app syncs native call log entries
-router.post(
-  '/sync',
-  verifyJWT,
-  requireRole([1, 2, 4, 7, 13]),
-  async (req: Request, res: Response) => {
-    try {
-      const { calls } = req.body; // Array of call log entries
-      if (!Array.isArray(calls) || calls.length === 0) {
-        return res
-          .status(400)
-          .json({ success: false, error: 'calls array is required and must be non-empty.' });
-      }
-
-      let saved = 0;
-      let duplicates = 0;
-
-      for (const call of calls) {
-        try {
-          const { phone_number, direction, status, duration_seconds, called_at, device_call_id } =
-            call;
-
-          // Normalize phone number for matching (strip spaces, dashes, country code variations)
-          const normalized = normalizePhone(phone_number);
-
-          // Match to a lead assigned to this user (by phone)
-          const matchedLead = await prisma.leads.findFirst({
-            where: {
-              contact: { contains: normalized.slice(-10) }, // last 10 digits
-              is_assign: 1,
-            },
-            select: { id: true },
-          });
-
-          // Check for duplicate (same user + same called_at + same number)
-          const existing = await (prisma as any).call_logs
-            ?.findFirst?.({
-              where: {
-                user_id: req.user!.user_id,
-                called_at: new Date(called_at),
-                phone_number: { contains: normalized.slice(-10) },
-              },
-            })
-            .catch(() => null);
-
-          if (existing) {
-            duplicates++;
-            continue;
-          }
-
-          await (prisma as any).call_logs.create({
-            data: {
-              user_id: req.user!.user_id,
-              lead_id: matchedLead?.id || null,
-              phone_number: normalized,
-              direction: direction || 'outgoing',
-              status: status || 'unknown',
-              duration_seconds: Number(duration_seconds) || 0,
-              called_at: new Date(called_at),
-              synced_at: new Date(),
-              device_call_id: device_call_id || null,
-            },
-          });
-          saved++;
-        } catch (rowErr: any) {
-          // Skip individual row errors (e.g., unique constraint)
-          if (rowErr.code !== 'P2002') console.warn('Call log row error:', rowErr.message);
-          else duplicates++;
-        }
-      }
-
-      res.json({
-        success: true,
-        message: `Synced ${saved} call log entries. ${duplicates} duplicates skipped.`,
-        data: { saved, duplicates, total: calls.length },
-      });
-    } catch (err) {
-      res.status(500).json({ success: false, error: 'Call log sync failed.' });
+router.post('/sync', verifyJWT, requireRole(CALL_VIEWERS), async (req: Request, res: Response) => {
+  try {
+    const { calls } = req.body; // Array of call log entries
+    if (!Array.isArray(calls) || calls.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'calls array is required and must be non-empty.' });
     }
+
+    let saved = 0;
+    let duplicates = 0;
+
+    for (const call of calls) {
+      try {
+        const { phone_number, direction, status, duration_seconds, called_at, device_call_id } =
+          call;
+
+        // Normalize phone number for matching (strip spaces, dashes, country code variations)
+        const normalized = normalizePhone(phone_number);
+
+        // Match to a lead assigned to this user (by phone)
+        const matchedLead = await prisma.leads.findFirst({
+          where: {
+            contact: { contains: normalized.slice(-10) }, // last 10 digits
+            is_assign: 1,
+          },
+          select: { id: true },
+        });
+
+        // Check for duplicate (same user + same called_at + same number)
+        const existing = await (prisma as any).call_logs
+          ?.findFirst?.({
+            where: {
+              user_id: req.user!.user_id,
+              called_at: new Date(called_at),
+              phone_number: { contains: normalized.slice(-10) },
+            },
+          })
+          .catch(() => null);
+
+        if (existing) {
+          duplicates++;
+          continue;
+        }
+
+        await (prisma as any).call_logs.create({
+          data: {
+            user_id: req.user!.user_id,
+            lead_id: matchedLead?.id || null,
+            phone_number: normalized,
+            direction: direction || 'outgoing',
+            status: status || 'unknown',
+            duration_seconds: Number(duration_seconds) || 0,
+            called_at: new Date(called_at),
+            synced_at: new Date(),
+            device_call_id: device_call_id || null,
+          },
+        });
+        saved++;
+      } catch (rowErr: any) {
+        // Skip individual row errors (e.g., unique constraint)
+        if (rowErr.code !== 'P2002') console.warn('Call log row error:', rowErr.message);
+        else duplicates++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Synced ${saved} call log entries. ${duplicates} duplicates skipped.`,
+      data: { saved, duplicates, total: calls.length },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Call log sync failed.' });
   }
-);
+});
 
 // ─── GET /v1/call-logs/analytics/me ─────────────────────────────────────────
 // Sales Employee: own analytics
 router.get(
   '/analytics/me',
   verifyJWT,
-  requireRole([1, 2, 4, 7, 13]),
+  requireRole(CALL_VIEWERS),
   async (req: Request, res: Response) => {
     try {
       const { from, to } = req.query;
@@ -116,46 +117,117 @@ router.get(
   }
 );
 
+// ─── Helper: Per-employee breakdown aggregated directly from call_history + users ─
+// Matches legacy CallController::index() (users.user_type = 6, status = 1) plus any user
+// present in call_history, so user_id matches call_history.user_id (= users.id).
+async function getTeamCallAnalytics(from?: string, to?: string, leadSource?: string) {
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+  const fromDate =
+    typeof from === 'string' && DATE_RE.test(from.trim().slice(0, 10))
+      ? from.trim().slice(0, 10)
+      : undefined;
+  const toDate =
+    typeof to === 'string' && DATE_RE.test(to.trim().slice(0, 10))
+      ? to.trim().slice(0, 10)
+      : undefined;
+  const joinConds: Prisma.Sql[] = [Prisma.sql`ch.user_id = u.id`];
+  if (fromDate) joinConds.push(Prisma.sql`ch.call_date >= ${fromDate}`);
+  if (toDate) joinConds.push(Prisma.sql`ch.call_date <= ${toDate}`);
+  const src = (leadSource || '').trim().toUpperCase();
+  if (src) {
+    if (src.startsWith('ETAX')) joinConds.push(Prisma.sql`ch.lead_source LIKE 'ETAX%'`);
+    else if (src.startsWith('SAHAKAR')) joinConds.push(Prisma.sql`ch.lead_source LIKE 'SAHAKAR%'`);
+    else if (src.startsWith('UDYAMI') || src.startsWith('UDDYOMI') || src.startsWith('UDAYAMI')) {
+      joinConds.push(Prisma.sql`(ch.lead_source LIKE 'UDYAMI%' OR ch.lead_source LIKE 'UDDYOMI%')`);
+    } else {
+      joinConds.push(Prisma.sql`ch.lead_source = ${leadSource!.trim()}`);
+    }
+  }
+
+  const rows: any[] = await prisma.$queryRaw`
+    SELECT
+      u.id AS user_id,
+      u.username AS name,
+      u.user_type AS role_id,
+      COUNT(ch.id) AS total_calls,
+      COALESCE(SUM(ch.call_type = 'incoming'), 0) AS incoming_calls,
+      COALESCE(SUM(ch.call_type = 'outgoing'), 0) AS outgoing_calls,
+      COALESCE(SUM(ch.call_type IN ('incoming', 'outgoing')), 0) AS answered,
+      COALESCE(SUM(ch.call_type IN ('incoming_missed', 'outgoing_missed', 'missed')), 0) AS missed,
+      COALESCE(SUM(ch.call_type = 'rejected'), 0) AS rejected,
+      COALESCE(SUM(CASE WHEN ch.call_type IN ('incoming', 'outgoing') THEN ch.duration ELSE 0 END), 0) AS total_duration,
+      COUNT(DISTINCT CASE WHEN ch.lead_id > 0 THEN ch.lead_id ELSE NULL END) AS unique_leads
+    FROM users u
+    LEFT JOIN call_history ch ON ${Prisma.join(joinConds, ' AND ')}
+    WHERE (u.user_type = 6 AND u.status = 1)
+       OR EXISTS (SELECT 1 FROM call_history ch2 WHERE ch2.user_id = u.id)
+    GROUP BY u.id, u.username, u.user_type
+    ORDER BY total_calls DESC, u.username ASC
+  `;
+
+  return rows.map((r) => {
+    const total_calls = Number(r.total_calls ?? 0) || 0;
+    const incoming_calls = Number(r.incoming_calls ?? 0) || 0;
+    const outgoing_calls = Number(r.outgoing_calls ?? 0) || 0;
+    const answered = Number(r.answered ?? 0) || 0;
+    const missed = Number(r.missed ?? 0) || 0;
+    const rejected = Number(r.rejected ?? 0) || 0;
+    const not_answered = missed + rejected;
+    const total_talk_time_seconds = Number(r.total_duration ?? 0) || 0;
+    const avg_call_duration_seconds =
+      answered > 0 ? Math.round(total_talk_time_seconds / answered) : 0;
+    const unique_leads_called = Number(r.unique_leads ?? 0) || 0;
+    const answer_rate = total_calls > 0 ? Math.round((answered / total_calls) * 100) : 0;
+    return {
+      user_id: Number(r.user_id),
+      name: r.name || `User #${Number(r.user_id)}`,
+      role_id: Number(r.role_id ?? 6),
+      total_calls,
+      incoming_calls,
+      outgoing_calls,
+      answered,
+      missed,
+      rejected,
+      not_answered,
+      total_talk_time_seconds,
+      avg_call_duration_seconds,
+      unique_leads_called,
+      answer_rate,
+    };
+  });
+}
+
 // ─── GET /v1/call-logs/analytics/team ───────────────────────────────────────
-// Sales Manager: team analytics
+// Managers (Admin, Super Admin, Operations Manager, Sales Manager): per-employee call stats
 router.get(
   '/analytics/team',
   verifyJWT,
-  requireRole(SALES_MANAGERS),
+  requireRole(CALL_MANAGERS),
   async (req: Request, res: Response) => {
     try {
-      const { from, to } = req.query;
-      const team = await (prisma as any).staff_users
-        .findMany({
-          where: { role_id: { in: [7, 13] }, is_active: true },
-          select: { id: true, name: true },
-        })
-        .catch(() => []);
-
-      const results = await Promise.all(
-        team.map(async (member: any) => ({
-          user_id: member.id,
-          name: member.name,
-          ...(await getEmployeeAnalytics(member.id, from as string, to as string)),
-        }))
+      const { from, to, lead_source } = req.query;
+      const results = await getTeamCallAnalytics(
+        from as string,
+        to as string,
+        lead_source as string
       );
-
       res.json({ success: true, data: results });
     } catch (err) {
+      console.error('team analytics failed:', (err as Error).message);
       res.status(500).json({ success: false, error: 'Failed to fetch team analytics.' });
     }
   }
 );
 
 // ─── GET /v1/call-logs/analytics/all ────────────────────────────────────────
-// Super Admin / Admin: all employees
+// Super Admin / Admin / Managers: all employees
 router.get(
   '/analytics/all',
   verifyJWT,
-  requireRole(ADMIN_ROLES),
+  requireRole(CALL_MANAGERS),
   async (req: Request, res: Response) => {
     try {
-      const { from, to, employee_id } = req.query;
+      const { from, to, employee_id, lead_source } = req.query;
 
       if (employee_id) {
         const analytics = await getEmployeeAnalytics(
@@ -166,56 +238,49 @@ router.get(
         return res.json({ success: true, data: analytics });
       }
 
-      const salesStaff = await (prisma as any).staff_users
-        .findMany({
-          where: { role_id: { in: [4, 7, 13] }, is_active: true },
-          select: { id: true, name: true, role_id: true },
-        })
-        .catch(() => []);
-
-      const results = await Promise.all(
-        salesStaff.map(async (member: any) => ({
-          user_id: member.id,
-          name: member.name,
-          role_id: member.role_id,
-          ...(await getEmployeeAnalytics(member.id, from as string, to as string)),
-        }))
+      const results = await getTeamCallAnalytics(
+        from as string,
+        to as string,
+        lead_source as string
       );
-
       res.json({ success: true, data: results });
     } catch (err) {
+      console.error('all analytics failed:', (err as Error).message);
       res.status(500).json({ success: false, error: 'Failed to fetch analytics.' });
     }
   }
 );
 
 // ─── GET /v1/call-logs/staff ─────────────────────────────────────────────────
-// Get staff list for filtering call logs
-router.get(
-  '/staff',
-  verifyJWT,
-  requireRole([...ADMIN_ROLES, ...SALES_MANAGERS]),
-  async (req: Request, res: Response) => {
-    try {
-      const staff = await prisma.staff_users.findMany({
-        where: { is_active: true },
-        select: { id: true, name: true, role_id: true },
-        orderBy: { name: 'asc' },
-      });
-      res.json({ success: true, data: staff });
-    } catch (err) {
-      res.status(500).json({ success: false, error: 'Failed to fetch staff list.' });
-    }
+// Get sales staff list from `users` (matching call_history.user_id = users.id)
+router.get('/staff', verifyJWT, requireRole(CALL_MANAGERS), async (req: Request, res: Response) => {
+  try {
+    const rows: any[] = await prisma.$queryRaw`
+        SELECT u.id, u.username AS name, u.user_type AS role_id
+        FROM users u
+        WHERE (u.user_type = 6 AND u.status = 1)
+           OR EXISTS (SELECT 1 FROM call_history ch WHERE ch.user_id = u.id)
+        ORDER BY u.username ASC
+      `;
+    const staff = rows.map((r) => ({
+      id: Number(r.id),
+      name: r.name || `User #${Number(r.id)}`,
+      role_id: Number(r.role_id ?? 6),
+    }));
+    res.json({ success: true, data: staff });
+  } catch (err) {
+    console.error('staff list failed:', (err as Error).message);
+    res.status(500).json({ success: false, error: 'Failed to fetch staff list.' });
   }
-);
+});
 
 // ─── Who may see whose calls ──────────────────────────────────────────────────
-// Managers/admins (roles 1, 2, 4) may pass ?user_id= (users.id) or see everyone.
+// Managers/admins (roles 1, 2, 3, 4) may pass ?user_id= (users.id) or see everyone.
 // Everyone else (sales/ops employees) only ever sees their own calls.
 async function resolveCallScope(req: Request): Promise<{ userId?: number; denied?: boolean }> {
   const roles =
     req.user!.role_ids && req.user!.role_ids.length ? req.user!.role_ids : [req.user!.role_id];
-  if (roles.some((r) => SALES_MANAGERS.includes(r))) {
+  if (roles.some((r) => CALL_MANAGERS.includes(r))) {
     const q = Number(req.query.user_id);
     return { userId: Number.isInteger(q) && q > 0 ? q : undefined };
   }
@@ -241,7 +306,7 @@ const q = (v: unknown) => (typeof v === 'string' ? v : undefined);
 router.get(
   '/summary',
   verifyJWT,
-  requireRole([1, 2, 4, 7, 13]),
+  requireRole(CALL_VIEWERS),
   async (req: Request, res: Response) => {
     try {
       const scope = await resolveCallScope(req);
@@ -270,7 +335,7 @@ router.get(
 router.get(
   '/lead-details/:id',
   verifyJWT,
-  requireRole([1, 2, 4, 7, 13]),
+  requireRole(CALL_VIEWERS),
   async (req: Request, res: Response) => {
     try {
       const leadId = Number(req.params.id);
@@ -330,7 +395,7 @@ router.get(
 router.get(
   '/history',
   verifyJWT,
-  requireRole([1, 2, 4, 7, 13]),
+  requireRole(CALL_VIEWERS),
   async (req: Request, res: Response) => {
     try {
       const pageNum = Math.max(1, parseInt(q(req.query.page) || '1') || 1);
@@ -390,46 +455,30 @@ async function getEmployeeAnalytics(userId: number, from?: string, to?: string) 
       .catch(() => []);
 
     if (logs.length === 0) {
-      const historyWhere: any = { user_id: userId };
-      if (from || to) {
-        historyWhere.call_date = {};
-        if (from) historyWhere.call_date.gte = new Date(from);
-        if (to) historyWhere.call_date.lte = new Date(to);
-      }
-      const calls = await prisma.call_history
-        .findMany({
-          where: historyWhere,
-          select: { call_type: true, duration: true, lead_id: true },
-        })
-        .catch(() => []);
-
-      if (calls.length > 0) {
-        const total_calls = calls.length;
-        const answered = calls.filter(
-          (c: any) => c.call_type === 'outgoing' || c.call_type === 'incoming'
-        ).length;
-        const missed = calls.filter(
-          (c: any) => c.call_type === 'outgoing_missed' || c.call_type === 'incoming_missed'
-        ).length;
-        const rejected = calls.filter((c: any) => c.call_type === 'rejected').length;
-        const total_duration = calls.reduce((acc: number, c: any) => acc + (c.duration || 0), 0);
+      const stats = await getCallStats({ userId, from, to });
+      if (stats.total_calls > 0) {
+        const uniqRows = await prisma.$queryRaw<any[]>`
+          SELECT COUNT(DISTINCT CASE WHEN lead_id > 0 THEN lead_id ELSE NULL END) AS u
+          FROM call_history
+          WHERE user_id = ${userId}
+        `.catch(() => [{ u: 0 }]);
+        const unique_leads = Number(uniqRows[0]?.u ?? 0) || 0;
+        const answered = stats.answered_calls;
+        const missed = stats.missed_calls;
+        const total_duration = stats.total_duration;
         const avg_duration = answered > 0 ? Math.round(total_duration / answered) : 0;
-        const unique_leads = new Set(
-          calls
-            .filter((c: any) => c.lead_id && Number(c.lead_id) > 0)
-            .map((c: any) => Number(c.lead_id))
-        ).size;
-
         return {
-          total_calls,
+          total_calls: stats.total_calls,
+          incoming_calls: stats.incoming_calls,
+          outgoing_calls: stats.outgoing_calls,
           answered,
           missed,
-          rejected,
-          not_answered: missed + rejected,
+          rejected: 0,
+          not_answered: missed,
           total_talk_time_seconds: total_duration,
           avg_call_duration_seconds: avg_duration,
           unique_leads_called: unique_leads,
-          answer_rate: total_calls > 0 ? Math.round((answered / total_calls) * 100) : 0,
+          answer_rate: stats.total_calls > 0 ? Math.round((answered / stats.total_calls) * 100) : 0,
         };
       }
     }

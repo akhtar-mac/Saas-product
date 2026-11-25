@@ -938,11 +938,9 @@ export default function HrWorkforcePage() {
                       <td className="py-2.5 px-3 text-slate-600 font-medium">{staff.dept}</td>
                       <td className="py-2.5 px-3">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${statusCfg.cls}`}
+                          className={`inline-flex items-center whitespace-nowrap gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${statusCfg.cls}`}
                         >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} ${staff.status === 'Online' ? 'animate-pulse' : ''}`}
-                          />
+                          <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} `} />
                           {staff.status}
                         </span>
                       </td>

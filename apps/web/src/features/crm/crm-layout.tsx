@@ -36,6 +36,7 @@ import CommandPalette from './components/command-palette';
 import NotificationCenter, { NotificationBadge } from './components/notification-center';
 import { hasUserPermission } from './permissions';
 import { ChatNotificationProvider, useChatNotification } from './context/chat-notification-context';
+import { SignOutConfirmModal } from '@/components/ui/sign-out-modal';
 
 function CrmLayoutContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -54,6 +55,7 @@ function CrmLayoutContent() {
   });
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [signOutModalOpen, setSignOutModalOpen] = useState(false);
   const bellRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement | null>(null);
   const [sidebarEditMode, setSidebarEditMode] = useState(false);
@@ -660,15 +662,7 @@ function CrmLayoutContent() {
               </Link>
             )}
 
-            {/* Department Hubs: HR Desk, Marketing Suite, IT Command Center — hide for ops/franchise employees */}
-            {!isFranchiseEmployee &&
-              !isFranchiseManager &&
-              !showOpsEmployeeSection &&
-              !isSalesEmployee && (
-                <div className="pt-2 pb-1 px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                  Department Hubs
-                </div>
-              )}
+            {/* Department Hubs section hidden from sidebar (pages/routes remain intact) */}
 
             {/* Super Admin / Admin — Manage All Employees - Hide for Franchise Manager and Franchise Employee */}
             {!isFranchiseManager && !isFranchiseEmployee && isSuperAdmin && (
@@ -711,78 +705,6 @@ function CrmLayoutContent() {
                 <span className="badge badge-gold text-[9px] px-1.5 py-0.2">120+</span>
               </Link>
             )}
-
-            {/* HR & Accounts - Hide for Franchise Manager, Franchise Employee, and Ops Employee */}
-            {!isFranchiseManager &&
-              !isFranchiseEmployee &&
-              !showOpsEmployeeSection &&
-              !isSalesEmployee && (
-                <Link
-                  to="/crm/hr"
-                  onClick={handleNavClick}
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
-                    location.pathname === '/crm/hr'
-                      ? 'bg-[#1B365D] text-white shadow-sm'
-                      : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Users
-                      className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/hr' ? 'text-white' : 'text-[#D97706]'}`}
-                    />
-                    <span>HR & Accounts</span>
-                  </div>
-                  <span className="badge badge-gold text-[9px] px-1.5 py-0.2">Careers ATS</span>
-                </Link>
-              )}
-
-            {/* Marketing Hub - Hide for Franchise Manager, Franchise Employee, and Ops Employee */}
-            {!isFranchiseManager &&
-              !isFranchiseEmployee &&
-              !showOpsEmployeeSection &&
-              !isSalesEmployee && (
-                <Link
-                  to="/crm/marketing"
-                  onClick={handleNavClick}
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
-                    location.pathname === '/crm/marketing'
-                      ? 'bg-[#1B365D] text-white shadow-sm'
-                      : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Target
-                      className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/marketing' ? 'text-white' : 'text-pink-600'}`}
-                    />
-                    <span>Marketing Hub</span>
-                  </div>
-                  <span className="badge badge-navy text-[9px] px-1.5 py-0.2">Social & Ads</span>
-                </Link>
-              )}
-
-            {/* IT Command Center - Hide for Franchise Manager, Franchise Employee, and Ops Employee */}
-            {!isFranchiseManager &&
-              !isFranchiseEmployee &&
-              !showOpsEmployeeSection &&
-              !isSalesEmployee && (
-                <Link
-                  to="/crm/it-command"
-                  onClick={handleNavClick}
-                  className={`flex items-center justify-between px-3 py-2 rounded-xl font-bold transition-all ${
-                    location.pathname === '/crm/it-command'
-                      ? 'bg-[#1B365D] text-white shadow-sm'
-                      : 'text-slate-800 hover:bg-slate-100 hover:text-[#1B365D]'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Terminal
-                      className={`w-4 h-4 shrink-0 ${location.pathname === '/crm/it-command' ? 'text-white' : 'text-[#0084D1]'}`}
-                    />
-                    <span>IT Command Center</span>
-                  </div>
-                  <span className="badge badge-green text-[9px] px-1.5 py-0.2">Super Tech</span>
-                </Link>
-              )}
 
             {/* 2. OPERATION MANAGER ACCORDION */}
             {showOpsSection && (
@@ -1925,8 +1847,9 @@ function CrmLayoutContent() {
             </Link>
 
             <button
-              onClick={handleLogout}
-              className="w-full text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center justify-center gap-1.5 p-2 hover:bg-rose-50 rounded-lg transition-colors"
+              type="button"
+              onClick={() => setSignOutModalOpen(true)}
+              className="w-full text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center justify-center gap-1.5 p-2 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" /> Sign Out
             </button>
@@ -2071,6 +1994,11 @@ function CrmLayoutContent() {
 
       {/* Global Command Palette */}
       <CommandPalette isOpen={cmdPaletteOpen} onClose={() => setCmdPaletteOpen(false)} />
+      <SignOutConfirmModal
+        isOpen={signOutModalOpen}
+        onClose={() => setSignOutModalOpen(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }

@@ -28,6 +28,8 @@ interface EmployeeAnalytics {
   name?: string;
   role_id?: number;
   total_calls: number;
+  incoming_calls?: number;
+  outgoing_calls?: number;
   answered: number;
   missed: number;
   rejected: number;
@@ -94,16 +96,18 @@ function StatCard({
   bg: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-2">
+    <div className="bg-white rounded-2xl border border-slate-200 p-2.5 shadow-sm hover:shadow-md transition-shadow min-w-0">
+      <div className="flex items-start justify-between mb-1.5">
         <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+          className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: bg }}
         >
           <Icon className="w-4 h-4" style={{ color }} />
         </div>
       </div>
-      <p className="text-xl font-bold font-display text-slate-900">{value}</p>
+      <p className="text-[13px] xl:text-sm font-bold font-display text-slate-900 tabular-nums whitespace-nowrap">
+        {typeof value === 'number' ? value.toLocaleString('en-IN') : value}
+      </p>
       <p className="text-xs font-semibold text-slate-600 mt-0.5">{label}</p>
       {sub && <p className="text-[11px] text-slate-400 mt-0.5">{sub}</p>}
     </div>
@@ -111,9 +115,25 @@ function StatCard({
 }
 
 export default function CrmCallAnalyticsPage() {
-  const { staffToken, staffUser } = useAuthStore();
+  const { staffToken, staffUser, activeRole } = useAuthStore();
+  const effectiveRole = activeRole || staffUser?.role;
+  const roleList = [effectiveRole, staffUser?.role, ...(staffUser?.roles || [])].filter(Boolean);
+  const roleIds = staffUser?.roleIds || [];
+  const isAdmin =
+    roleList.includes(RoleType.SUPER_ADMIN) ||
+    roleList.includes(RoleType.ADMIN) ||
+    roleIds.includes(1) ||
+    roleIds.includes(2);
+  const isManager =
+    isAdmin ||
+    roleList.includes(RoleType.SALES_MANAGER) ||
+    roleList.includes(RoleType.OPERATIONS_MANAGER) ||
+    roleIds.includes(3) ||
+    roleIds.includes(4);
+
   const [activeTab, setActiveTab] = useState<'history' | 'analytics'>('history');
-  const [view, setView] = useState<'me' | 'team' | 'all'>('me');
+  const [view, setView] = useState<'me' | 'team' | 'all'>(isManager ? 'team' : 'me');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Filters state
   const [staffList, setStaffList] = useState<StaffOption[]>([]);
@@ -151,9 +171,12 @@ export default function CrmCallAnalyticsPage() {
   const [analytics, setAnalytics] = useState<EmployeeAnalytics | null>(null);
   const [teamData, setTeamData] = useState<EmployeeAnalytics[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const isAdmin = staffUser?.role === RoleType.SUPER_ADMIN || staffUser?.role === RoleType.ADMIN;
-  const isManager = isAdmin || staffUser?.role === RoleType.SALES_MANAGER;
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const authHeaders = {
     'Content-Type': 'application/json',
@@ -170,7 +193,7 @@ export default function CrmCallAnalyticsPage() {
         })
         .catch(() => {});
     }
-  }, []);
+  }, [isManager, isAdmin, staffToken]);
 
   const buildQueryParams = () => {
     const params = new URLSearchParams();
@@ -179,7 +202,7 @@ export default function CrmCallAnalyticsPage() {
     if (selectedStaff) params.append('user_id', selectedStaff);
     if (callTypeFilter) params.append('call_type', callTypeFilter);
     if (leadSourceFilter) params.append('lead_source', leadSourceFilter);
-    if (search) params.append('search', search);
+    if (debouncedSearch) params.append('search', debouncedSearch);
     return params;
   };
 
@@ -191,26 +214,17 @@ export default function CrmCallAnalyticsPage() {
         headers: authHeaders,
       });
       const data = await res.json();
-      if (data.success && data.data) {
+      if (!res.ok || !data.success) {
+        setErrorMsg(data?.error || 'Could not load call summary.');
+        return;
+      }
+      setErrorMsg(null);
+      if (data.data) {
         setSummaryTotal(data.data.total);
         setSummaryToday(data.data.today);
       }
     } catch {
-      // Demo fallback summary
-      setSummaryTotal({
-        total_calls: 142,
-        incoming_calls: 58,
-        outgoing_calls: 84,
-        missed_calls: 12,
-        total_duration: 18450,
-      });
-      setSummaryToday({
-        total_calls: 18,
-        incoming_calls: 7,
-        outgoing_calls: 11,
-        missed_calls: 2,
-        total_duration: 2100,
-      });
+      setErrorMsg('Unable to reach the server for call summary.');
     }
   };
 
@@ -226,47 +240,20 @@ export default function CrmCallAnalyticsPage() {
         headers: authHeaders,
       });
       const data = await res.json();
-      if (data.success) {
-        setHistoryLogs(data.data || []);
-        if (data.pagination) {
-          setTotalPages(data.pagination.totalPages || 1);
-          setTotalHistoryCount(data.pagination.total || 0);
-        }
+      if (!res.ok || !data.success) {
+        setErrorMsg(data?.error || 'Could not load call history.');
+        setHistoryLogs([]);
+        return;
+      }
+      setErrorMsg(null);
+      setHistoryLogs(data.data || []);
+      if (data.pagination) {
+        setTotalPages(data.pagination.totalPages || 1);
+        setTotalHistoryCount(data.pagination.total || 0);
       }
     } catch {
-      // Demo fallback history
-      setHistoryLogs([
-        {
-          id: 1,
-          lead_id: 101,
-          lead_name: 'Rajesh Kumar',
-          lead_contact: '+91 9876543210',
-          lead_source: 'ETax',
-          phone_number: '+91 9876543210',
-          direction: 'outgoing',
-          status: 'answered',
-          call_type: 'outgoing',
-          duration_seconds: 240,
-          user_id: 2,
-          user_name: 'Priya Sharma',
-          called_at: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          lead_id: 102,
-          lead_name: 'Amit Patel',
-          lead_contact: '+91 9812345678',
-          lead_source: 'Sahakar Samridhi',
-          phone_number: '+91 9812345678',
-          direction: 'incoming',
-          status: 'missed',
-          call_type: 'incoming_missed',
-          duration_seconds: 0,
-          user_id: 3,
-          user_name: 'Rahul Verma',
-          called_at: new Date(Date.now() - 3600000).toISOString(),
-        },
-      ]);
+      setErrorMsg('Unable to reach the server for call history.');
+      setHistoryLogs([]);
     } finally {
       setHistoryLoading(false);
     }
@@ -279,71 +266,47 @@ export default function CrmCallAnalyticsPage() {
       const params = new URLSearchParams();
       if (dateFrom) params.append('from', dateFrom);
       if (dateTo) params.append('to', dateTo);
+      if (leadSourceFilter) params.append('lead_source', leadSourceFilter);
 
       if (view === 'me' || (!isManager && !isAdmin)) {
         const res = await fetch(`${API_BASE}/v1/call-logs/analytics/me?${params.toString()}`, {
           headers: authHeaders,
         });
         const data = await res.json();
-        if (data.success) setAnalytics(data.data);
+        if (!res.ok || !data.success) {
+          setErrorMsg(data?.error || 'Could not load call analytics.');
+          return;
+        }
+        setErrorMsg(null);
+        setAnalytics(data.data);
       } else if (view === 'team') {
         const res = await fetch(`${API_BASE}/v1/call-logs/analytics/team?${params.toString()}`, {
           headers: authHeaders,
         });
         const data = await res.json();
-        if (data.success) setTeamData(data.data);
+        if (!res.ok || !data.success) {
+          setErrorMsg(data?.error || 'Could not load team call report.');
+          setTeamData([]);
+          return;
+        }
+        setErrorMsg(null);
+        setTeamData(data.data || []);
       } else {
         const res = await fetch(`${API_BASE}/v1/call-logs/analytics/all?${params.toString()}`, {
           headers: authHeaders,
         });
         const data = await res.json();
-        if (data.success) setTeamData(data.data);
+        if (!res.ok || !data.success) {
+          setErrorMsg(data?.error || 'Could not load staff call report.');
+          setTeamData([]);
+          return;
+        }
+        setErrorMsg(null);
+        setTeamData(data.data || []);
       }
     } catch {
-      if (view === 'me') {
-        setAnalytics({
-          total_calls: 127,
-          answered: 89,
-          missed: 24,
-          rejected: 14,
-          not_answered: 38,
-          total_talk_time_seconds: 18420,
-          avg_call_duration_seconds: 207,
-          unique_leads_called: 63,
-          answer_rate: 70,
-        });
-      } else {
-        setTeamData([
-          {
-            user_id: 1,
-            name: 'Priya Sharma',
-            role_id: 7,
-            total_calls: 143,
-            answered: 112,
-            missed: 20,
-            rejected: 11,
-            not_answered: 31,
-            total_talk_time_seconds: 23040,
-            avg_call_duration_seconds: 206,
-            unique_leads_called: 78,
-            answer_rate: 78,
-          },
-          {
-            user_id: 2,
-            name: 'Rahul Verma',
-            role_id: 7,
-            total_calls: 98,
-            answered: 61,
-            missed: 28,
-            rejected: 9,
-            not_answered: 37,
-            total_talk_time_seconds: 12240,
-            avg_call_duration_seconds: 201,
-            unique_leads_called: 52,
-            answer_rate: 62,
-          },
-        ]);
-      }
+      setErrorMsg('Unable to reach the server for call analytics.');
+      setTeamData([]);
     } finally {
       setAnalyticsLoading(false);
     }
@@ -356,7 +319,17 @@ export default function CrmCallAnalyticsPage() {
     } else {
       loadAnalytics();
     }
-  }, [activeTab, view, dateFrom, dateTo, selectedStaff, callTypeFilter, leadSourceFilter, page]);
+  }, [
+    activeTab,
+    view,
+    dateFrom,
+    dateTo,
+    selectedStaff,
+    callTypeFilter,
+    leadSourceFilter,
+    debouncedSearch,
+    page,
+  ]);
 
   const handleRefresh = () => {
     loadSummaryStats();
@@ -378,25 +351,25 @@ export default function CrmCallAnalyticsPage() {
     const srcUpper = (source || '').toUpperCase();
     if (srcUpper.includes('ETAX')) {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-100 text-blue-800">
+        <span className="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-100 text-blue-800">
           ETax
         </span>
       );
     } else if (srcUpper.includes('SAHAKAR')) {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+        <span className="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">
           Sahakar
         </span>
       );
     } else if (srcUpper.includes('UDYAMI')) {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800">
+        <span className="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800">
           Udyami
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700">
+      <span className="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700">
         {source || 'Direct'}
       </span>
     );
@@ -405,7 +378,7 @@ export default function CrmCallAnalyticsPage() {
   const renderCallTypeBadge = (direction: string, status: string) => {
     if (status === 'missed' || status === 'rejected') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">
+        <span className="inline-flex items-center whitespace-nowrap gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">
           <PhoneMissed className="w-3 h-3 text-red-500" />
           Missed Call
         </span>
@@ -413,14 +386,14 @@ export default function CrmCallAnalyticsPage() {
     }
     if (direction === 'incoming') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <span className="inline-flex items-center whitespace-nowrap gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
           <ArrowDownLeft className="w-3 h-3 text-emerald-500" />
           Incoming
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+      <span className="inline-flex items-center whitespace-nowrap gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">
         <ArrowUpRight className="w-3 h-3 text-sky-500" />
         Outgoing
       </span>
@@ -467,6 +440,13 @@ export default function CrmCallAnalyticsPage() {
           </button>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="flex items-center gap-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl px-4 py-3 text-xs font-medium">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
 
       {/* Overview Stat Cards (Total vs Today breakdown) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -841,7 +821,7 @@ export default function CrmCallAnalyticsPage() {
         <div className="space-y-6">
           <div className="flex bg-slate-100 rounded-xl p-1 gap-1 self-start w-fit">
             {(
-              ['me', ...(isManager ? ['team'] : []), ...(isAdmin ? ['all'] : [])] as (
+              [...(isManager ? ['team'] : []), ...(isAdmin ? ['all'] : []), 'me'] as (
                 'me' | 'team' | 'all'
               )[]
             ).map((v) => (
@@ -854,7 +834,7 @@ export default function CrmCallAnalyticsPage() {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {v === 'me' ? 'My Analytics' : v === 'team' ? 'My Team' : 'All Staff'}
+                {v === 'me' ? 'My Analytics' : v === 'team' ? 'Employee Report' : 'All Staff'}
               </button>
             ))}
           </div>
@@ -942,6 +922,15 @@ export default function CrmCallAnalyticsPage() {
                         Total Calls
                       </th>
                       <th className="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase">
+                        Incoming
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase">
+                        Outgoing
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase">
+                        Missed
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase">
                         Answered
                       </th>
                       <th className="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase">
@@ -953,25 +942,105 @@ export default function CrmCallAnalyticsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {teamData.map((m, idx) => (
-                      <tr key={m.user_id || idx} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 text-xs font-bold text-slate-500">{idx + 1}</td>
-                        <td className="px-4 py-3 font-semibold text-slate-900">{m.name}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-slate-700">
-                          {m.total_calls}
-                        </td>
-                        <td className="px-4 py-3 text-right text-emerald-600 font-bold">
-                          {m.answered}
-                        </td>
-                        <td className="px-4 py-3 text-right text-slate-500">
-                          {formatDuration(m.total_talk_time_seconds)}
-                        </td>
-                        <td className="px-4 py-3 text-right font-bold text-slate-700">
-                          {m.answer_rate}%
+                    {analyticsLoading ? (
+                      <tr>
+                        <td colSpan={9} className="px-4 py-10 text-center text-xs text-slate-400">
+                          Loading employee call report...
                         </td>
                       </tr>
-                    ))}
+                    ) : teamData.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="px-4 py-10 text-center text-xs text-slate-400">
+                          No employee call records found for the selected filters.
+                        </td>
+                      </tr>
+                    ) : (
+                      teamData.map((m, idx) => (
+                        <tr key={m.user_id || idx} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-4 py-3 text-xs font-bold text-slate-500">{idx + 1}</td>
+                          <td className="px-4 py-3 font-semibold text-slate-900">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (m.user_id) {
+                                  setSelectedStaff(String(m.user_id));
+                                  setActiveTab('history');
+                                  setPage(1);
+                                }
+                              }}
+                              className="hover:text-[#0284c7] hover:underline text-left"
+                              title="View call history for this employee"
+                            >
+                              {m.name}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 text-right font-semibold text-slate-800">
+                            {m.total_calls.toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-4 py-3 text-right text-emerald-700 font-medium">
+                            {(m.incoming_calls ?? 0).toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-4 py-3 text-right text-sky-700 font-medium">
+                            {(m.outgoing_calls ?? 0).toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-4 py-3 text-right text-rose-600 font-medium">
+                            {(m.missed ?? 0).toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-4 py-3 text-right text-emerald-600 font-bold">
+                            {m.answered.toLocaleString('en-IN')}
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-600 whitespace-nowrap">
+                            {formatDuration(m.total_talk_time_seconds)}
+                          </td>
+                          <td className="px-4 py-3 text-right font-bold text-slate-700">
+                            {m.answer_rate}%
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
+                  {teamData.length > 0 && (
+                    <tfoot>
+                      <tr className="bg-slate-50 border-t border-slate-200 font-bold text-slate-800 text-xs">
+                        <td className="px-4 py-3" colSpan={2}>
+                          Total ({teamData.length} staff)
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {teamData.reduce((s, r) => s + r.total_calls, 0).toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-4 py-3 text-right text-emerald-700">
+                          {teamData
+                            .reduce((s, r) => s + (r.incoming_calls ?? 0), 0)
+                            .toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-4 py-3 text-right text-sky-700">
+                          {teamData
+                            .reduce((s, r) => s + (r.outgoing_calls ?? 0), 0)
+                            .toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-4 py-3 text-right text-rose-600">
+                          {teamData
+                            .reduce((s, r) => s + (r.missed ?? 0), 0)
+                            .toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-4 py-3 text-right text-emerald-700">
+                          {teamData.reduce((s, r) => s + r.answered, 0).toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          {formatDuration(
+                            teamData.reduce((s, r) => s + r.total_talk_time_seconds, 0)
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {(() => {
+                            const t = teamData.reduce((s, r) => s + r.total_calls, 0);
+                            const a = teamData.reduce((s, r) => s + r.answered, 0);
+                            return `${t > 0 ? Math.round((a / t) * 100) : 0}%`;
+                          })()}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  )}
                 </table>
               </div>
             </div>

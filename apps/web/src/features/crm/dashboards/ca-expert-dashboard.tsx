@@ -156,10 +156,10 @@ export default function CaExpertDashboard() {
                   <td className="text-xs text-slate-600 font-semibold">{item.date}</td>
                   <td>
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                      className={`inline-flex items-center whitespace-nowrap border px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                         item.status === 'Pending Sign'
-                          ? 'bg-amber-50 text-amber-700'
-                          : 'bg-blue-50 text-blue-700'
+                          ? 'bg-amber-50 text-amber-800 border-amber-200'
+                          : 'bg-sky-50 text-sky-700 border-sky-200'
                       }`}
                     >
                       {item.status}

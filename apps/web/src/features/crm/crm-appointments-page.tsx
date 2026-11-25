@@ -253,7 +253,9 @@ export default function CrmAppointmentsPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-600">{appt.city}</td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`badge text-[10px] ${STATUS_BADGES[appt.status]}`}>
+                      <span
+                        className={`badge whitespace-nowrap text-[10px] ${STATUS_BADGES[appt.status]}`}
+                      >
                         {appt.status}
                       </span>
                     </td>

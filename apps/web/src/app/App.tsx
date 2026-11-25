@@ -54,6 +54,7 @@ const HrWorkforcePage = lazy(() => import('@/features/crm/hr-workforce-page'));
 const CrmUserManagementPage = lazy(() => import('@/features/crm/crm-user-management-page'));
 const CrmWonFormPage = lazy(() => import('@/features/crm/crm-won-form-page'));
 const CrmCallAnalyticsPage = lazy(() => import('@/features/crm/crm-call-analytics-page'));
+const CrmLocationsPage = lazy(() => import('@/features/crm/crm-locations-page'));
 const CrmDesktopTrackingPage = lazy(() => import('@/features/crm/crm-desktop-tracking-page'));
 const CrmManageCategoryPage = lazy(() => import('@/features/crm/crm-manage-category-page'));
 const CrmManageServicesPage = lazy(() => import('@/features/crm/crm-manage-services-page'));
@@ -168,7 +169,7 @@ export default function App() {
           <Route path="quotation" element={<CrmQuotationsPage />} />
           <Route path="accounts" element={<CrmAccountsPage />} />
           <Route path="operation-manage-customer" element={<CrmAccountsPage />} />
-          <Route path="locations" element={<CrmAccountsPage />} />
+          <Route path="locations" element={<CrmLocationsPage />} />
           <Route path="desktop-report" element={<CrmDesktopTrackingPage />} />
           <Route path="desktop-report-idle" element={<CrmDesktopTrackingPage />} />
           <Route path="desktrack-live" element={<CrmDesktopTrackingPage />} />

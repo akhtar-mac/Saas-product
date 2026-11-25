@@ -218,7 +218,7 @@ export default function CrmFranchiseManagePartnersOrders() {
                 <td className="py-3 px-4">
                   {order.is_approve === 0 && (
                     <span
-                      className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs cursor-pointer hover:bg-yellow-200"
+                      className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-[11px] font-semibold cursor-pointer hover:bg-amber-100"
                       onClick={() => handleStatusClick(order)}
                     >
                       Pending
@@ -226,7 +226,7 @@ export default function CrmFranchiseManagePartnersOrders() {
                   )}
                   {order.is_approve === 1 && (
                     <span
-                      className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs cursor-pointer hover:bg-green-200"
+                      className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-semibold cursor-pointer hover:bg-emerald-100"
                       onClick={() => handleStatusClick(order)}
                     >
                       Approved
@@ -234,7 +234,7 @@ export default function CrmFranchiseManagePartnersOrders() {
                   )}
                   {order.is_approve === 2 && (
                     <span
-                      className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs cursor-pointer hover:bg-red-200"
+                      className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-full text-[11px] font-semibold cursor-pointer hover:bg-rose-100"
                       onClick={() => handleStatusClick(order)}
                     >
                       Rejected

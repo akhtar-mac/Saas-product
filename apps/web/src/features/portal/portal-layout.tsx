@@ -15,9 +15,11 @@ import {
   Video,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
+import { SignOutConfirmModal } from '@/components/ui/sign-out-modal';
 
 export default function PortalLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [signOutModalOpen, setSignOutModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { customer, logoutCustomer } = useAuthStore();
@@ -201,7 +203,8 @@ export default function PortalLayout() {
                 Staff CRM Login →
               </Link>
               <button
-                onClick={handleLogout}
+                type="button"
+                onClick={() => setSignOutModalOpen(true)}
                 className="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1 p-1 hover:bg-red-50 rounded"
               >
                 <LogOut className="w-3.5 h-3.5" /> Logout
@@ -249,6 +252,12 @@ export default function PortalLayout() {
           <Outlet />
         </main>
       </div>
+      <SignOutConfirmModal
+        isOpen={signOutModalOpen}
+        onClose={() => setSignOutModalOpen(false)}
+        onConfirm={handleLogout}
+        description="You will need to sign in again to access your ETaxwala client portal."
+      />
     </div>
   );
 }

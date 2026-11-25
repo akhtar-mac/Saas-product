@@ -1027,24 +1027,24 @@ export default function CrmTasksPage() {
                                                 ? 'On Hold'
                                                 : 'Not Started'
                               }
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              className={`inline-flex items-center whitespace-nowrap border text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                                 task.status === 'completed'
-                                  ? 'bg-[#16A34A] text-white'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : task.status === 'wip'
-                                    ? 'bg-[#2563EB] text-white'
+                                    ? 'bg-sky-50 text-sky-700 border-sky-200'
                                     : task.status === 'pendingfromclient'
-                                      ? 'bg-[#D97706] text-white'
+                                      ? 'bg-amber-50 text-amber-800 border-amber-200'
                                       : task.status === 'invoiced'
-                                        ? 'bg-[#7C3AED] text-white'
+                                        ? 'bg-violet-50 text-violet-700 border-violet-200'
                                         : task.status === 'returnback'
-                                          ? 'bg-[#0891B2] text-white'
+                                          ? 'bg-cyan-50 text-cyan-700 border-cyan-200'
                                           : task.status === 'cancel'
-                                            ? 'bg-[#6B7280] text-white'
+                                            ? 'bg-slate-100 text-slate-600 border-slate-200'
                                             : task.status === 'feespending'
-                                              ? 'bg-[#EA580C] text-white'
+                                              ? 'bg-orange-50 text-orange-700 border-orange-200'
                                               : task.status === 'onhold'
-                                                ? 'bg-[#B45309] text-white'
-                                                : 'bg-[#DC2626] text-white'
+                                                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                                : 'bg-rose-50 text-rose-700 border-rose-200'
                               }`}
                             >
                               {STATUS_SHORT_MAP[task.status] || 'Not Started'}
@@ -1093,7 +1093,7 @@ export default function CrmTasksPage() {
                               {task.assignTo === 'Un-Assign' ||
                               task.isAssign === 0 ||
                               !task.assignedToId ? (
-                                <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs">
+                                <span className="inline-flex items-center whitespace-nowrap bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-semibold px-2 py-0.5 rounded-full">
                                   Un-Assign
                                 </span>
                               ) : (
@@ -1131,24 +1131,24 @@ export default function CrmTasksPage() {
                                                 ? 'On Hold'
                                                 : 'Not Started'
                               }
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              className={`inline-flex items-center whitespace-nowrap border text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                                 task.status === 'completed'
-                                  ? 'bg-[#16A34A] text-white'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : task.status === 'wip'
-                                    ? 'bg-[#2563EB] text-white'
+                                    ? 'bg-sky-50 text-sky-700 border-sky-200'
                                     : task.status === 'pendingfromclient'
-                                      ? 'bg-[#D97706] text-white'
+                                      ? 'bg-amber-50 text-amber-800 border-amber-200'
                                       : task.status === 'invoiced'
-                                        ? 'bg-[#7C3AED] text-white'
+                                        ? 'bg-violet-50 text-violet-700 border-violet-200'
                                         : task.status === 'returnback'
-                                          ? 'bg-[#0891B2] text-white'
+                                          ? 'bg-cyan-50 text-cyan-700 border-cyan-200'
                                           : task.status === 'cancel'
-                                            ? 'bg-[#6B7280] text-white'
+                                            ? 'bg-slate-100 text-slate-600 border-slate-200'
                                             : task.status === 'feespending'
-                                              ? 'bg-[#EA580C] text-white'
+                                              ? 'bg-orange-50 text-orange-700 border-orange-200'
                                               : task.status === 'onhold'
-                                                ? 'bg-[#B45309] text-white'
-                                                : 'bg-[#DC2626] text-white'
+                                                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                                : 'bg-rose-50 text-rose-700 border-rose-200'
                               }`}
                             >
                               {STATUS_SHORT_MAP[task.status] || 'Not Started'}
@@ -1235,10 +1235,20 @@ export default function CrmTasksPage() {
 
                                     {/* Status Pill */}
                                     <span
-                                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-2xs ${
+                                      className={`inline-flex items-center whitespace-nowrap border text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${
                                         tl.status === 5
-                                          ? 'bg-[#16A34A] text-white'
-                                          : 'bg-[#EF4444] text-white'
+                                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                          : tl.status === 2
+                                            ? 'bg-sky-50 text-sky-700 border-sky-200'
+                                            : tl.status === 3 || tl.status === 9
+                                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                              : tl.status === 4
+                                                ? 'bg-violet-50 text-violet-700 border-violet-200'
+                                                : tl.status === 6
+                                                  ? 'bg-cyan-50 text-cyan-700 border-cyan-200'
+                                                  : tl.status === 7
+                                                    ? 'bg-slate-100 text-slate-600 border-slate-200'
+                                                    : 'bg-rose-50 text-rose-700 border-rose-200'
                                       }`}
                                     >
                                       {STATUS_LABELS_MAP[tl.status] || 'Unknown'}
