@@ -64,7 +64,74 @@ interface ServiceItem {
   category_name?: string;
   cp_type?: number; // 1=Basic 2=Standard 3=Premium 4=Diamond 0=none
   cp_id?: number; // combo_packages primary key
+
   cp_discount?: number;
+}
+
+const EMPTY_DATE_RE = /^(na|n\/a|null|undefined|not required|-|—|\s*)$/i;
+const MONTH_INDEX: Record<string, number> = {
+  jan: 1,
+  feb: 2,
+  mar: 3,
+  apr: 4,
+  may: 5,
+  jun: 6,
+  jul: 7,
+  aug: 8,
+  sep: 9,
+  oct: 10,
+  nov: 11,
+  dec: 12,
+};
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+function toDateParts(value: unknown): { y: number; m: number; d: number } | null {
+  if (value === null || value === undefined || value === '') return null;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const iso = value.toISOString();
+    if (/T00:00:00(?:\.000)?Z$/.test(iso)) {
+      const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+      return { y, m, d };
+    }
+    const ist = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(value);
+    const [y, m, d] = ist.split('-').map(Number);
+    return { y, m, d };
+  }
+  const raw = String(value).trim();
+  if (!raw || EMPTY_DATE_RE.test(raw)) return null;
+  let match = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T].*)?$/);
+  if (match) return { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) };
+  match = raw.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})(?:\s.*)?$/);
+  if (match) {
+    const a = Number(match[1]);
+    const b = Number(match[2]);
+    const y = Number(match[3]);
+    if (b <= 12) return { y, m: b, d: a };
+    if (a <= 12) return { y, m: a, d: b };
+  }
+  match = raw.match(/^[A-Za-z]{3}\s+([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})(?:\s|$)/);
+  if (match) {
+    const month = MONTH_INDEX[match[1].toLowerCase()];
+    if (month) return { y: Number(match[3]), m: month, d: Number(match[2]) };
+  }
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) return toDateParts(parsed);
+  return null;
+}
+
+/** Display dates as DD-MM-YYYY (IST). Empty/NA values become '—'. */
+function formatDisplayDate(value: unknown): string {
+  const parts = toDateParts(value);
+  if (!parts) return '—';
+  return `${pad2(parts.d)}-${pad2(parts.m)}-${parts.y}`;
 }
 
 export default function CrmAccountsPage() {
@@ -1534,7 +1601,9 @@ export default function CrmAccountsPage() {
                     <td className="py-2.5 px-3 font-bold text-slate-800">{item.total}</td>
                     <td className="py-2.5 px-3 font-bold text-emerald-700">{item.paid}</td>
                     <td className="py-2.5 px-3 font-bold text-red-600">{item.unpaid}</td>
-                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{item.dueDate}</td>
+                    <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                      {formatDisplayDate(item.dueDate)}
+                    </td>
                     <td className="py-2.5 px-3 text-center relative">
                       <button
                         onClick={() => {
@@ -4156,9 +4225,9 @@ export default function CrmAccountsPage() {
                                 </span>
                               )}
                             </div>
-                            {t.due_date && (
+                            {formatDisplayDate(t.due_date) !== '—' && (
                               <p className="text-[10px] text-slate-400 mt-1 pl-1">
-                                Due: {t.due_date}
+                                Due: {formatDisplayDate(t.due_date)}
                               </p>
                             )}
                           </div>
@@ -4519,7 +4588,8 @@ export default function CrmAccountsPage() {
                                   )}
                                 </div>
                                 <span className="text-[11px] text-slate-500 whitespace-nowrap">
-                                  {entry.date || '—'} {entry.time ? `• ${entry.time}` : ''}
+                                  {formatDisplayDate(entry.date)}
+                                  {entry.time ? ` • ${entry.time}` : ''}
                                 </span>
                               </div>
                               <p className="text-xs text-slate-700 leading-relaxed">
@@ -4552,9 +4622,21 @@ export default function CrmAccountsPage() {
                 <div className="space-y-4">
                   {(() => {
                     const s = detailsPrice?.summary;
-                    const totalAmt = s?.total_amount ?? activeCustomer.total ?? 0;
-                    const paidAmt = s?.paid_amount ?? activeCustomer.paid ?? 0;
-                    const unpaidAmt = s?.unpaid_amount ?? activeCustomer.unpaid ?? 0;
+                    const totalAmt = Number(s?.total_amount ?? activeCustomer.total ?? 0);
+                    const paidAmt = Number(s?.paid_amount ?? activeCustomer.paid ?? 0);
+                    const unpaidAmt = Math.max(
+                      s?.unpaid_amount != null ? Number(s.unpaid_amount) : totalAmt - paidAmt,
+                      0
+                    );
+                    const emiType = Number(s?.emi_type ?? 1);
+                    const secondAmt = Number(s?.second_emi_amount ?? 0);
+                    const thirdAmt = Number(s?.third_emi_amount ?? 0);
+                    const secondDue = formatDisplayDate(
+                      s?.second_due_date || activeCustomer.dueDate
+                    );
+                    const thirdDue = formatDisplayDate(s?.third_due_date);
+                    const showSecondEmi = emiType >= 2 && (secondAmt > 0 || secondDue !== '—');
+                    const showThirdEmi = emiType === 3 && thirdAmt > 0;
                     const planNames: Record<number, string> = {
                       1: 'Basic',
                       2: 'Standard',
@@ -4637,22 +4719,27 @@ export default function CrmAccountsPage() {
                               </span>
                             )}
                           </div>
-                          <div>
-                            <span className="text-slate-500 block">2nd EMI & Due Date</span>
-                            <span className="font-semibold text-slate-800">
-                              ₹{Number(s?.second_emi_amount ?? 0).toLocaleString('en-IN')} •{' '}
-                              {s?.second_due_date || activeCustomer.dueDate || 'NA'}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block">3rd EMI & Due Date</span>
-                            <span className="font-semibold text-slate-800">
-                              {s?.third_emi_amount
-                                ? `₹${Number(s.third_emi_amount).toLocaleString('en-IN')}`
-                                : 'NA'}{' '}
-                              • {s?.third_due_date || 'NA'}
-                            </span>
-                          </div>
+                          {showSecondEmi && (
+                            <div>
+                              <span className="text-slate-500 block">2nd EMI & Due Date</span>
+                              <span className="font-semibold text-slate-800">
+                                ₹{secondAmt.toLocaleString('en-IN')} • {secondDue}
+                              </span>
+                            </div>
+                          )}
+                          {showThirdEmi && (
+                            <div>
+                              <span className="text-slate-500 block">3rd EMI & Due Date</span>
+                              <span className="font-semibold text-slate-800">
+                                ₹{thirdAmt.toLocaleString('en-IN')} • {thirdDue}
+                              </span>
+                            </div>
+                          )}
+                          {!showSecondEmi && !showThirdEmi && (
+                            <div className="sm:col-span-2 text-slate-500">
+                              No further EMI instalments recorded for this order.
+                            </div>
+                          )}
                           <div className="sm:col-span-2 pt-2 border-t border-slate-100">
                             <span className="text-slate-500 block">Payment / EMI Comment</span>
                             <span className="text-slate-800 font-medium">
@@ -4689,12 +4776,14 @@ export default function CrmAccountsPage() {
                                     </td>
                                     <td className="px-3 py-2 text-rose-600 font-semibold">
                                       ₹
-                                      {(e.emi_unpaid_amount + (e.second_emi || 0)).toLocaleString(
-                                        'en-IN'
-                                      )}
+                                      {Math.max(
+                                        Number(e.emi_total_amount || 0) -
+                                          Number(e.emi_paid_amount || 0),
+                                        0
+                                      ).toLocaleString('en-IN')}
                                     </td>
                                     <td className="px-3 py-2 whitespace-nowrap">
-                                      {e.emi_due_date || '—'}
+                                      {formatDisplayDate(e.emi_due_date)}
                                     </td>
                                     <td className="px-3 py-2 text-slate-600">
                                       {e.emi_comment || '—'}
@@ -4734,7 +4823,9 @@ export default function CrmAccountsPage() {
                             <span className="font-bold text-slate-700">{msg.from_name}</span>
                             <span>→</span>
                             <span>{msg.to_name}</span>
-                            {msg.date && <span>• {msg.date}</span>}
+                            {formatDisplayDate(msg.date) !== '—' && (
+                              <span>• {formatDisplayDate(msg.date)}</span>
+                            )}
                           </div>
                           <p className="leading-relaxed">{msg.chat_msg}</p>
                         </div>

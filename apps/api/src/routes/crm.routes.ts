@@ -35,10 +35,83 @@ const router = Router();
 router.use(verifyJWT);
 
 // Helper to serialize BigInt fields to JSON
+
 function serializeBigInt(obj: any): any {
   return JSON.parse(
     JSON.stringify(obj, (key, value) => (typeof value === 'bigint' ? value.toString() : value))
   );
+}
+
+const EMPTY_DATE_RE = /^(na|n\/a|null|undefined|not required|-|—|\s*)$/i;
+const MONTH_INDEX: Record<string, number> = {
+  jan: 1,
+  feb: 2,
+  mar: 3,
+  apr: 4,
+  may: 5,
+  jun: 6,
+  jul: 7,
+  aug: 8,
+  sep: 9,
+  oct: 10,
+  nov: 11,
+  dec: 12,
+};
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+function toDateParts(value: unknown): { y: number; m: number; d: number } | null {
+  if (value === null || value === undefined || value === '') return null;
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const iso = value.toISOString();
+    if (/T00:00:00(?:\.000)?Z$/.test(iso)) {
+      const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+      return { y, m, d };
+    }
+    const ist = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(value);
+    const [y, m, d] = ist.split('-').map(Number);
+    return { y, m, d };
+  }
+
+  const raw = String(value).trim();
+  if (!raw || EMPTY_DATE_RE.test(raw)) return null;
+
+  let match = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T].*)?$/);
+  if (match) return { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) };
+
+  match = raw.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})(?:\s.*)?$/);
+  if (match) {
+    const a = Number(match[1]);
+    const b = Number(match[2]);
+    const y = Number(match[3]);
+    if (b <= 12) return { y, m: b, d: a };
+    if (a <= 12) return { y, m: a, d: b };
+  }
+
+  match = raw.match(/^[A-Za-z]{3}\s+([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})(?:\s|$)/);
+  if (match) {
+    const month = MONTH_INDEX[match[1].toLowerCase()];
+    if (month) return { y: Number(match[3]), m: month, d: Number(match[2]) };
+  }
+
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) return toDateParts(parsed);
+  return null;
+}
+
+/** Display date as DD-MM-YYYY (IST calendar date). Returns null for empty/NA. */
+function formatDateDmy(value: unknown): string | null {
+  const parts = toDateParts(value);
+  if (!parts) return null;
+  return `${pad2(parts.d)}-${pad2(parts.m)}-${parts.y}`;
 }
 
 // 1. Live CRM Aggregated Statistics across all 66 tables
@@ -2291,14 +2364,11 @@ router.get('/customers', async (req, res) => {
     };
 
     const mapped = custsRaw.map((c: any) => {
-      const totalAmt = c.emi_total_amount
-        ? Number(c.emi_total_amount)
-        : Number(c.total_amount) || 0;
-      const paidAmt = c.emi_paid_amount ? Number(c.emi_paid_amount) : Number(c.total_amount) || 0;
-      const unpaidAmt = c.emi_unpaid_amount
-        ? Number(c.emi_unpaid_amount)
-        : Math.max(totalAmt - paidAmt, 0);
-      const dueDate = c.emi_due_date ? String(c.emi_due_date).split('T')[0] : '—';
+      const hasEmi = c.emi_total_amount !== null && c.emi_total_amount !== undefined;
+      const totalAmt = hasEmi ? Number(c.emi_total_amount ?? 0) : Number(c.total_amount) || 0;
+      const paidAmt = hasEmi ? Number(c.emi_paid_amount ?? 0) : totalAmt;
+      const unpaidAmt = Math.max(totalAmt - paidAmt, 0);
+      const dueDate = formatDateDmy(c.emi_due_date) || '—';
       const planType = c.cp_type ? typeMap[Number(c.cp_type)] || 'standard' : 'standard';
 
       return {
@@ -2323,7 +2393,7 @@ router.get('/customers', async (req, res) => {
         paid: paidAmt,
         unpaid: unpaidAmt,
         dueDate,
-        date: c.order_date ? String(c.order_date).split('T')[0] : '',
+        date: formatDateDmy(c.order_date) || '',
       };
     });
 
@@ -3254,7 +3324,8 @@ router.get('/customers/:id/timeline', async (req, res) => {
           task_name: t.task_name,
           service_name: t.service_name || null,
           assigned_user_name: t.assigned_user_name || null,
-          due_date: t.due_date || null,
+          due_date: formatDateDmy(t.due_date),
+          assign_date: formatDateDmy(t.assign_date),
           actual_task_status: t.actual_task_status ?? t.original_task_status ?? 1,
         })),
         timeline: timeline.map((row) => ({
@@ -3268,7 +3339,7 @@ router.get('/customers/:id/timeline', async (req, res) => {
           status: Number(row.status || 1),
           added_by: Number(row.added_by || 0),
           username: row.username || 'Staff',
-          date: row.date || '',
+          date: formatDateDmy(row.date) || '',
           time: row.time || '',
           start_time: row.start_time ? String(row.start_time) : null,
           end_time: row.end_time ? String(row.end_time) : null,
@@ -3353,17 +3424,21 @@ router.get('/customers/:id/service-price', async (req, res) => {
 
     const order = orderRows[0] || null;
     const primaryEmi = emiRows[0] || null;
+    const emiType = primaryEmi ? Number(primaryEmi.emi_type || 1) : 1;
     const totalAmount = primaryEmi
       ? Number(primaryEmi.emi_total_amount ?? 0)
       : Number(order?.total_amount ?? order?.service_price ?? 0);
-    const paidAmount = primaryEmi
-      ? Number(primaryEmi.emi_paid_amount ?? 0)
-      : Number(order?.total_amount ?? 0);
+    // Paid is the running total stored on customer_emi (old OMController adds each payment).
+    const paidAmount = primaryEmi ? Number(primaryEmi.emi_paid_amount ?? 0) : totalAmount;
+    // Remaining unpaid is always total - paid (not 2nd EMI + 3rd EMI).
+    const unpaidAmount = Math.max(totalAmount - paidAmount, 0);
     const secondInstallment = primaryEmi ? Number(primaryEmi.emi_unpaid_amount ?? 0) : 0;
-    const thirdInstallment = primaryEmi ? Number(primaryEmi.second_emi ?? 0) : 0;
-    const unpaidAmount = primaryEmi
-      ? secondInstallment + thirdInstallment
-      : Math.max(totalAmount - paidAmount, 0);
+    const thirdRaw =
+      primaryEmi && primaryEmi.second_emi !== null && primaryEmi.second_emi !== undefined
+        ? Number(primaryEmi.second_emi)
+        : 0;
+    // 3rd EMI is only a real installment in 3-pay mode (emi_type = 3).
+    const thirdInstallment = emiType === 3 && thirdRaw > 0 ? thirdRaw : 0;
 
     res.json({
       success: true,
@@ -3388,38 +3463,38 @@ router.get('/customers/:id/service-price', async (req, res) => {
             order?.cp_discount !== null && order?.cp_discount !== undefined
               ? Number(order.cp_discount)
               : 0,
-          emi_type: primaryEmi ? Number(primaryEmi.emi_type) : 1,
+          emi_type: emiType,
           total_amount: totalAmount,
           paid_amount: paidAmount,
           unpaid_amount: unpaidAmount,
           second_emi_amount: secondInstallment,
-          second_due_date: primaryEmi?.emi_due_date
-            ? String(primaryEmi.emi_due_date).split('T')[0]
-            : null,
+          second_due_date: formatDateDmy(primaryEmi?.emi_due_date),
           third_emi_amount: thirdInstallment,
-          third_due_date: primaryEmi?.second_emi_due_date
-            ? String(primaryEmi.second_emi_due_date).split('T')[0]
-            : null,
+          third_due_date: formatDateDmy(primaryEmi?.second_emi_due_date),
           emi_comment: primaryEmi?.emi_comment || '',
-          order_date: order?.order_date ? String(order.order_date) : null,
+          order_date: formatDateDmy(order?.order_date),
         },
-        emis: emiRows.map((e) => ({
-          emi_id: Number(e.emi_id),
-          customer_id: Number(e.customer_id),
-          order_id: Number(e.order_id),
-          emi_type: Number(e.emi_type),
-          emi_total_amount: Number(e.emi_total_amount ?? 0),
-          emi_paid_amount: Number(e.emi_paid_amount ?? 0),
-          emi_unpaid_amount: Number(e.emi_unpaid_amount ?? 0),
-          emi_due_date: e.emi_due_date ? String(e.emi_due_date).split('T')[0] : null,
-          second_emi:
-            e.second_emi !== null && e.second_emi !== undefined ? Number(e.second_emi) : 0,
-          second_emi_due_date: e.second_emi_due_date
-            ? String(e.second_emi_due_date).split('T')[0]
-            : null,
-          emi_comment: e.emi_comment || '',
-          date: e.date ? String(e.date) : null,
-        })),
+        emis: emiRows.map((e) => {
+          const rowTotal = Number(e.emi_total_amount ?? 0);
+          const rowPaid = Number(e.emi_paid_amount ?? 0);
+          return {
+            emi_id: Number(e.emi_id),
+            customer_id: Number(e.customer_id),
+            order_id: Number(e.order_id),
+            emi_type: Number(e.emi_type),
+            emi_total_amount: rowTotal,
+            emi_paid_amount: rowPaid,
+            emi_unpaid_amount: Math.max(rowTotal - rowPaid, 0),
+            emi_due_date: formatDateDmy(e.emi_due_date),
+            second_emi:
+              Number(e.emi_type) === 3 && e.second_emi !== null && e.second_emi !== undefined
+                ? Number(e.second_emi)
+                : 0,
+            second_emi_due_date: formatDateDmy(e.second_emi_due_date),
+            emi_comment: e.emi_comment || '',
+            date: formatDateDmy(e.date),
+          };
+        }),
       }),
     });
   } catch (error: any) {
@@ -3506,7 +3581,7 @@ router.get('/customers/:id/direct-chat', async (req, res) => {
           from_name: r.from_name,
           to_name: r.to_name,
           chat_msg: r.chat_msg || '',
-          date: r.date ? String(r.date) : null,
+          date: formatDateDmy(r.date),
         }))
       ),
     });
