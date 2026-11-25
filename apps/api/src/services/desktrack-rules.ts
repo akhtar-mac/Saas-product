@@ -168,14 +168,23 @@ export function isYmd(v: unknown): v is string {
  * (the placeholder in the old form, and the one live row), so accept a bare
  * host too, store it exactly as typed (trimmed) so the desktop client match is unchanged.
  */
+/**
+ * Canonical host for blocked_websites.website_url.
+ * The desktop client (etaxwala.com/api/blocked-websites/{user_id}) receives a
+ * JSON array of these strings. The only successful historical row is
+ * `www.youtube.com` (host only, no scheme). Pasted URLs are reduced to host
+ * so the client gets the same shape.
+ */
 export function normaliseBlockedSite(raw: unknown): string | null {
   const v = String(raw ?? '').trim();
   if (!v || v.length > 255 || /\s/.test(v)) return null;
   const withScheme = /^[a-z]+:\/\//i.test(v) ? v : `http://${v}`;
   try {
     const u = new URL(withScheme);
-    if (!u.hostname || !u.hostname.includes('.')) return null;
-    return v;
+    const host = u.hostname.replace(/\.$/, '').toLowerCase();
+    if (!host || !host.includes('.')) return null;
+    if (host === 'localhost') return null;
+    return host;
   } catch {
     return null;
   }

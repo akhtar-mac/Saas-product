@@ -69,6 +69,15 @@ not exist; screenshots are served only behind staff login).
   exists on live; the new page shows a notice if it is ever missing.
 - Old Block Website page was a stub (empty table, form posted to the lead form). Old
   "block website for IP" wrote a `device_ip` column that does not exist.
+- Block-website end to end: the Windows client calls `GET etaxwala.com/api/blocked-websites/{user_id}`
+  (no auth) and receives a JSON array of `website_url` strings for that `users.id` (the id
+  returned by `user-desktop-login`). The new CRM writes `user_id` + a host-only `website_url`
+  (e.g. `www.youtube.com`, same as the only historical live row). The old admin path never
+  wrote `user_id`, so the client almost never received a list. The live row (`user_id` 44,
+  `www.youtube.com`) is an orphan — that id is not a `users` row, so no signed-in PC will
+  fetch it. We cannot confirm the installed client actually enforces the list (no client
+  source); if it does, a new block on a real staff login will be visible on the next client
+  poll of etaxwala.com. Do not change etaxwala.com.
 - On this line `POST /v1/crm/employees` and `PUT /v1/crm/employees/:id` (crm.routes) still write
   `desktop_users` rows (left unchanged); prefer Desktrack → Desktop users.
 

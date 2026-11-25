@@ -240,8 +240,11 @@ router.get(
         id: Number(r.id),
         user_id: r.user_id,
         staff_name: names.get(r.user_id) ?? null,
+        staff_exists: names.has(r.user_id),
         website_url: r.website_url,
         created_at: wall(r.created_at),
+        // Same list the Windows client gets from etaxwala.com/api/blocked-websites/{user_id}
+        client_path: `/api/blocked-websites/${r.user_id}`,
       })),
     });
   })
@@ -260,6 +263,8 @@ router.post(
       where: { user_id: userId, website_url: url },
     });
     if (dup) return bad(res, 'This website is already blocked for this staff member', 409);
+    // Write the same columns the old client API reads: user_id + website_url.
+    // (The old Manage IPs form wrote device_ip, which this table does not have.)
     // This schema's blocked_websites model has no id default (the column is
     // AUTO_INCREMENT in the database), so insert with bound raw SQL.
     const stamp = istStamp();

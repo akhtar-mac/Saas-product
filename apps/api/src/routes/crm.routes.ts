@@ -4604,44 +4604,21 @@ router.get('/desktrack/sessions', (_req, res) => {
   });
 });
 
-router.get('/desktrack/blocked', async (_req, res) => {
-  try {
-    const blocked = await prisma.blocked_websites.findMany({
-      take: 100,
-      orderBy: { created_at: 'desc' },
-    });
-    const urls = blocked.map((b: any) => b.website_url);
-    res.json({
-      success: true,
-      data: urls.length > 0 ? urls : ['facebook.com', 'instagram.com', 'netflix.com'],
-    });
-  } catch {
-    res.json({ success: true, data: ['facebook.com', 'instagram.com', 'netflix.com'] });
-  }
+// Real list/create/update/delete live on desktrack.routes.ts, mounted first at
+// /v1/crm/desktrack. These leftovers returned demo sites (facebook/instagram)
+// and wrote every new block as user_id 1, which the desktop client never sees.
+router.get('/desktrack/blocked', (_req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Use /v1/crm/desktrack/blocked (Desktrack router).',
+  });
 });
 
-router.post('/desktrack/blocked', async (req, res) => {
-  try {
-    const { url } = req.body;
-    if (!url) return res.status(400).json({ success: false, error: 'URL is required' });
-    const maxB = await prisma.blocked_websites.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
-    const nextId = (maxB?.id ? Number(maxB.id) : 100) + 1;
-    await prisma.blocked_websites.create({
-      data: {
-        id: nextId,
-        user_id: 1,
-        website_url: url.trim(),
-        created_at: new Date(),
-        updated_at: new Date(),
-      },
-    });
-    res.json({ success: true, message: `URL ${url} added to blocked list in database` });
-  } catch (error) {
-    res.status(500).json({ success: false, error: 'Failed to block website' });
-  }
+router.post('/desktrack/blocked', (_req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Use /v1/crm/desktrack/blocked (Desktrack router).',
+  });
 });
 
 // 4.14.11 - 4.14.15: System Reports
