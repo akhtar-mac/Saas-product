@@ -153,6 +153,7 @@ export const PERMISSIONS: PermissionDef[] = [
   P('operations:customer_details', 'Customer Details list', 'Operations', { manager: true }),
   P('operations:customer_timeline', 'Customer work timeline', 'Operations'),
   P('operations:customer_dues', 'Customer dues & EMI', 'Operations', { manager: true }),
+  P('accounts:emi_collect', 'Collect EMI payments & schedule installments', 'Operations'),
   P('operations:tasks_view', 'Manage Tasks: view', 'Operations'),
   P('operations:tasks_view_all', 'Manage Tasks: all staff tasks', 'Operations', { manager: true }),
   P('operations:tasks_assign', 'Manage Tasks: assign', 'Operations', { manager: true }),
@@ -407,6 +408,14 @@ export const ROLE_DEFAULTS: Record<number, string[]> = {
   15: ['dashboard:view', ...CHAT, 'leads:subbrands', 'blogs:manage', 'it:view'],
   16: ['dashboard:view', ...CHAT],
 };
+
+// EMI collect / schedule (Manage Customer → Service Price & EMI): same roles the
+// EMI release allowed before options existed (Ops Manager/Employee/Assistant, Franchise).
+for (const id of [3, 6, 8, 10, 12]) {
+  if (ROLE_DEFAULTS[id] && !ROLE_DEFAULTS[id].includes('accounts:emi_collect')) {
+    ROLE_DEFAULTS[id].push('accounts:emi_collect');
+  }
+}
 
 /**
  * Old permission keys still used by older screens / old JWTs -> new keys.

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request } from 'express';
 import { prisma } from '../config/db.js';
 import { validateBody } from '../middleware/validate.middleware.js';
 import { verifyJWT } from '../middleware/auth.middleware.js';
@@ -3384,7 +3384,29 @@ const ALLOWED_EMI_PAYMENT_MODES = new Set([
   'Other',
 ]);
 
-function canUserCollectEmi(user?: JwtPayload): boolean {
+function canUserCollectEmi(req: Request): boolean {
+  // With role-based access, the user's options decide (an admin can add or remove it).
+  if (req.rbac) {
+    return req.rbac.has('accounts:emi_collect') || req.rbac.has('operations:customer_dues');
+  }
+  return canUserCollectEmiByRole(req.user);
+}
+
+/** Actor + request fields for Activity Logs (RBAC columns when present). */
+function emiAuditActor(req: Request) {
+  const p = req.rbac?.profile;
+  return {
+    actorId: p?.id ?? req.user?.user_id,
+    actorEmail: p?.email ?? req.user?.email,
+    actorName: p?.name ?? (req.user as any)?.username,
+    actorRole: p?.roleKey ?? req.user?.role_name,
+    actorSource: p?.source,
+    method: req.method,
+    path: req.originalUrl.split('?')[0],
+  };
+}
+
+function canUserCollectEmiByRole(user?: JwtPayload): boolean {
   if (!user) return false;
   const allowedRoleNames = new Set([
     'super_admin',
@@ -3746,7 +3768,7 @@ router.get('/customers/:id/service-price', async (req, res) => {
       success: true,
       data: serializeBigInt({
         schema_ready: schemaReady,
-        can_collect: canUserCollectEmi(req.user),
+        can_collect: canUserCollectEmi(req),
         summary: {
           primary_emi_id: primaryEmi ? Number(primaryEmi.emi_id) : null,
           order_id: order
@@ -3831,7 +3853,7 @@ router.get('/customers/:id/service-price', async (req, res) => {
 
 // 13b-3a. Collect an EMI payment (creates customer_dues + customer_due_details, updates customer_emi & schedule)
 router.post('/customers/:id/emi/collect', (req, res) => {
-  if (!canUserCollectEmi(req.user)) {
+  if (!canUserCollectEmi(req)) {
     return res.status(403).json({
       success: false,
       error: 'You do not have permission to collect EMI payments.',
@@ -4085,11 +4107,13 @@ router.post('/customers/:id/emi/collect', (req, res) => {
         };
       });
 
+      res.locals.auditLogged = true;
       await recordAuditLog({
-        actorId: req.user?.user_id,
-        actorEmail: req.user?.email,
-        actorRole: req.user?.role_name,
+        ...emiAuditActor(req),
         action: 'emi_collect',
+        module: 'Customers',
+        summary: `Collected EMI ₹${Number(rawAmount).toLocaleString('en-IN')} (${paymentMode}) for customer #${req.params.id}`,
+        statusCode: 200,
         resource: 'customer_emi',
         resourceId: String(result.emiId),
         oldState: {
@@ -4149,7 +4173,7 @@ router.post('/customers/:id/emi/collect', (req, res) => {
 
 // 13b-3b. Add or update scheduled EMI installment (EMI 2, 3, 4, ...) until scheduled total covers unpaid
 router.post('/customers/:id/emi/schedule', async (req, res) => {
-  if (!canUserCollectEmi(req.user)) {
+  if (!canUserCollectEmi(req)) {
     return res.status(403).json({
       success: false,
       error: 'You do not have permission to schedule EMI installments.',
@@ -4426,11 +4450,13 @@ router.post('/customers/:id/emi/schedule', async (req, res) => {
       };
     });
 
+    res.locals.auditLogged = true;
     await recordAuditLog({
-      actorId: req.user?.user_id,
-      actorEmail: req.user?.email,
-      actorRole: req.user?.role_name,
+      ...emiAuditActor(req),
       action: result.isEdit ? 'emi_schedule_update' : 'emi_schedule',
+      module: 'Customers',
+      summary: `${result.isEdit ? 'Updated' : 'Scheduled'} EMI ${result.installmentNo} (₹${Number(result.amount).toLocaleString('en-IN')}) for customer #${custId}`,
+      statusCode: 200,
       resource: 'customer_emi',
       resourceId: String(result.emiId),
       newState: {

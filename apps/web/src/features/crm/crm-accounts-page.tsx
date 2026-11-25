@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
 import { API_BASE_URL } from '@/lib/api-base';
+import { accessListHas, isServerAccessList } from './permissions';
 import EmiServicePricePanel, {
   type ServicePricePayload,
 } from './components/emi-service-price-panel';
@@ -147,6 +148,14 @@ export default function CrmAccountsPage() {
       activeRole !== RoleType.OPERATIONS_EMPLOYEE &&
       !(staffUser?.roles || []).includes(RoleType.OPERATIONS_EMPLOYEE));
   const canManageEmi = (() => {
+    // Role-based access: the server's option list decides (admins can add/remove it).
+    if (isServerAccessList(staffUser?.permissions)) {
+      const list = staffUser?.permissions || [];
+      return (
+        accessListHas(list, 'accounts:emi_collect') ||
+        accessListHas(list, 'operations:customer_dues')
+      );
+    }
     if (isSalesEmployeeView) return false;
     const allowedRoles = new Set<string>([
       RoleType.SUPER_ADMIN,
