@@ -29,18 +29,23 @@ import {
   Target,
   Terminal,
   MapPin,
+  ScrollText,
+  Trash2,
+  KeyRound,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
 import CommandPalette from './components/command-palette';
 import NotificationCenter, { NotificationBadge } from './components/notification-center';
-import { hasUserPermission } from './permissions';
+import { hasUserPermission, isServerAccessList } from './permissions';
+import { useAccessSync } from './access/use-access-sync';
 import { ChatNotificationProvider, useChatNotification } from './context/chat-notification-context';
 import { SignOutConfirmModal } from '@/components/ui/sign-out-modal';
 
 function CrmLayoutContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    extraAccess: true,
     sales: true,
     operations: true,
     admin: false,
@@ -64,6 +69,8 @@ function CrmLayoutContent() {
   const { staffUser, activeRole, setStaffRole, logoutStaff } = useAuthStore();
   const { unreadChatCount } = useChatNotification();
   const UNREAD_COUNT = 4;
+  // Options added/removed on the Users & Access page reach the menu within a minute.
+  useAccessSync();
 
   const toggleSection = (section: string) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -400,8 +407,12 @@ function CrmLayoutContent() {
   };
 
   const can = (permKey: string) => {
-    return hasUserPermission(staffUser?.permissions, activeRole, permKey, staffUser?.roles);
+    return hasUserPermission(staffUser?.permissions, activeRole, permKey, [
+      ...((staffUser?.roles as (string | number)[]) || []),
+      ...(staffUser?.roleIds || []),
+    ]);
   };
+  const serverAccess = isServerAccessList(staffUser?.permissions);
 
   const handleNavClick = () => {
     if (window.innerWidth < 768) {
@@ -497,6 +508,8 @@ function CrmLayoutContent() {
     !isOpsManager &&
     (can('admin:view') ||
       can('users:manage') ||
+      can('logs:view') ||
+      can('recycle_bin:view') ||
       can('categories:manage') ||
       can('services:manage') ||
       can('packages:manage') ||
@@ -520,6 +533,104 @@ function CrmLayoutContent() {
       can('tasks:view') ||
       can('appointments:manage') ||
       isActiveRole(RoleType.OPERATIONS_EMPLOYEE));
+
+  // Links for options outside the user's own role menu (only with server-driven access).
+  const extraLinkDefs: { perm: string; label: string; to: string; shownAlready: boolean }[] = [
+    {
+      perm: 'calls:view_all',
+      label: 'Call Report (all staff)',
+      to: '/crm/call-analytics',
+      shownAlready: showOpsSection || showSalesSection,
+    },
+    {
+      perm: 'leads:view_all',
+      label: 'All Leads',
+      to: '/crm/leads',
+      shownAlready: showSalesSection,
+    },
+    {
+      perm: 'operations:customers_view',
+      label: 'Manage Customer',
+      to: '/crm/operation-manage-customer',
+      shownAlready: showOpsSection,
+    },
+    {
+      perm: 'operations:customer_details',
+      label: 'Customer Details',
+      to: '/crm/customer-details',
+      shownAlready: showOpsSection,
+    },
+    {
+      perm: 'operations:tasks_view_all',
+      label: 'Manage Tasks (all)',
+      to: '/crm/operation-manage-tasks',
+      shownAlready: showOpsSection || showSalesSection,
+    },
+    {
+      perm: 'operations:employees',
+      label: 'Manage Employee',
+      to: '/crm/operation-manage-employee',
+      shownAlready: showOpsSection,
+    },
+    {
+      perm: 'operations:locations_view',
+      label: 'Locations',
+      to: '/crm/locations',
+      shownAlready: showOpsSection,
+    },
+    {
+      perm: 'desktop_tracking:view',
+      label: 'Desktop Report',
+      to: '/crm/desktop-report',
+      shownAlready: showOpsSection,
+    },
+    {
+      perm: 'workforce:view',
+      label: 'Manage Employees',
+      to: '/crm/workforce',
+      shownAlready: showSalesSection || isAdmin,
+    },
+    {
+      perm: 'quotations:view',
+      label: 'Quotations',
+      to: '/crm/quotations',
+      shownAlready: showSalesSection || showSalesEmployeeSection,
+    },
+    {
+      perm: 'appointments:view',
+      label: 'Appointments',
+      to: '/crm/appointments',
+      shownAlready:
+        showOpsSection || showSalesEmployeeSection || showOpsEmployeeSection || showAdminSection,
+    },
+    {
+      perm: 'users:view',
+      label: 'Users & Access',
+      to: '/crm/users',
+      shownAlready: showAdminSection,
+    },
+    { perm: 'logs:view', label: 'Activity Logs', to: '/crm/logs', shownAlready: showAdminSection },
+    {
+      perm: 'recycle_bin:view',
+      label: 'Recycle Bin',
+      to: '/crm/recycle-bin',
+      shownAlready: showAdminSection,
+    },
+  ];
+  const extraLinks = serverAccess
+    ? extraLinkDefs
+        .filter((l) => !l.shownAlready && can(l.perm))
+        .filter((l, i, arr) => arr.findIndex((x) => x.to === l.to) === i)
+        .map((l) => ({
+          ...l,
+          icon:
+            l.to === '/crm/logs' ? (
+              <ScrollText className="w-3.5 h-3.5 text-slate-400" />
+            ) : l.to === '/crm/recycle-bin' ? (
+              <Trash2 className="w-3.5 h-3.5 text-slate-400" />
+            ) : null,
+        }))
+    : [];
 
   return (
     <div className="crm-shell h-screen bg-[#FAF9F5] text-slate-800 flex flex-col md:flex-row font-sans overflow-hidden">
@@ -1739,7 +1850,35 @@ function CrmLayoutContent() {
                             : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
                         }`}
                       >
-                        <span>Users &amp; Roles</span>
+                        <span>Users &amp; Access</span>
+                      </Link>
+                    )}
+
+                    {can('logs:view') && (
+                      <Link
+                        to="/crm/logs"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/logs'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Activity Logs</span>
+                      </Link>
+                    )}
+
+                    {can('recycle_bin:view') && (
+                      <Link
+                        to="/crm/recycle-bin"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/recycle-bin'
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Recycle Bin</span>
                       </Link>
                     )}
 
@@ -1811,6 +1950,46 @@ function CrmLayoutContent() {
                         <span>Appointments</span>
                       </Link>
                     )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Extra options an admin gave this user (Users & Access page) that their
+                own role's menu does not already show. */}
+            {serverAccess && !isSuperAdmin && extraLinks.length > 0 && (
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => toggleSection('extraAccess')}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>More options</span>
+                  </div>
+                  {openSections.extraAccess ? (
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  )}
+                </button>
+                {openSections.extraAccess && (
+                  <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-amber-100 ml-4">
+                    {extraLinks.map((l) => (
+                      <Link
+                        key={l.to + l.label}
+                        to={l.to}
+                        onClick={handleNavClick}
+                        className={`flex items-center gap-2 py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === l.to.split('?')[0]
+                            ? 'bg-blue-50 text-[#1B365D] font-bold'
+                            : 'text-slate-600 hover:text-[#1B365D] hover:bg-slate-50'
+                        }`}
+                      >
+                        {l.icon}
+                        <span>{l.label}</span>
+                      </Link>
+                    ))}
                   </div>
                 )}
               </div>

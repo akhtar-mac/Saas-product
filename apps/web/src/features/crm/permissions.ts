@@ -591,12 +591,58 @@ export const ROLE_NAME_DEFAULT_PERMISSIONS: Record<string, string[]> = {
  * Check if a user has a specific permission.
  * Resolves union of permissions across ALL assigned roles if multi-role.
  */
+// ─── Server-driven access (Users & Access page) ─────────────────────────────
+// Since the RBAC rollout the API sends the user's *effective* option list
+// (role defaults + options an admin added − options an admin removed), marked
+// with this sentinel. When it is present it is the single source of truth.
+export const RBAC_SENTINEL = '__rbac_v2';
+
+/** Older menu keys → the finer keys the server uses. */
+export const PERMISSION_ALIASES: Record<string, string[]> = {
+  'operations:customers': ['operations:customers_view'],
+  'operations:tasks': ['operations:tasks_view'],
+  'leads:view': ['leads:view_own', 'leads:view_all'],
+  'tasks:view': ['operations:internal_tasks_view', 'operations:tasks_view'],
+  'appointments:manage': ['appointments:view'],
+  'call_analytics:view': ['calls:view_all'],
+  'users:manage': ['users:view'],
+  'franchise:partners': ['franchise:partners_manage'],
+  'franchise:inquiries': ['franchise:inquiries_manage'],
+  'franchise:training': ['franchise:training_view'],
+  'franchise:leads': ['franchise:leads_manage'],
+  'franchise:orders': ['franchise:orders_view'],
+};
+
+const SUPER_ADMIN_ONLY_KEYS = new Set(['recycle_bin:purge']);
+
+export function isServerAccessList(list: string[] | undefined): boolean {
+  return Array.isArray(list) && list.includes(RBAC_SENTINEL);
+}
+
+/** True when a server option list grants `perm` (directly, by '*', or by an alias). */
+export function accessListHas(list: string[], perm: string): boolean {
+  const star = list.includes('*') && !SUPER_ADMIN_ONLY_KEYS.has(perm);
+  if (star || list.includes(perm)) return true;
+  const aliases = PERMISSION_ALIASES[perm];
+  return !!aliases && aliases.some((a) => list.includes(a));
+}
+
+const isSuperAdminRole = (r: number | string) =>
+  r === 1 || r === 'SUPER_ADMIN' || r === 'Super Admin' || r === 'super_admin';
+
 export function hasUserPermission(
   userPermissions: string[] | undefined,
   roleIdOrName: number | string | undefined,
   requiredPermission: string,
   userRoles?: (number | string)[]
 ): boolean {
+  if (isServerAccessList(userPermissions)) {
+    const roles =
+      userRoles && userRoles.length ? userRoles : roleIdOrName !== undefined ? [roleIdOrName] : [];
+    if (roles.some(isSuperAdminRole)) return true;
+    return accessListHas(userPermissions as string[], requiredPermission);
+  }
+
   // Check if any assigned role has Super Admin bypass
   const allRoles =
     userRoles && userRoles.length > 0

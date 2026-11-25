@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
-import { Plus, Phone, ChevronDown, X, User } from 'lucide-react';
+import { Plus, Phone, ChevronDown, X, User, Trash2 } from 'lucide-react';
+import { CrmModal } from '@/components/ui/crm-modal';
 import { API_BASE_URL } from '@/lib/api-base';
+import { hasUserPermission } from './permissions';
 
 interface Lead {
   id: number;
@@ -333,6 +335,19 @@ export default function CrmLeadsPage() {
   // Role-based visibility — Sales Employees have restricted view (no bulk assign, no selection)
   const isSalesEmployee = activeRole === RoleType.SALES_EMPLOYEE;
   const isManager = !isSalesEmployee; // Manager / Admin can assign leads to other staff
+  const canAccess = (key: string) =>
+    hasUserPermission(staffUser?.permissions, activeRole, key, [
+      ...((staffUser?.roles as (string | number)[]) || []),
+      ...(staffUser?.roleIds || []),
+    ]);
+  // An admin can give a sales employee "See all leads"; then they are not pinned to their own.
+  const canSeeAllLeads = canAccess('leads:view_all');
+  const pinToOwnLeads = isSalesEmployee && !canSeeAllLeads;
+  const canDeleteLeads = canAccess('leads:delete');
+  const [deleteLead, setDeleteLead] = useState<{ id: number; name: string } | null>(null);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const activeStaffName =
     staffUser?.username ||
     (staffUser as any)?.name ||
@@ -571,7 +586,7 @@ export default function CrmLeadsPage() {
     if (debouncedSearch) params.set('search', debouncedSearch);
     // Sales employees only see their own assigned leads; managers can filter by any employee
     const effectiveAssignee =
-      isSalesEmployee && activeUserId && activeUserId > 1 ? activeUserId : selectedEmployee;
+      pinToOwnLeads && activeUserId && activeUserId > 1 ? activeUserId : selectedEmployee;
     if (effectiveAssignee) {
       params.set('assigned_to', String(effectiveAssignee));
     }
@@ -632,7 +647,7 @@ export default function CrmLeadsPage() {
     debouncedSearch,
     selectedSource,
     refetchTrigger,
-    isSalesEmployee,
+    pinToOwnLeads,
     activeUserId,
     selectedEmployee,
   ]);
@@ -642,7 +657,7 @@ export default function CrmLeadsPage() {
     const countParams = new URLSearchParams();
     // Counts scoped to the selected employee (sales employee's own leads, or manager's filter)
     const effectiveAssignee =
-      isSalesEmployee && activeUserId && activeUserId > 1 ? activeUserId : selectedEmployee;
+      pinToOwnLeads && activeUserId && activeUserId > 1 ? activeUserId : selectedEmployee;
     if (effectiveAssignee) {
       countParams.set('assigned_to', String(effectiveAssignee));
     }
@@ -653,7 +668,7 @@ export default function CrmLeadsPage() {
         if (data?.success && data.counts) setKpiCounts(data.counts);
       })
       .catch(() => {});
-  }, [isSalesEmployee, activeUserId, selectedEmployee]);
+  }, [pinToOwnLeads, activeUserId, selectedEmployee]);
 
   // Helper to parse staff names from remarks
   const parseRemarkItem = (r: any) => {
@@ -1753,6 +1768,7 @@ export default function CrmLeadsPage() {
                 {isManager && <th className="py-2.5 px-3 font-bold">Assign To</th>}
                 <th className="py-2.5 px-3 font-bold">Assign Date</th>
                 <th className="py-2.5 px-3 font-bold">Status</th>
+                {canDeleteLeads && <th className="py-2.5 px-3 font-bold text-center">Action</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -1886,6 +1902,21 @@ export default function CrmLeadsPage() {
                       );
                     })()}
                   </td>
+                  {canDeleteLeads && (
+                    <td className="py-2.5 px-3 text-center">
+                      <button
+                        onClick={() => {
+                          setDeleteError('');
+                          setDeleteReason('');
+                          setDeleteLead({ id: item.id, name: item.name });
+                        }}
+                        className="w-7 h-7 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        title="Move to Recycle Bin"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -3807,6 +3838,75 @@ export default function CrmLeadsPage() {
           </div>
         </div>
       )}
+
+      {/* Move a lead to the Recycle Bin (Super Admin / Admin can restore it) */}
+      <CrmModal
+        isOpen={!!deleteLead}
+        onClose={() => !deleteBusy && setDeleteLead(null)}
+        title="Move lead to Recycle Bin?"
+        description={deleteLead ? `${deleteLead.name} (#${deleteLead.id})` : undefined}
+        size="sm"
+        icon={<Trash2 className="w-4 h-4" />}
+      >
+        <div className="space-y-3 text-xs">
+          <p className="text-slate-600">
+            The lead is hidden from all lists. Its call history stays. A Super Admin or Admin can
+            restore it from the Recycle Bin.
+          </p>
+          <label className="block">
+            <span className="block text-[11px] font-bold text-slate-600 mb-1">
+              Reason (optional)
+            </span>
+            <input
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              maxLength={255}
+              placeholder="e.g. duplicate enquiry"
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </label>
+          {deleteError && <p className="text-rose-600 font-semibold">{deleteError}</p>}
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              className="btn-outline btn-sm"
+              disabled={deleteBusy}
+              onClick={() => setDeleteLead(null)}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn-danger btn-sm inline-flex items-center gap-1.5"
+              disabled={deleteBusy}
+              onClick={async () => {
+                if (!deleteLead) return;
+                setDeleteBusy(true);
+                setDeleteError('');
+                try {
+                  const qs = new URLSearchParams({ book: selectedSource || 'etax' });
+                  if (deleteReason.trim()) qs.set('reason', deleteReason.trim());
+                  const res = await fetch(`${API_BASE}/v1/crm/leads/${deleteLead.id}?${qs}`, {
+                    method: 'DELETE',
+                  });
+                  const d = await res.json().catch(() => ({}));
+                  if (!res.ok || d.success === false) {
+                    setDeleteError(d.error || d.message || 'Could not move the lead.');
+                    return;
+                  }
+                  setDeleteLead(null);
+                  setRefetchTrigger((prev) => prev + 1);
+                } catch {
+                  setDeleteError('Cannot reach the server. Please try again.');
+                } finally {
+                  setDeleteBusy(false);
+                }
+              }}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {deleteBusy ? 'Moving…' : 'Move to Recycle Bin'}
+            </button>
+          </div>
+        </div>
+      </CrmModal>
     </div>
   );
 }

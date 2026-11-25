@@ -14,6 +14,10 @@ router.use(verifyJWT);
 
 const n = (v: any) => (typeof v === 'bigint' ? Number(v) : v);
 
+/** 'YYYY-MM-DDTHH:mm:ss' in India time -> 'YYYY-MM-DD HH:mm:ss' UTC. */
+const istToUtc = (local: string) =>
+  new Date(new Date(`${local}+05:30`).getTime()).toISOString().slice(0, 19).replace('T', ' ');
+
 async function cols() {
   const extended = await hasColumn('audit_logs', 'module');
   return extended
@@ -48,12 +52,13 @@ async function buildWhere(req: Request) {
   if (q.status === 'failed' && extended) where.push('status_code >= 400');
   if (q.status === 'ok' && extended) where.push('(status_code IS NULL OR status_code < 400)');
   if (q.from && /^\d{4}-\d{2}-\d{2}$/.test(q.from)) {
+    // Dates are picked in India time; created_at is stored in UTC.
     where.push('created_at >= ?');
-    params.push(`${q.from} 00:00:00`);
+    params.push(istToUtc(`${q.from}T00:00:00`));
   }
   if (q.to && /^\d{4}-\d{2}-\d{2}$/.test(q.to)) {
     where.push('created_at <= ?');
-    params.push(`${q.to} 23:59:59`);
+    params.push(istToUtc(`${q.to}T23:59:59`));
   }
   if (q.search) {
     const s = `%${String(q.search).slice(0, 100)}%`;
