@@ -8,6 +8,14 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { recordAuditLog } from '../services/audit.service.js';
+import type { JwtPayload } from '../middleware/auth.middleware.js';
+import {
+  emiProofUpload,
+  resolveProofFilePath,
+  sanitizeProofFilename,
+  saveEmiProofToDisk,
+} from '../utils/emi-uploads.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -3365,7 +3373,161 @@ router.get('/customers/:id/timeline', async (req, res) => {
   }
 });
 
-// 13b-3. Manage Customer: Service Price & EMI Breakdown (customer_emi + orders + services)
+// Helpers for EMI permissions, date formatting, and legacy-compatible schedule/payments
+const ALLOWED_EMI_PAYMENT_MODES = new Set([
+  'UPI',
+  'Bank Transfer',
+  'Cash',
+  'Cheque',
+  'Card',
+  'Razorpay',
+  'Other',
+]);
+
+function canUserCollectEmi(user?: JwtPayload): boolean {
+  if (!user) return false;
+  const allowedRoleNames = new Set([
+    'super_admin',
+    'admin',
+    'operations_manager',
+    'operations_employee',
+    'operations_assistant',
+    'franchise_manager',
+    'franchise_partner',
+    'franchise_employee',
+  ]);
+  const roleNames = [user.role_name, ...(user.roles || [])]
+    .filter(Boolean)
+    .map((r) => String(r).toLowerCase());
+  if (roleNames.some((r) => allowedRoleNames.has(r))) return true;
+  const allowedIds = new Set([1, 2, 3, 6, 8, 10, 12]);
+  const roleIds = user.role_ids?.length ? user.role_ids : [user.role_id];
+  return roleIds.some((id) => allowedIds.has(Number(id)));
+}
+
+function isMissingTableError(err: any): boolean {
+  const msg = String(err?.message || '');
+  const code = String(err?.code || '');
+  const metaCode = String(err?.meta?.code || '');
+  return (
+    code === 'ER_NO_SUCH_TABLE' ||
+    metaCode === '1146' ||
+    msg.includes("doesn't exist") ||
+    msg.includes('1146')
+  );
+}
+
+function formatDateIso(value: unknown): string | null {
+  const parts = toDateParts(value);
+  if (!parts) return null;
+  return `${parts.y}-${pad2(parts.m)}-${pad2(parts.d)}`;
+}
+
+function parseIsoDateInput(value: unknown): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  const raw = String(value).trim();
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const y = Number(match[1]);
+  const m = Number(match[2]);
+  const d = Number(match[3]);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() + 1 !== m || dt.getUTCDate() !== d) {
+    return null;
+  }
+  return raw;
+}
+
+function todayIstIso(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+function buildLegacySchedule(
+  primaryEmi: any,
+  unpaidAmount: number,
+  thirdInstallment: number
+): Array<{
+  id: number | null;
+  installment_no: number;
+  amount: number;
+  paid_amount: number;
+  remaining_amount: number;
+  due_date: string | null;
+  due_date_iso: string | null;
+  status: 'pending' | 'partial' | 'paid';
+  note: string | null;
+  source: 'table' | 'legacy';
+}> {
+  if (!primaryEmi || unpaidAmount <= 0) return [];
+  const emiType = Number(primaryEmi.emi_type || 1);
+  const due2Iso = formatDateIso(primaryEmi.emi_due_date);
+  const due3Iso = formatDateIso(primaryEmi.second_emi_due_date);
+  const rows: Array<any> = [];
+
+  if (emiType >= 3 && thirdInstallment > 0) {
+    const secondAmt = Math.max(unpaidAmount - thirdInstallment, 0);
+    if (secondAmt > 0) {
+      rows.push({
+        id: null,
+        installment_no: 2,
+        amount: secondAmt,
+        paid_amount: 0,
+        remaining_amount: secondAmt,
+        due_date: formatDateDmy(due2Iso),
+        due_date_iso: due2Iso,
+        status: 'pending',
+        note: null,
+        source: 'legacy',
+      });
+      rows.push({
+        id: null,
+        installment_no: 3,
+        amount: thirdInstallment,
+        paid_amount: 0,
+        remaining_amount: thirdInstallment,
+        due_date: formatDateDmy(due3Iso),
+        due_date_iso: due3Iso,
+        status: 'pending',
+        note: null,
+        source: 'legacy',
+      });
+    } else {
+      rows.push({
+        id: null,
+        installment_no: 2,
+        amount: unpaidAmount,
+        paid_amount: 0,
+        remaining_amount: unpaidAmount,
+        due_date: formatDateDmy(due3Iso || due2Iso),
+        due_date_iso: due3Iso || due2Iso,
+        status: 'pending',
+        note: null,
+        source: 'legacy',
+      });
+    }
+  } else if (emiType >= 2 && due2Iso) {
+    rows.push({
+      id: null,
+      installment_no: 2,
+      amount: unpaidAmount,
+      paid_amount: 0,
+      remaining_amount: unpaidAmount,
+      due_date: formatDateDmy(due2Iso),
+      due_date_iso: due2Iso,
+      status: 'pending',
+      note: null,
+      source: 'legacy',
+    });
+  }
+  return rows;
+}
+
+// 13b-3. Manage Customer: Service Price & EMI Breakdown (customer_emi + orders + services + dues + schedule)
 router.get('/customers/:id/service-price', async (req, res) => {
   try {
     const custId = Number(req.params.id);
@@ -3449,13 +3611,144 @@ router.get('/customers/:id/service-price', async (req, res) => {
       primaryEmi && primaryEmi.second_emi !== null && primaryEmi.second_emi !== undefined
         ? Number(primaryEmi.second_emi)
         : 0;
-    // 3rd EMI is only a real installment in 3-pay mode (emi_type = 3).
-    const thirdInstallment = emiType === 3 && thirdRaw > 0 ? thirdRaw : 0;
+    // 3rd EMI is only a real installment in 3-pay mode (emi_type >= 3).
+    const thirdInstallment = emiType >= 3 && thirdRaw > 0 ? thirdRaw : 0;
+
+    // Fetch EMI schedule (customer_emi_installments) and payment history (customer_dues + customer_due_details)
+    let schemaReady = true;
+    let schedule: any[] = [];
+    let payments: any[] = [];
+
+    if (primaryEmi) {
+      const primaryEmiId = Number(primaryEmi.emi_id);
+      try {
+        const instRows = await prisma.$queryRawUnsafe<any[]>(
+          `SELECT id, emi_id, customer_id, order_id, installment_no, amount, paid_amount, due_date, status, note
+           FROM customer_emi_installments
+           WHERE emi_id = ?
+           ORDER BY installment_no ASC`,
+          primaryEmiId
+        );
+        if (instRows.length > 0) {
+          schedule = instRows.map((r) => {
+            const amt = Number(r.amount ?? 0);
+            const paid = Number(r.paid_amount ?? 0);
+            const rem = Math.max(amt - paid, 0);
+            const dueIso = formatDateIso(r.due_date);
+            return {
+              id: Number(r.id),
+              installment_no: Number(r.installment_no),
+              amount: amt,
+              paid_amount: paid,
+              remaining_amount: rem,
+              due_date: formatDateDmy(r.due_date),
+              due_date_iso: dueIso,
+              status: rem === 0 ? 'paid' : paid > 0 ? 'partial' : 'pending',
+              note: r.note || null,
+              source: 'table' as const,
+            };
+          });
+        }
+      } catch (err: any) {
+        if (isMissingTableError(err)) {
+          schemaReady = false;
+        } else {
+          throw err;
+        }
+      }
+
+      if (schedule.length === 0) {
+        schedule = buildLegacySchedule(primaryEmi, unpaidAmount, thirdInstallment);
+      }
+
+      const allEmiIds = emiRows.map((r) => Number(r.emi_id)).filter((id) => id > 0);
+      if (allEmiIds.length > 0) {
+        const placeholders = allEmiIds.map(() => '?').join(',');
+        let dueRows: any[] = [];
+        try {
+          dueRows = await prisma.$queryRawUnsafe<any[]>(
+            `SELECT cd.cd_id, cd.emi_id, cd.customer_id, cd.paid_amount, cd.unpaid_amount,
+                    cd.payment_screenshot, cd.added_by, cd.is_approve, cd.date,
+                    u.username AS added_by_name,
+                    cdd.installment_no, cdd.payment_mode, cdd.payment_reference,
+                    cdd.payment_date, cdd.comment AS detail_comment
+             FROM customer_dues cd
+             LEFT JOIN users u ON cd.added_by = u.id
+             LEFT JOIN customer_due_details cdd ON cdd.cd_id = cd.cd_id
+             WHERE cd.emi_id IN (${placeholders})
+             ORDER BY cd.cd_id DESC`,
+            ...allEmiIds
+          );
+        } catch (err: any) {
+          if (isMissingTableError(err)) {
+            schemaReady = false;
+            dueRows = await prisma.$queryRawUnsafe<any[]>(
+              `SELECT cd.cd_id, cd.emi_id, cd.customer_id, cd.paid_amount, cd.unpaid_amount,
+                      cd.payment_screenshot, cd.added_by, cd.is_approve, cd.date,
+                      u.username AS added_by_name
+               FROM customer_dues cd
+               LEFT JOIN users u ON cd.added_by = u.id
+               WHERE cd.emi_id IN (${placeholders})
+               ORDER BY cd.cd_id DESC`,
+              ...allEmiIds
+            );
+          } else {
+            throw err;
+          }
+        }
+
+        payments = dueRows.map((d) => {
+          const proofName = sanitizeProofFilename(d.payment_screenshot || '');
+          const ext = proofName ? path.extname(proofName).toLowerCase() : '';
+          return {
+            cd_id: Number(d.cd_id),
+            emi_id: Number(d.emi_id),
+            customer_id: Number(d.customer_id),
+            paid_amount: Number(d.paid_amount ?? 0),
+            unpaid_amount: Number(d.unpaid_amount ?? 0),
+            payment_screenshot: proofName || '',
+            proof_url: proofName ? `/v1/crm/emi-proofs/${encodeURIComponent(proofName)}` : null,
+            proof_type: proofName ? (ext === '.pdf' ? 'pdf' : 'image') : null,
+            added_by: d.added_by !== null && d.added_by !== undefined ? Number(d.added_by) : null,
+            added_by_name: d.added_by_name || (d.added_by ? `Staff #${d.added_by}` : 'Staff'),
+            is_approve: Number(d.is_approve ?? 0),
+            payment_date: formatDateDmy(d.payment_date || d.date),
+            recorded_at: formatDateDmy(d.date),
+            payment_mode: d.payment_mode || null,
+            payment_reference: d.payment_reference || null,
+            comment: d.detail_comment || null,
+            installment_no:
+              d.installment_no !== null && d.installment_no !== undefined
+                ? Number(d.installment_no)
+                : null,
+          };
+        });
+      }
+    }
+
+    const scheduledUnpaidTotal = schedule.reduce(
+      (sum, item) => sum + Number(item.remaining_amount || 0),
+      0
+    );
+    const unscheduledAmount = Math.max(unpaidAmount - scheduledUnpaidTotal, 0);
+    const nextDueInstallment =
+      schedule.find((item) => Number(item.remaining_amount || 0) > 0) || null;
+    const maxInstNo = schedule.reduce(
+      (max, item) => Math.max(max, Number(item.installment_no || 1)),
+      1
+    );
+    const nextInstallmentNo = Math.max(maxInstNo + 1, 2);
+
+    const initialProofName = sanitizeProofFilename(primaryEmi?.payment_screenshot || '');
+    const initialProofExt = initialProofName ? path.extname(initialProofName).toLowerCase() : '';
 
     res.json({
       success: true,
       data: serializeBigInt({
+        schema_ready: schemaReady,
+        can_collect: canUserCollectEmi(req.user),
         summary: {
+          primary_emi_id: primaryEmi ? Number(primaryEmi.emi_id) : null,
           order_id: order
             ? Number(order.order_id)
             : primaryEmi
@@ -3479,11 +3772,30 @@ router.get('/customers/:id/service-price', async (req, res) => {
           total_amount: totalAmount,
           paid_amount: paidAmount,
           unpaid_amount: unpaidAmount,
+          scheduled_unpaid_total: scheduledUnpaidTotal,
+          unscheduled_amount: unscheduledAmount,
+          next_installment_no: nextInstallmentNo,
+          next_due_installment: nextDueInstallment
+            ? {
+                installment_no: nextDueInstallment.installment_no,
+                remaining_amount: nextDueInstallment.remaining_amount,
+                due_date: nextDueInstallment.due_date,
+              }
+            : null,
           second_emi_amount: secondInstallment,
           second_due_date: formatDateDmy(primaryEmi?.emi_due_date),
           third_emi_amount: thirdInstallment,
           third_due_date: formatDateDmy(primaryEmi?.second_emi_due_date),
           emi_comment: primaryEmi?.emi_comment || '',
+          initial_payment_screenshot: initialProofName || '',
+          initial_proof_url: initialProofName
+            ? `/v1/crm/emi-proofs/${encodeURIComponent(initialProofName)}`
+            : null,
+          initial_proof_type: initialProofName
+            ? initialProofExt === '.pdf'
+              ? 'pdf'
+              : 'image'
+            : null,
           order_date: formatDateDmy(order?.order_date),
         },
         emis: emiRows.map((e) => {
@@ -3499,7 +3811,7 @@ router.get('/customers/:id/service-price', async (req, res) => {
             emi_unpaid_amount: Math.max(rowTotal - rowPaid, 0),
             emi_due_date: formatDateDmy(e.emi_due_date),
             second_emi:
-              Number(e.emi_type) === 3 && e.second_emi !== null && e.second_emi !== undefined
+              Number(e.emi_type) >= 3 && e.second_emi !== null && e.second_emi !== undefined
                 ? Number(e.second_emi)
                 : 0,
             second_emi_due_date: formatDateDmy(e.second_emi_due_date),
@@ -3507,11 +3819,672 @@ router.get('/customers/:id/service-price', async (req, res) => {
             date: formatDateDmy(e.date),
           };
         }),
+        schedule,
+        payments,
       }),
     });
   } catch (error: any) {
     console.error('Error fetching customer service price:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch customer service price' });
+  }
+});
+
+// 13b-3a. Collect an EMI payment (creates customer_dues + customer_due_details, updates customer_emi & schedule)
+router.post('/customers/:id/emi/collect', (req, res) => {
+  if (!canUserCollectEmi(req.user)) {
+    return res.status(403).json({
+      success: false,
+      error: 'You do not have permission to collect EMI payments.',
+    });
+  }
+
+  const uploadMiddleware = emiProofUpload.fields([
+    { name: 'proof', maxCount: 1 },
+    { name: 'payment_screenshot', maxCount: 1 },
+  ]);
+
+  uploadMiddleware(req, res, async (uploadErr: any) => {
+    if (uploadErr) {
+      const msg =
+        uploadErr?.code === 'LIMIT_FILE_SIZE'
+          ? 'Proof file exceeds the 5 MB size limit.'
+          : uploadErr?.message || 'Invalid proof upload.';
+      return res.status(400).json({ success: false, error: msg });
+    }
+
+    let savedProofPath: string | null = null;
+    try {
+      const custId = Number(req.params.id);
+      if (!Number.isInteger(custId) || custId <= 0) {
+        return res.status(400).json({ success: false, error: 'Invalid customer id' });
+      }
+
+      const rawAmount = Number(req.body?.amount);
+      if (!Number.isFinite(rawAmount) || rawAmount <= 0 || !Number.isInteger(rawAmount)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Collected amount must be a positive whole rupee amount.',
+        });
+      }
+
+      const paymentMode = String(req.body?.payment_mode || 'UPI').trim();
+      if (!ALLOWED_EMI_PAYMENT_MODES.has(paymentMode)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid payment mode selected.',
+        });
+      }
+
+      const paymentDateIso = req.body?.payment_date
+        ? parseIsoDateInput(req.body.payment_date)
+        : todayIstIso();
+      if (!paymentDateIso) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid payment date. Use YYYY-MM-DD.',
+        });
+      }
+
+      const paymentReference = String(req.body?.payment_reference || '')
+        .trim()
+        .slice(0, 120);
+      const comment = String(req.body?.comment || '')
+        .trim()
+        .slice(0, 1000);
+      const requestedEmiId = Number(req.body?.emi_id);
+      const requestedOrderId = Number(req.body?.order_id);
+
+      const filesMap = (req.files || {}) as Record<string, Express.Multer.File[]>;
+      const proofFile = filesMap.proof?.[0] || filesMap.payment_screenshot?.[0] || null;
+
+      const result = await prisma.$transaction(async (tx) => {
+        let lockedRows: any[] = [];
+        if (Number.isInteger(requestedEmiId) && requestedEmiId > 0) {
+          lockedRows = await tx.$queryRawUnsafe<any[]>(
+            `SELECT * FROM customer_emi WHERE emi_id = ? AND customer_id = ? LIMIT 1 FOR UPDATE`,
+            requestedEmiId,
+            custId
+          );
+        } else if (Number.isInteger(requestedOrderId) && requestedOrderId > 0) {
+          lockedRows = await tx.$queryRawUnsafe<any[]>(
+            `SELECT * FROM customer_emi WHERE order_id = ? AND customer_id = ? ORDER BY emi_id DESC LIMIT 1 FOR UPDATE`,
+            requestedOrderId,
+            custId
+          );
+        } else {
+          lockedRows = await tx.$queryRawUnsafe<any[]>(
+            `SELECT * FROM customer_emi WHERE customer_id = ? ORDER BY emi_id DESC LIMIT 1 FOR UPDATE`,
+            custId
+          );
+        }
+
+        const emi = lockedRows[0];
+        if (!emi) {
+          const err: any = new Error('No EMI record found for this customer order.');
+          err.statusCode = 404;
+          throw err;
+        }
+
+        const emiId = Number(emi.emi_id);
+        const totalAmount = Number(emi.emi_total_amount ?? 0);
+        const currentPaid = Number(emi.emi_paid_amount ?? 0);
+        const currentUnpaid = Math.max(totalAmount - currentPaid, 0);
+
+        if (currentUnpaid <= 0) {
+          const err: any = new Error('This order is already fully paid.');
+          err.statusCode = 400;
+          throw err;
+        }
+        if (rawAmount > currentUnpaid) {
+          const err: any = new Error(
+            `Collected amount (₹${rawAmount.toLocaleString('en-IN')}) cannot exceed unpaid balance (₹${currentUnpaid.toLocaleString('en-IN')}).`
+          );
+          err.statusCode = 400;
+          throw err;
+        }
+
+        let proofFilename = '';
+        if (proofFile) {
+          const saved = saveEmiProofToDisk(proofFile, emiId);
+          proofFilename = saved.filename;
+          savedProofPath = saved.fullPath;
+        }
+
+        const newPaid = currentPaid + rawAmount;
+        const newUnpaid = Math.max(totalAmount - newPaid, 0);
+        const paymentTimestamp = new Date(`${paymentDateIso}T12:00:00+05:30`);
+        const actorId = Number(req.user?.user_id || 1);
+
+        await tx.$executeRawUnsafe(
+          `INSERT INTO customer_dues
+             (emi_id, customer_id, paid_amount, unpaid_amount, payment_screenshot, added_by, is_approve, date)
+           VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
+          emiId,
+          custId,
+          rawAmount,
+          newUnpaid,
+          proofFilename,
+          actorId,
+          paymentTimestamp
+        );
+        const lastIdRes = await tx.$queryRawUnsafe<any[]>(`SELECT LAST_INSERT_ID() AS id`);
+        const cdId = Number(lastIdRes[0]?.id || 0);
+
+        // Apply payment FIFO across scheduled installments (if table exists & has rows)
+        let appliedInstallmentNo: number | null = null;
+        let nextPendingDueDate: Date | string | null = emi.emi_due_date || null;
+
+        try {
+          const instRows = await tx.$queryRawUnsafe<any[]>(
+            `SELECT id, installment_no, amount, paid_amount, due_date, status
+             FROM customer_emi_installments
+             WHERE emi_id = ?
+             ORDER BY installment_no ASC
+             FOR UPDATE`,
+            emiId
+          );
+
+          if (instRows.length > 0) {
+            let remainingToApply = rawAmount;
+            for (const inst of instRows) {
+              if (remainingToApply <= 0) break;
+              const instAmt = Number(inst.amount ?? 0);
+              const instPaid = Number(inst.paid_amount ?? 0);
+              const instRem = Math.max(instAmt - instPaid, 0);
+              if (instRem <= 0) continue;
+
+              if (appliedInstallmentNo === null) {
+                appliedInstallmentNo = Number(inst.installment_no);
+              }
+              const take = Math.min(instRem, remainingToApply);
+              const updatedInstPaid = instPaid + take;
+              const updatedStatus = updatedInstPaid >= instAmt ? 'paid' : 'partial';
+              await tx.$executeRawUnsafe(
+                `UPDATE customer_emi_installments SET paid_amount = ?, status = ? WHERE id = ?`,
+                updatedInstPaid,
+                updatedStatus,
+                Number(inst.id)
+              );
+              remainingToApply -= take;
+              inst.paid_amount = updatedInstPaid;
+            }
+
+            const firstUnpaidInst = instRows.find(
+              (inst) => Number(inst.amount ?? 0) - Number(inst.paid_amount ?? 0) > 0
+            );
+            nextPendingDueDate = firstUnpaidInst?.due_date || null;
+          }
+
+          await tx.$executeRawUnsafe(
+            `INSERT INTO customer_due_details
+               (cd_id, emi_id, installment_no, payment_mode, payment_reference, payment_date, comment, proof_storage, created_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'persistent', ?)`,
+            cdId,
+            emiId,
+            appliedInstallmentNo,
+            paymentMode,
+            paymentReference || null,
+            paymentDateIso,
+            comment || null,
+            actorId
+          );
+        } catch (metaErr: any) {
+          if (!isMissingTableError(metaErr)) {
+            throw metaErr;
+          }
+        }
+
+        const updatedDueDate = newUnpaid === 0 ? null : nextPendingDueDate;
+        const clearThird = newUnpaid === 0;
+        if (proofFilename) {
+          await tx.$executeRawUnsafe(
+            `UPDATE customer_emi
+             SET emi_paid_amount = ?,
+                 emi_unpaid_amount = ?,
+                 emi_due_date = ?,
+                 second_emi = CASE WHEN ? THEN NULL ELSE second_emi END,
+                 second_emi_due_date = CASE WHEN ? THEN NULL ELSE second_emi_due_date END,
+                 payment_screenshot = ?
+             WHERE emi_id = ?`,
+            newPaid,
+            newUnpaid,
+            updatedDueDate,
+            clearThird ? 1 : 0,
+            clearThird ? 1 : 0,
+            proofFilename,
+            emiId
+          );
+        } else {
+          await tx.$executeRawUnsafe(
+            `UPDATE customer_emi
+             SET emi_paid_amount = ?,
+                 emi_unpaid_amount = ?,
+                 emi_due_date = ?,
+                 second_emi = CASE WHEN ? THEN NULL ELSE second_emi END,
+                 second_emi_due_date = CASE WHEN ? THEN NULL ELSE second_emi_due_date END
+             WHERE emi_id = ?`,
+            newPaid,
+            newUnpaid,
+            updatedDueDate,
+            clearThird ? 1 : 0,
+            clearThird ? 1 : 0,
+            emiId
+          );
+        }
+
+        return {
+          emiId,
+          orderId: Number(emi.order_id),
+          cdId,
+          oldPaid: currentPaid,
+          oldUnpaid: currentUnpaid,
+          newPaid,
+          newUnpaid,
+          proofFilename,
+          appliedInstallmentNo,
+        };
+      });
+
+      await recordAuditLog({
+        actorId: req.user?.user_id,
+        actorEmail: req.user?.email,
+        actorRole: req.user?.role_name,
+        action: 'emi_collect',
+        resource: 'customer_emi',
+        resourceId: String(result.emiId),
+        oldState: {
+          emi_paid_amount: result.oldPaid,
+          emi_unpaid_amount: result.oldUnpaid,
+        },
+        newState: {
+          emi_paid_amount: result.newPaid,
+          emi_unpaid_amount: result.newUnpaid,
+          collected_amount: rawAmount,
+          payment_mode: paymentMode,
+          payment_reference: paymentReference || null,
+          payment_date: paymentDateIso,
+          cd_id: result.cdId,
+          installment_no: result.appliedInstallmentNo,
+          proof_filename: result.proofFilename || null,
+        },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+
+      res.json({
+        success: true,
+        message:
+          result.newUnpaid === 0
+            ? 'Payment recorded. Customer balance is now fully paid!'
+            : `Collected ₹${rawAmount.toLocaleString('en-IN')}. Remaining unpaid: ₹${result.newUnpaid.toLocaleString('en-IN')}.`,
+        data: serializeBigInt({
+          cd_id: result.cdId,
+          emi_id: result.emiId,
+          order_id: result.orderId,
+          collected_amount: rawAmount,
+          paid_amount: result.newPaid,
+          unpaid_amount: result.newUnpaid,
+          proof_url: result.proofFilename
+            ? `/v1/crm/emi-proofs/${encodeURIComponent(result.proofFilename)}`
+            : null,
+        }),
+      });
+    } catch (error: any) {
+      if (savedProofPath && fs.existsSync(savedProofPath)) {
+        try {
+          fs.unlinkSync(savedProofPath);
+        } catch {}
+      }
+      const status = Number(error?.statusCode) || 500;
+      if (status >= 500) {
+        console.error('Error collecting EMI payment:', error);
+      }
+      res.status(status).json({
+        success: false,
+        error: error?.message || 'Failed to collect EMI payment',
+      });
+    }
+  });
+});
+
+// 13b-3b. Add or update scheduled EMI installment (EMI 2, 3, 4, ...) until scheduled total covers unpaid
+router.post('/customers/:id/emi/schedule', async (req, res) => {
+  if (!canUserCollectEmi(req.user)) {
+    return res.status(403).json({
+      success: false,
+      error: 'You do not have permission to schedule EMI installments.',
+    });
+  }
+
+  try {
+    const custId = Number(req.params.id);
+    if (!Number.isInteger(custId) || custId <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid customer id' });
+    }
+
+    const amount = Number(req.body?.amount);
+    if (!Number.isFinite(amount) || amount <= 0 || !Number.isInteger(amount)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Installment amount must be a positive whole rupee amount.',
+      });
+    }
+
+    const dueDateIso = parseIsoDateInput(req.body?.due_date);
+    if (!dueDateIso) {
+      return res.status(400).json({
+        success: false,
+        error: 'Valid due date (YYYY-MM-DD) is required.',
+      });
+    }
+
+    const note = String(req.body?.note || '')
+      .trim()
+      .slice(0, 500);
+    const requestedEmiId = Number(req.body?.emi_id);
+    const requestedOrderId = Number(req.body?.order_id);
+    const editInstallmentNo = req.body?.installment_no ? Number(req.body.installment_no) : null;
+    if (
+      editInstallmentNo !== null &&
+      (!Number.isInteger(editInstallmentNo) || editInstallmentNo < 2)
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: 'Installment number must be 2 or higher.',
+      });
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      let lockedRows: any[] = [];
+      if (Number.isInteger(requestedEmiId) && requestedEmiId > 0) {
+        lockedRows = await tx.$queryRawUnsafe<any[]>(
+          `SELECT * FROM customer_emi WHERE emi_id = ? AND customer_id = ? LIMIT 1 FOR UPDATE`,
+          requestedEmiId,
+          custId
+        );
+      } else if (Number.isInteger(requestedOrderId) && requestedOrderId > 0) {
+        lockedRows = await tx.$queryRawUnsafe<any[]>(
+          `SELECT * FROM customer_emi WHERE order_id = ? AND customer_id = ? ORDER BY emi_id DESC LIMIT 1 FOR UPDATE`,
+          requestedOrderId,
+          custId
+        );
+      } else {
+        lockedRows = await tx.$queryRawUnsafe<any[]>(
+          `SELECT * FROM customer_emi WHERE customer_id = ? ORDER BY emi_id DESC LIMIT 1 FOR UPDATE`,
+          custId
+        );
+      }
+
+      const emi = lockedRows[0];
+      if (!emi) {
+        const err: any = new Error('No EMI record found for this customer order.');
+        err.statusCode = 404;
+        throw err;
+      }
+
+      const emiId = Number(emi.emi_id);
+      const orderId = Number(emi.order_id);
+      const totalAmount = Number(emi.emi_total_amount ?? 0);
+      const currentPaid = Number(emi.emi_paid_amount ?? 0);
+      const currentUnpaid = Math.max(totalAmount - currentPaid, 0);
+
+      if (currentUnpaid <= 0) {
+        const err: any = new Error('This order is already fully paid.');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      let instRows: any[] = [];
+      try {
+        instRows = await tx.$queryRawUnsafe<any[]>(
+          `SELECT * FROM customer_emi_installments WHERE emi_id = ? ORDER BY installment_no ASC FOR UPDATE`,
+          emiId
+        );
+      } catch (err: any) {
+        if (isMissingTableError(err)) {
+          const e: any = new Error(
+            'EMI schedule table (customer_emi_installments) is not installed yet. Run the drafted add-only SQL migration first.'
+          );
+          e.statusCode = 503;
+          throw e;
+        }
+        throw err;
+      }
+
+      const actorId = Number(req.user?.user_id || 1);
+
+      // Seed legacy EMI 2 / EMI 3 into customer_emi_installments if table has no rows yet
+      // and we are appending a new installment (or editing EMI 3 when legacy EMI 2 exists)
+      if (instRows.length === 0) {
+        const emiType = Number(emi.emi_type || 1);
+        const thirdRaw =
+          emi.second_emi !== null && emi.second_emi !== undefined ? Number(emi.second_emi) : 0;
+        const legacyThird = emiType >= 3 && thirdRaw > 0 ? thirdRaw : 0;
+        const legacySchedule = buildLegacySchedule(emi, currentUnpaid, legacyThird);
+        for (const legacyItem of legacySchedule) {
+          if (editInstallmentNo !== null && legacyItem.installment_no === editInstallmentNo) {
+            continue; // will be inserted/updated with user's edited values below
+          }
+          await tx.$executeRawUnsafe(
+            `INSERT INTO customer_emi_installments
+               (emi_id, customer_id, order_id, installment_no, amount, paid_amount, due_date, status, note, created_by)
+             VALUES (?, ?, ?, ?, ?, 0, ?, 'pending', ?, ?)`,
+            emiId,
+            custId,
+            orderId,
+            legacyItem.installment_no,
+            legacyItem.amount,
+            legacyItem.due_date_iso,
+            null,
+            actorId
+          );
+        }
+        instRows = await tx.$queryRawUnsafe<any[]>(
+          `SELECT * FROM customer_emi_installments WHERE emi_id = ? ORDER BY installment_no ASC FOR UPDATE`,
+          emiId
+        );
+      }
+
+      let targetNo: number;
+      if (editInstallmentNo !== null) {
+        targetNo = editInstallmentNo;
+        const existingTarget = instRows.find((r) => Number(r.installment_no) === targetNo);
+        const alreadyPaidOnInst = Number(existingTarget?.paid_amount ?? 0);
+        if (amount < alreadyPaidOnInst) {
+          const err: any = new Error(
+            `Installment amount cannot be less than already collected (₹${alreadyPaidOnInst.toLocaleString('en-IN')}).`
+          );
+          err.statusCode = 400;
+          throw err;
+        }
+
+        const otherRemaining = instRows
+          .filter((r) => Number(r.installment_no) !== targetNo)
+          .reduce(
+            (sum, r) => sum + Math.max(Number(r.amount ?? 0) - Number(r.paid_amount ?? 0), 0),
+            0
+          );
+        const newTargetRemaining = Math.max(amount - alreadyPaidOnInst, 0);
+        if (otherRemaining + newTargetRemaining > currentUnpaid) {
+          const maxAllowed = Math.max(currentUnpaid - otherRemaining + alreadyPaidOnInst, 0);
+          const err: any = new Error(
+            `Scheduled installments cannot exceed unpaid balance (₹${currentUnpaid.toLocaleString('en-IN')}). Max allowed for EMI ${targetNo}: ₹${maxAllowed.toLocaleString('en-IN')}.`
+          );
+          err.statusCode = 400;
+          throw err;
+        }
+
+        const newStatus =
+          newTargetRemaining === 0 ? 'paid' : alreadyPaidOnInst > 0 ? 'partial' : 'pending';
+        if (existingTarget) {
+          await tx.$executeRawUnsafe(
+            `UPDATE customer_emi_installments
+             SET amount = ?, due_date = ?, status = ?, note = ?
+             WHERE id = ?`,
+            amount,
+            dueDateIso,
+            newStatus,
+            note || null,
+            Number(existingTarget.id)
+          );
+        } else {
+          await tx.$executeRawUnsafe(
+            `INSERT INTO customer_emi_installments
+               (emi_id, customer_id, order_id, installment_no, amount, paid_amount, due_date, status, note, created_by)
+             VALUES (?, ?, ?, ?, ?, 0, ?, 'pending', ?, ?)`,
+            emiId,
+            custId,
+            orderId,
+            targetNo,
+            amount,
+            dueDateIso,
+            note || null,
+            actorId
+          );
+        }
+      } else {
+        const scheduledRemaining = instRows.reduce(
+          (sum, r) => sum + Math.max(Number(r.amount ?? 0) - Number(r.paid_amount ?? 0), 0),
+          0
+        );
+        const unscheduled = Math.max(currentUnpaid - scheduledRemaining, 0);
+        if (unscheduled <= 0) {
+          const err: any = new Error(
+            'All unpaid balance is already covered by the scheduled EMIs. Edit an existing pending EMI if you want to split it.'
+          );
+          err.statusCode = 400;
+          throw err;
+        }
+        if (amount > unscheduled) {
+          const err: any = new Error(
+            `Installment amount (₹${amount.toLocaleString('en-IN')}) exceeds unscheduled balance (₹${unscheduled.toLocaleString('en-IN')}).`
+          );
+          err.statusCode = 400;
+          throw err;
+        }
+
+        const maxNo = instRows.reduce((max, r) => Math.max(max, Number(r.installment_no || 1)), 1);
+        targetNo = Math.max(maxNo + 1, 2);
+
+        await tx.$executeRawUnsafe(
+          `INSERT INTO customer_emi_installments
+             (emi_id, customer_id, order_id, installment_no, amount, paid_amount, due_date, status, note, created_by)
+           VALUES (?, ?, ?, ?, ?, 0, ?, 'pending', ?, ?)`,
+          emiId,
+          custId,
+          orderId,
+          targetNo,
+          amount,
+          dueDateIso,
+          note || null,
+          actorId
+        );
+      }
+
+      // Sync legacy customer_emi columns so etaxwala.com & customer table stay accurate
+      const updatedInstRows = await tx.$queryRawUnsafe<any[]>(
+        `SELECT * FROM customer_emi_installments WHERE emi_id = ? ORDER BY installment_no ASC`,
+        emiId
+      );
+      const nextUnpaidInst = updatedInstRows.find(
+        (r) => Number(r.amount ?? 0) - Number(r.paid_amount ?? 0) > 0
+      );
+      const inst3 = updatedInstRows.find((r) => Number(r.installment_no) === 3);
+      const maxScheduledNo = updatedInstRows.reduce(
+        (max, r) => Math.max(max, Number(r.installment_no || 1)),
+        1
+      );
+      const syncedEmiType =
+        maxScheduledNo >= 3
+          ? Math.max(Number(emi.emi_type || 1), 3)
+          : Math.max(Number(emi.emi_type || 1), 2);
+      const syncedDueDate = nextUnpaidInst?.due_date || emi.emi_due_date || dueDateIso;
+
+      await tx.$executeRawUnsafe(
+        `UPDATE customer_emi
+         SET emi_type = ?,
+             emi_unpaid_amount = ?,
+             emi_due_date = ?,
+             second_emi = ?,
+             second_emi_due_date = ?
+         WHERE emi_id = ?`,
+        syncedEmiType,
+        currentUnpaid,
+        syncedDueDate,
+        inst3 ? Number(inst3.amount) : emi.second_emi,
+        inst3 ? inst3.due_date : emi.second_emi_due_date,
+        emiId
+      );
+
+      return {
+        emiId,
+        orderId,
+        installmentNo: targetNo,
+        amount,
+        dueDateIso,
+        isEdit: editInstallmentNo !== null,
+      };
+    });
+
+    await recordAuditLog({
+      actorId: req.user?.user_id,
+      actorEmail: req.user?.email,
+      actorRole: req.user?.role_name,
+      action: result.isEdit ? 'emi_schedule_update' : 'emi_schedule',
+      resource: 'customer_emi',
+      resourceId: String(result.emiId),
+      newState: {
+        customer_id: custId,
+        order_id: result.orderId,
+        installment_no: result.installmentNo,
+        amount: result.amount,
+        due_date: result.dueDateIso,
+        note: note || null,
+      },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+
+    res.json({
+      success: true,
+      message: result.isEdit
+        ? `Updated EMI ${result.installmentNo} (₹${result.amount.toLocaleString('en-IN')}).`
+        : `Scheduled EMI ${result.installmentNo} for ₹${result.amount.toLocaleString('en-IN')}.`,
+      data: serializeBigInt(result),
+    });
+  } catch (error: any) {
+    const status = Number(error?.statusCode) || 500;
+    if (status >= 500) {
+      console.error('Error scheduling EMI installment:', error);
+    }
+    res.status(status).json({
+      success: false,
+      error: error?.message || 'Failed to schedule EMI installment',
+    });
+  }
+});
+
+// 13b-3c. Staff-authenticated payment proof download/preview (never public)
+router.get('/emi-proofs/:filename', async (req, res) => {
+  try {
+    if (!req.user || String(req.user.role_name || '').toLowerCase() === 'customer') {
+      return res.status(403).json({ success: false, error: 'Staff authentication required.' });
+    }
+    const resolved = resolveProofFilePath(req.params.filename);
+    if (!resolved) {
+      return res.status(404).json({ success: false, error: 'Payment proof file not found.' });
+    }
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Type', resolved.contentType);
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="${resolved.filename.replace(/"/g, '')}"`
+    );
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    return res.sendFile(resolved.fullPath);
+  } catch (error: any) {
+    console.error('Error serving EMI proof:', error);
+    return res.status(500).json({ success: false, error: 'Failed to read proof file.' });
   }
 });
 
