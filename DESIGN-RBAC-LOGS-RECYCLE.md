@@ -6,6 +6,16 @@
 
 ---
 
+> **As built (25 Nov 2026, branch `design/rbac-logs-recycle`).** This document is the original design. What changed while building:
+>
+> - No `rbac_roles` / `rbac_permissions` / `rbac_role_permissions` tables: roles (all 16 kept), the option catalogue and role defaults live in code (`apps/api/src/rbac/catalog.ts`). The DB holds only per-user changes (`rbac_user_access`, `rbac_user_permission_overrides`). No Prisma schema change; raw SQL with runtime schema detection, so code works before and after the SQL.
+> - One global API guard (`rbac/route-guard.ts`) maps routes to options and pins non-"view all" users to their own data; a granted manager option (e.g. _See all leads_, _See all calls_) lifts the pin for that option across the whole company.
+> - Only Super Admin and Admin can add/remove options; nobody can grant an option they do not hold; only Super Admin can grant Super-Admin-only options or edit a Super Admin. HR can create/edit/deactivate staff below Admin but not change options.
+> - Leads use a `deleted_at` flag (child tables cascade); customers, orders, tasks, service questions and staff accounts are archived to `recycle_bin_items` with their related rows and re-inserted on restore. Restore: Super Admin + Admin. Delete forever: Super Admin only (typed confirmation).
+> - Activity Logs: every staff POST/PUT/PATCH/DELETE, logins/logouts and exports, with secrets redacted; times stored UTC, shown IST. Retention 1 year via `apps/api/scripts/purge-audit-logs.mjs` (dry run by default; not scheduled).
+> - Department Hubs removal and the sign-out modal were done by the Ops Manager branch, not here.
+> - Live steps: see `RUNBOOK-RBAC-LOGS-RECYCLE.md`.
+
 ## 1. Current-State Findings (Audit of New App, Old App & Live DB)
 
 ### 1.1 Roles, Users & Access Control Today
