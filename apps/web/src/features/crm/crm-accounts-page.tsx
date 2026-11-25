@@ -3,6 +3,9 @@ import { useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
 import { API_BASE_URL } from '@/lib/api-base';
+import EmiServicePricePanel, {
+  type ServicePricePayload,
+} from './components/emi-service-price-panel';
 import {
   Plus,
   Trash2,
@@ -143,6 +146,24 @@ export default function CrmAccountsPage() {
     ((staffUser?.roleIds || []).includes(7) &&
       activeRole !== RoleType.OPERATIONS_EMPLOYEE &&
       !(staffUser?.roles || []).includes(RoleType.OPERATIONS_EMPLOYEE));
+  const canManageEmi = (() => {
+    if (isSalesEmployeeView) return false;
+    const allowedRoles = new Set<string>([
+      RoleType.SUPER_ADMIN,
+      RoleType.ADMIN,
+      RoleType.OPERATIONS_MANAGER,
+      RoleType.OPERATIONS_EMPLOYEE,
+      RoleType.OPERATIONS_ASSISTANT,
+      RoleType.FRANCHISE_MANAGER,
+      RoleType.FRANCHISE_EMPLOYEE,
+    ]);
+    const roleList = [activeRole, staffUser?.role, ...(staffUser?.roles || [])].filter(
+      Boolean
+    ) as string[];
+    if (roleList.some((r) => allowedRoles.has(r))) return true;
+    const allowedIds = new Set([1, 2, 3, 6, 8, 10, 12]);
+    return (staffUser?.roleIds || []).some((id) => allowedIds.has(Number(id)));
+  })();
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -292,7 +313,7 @@ export default function CrmAccountsPage() {
   const [detailsTasks, setDetailsTasks] = useState<any[]>([]);
   const [selectedTimelineTaskId, setSelectedTimelineTaskId] = useState<string>('all');
   const [detailsTimeline, setDetailsTimeline] = useState<any[]>([]);
-  const [detailsPrice, setDetailsPrice] = useState<{ summary: any; emis: any[] } | null>(null);
+  const [detailsPrice, setDetailsPrice] = useState<ServicePricePayload | null>(null);
   const [detailsChat, setDetailsChat] = useState<any[]>([]);
 
   // Form states
@@ -913,6 +934,23 @@ export default function CrmAccountsPage() {
     }
   };
 
+  const refreshActiveServicePrice = async () => {
+    if (!activeCustomer) return;
+    const qsOrder = activeCustomer.orderId ? `order_id=${activeCustomer.orderId}` : '';
+    try {
+      const priceRes = await fetch(
+        `${API_BASE}/v1/crm/customers/${activeCustomer.id}/service-price${qsOrder ? `?${qsOrder}` : ''}`
+      );
+      const priceJson = await priceRes.json().catch(() => null);
+      if (priceJson?.success && priceJson.data) {
+        setDetailsPrice(priceJson.data);
+      }
+    } catch (err) {
+      console.error('Error refreshing service price:', err);
+    }
+    fetchCustomers();
+  };
+
   useEffect(() => {
     if (!isDetailsOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -1496,7 +1534,6 @@ export default function CrmAccountsPage() {
               placeholder="Search Data..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onBlur={() => searchInputRef.current?.focus()}
               className="text-xs bg-white border border-slate-300 rounded px-3 py-1 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#003A66] w-48"
             />
           </div>
@@ -1624,7 +1661,7 @@ export default function CrmAccountsPage() {
                       })() && (
                         <div
                           ref={menuRef}
-                          className={`absolute right-0 z-50 w-52 bg-white rounded-lg shadow-lg border border-slate-200 py-1 text-left text-xs max-h-[70vh] overflow-y-auto ${idx === filtered.length - 1 ? 'bottom-6' : 'top-6'}`}
+                          className={`absolute right-0 z-50 w-52 bg-white rounded-lg shadow-lg border border-slate-200 py-1 text-left text-xs max-h-[70vh] overflow-y-auto ${idx >= 2 && idx === filtered.length - 1 ? 'bottom-6' : 'top-6'}`}
                         >
                           {/* 0. Timeline & Service Price (Work Timeline + EMI Breakdown + Direct Chat) */}
                           <button
@@ -1636,6 +1673,16 @@ export default function CrmAccountsPage() {
                           >
                             <History className="w-3.5 h-3.5 text-sky-600" />
                             Timeline & Service Price
+                          </button>
+                          <button
+                            onClick={() => {
+                              openCustomerDetails(item, 'price');
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 hover:bg-slate-50 text-slate-800 font-semibold flex items-center gap-2 cursor-pointer"
+                          >
+                            <IndianRupee className="w-3.5 h-3.5 text-emerald-600" />
+                            Service Price & Collect EMI
                           </button>
 
                           {/* 1. Manage Tasks (AddWorkEffort) */}
@@ -4619,185 +4666,15 @@ export default function CrmAccountsPage() {
                   })()}
                 </div>
               ) : detailsTab === 'price' ? (
-                <div className="space-y-4">
-                  {(() => {
-                    const s = detailsPrice?.summary;
-                    const totalAmt = Number(s?.total_amount ?? activeCustomer.total ?? 0);
-                    const paidAmt = Number(s?.paid_amount ?? activeCustomer.paid ?? 0);
-                    const unpaidAmt = Math.max(
-                      s?.unpaid_amount != null ? Number(s.unpaid_amount) : totalAmt - paidAmt,
-                      0
-                    );
-                    const emiType = Number(s?.emi_type ?? 1);
-                    const secondAmt = Number(s?.second_emi_amount ?? 0);
-                    const thirdAmt = Number(s?.third_emi_amount ?? 0);
-                    const secondDue = formatDisplayDate(
-                      s?.second_due_date || activeCustomer.dueDate
-                    );
-                    const thirdDue = formatDisplayDate(s?.third_due_date);
-                    const showSecondEmi = emiType >= 2 && (secondAmt > 0 || secondDue !== '—');
-                    const showThirdEmi = emiType === 3 && thirdAmt > 0;
-                    const planNames: Record<number, string> = {
-                      1: 'Basic',
-                      2: 'Standard',
-                      3: 'Premium',
-                      4: 'Diamond',
-                      5: 'Custom',
-                    };
-                    return (
-                      <>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                            <p className="text-[11px] font-semibold text-slate-500 uppercase">
-                              Total Amount
-                            </p>
-                            <p className="text-lg font-bold text-slate-900 mt-0.5">
-                              ₹{Number(totalAmt).toLocaleString('en-IN')}
-                            </p>
-                          </div>
-                          <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
-                            <p className="text-[11px] font-semibold text-emerald-700 uppercase">
-                              Paid Amount
-                            </p>
-                            <p className="text-lg font-bold text-emerald-800 mt-0.5">
-                              ₹{Number(paidAmt).toLocaleString('en-IN')}
-                            </p>
-                          </div>
-                          <div
-                            className={`p-3.5 rounded-xl border ${
-                              Number(unpaidAmt) > 0
-                                ? 'bg-rose-50/70 border-rose-200'
-                                : 'bg-slate-50 border-slate-200'
-                            }`}
-                          >
-                            <p
-                              className={`text-[11px] font-semibold uppercase ${
-                                Number(unpaidAmt) > 0 ? 'text-rose-700' : 'text-slate-500'
-                              }`}
-                            >
-                              Unpaid Amount
-                            </p>
-                            <p
-                              className={`text-lg font-bold mt-0.5 ${
-                                Number(unpaidAmt) > 0 ? 'text-rose-700' : 'text-slate-700'
-                              }`}
-                            >
-                              {Number(unpaidAmt) > 0
-                                ? `₹${Number(unpaidAmt).toLocaleString('en-IN')}`
-                                : 'No Pending Payment'}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white border border-slate-200 rounded-xl p-4 text-xs">
-                          <div>
-                            <span className="text-slate-500 block">Service & Category</span>
-                            <span className="font-bold text-slate-900">
-                              {s?.service_name || activeCustomer.service}
-                            </span>
-                            {(s?.category_name || activeCustomer.category) && (
-                              <span className="text-slate-500 ml-1">
-                                ({s?.category_name || activeCustomer.category})
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <span className="text-slate-500 block">
-                              Package Tier & Catalog Price
-                            </span>
-                            <span className="font-bold text-slate-900">
-                              {s?.cp_type
-                                ? planNames[s.cp_type] || 'Standard'
-                                : planNames[activeCustomer.cp_type] || 'Standard'}
-                              {s?.service_price !== null && s?.service_price !== undefined
-                                ? ` • ₹${Number(s.service_price).toLocaleString('en-IN')}`
-                                : ''}
-                            </span>
-                            {s?.cp_discount > 0 && (
-                              <span className="text-emerald-700 ml-1.5 font-semibold">
-                                (-₹{Number(s.cp_discount).toLocaleString('en-IN')} pkg discount)
-                              </span>
-                            )}
-                          </div>
-                          {showSecondEmi && (
-                            <div>
-                              <span className="text-slate-500 block">2nd EMI & Due Date</span>
-                              <span className="font-semibold text-slate-800">
-                                ₹{secondAmt.toLocaleString('en-IN')} • {secondDue}
-                              </span>
-                            </div>
-                          )}
-                          {showThirdEmi && (
-                            <div>
-                              <span className="text-slate-500 block">3rd EMI & Due Date</span>
-                              <span className="font-semibold text-slate-800">
-                                ₹{thirdAmt.toLocaleString('en-IN')} • {thirdDue}
-                              </span>
-                            </div>
-                          )}
-                          {!showSecondEmi && !showThirdEmi && (
-                            <div className="sm:col-span-2 text-slate-500">
-                              No further EMI instalments recorded for this order.
-                            </div>
-                          )}
-                          <div className="sm:col-span-2 pt-2 border-t border-slate-100">
-                            <span className="text-slate-500 block">Payment / EMI Comment</span>
-                            <span className="text-slate-800 font-medium">
-                              {s?.emi_comment || 'No comment recorded.'}
-                            </span>
-                          </div>
-                        </div>
-
-                        {(detailsPrice?.emis?.length || 0) > 1 && (
-                          <div className="border border-slate-200 rounded-xl overflow-hidden">
-                            <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-700">
-                              All EMI Records ({detailsPrice?.emis.length})
-                            </div>
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="bg-slate-50 text-slate-500 text-left">
-                                  <th className="px-3 py-2">Order #</th>
-                                  <th className="px-3 py-2">Total</th>
-                                  <th className="px-3 py-2">Paid</th>
-                                  <th className="px-3 py-2">Unpaid</th>
-                                  <th className="px-3 py-2">Due Date</th>
-                                  <th className="px-3 py-2">Comment</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-100">
-                                {detailsPrice!.emis.map((e) => (
-                                  <tr key={e.emi_id}>
-                                    <td className="px-3 py-2 font-mono">{e.order_id}</td>
-                                    <td className="px-3 py-2 font-semibold">
-                                      ₹{e.emi_total_amount.toLocaleString('en-IN')}
-                                    </td>
-                                    <td className="px-3 py-2 text-emerald-700 font-semibold">
-                                      ₹{e.emi_paid_amount.toLocaleString('en-IN')}
-                                    </td>
-                                    <td className="px-3 py-2 text-rose-600 font-semibold">
-                                      ₹
-                                      {Math.max(
-                                        Number(e.emi_total_amount || 0) -
-                                          Number(e.emi_paid_amount || 0),
-                                        0
-                                      ).toLocaleString('en-IN')}
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                      {formatDisplayDate(e.emi_due_date)}
-                                    </td>
-                                    <td className="px-3 py-2 text-slate-600">
-                                      {e.emi_comment || '—'}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
+                <EmiServicePricePanel
+                  customer={activeCustomer}
+                  detailsPrice={detailsPrice}
+                  apiBase={API_BASE}
+                  canManageEmi={canManageEmi}
+                  formatDisplayDate={formatDisplayDate}
+                  onRefresh={refreshActiveServicePrice}
+                  onToast={(type, text) => showToast(text, type)}
+                />
               ) : (
                 <div className="space-y-3">
                   {detailsChat.length === 0 ? (
