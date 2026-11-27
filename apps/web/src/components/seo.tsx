@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { useBrand } from '@/lib/branding';
 
 export interface SEOFaqItem {
   question: string;
@@ -17,9 +18,7 @@ export interface SEOProps {
   noIndex?: boolean;
 }
 
-const defaultTitle = 'ETaxwala — Chartered Accountants & Business Registration India';
-const defaultDesc =
-  'ETaxwala Business Solution Pvt Ltd — India’s trusted CA firm for Private Limited Company Registration, LLP, ITR Filing, GST Compliance, Tax Audit & Trademark. Over 1 Lakh+ clients served across India.';
+const defaultDesc = 'Registrations, tax filing, and compliance for growing businesses.';
 const defaultKeywords =
   'company registration india, private limited company, ITR filing online, GST registration, chartered accountant online, tax audit, LLP registration, trademark registration, business compliance';
 
@@ -34,25 +33,27 @@ export default function SEO({
   faqs,
   noIndex = false,
 }: SEOProps) {
-  const fullTitle = title ? `${title} | ETaxwala` : defaultTitle;
+  const brand = useBrand();
+  const fullTitle = title ? `${title} | ${brand.companyName}` : brand.companyName;
   const desc = description || defaultDesc;
   const kw = keywords || defaultKeywords;
-  const img = image || 'https://etaxwala.com/hero_corporate_growth.jpg';
-  const fullUrl = url ? `https://etaxwala.com${url}` : 'https://etaxwala.com';
+  const site = brand.websiteUrl || brand.appUrl || '';
+  const img = image || brand.logoUrl || '';
+  const fullUrl = url && site ? `${site.replace(/\/$/, '')}${url}` : site;
 
   // 1. Organization & AccountingService Master Schema
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'AccountingService',
-    '@id': 'https://etaxwala.com/#organization',
-    name: 'ETaxwala Business Solution Pvt Ltd',
-    legalName: 'ETaxwala Business Solution Pvt Ltd',
-    url: 'https://etaxwala.com',
-    logo: 'https://etaxwala.com/logo_black.png',
+    '@id': site ? `${site}/#organization` : undefined,
+    name: brand.legalName,
+    legalName: brand.legalName,
+    url: site || undefined,
+    logo: brand.logoUrl || undefined,
     image: img,
     description: desc,
-    telephone: '+91-7071070707',
-    email: 'support@etaxwala.com',
+    telephone: brand.supportPhone || undefined,
+    email: brand.supportEmail || undefined,
     priceRange: '₹₹',
     currenciesAccepted: 'INR',
     paymentAccepted: 'Direct Bank Transfer, NEFT, RTGS, IMPS, UPI, QR Code',
@@ -73,18 +74,7 @@ export default function SEO({
         closes: '19:00',
       },
     ],
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.9',
-      reviewCount: '12480',
-      bestRating: '5',
-      worstRating: '1',
-    },
-    sameAs: [
-      'https://www.facebook.com/etaxwala',
-      'https://www.linkedin.com/company/etaxwala',
-      'https://twitter.com/etaxwala',
-    ],
+    sameAs: [],
   };
 
   // 2. Breadcrumbs Schema
@@ -96,16 +86,14 @@ export default function SEO({
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: 'https://etaxwala.com',
+        item: site || '/',
       },
     ];
 
-    let currentPath = 'https://etaxwala.com';
+    let currentPath = site || '';
     segments.forEach((seg, idx) => {
       currentPath += `/${seg}`;
-      const formattedName = seg
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, (c) => c.toUpperCase());
+      const formattedName = seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
       itemListElement.push({
         '@type': 'ListItem',
         position: idx + 2,
@@ -175,28 +163,18 @@ export default function SEO({
       <link rel="canonical" href={fullUrl} />
 
       {/* Master Organization JSON-LD */}
-      <script type="application/ld+json">
-        {JSON.stringify(organizationSchema)}
-      </script>
+      <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
 
       {/* Breadcrumb JSON-LD */}
       {breadcrumbSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(breadcrumbSchema)}
-        </script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
       )}
 
       {/* FAQ Rich Results JSON-LD */}
-      {faqSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
-      )}
+      {faqSchema && <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>}
 
       {/* Custom Service/Product JSON-LD */}
-      {schema && (
-        <script type="application/ld+json">{JSON.stringify(schema)}</script>
-      )}
+      {schema && <script type="application/ld+json">{JSON.stringify(schema)}</script>}
     </Helmet>
   );
 }

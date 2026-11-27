@@ -13,6 +13,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:synthetic": "tsx prisma/seed-synthetic.ts",
+    "db:hash-legacy-passwords": "tsx scripts/hash-legacy-passwords.ts",
     "db:studio": "prisma studio"
   },
   "dependencies": {

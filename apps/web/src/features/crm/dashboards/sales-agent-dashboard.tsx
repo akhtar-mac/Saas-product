@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth-store';
 import { API_BASE_URL } from '@/lib/api-base';
+import { useBrand } from '@/lib/branding';
 import {
   PhoneCall,
   PhoneIncoming,
@@ -118,48 +119,10 @@ export default function SalesAgentDashboard() {
   const [callStatus, setCallStatus] = useState('INTERESTED');
 
   // Assigned Leads Queue State
+  const brand = useBrand();
   const [assignedLeads, setAssignedLeads] = useState<any[]>([]);
   const [isLoadingAssigned, setIsLoadingAssigned] = useState(false);
-
-  // Dummy Priority Assigned Queue (fallback)
-  const myAssignedLeads = [
-    {
-      id: 541,
-      name: 'Ramesh Patel',
-      phone: '+91 98220 11223',
-      service: 'Private Limited Company Incorporation',
-      source: 'ETaxwala',
-      status: 'Assigned',
-      city: 'Ahmedabad',
-    },
-    {
-      id: 542,
-      name: 'Siddharth Roy',
-      phone: '+91 97112 33445',
-      service: 'FSSAI Food License + GST',
-      source: 'Udyami Kisan',
-      status: 'Follow Up',
-      city: 'Kolkata',
-    },
-    {
-      id: 543,
-      name: 'Kavita Sundaram',
-      phone: '+91 94440 55667',
-      service: 'Trademark Registration & Search',
-      source: 'Sahakar',
-      status: 'Quote Sent',
-      city: 'Chennai',
-    },
-    {
-      id: 544,
-      name: 'Gaurav Jain',
-      phone: '+91 98100 77889',
-      service: 'Income Tax Return (ITR-3)',
-      source: 'ETaxwala',
-      status: 'Assigned',
-      city: 'Delhi',
-    },
-  ];
+  const [queueError, setQueueError] = useState<string | null>(null);
 
   // Fetch real assigned leads for logged in agent
   const fetchAssignedLeads = async () => {
@@ -170,21 +133,27 @@ export default function SalesAgentDashboard() {
       const API_BASE = API_BASE_URL;
       const res = await fetch(`${API_BASE}/v1/crm/leads?assigned_to=${activeUserId}&limit=10`);
       const data = await res.json();
-      if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
-        setAssignedLeads(
-          data.data.map((l: any) => ({
-            id: l.id,
-            name: l.name || 'Client Lead',
-            phone: l.contact || '9876543210',
-            service: l.service || 'Tax Service',
-            source: l.source || 'ETaxwala',
-            status: l.status || l.lead_status_name || 'Assigned',
-            city: l.city || 'Maharashtra',
-          }))
-        );
+      if (!res.ok || !data?.success) {
+        setQueueError(data?.error || 'The priority queue could not be loaded.');
+        setAssignedLeads([]);
+        return;
       }
+      setQueueError(null);
+      const rows = Array.isArray(data?.data) ? data.data : [];
+      setAssignedLeads(
+        rows.map((l: any) => ({
+          id: l.id,
+          name: l.name || 'Client lead',
+          phone: String(l.contact || ''),
+          service: l.service || 'Service',
+          source: l.source || 'Direct',
+          status: typeof l.status === 'string' ? l.status : l.lead_status_name || 'Assigned',
+          city: l.city || '',
+        }))
+      );
     } catch (err) {
       console.error('Failed to fetch assigned leads:', err);
+      setQueueError('The priority queue could not be loaded.');
     } finally {
       setIsLoadingAssigned(false);
     }
@@ -700,56 +669,70 @@ export default function SalesAgentDashboard() {
               </tr>
             </thead>
             <tbody>
-              {(assignedLeads.length > 0 ? assignedLeads : myAssignedLeads).map((lead) => (
-                <tr key={lead.id}>
-                  <td>
-                    <p className="font-bold text-slate-800 text-xs">{lead.name}</p>
-                    <p className="text-[10px] text-slate-400">
-                      {lead.city} • Lead #{lead.id}
-                    </p>
-                  </td>
-                  <td className="text-xs font-mono text-brand-navy font-bold">{lead.phone}</td>
-                  <td className="text-xs text-slate-700 font-medium">{lead.service}</td>
-                  <td>
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
-                        lead.source === 'ETaxwala'
-                          ? 'bg-blue-100 text-blue-800'
-                          : lead.source === 'Udyami Kisan'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-emerald-100 text-emerald-800'
-                      }`}
-                    >
-                      {lead.source}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="badge badge-gold text-[10px]">{lead.status}</span>
-                  </td>
-                  <td className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleOpenCallModal(lead)}
-                        className="btn btn-primary btn-sm"
-                      >
-                        <PhoneCall className="w-3.5 h-3.5" /> Call & Log
-                      </button>
-
-                      <a
-                        href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(
-                          lead.name
-                        )},%20I%20am%20calling%20from%20ETaxwala%20regarding%20your%20inquiry.`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-sm"
-                        style={{ background: '#25D366', color: 'white' }}
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-                      </a>
-                    </div>
+              {queueError ? (
+                <tr>
+                  <td colSpan={6} className="text-xs text-rose-700 py-6 text-center">
+                    {queueError}
                   </td>
                 </tr>
-              ))}
+              ) : assignedLeads.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-xs text-slate-500 py-6 text-center">
+                    No assigned leads in the queue.
+                  </td>
+                </tr>
+              ) : (
+                assignedLeads.map((lead) => (
+                  <tr key={lead.id}>
+                    <td>
+                      <p className="font-bold text-slate-800 text-xs">{lead.name}</p>
+                      <p className="text-[10px] text-slate-400">
+                        {lead.city} • Lead #{lead.id}
+                      </p>
+                    </td>
+                    <td className="text-xs font-mono text-brand-navy font-bold">{lead.phone}</td>
+                    <td className="text-xs text-slate-700 font-medium">{lead.service}</td>
+                    <td>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                          lead.source === 'ETaxwala'
+                            ? 'bg-blue-100 text-blue-800'
+                            : lead.source === 'Udyami Kisan'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-emerald-100 text-emerald-800'
+                        }`}
+                      >
+                        {lead.source}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="badge badge-gold text-[10px]">{lead.status}</span>
+                    </td>
+                    <td className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleOpenCallModal(lead)}
+                          className="btn btn-primary btn-sm"
+                        >
+                          <PhoneCall className="w-3.5 h-3.5" /> Call & Log
+                        </button>
+
+                        <a
+                          href={`https://wa.me/${String(lead.phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                            `Hello ${lead.name || ''}, I am calling from ${brand.companyName} regarding your inquiry.`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm"
+                          style={{ background: '#25D366', color: 'white' }}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

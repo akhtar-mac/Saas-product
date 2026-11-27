@@ -290,7 +290,7 @@ export default function CrmCallAnalyticsPage() {
           return;
         }
         setErrorMsg(null);
-        setTeamData(data.data || []);
+        setTeamData(Array.isArray(data.data) ? data.data : []);
       } else {
         const res = await fetch(`${API_BASE}/v1/call-logs/analytics/all?${params.toString()}`, {
           headers: authHeaders,
@@ -302,7 +302,7 @@ export default function CrmCallAnalyticsPage() {
           return;
         }
         setErrorMsg(null);
-        setTeamData(data.data || []);
+        setTeamData(Array.isArray(data.data) ? data.data : []);
       }
     } catch {
       setErrorMsg('Unable to reach the server for call analytics.');
@@ -766,10 +766,12 @@ export default function CrmCallAnalyticsPage() {
                           {formatDuration(log.duration_seconds)}
                         </div>
                         <div className="text-[11px] text-slate-400">
-                          {new Date(log.called_at).toLocaleTimeString('en-IN', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {Number.isNaN(new Date(log.called_at).getTime())
+                            ? '—'
+                            : new Date(log.called_at).toLocaleTimeString('en-IN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
                         </div>
                       </td>
                       {(isManager || isAdmin) && (
@@ -975,7 +977,7 @@ export default function CrmCallAnalyticsPage() {
                             </button>
                           </td>
                           <td className="px-4 py-3 text-right font-semibold text-slate-800">
-                            {m.total_calls.toLocaleString('en-IN')}
+                            {Number(m.total_calls || 0).toLocaleString('en-IN')}
                           </td>
                           <td className="px-4 py-3 text-right text-emerald-700 font-medium">
                             {(m.incoming_calls ?? 0).toLocaleString('en-IN')}
@@ -987,7 +989,7 @@ export default function CrmCallAnalyticsPage() {
                             {(m.missed ?? 0).toLocaleString('en-IN')}
                           </td>
                           <td className="px-4 py-3 text-right text-emerald-600 font-bold">
-                            {m.answered.toLocaleString('en-IN')}
+                            {Number(m.answered || 0).toLocaleString('en-IN')}
                           </td>
                           <td className="px-4 py-3 text-right text-slate-600 whitespace-nowrap">
                             {formatDuration(m.total_talk_time_seconds)}

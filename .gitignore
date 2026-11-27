@@ -45,6 +45,8 @@ Thumbs.db
 
 # Uploads
 apps/api/uploads/
+apps/api/public/branding/*
+!apps/api/public/branding/.gitkeep
 # Deploy artifacts
 hostinger-api/
 *.zip

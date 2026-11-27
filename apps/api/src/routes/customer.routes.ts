@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import bcrypt from 'bcrypt';
+import { hashPassword, verifyPassword } from '../services/password.js';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/db.js';
 import { env } from '../config/env.js';
@@ -49,17 +49,11 @@ router.post('/auth/register', validateBody(CustomerRegisterSchema), async (req, 
     });
 
     if (!existing) {
-      const maxCust = await prisma.customers.findFirst({
-        orderBy: { id: 'desc' },
-        select: { id: true },
-      });
-      const nextId = (maxCust?.id || 1373) + 1;
-      const hashedPassword = await bcrypt.hash(password || 'Customer@123', 12);
+      const hashedPassword = await hashPassword(password || 'Customer@123');
 
       existing = await prisma.customers.create({
         data: {
-          id: nextId,
-          lead_id: nextId + 15000,
+          lead_id: 0,
           name: name.trim(),
           business: `${name}'s Enterprise`,
           email: email.trim(),
@@ -70,25 +64,20 @@ router.post('/auth/register', validateBody(CustomerRegisterSchema), async (req, 
           state: 'Maharashtra',
           city: city || 'Pune',
           added_by: 1,
-          company_id: 'etaxwala',
+          company_id: 'TENANT',
           is_payment: 0,
           is_active: 1,
           is_approve: 1,
           is_partner: 0,
-          customer_token: `cust_tok_${Date.now()}_${nextId}`,
+          customer_token: `cust_tok_${Date.now()}`,
           date: new Date(),
         },
       });
 
       // Also create a lead so sales CRM has visibility
-      const maxLead = await prisma.leads.findFirst({
-        orderBy: { id: 'desc' },
-        select: { id: true },
-      });
       await prisma.leads
         .create({
           data: {
-            id: (maxLead?.id || 17281) + 1,
             name: name.trim(),
             contact: mobile.trim(),
             email: email.trim(),
@@ -102,7 +91,7 @@ router.post('/auth/register', validateBody(CustomerRegisterSchema), async (req, 
             lead_type: 0,
             is_customer: 1,
             is_payment: 0,
-            company_id: 'etaxwala',
+            company_id: 'TENANT',
             date: new Date(),
             created_at: new Date(),
             updated_at: new Date(),
@@ -216,7 +205,7 @@ router.post('/auth/login', validateBody(CustomerLoginSchema), async (req, res) =
           business: isEmail ? `${clean.split('@')[0]}'s Enterprise` : 'Apex Tech Solutions Pvt Ltd',
           email: isEmail ? clean : 'rajesh@apextech.in',
           contact: isEmail ? '+91 98765 43210' : clean,
-          password: '$2b$10$iJWGADi30072QuVY4VZude4JqQg9gZdcOKGRdsgqboaBKfycCSIlm',
+          password: '$2b$10$19MIJNpQ9rYed7y7chpZ2O5ACUNwF23WbiqmXjgv1/MoPJ6s8JxrO',
           service: 'Private Limited Company Registration',
           service_price: 7999,
           state: 'Maharashtra',
@@ -237,18 +226,9 @@ router.post('/auth/login', validateBody(CustomerLoginSchema), async (req, res) =
       throw new ApiError(401, 'Invalid email, mobile number, or password.');
     }
 
-    // Password verification: in demo mode accept credentials, in production enforce strict bcrypt
-    let isPasswordValid = env.NODE_ENV !== 'production';
+    const isPasswordValid = await verifyPassword(customer.password, password);
     if (!isPasswordValid) {
-      if (customer.password) {
-        isPasswordValid = await bcrypt.compare(password, customer.password).catch(() => false);
-        if (!isPasswordValid && customer.password === password) {
-          isPasswordValid = true; // Legacy plain text match
-        }
-      }
-      if (!isPasswordValid) {
-        throw new ApiError(401, 'Invalid email, mobile number, or password.');
-      }
+      throw new ApiError(401, 'Invalid email, mobile number, or password.');
     }
 
     if (customer.is_active === 0 || customer.is_active === false) {

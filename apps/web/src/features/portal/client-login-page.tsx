@@ -14,8 +14,8 @@ import {
 import { useAuthStore } from '@/store/auth-store';
 
 export default function ClientLoginPage() {
-  const [identifier, setIdentifier] = useState('rajesh@apextech.in');
-  const [password, setPassword] = useState('Password@123');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [useOtp, setUseOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
@@ -142,8 +142,12 @@ export default function ClientLoginPage() {
                   ⚡
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-amber-900 block">Demo Client Portal Access</span>
-                  <span className="text-[11px] text-amber-700 font-mono">rajesh@apextech.in • Rajesh Sharma</span>
+                  <span className="text-xs font-bold text-amber-900 block">
+                    Demo Client Portal Access
+                  </span>
+                  <span className="text-[11px] text-amber-700 font-mono">
+                    rajesh@apextech.in • Rajesh Sharma
+                  </span>
                 </div>
               </div>
               <button

@@ -4,10 +4,12 @@ import { ShieldCheck, Lock, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { RoleType } from '@etaxwala/types';
 import { API_BASE_URL } from '@/lib/api-base';
+import { BrandMark, useBrand } from '@/lib/branding';
 
 const API_BASE = API_BASE_URL;
 
 export default function CrmLoginPage() {
+  const brand = useBrand();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -109,7 +111,7 @@ export default function CrmLoginPage() {
         {/* Logo */}
         <div className="absolute top-8 left-10">
           <Link to="/">
-            <img src="/logo_black.png" alt="ETaxwala" className="h-9 w-auto" />
+            <BrandMark className="h-9" />
           </Link>
         </div>
 
@@ -117,7 +119,7 @@ export default function CrmLoginPage() {
         <div className="w-full max-w-xs mx-auto">
           <img
             src="/staff_login_illus.jpg"
-            alt="ETaxwala CRM Dashboard"
+            alt={`${brand.companyName} CRM`}
             className="w-full rounded-3xl shadow-2xl object-cover"
             style={{ aspectRatio: '3/4' }}
           />
@@ -144,7 +146,7 @@ export default function CrmLoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden">
             <Link to="/">
-              <img src="/logo_black.png" alt="ETaxwala" className="h-9 w-auto" />
+              <BrandMark className="h-9" />
             </Link>
           </div>
 

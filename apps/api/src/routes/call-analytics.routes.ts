@@ -17,6 +17,15 @@ import {
 
 const router = Router();
 
+function missingTable(err: unknown): boolean {
+  const msg = String((err as { message?: string })?.message || '');
+  const code = String((err as { code?: string })?.code || '');
+  return (
+    code === 'P2021' ||
+    /doesn't exist|does not exist|ER_NO_SUCH_TABLE|Unknown table|\b1146\b/i.test(msg)
+  );
+}
+
 // Roles allowed to view call reports across all staff & filter by ?user_id=
 // 1: super_admin, 2: admin, 3: operations_manager, 4: sales_manager
 const CALL_MANAGERS = [1, 2, 3, 4];
@@ -215,6 +224,10 @@ router.get(
       res.json({ success: true, data: results });
     } catch (err) {
       console.error('team analytics failed:', (err as Error).message);
+      if (missingTable(err)) {
+        res.json({ success: true, data: [], warning: 'Call history is not available yet.' });
+        return;
+      }
       res.status(500).json({ success: false, error: 'Failed to fetch team analytics.' });
     }
   }
@@ -247,6 +260,10 @@ router.get(
       res.json({ success: true, data: results });
     } catch (err) {
       console.error('all analytics failed:', (err as Error).message);
+      if (missingTable(err)) {
+        res.json({ success: true, data: [], warning: 'Call history is not available yet.' });
+        return;
+      }
       res.status(500).json({ success: false, error: 'Failed to fetch analytics.' });
     }
   }
@@ -271,6 +288,10 @@ router.get('/staff', verifyJWT, requireRole(CALL_MANAGERS), async (req: Request,
     res.json({ success: true, data: staff });
   } catch (err) {
     console.error('staff list failed:', (err as Error).message);
+    if (missingTable(err)) {
+      res.json({ success: true, data: [], warning: 'Staff call list is not available yet.' });
+      return;
+    }
     res.status(500).json({ success: false, error: 'Failed to fetch staff list.' });
   }
 });
@@ -327,6 +348,15 @@ router.get(
       res.json({ success: true, data: { total, today: todayStats, today_date: today } });
     } catch (err) {
       console.error('call summary failed:', (err as Error).message);
+      if (missingTable(err)) {
+        const today = istToday();
+        res.json({
+          success: true,
+          data: { total: EMPTY_STATS, today: EMPTY_STATS, today_date: today },
+          warning: 'Call history is not available yet.',
+        });
+        return;
+      }
       res.status(500).json({ success: false, error: 'Failed to fetch call summary.' });
     }
   }
@@ -434,6 +464,15 @@ router.get(
       });
     } catch (err) {
       console.error('call history failed:', (err as Error).message);
+      if (missingTable(err)) {
+        res.json({
+          success: true,
+          data: [],
+          pagination: { total: 0, page: 1, limit: 20, totalPages: 0 },
+          warning: 'Call history is not available yet.',
+        });
+        return;
+      }
       res.status(500).json({ success: false, error: 'Failed to fetch call history.' });
     }
   }

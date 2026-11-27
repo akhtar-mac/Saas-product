@@ -281,8 +281,8 @@ export default function OpsManagerDashboard() {
             <span className="badge badge-gold">Operations Manager</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            4,911 operations tasks, 10-stage lifecycle tracking, SLA compliance, bottleneck
-            detection & promotional coupon management.
+            10-stage lifecycle tracking, SLA compliance, and coupon management. Counts come from the
+            live queue.
           </p>
         </div>
 

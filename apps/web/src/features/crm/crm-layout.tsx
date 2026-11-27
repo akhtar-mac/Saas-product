@@ -46,8 +46,10 @@ import { hasUserPermission, isServerAccessList } from './permissions';
 import { useAccessSync } from './access/use-access-sync';
 import { ChatNotificationProvider, useChatNotification } from './context/chat-notification-context';
 import { SignOutConfirmModal } from '@/components/ui/sign-out-modal';
+import { BrandMark, useBrand } from '@/lib/branding';
 
 function CrmLayoutContent() {
+  const brand = useBrand();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     extraAccess: true,
@@ -642,7 +644,7 @@ function CrmLayoutContent() {
       {/* Mobile Top Bar */}
       <div className="md:hidden flex items-center justify-between p-4 bg-[#FFFDF9] border-b border-[#EAE6DD] sticky top-0 z-30 shadow-xs">
         <Link to="/crm" className="flex items-center gap-2">
-          <img src="/logo_black.png" alt="ETaxwala" className="h-7 w-auto" />
+          <BrandMark className="h-7" />
           <span className="badge badge-gold text-[10px]">{activeRole}</span>
         </Link>
 
@@ -675,7 +677,7 @@ function CrmLayoutContent() {
           {/* Header & Logo */}
           <div className="p-4 border-b border-[#EAE6DD] flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2.5">
-              <img src="/logo_black.png" alt="ETaxwala" className="h-8 w-auto" />
+              <BrandMark className="h-8" />
             </Link>
             <button
               type="button"
@@ -754,6 +756,20 @@ function CrmLayoutContent() {
                   className={`w-4 h-4 shrink-0 ${location.pathname === '/crm' ? 'text-white' : 'text-[#1B365D]'}`}
                 />
                 <span>Dashboard</span>
+              </Link>
+            )}
+            {(can('marketing:view') || can('admin:view')) && (
+              <Link
+                to="/crm/marketing-automation"
+                onClick={handleNavClick}
+                className={`flex items-center gap-3 px-3 py-2 rounded-xl font-bold transition-all ${
+                  location.pathname.startsWith('/crm/marketing-automation')
+                    ? 'bg-[#1E3A8A] text-white shadow-sm'
+                    : 'text-slate-800 hover:bg-slate-100 hover:text-[#1E3A8A]'
+                }`}
+              >
+                <Target className="w-4 h-4 shrink-0" />
+                <span>Marketing automation</span>
               </Link>
             )}
 
@@ -1579,7 +1595,7 @@ function CrmLayoutContent() {
                                   : 'text-slate-600 hover:text-[#1B365D]'
                               }`}
                             >
-                              ETaxwala Leads List
+                              Leads list
                             </Link>
                             <Link
                               to="/crm/leads?source=udyamikisan"
@@ -1927,6 +1943,20 @@ function CrmLayoutContent() {
 
                 {openSections.admin && (
                   <div className="pl-4 pr-1 py-1 space-y-0.5 border-l-2 border-slate-100 ml-4">
+                    {can('admin:view') && (
+                      <Link
+                        to="/crm/settings"
+                        onClick={handleNavClick}
+                        className={`flex items-center justify-between py-1.5 px-2 rounded-lg font-medium ${
+                          location.pathname === '/crm/settings'
+                            ? 'bg-blue-50 text-[#1E3A8A] font-bold'
+                            : 'text-slate-600 hover:text-[#1E3A8A] hover:bg-slate-50'
+                        }`}
+                      >
+                        <span>Workspace settings</span>
+                      </Link>
+                    )}
+
                     {(isSuperAdmin || can('users:manage')) && (
                       <Link
                         to="/crm/users"
@@ -2139,7 +2169,7 @@ function CrmLayoutContent() {
             </button>
             <div className="flex items-center gap-2 whitespace-nowrap">
               <span className="font-bold text-sm text-[#1B365D] whitespace-nowrap tracking-tight">
-                ETaxwala Business Solution Pvt Ltd
+                {brand.legalName}
               </span>
               <span className="text-slate-300 hidden lg:inline">|</span>
               <span className="text-xs font-semibold text-slate-500 whitespace-nowrap hidden lg:inline max-w-[220px] truncate">

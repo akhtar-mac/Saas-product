@@ -8,9 +8,8 @@
  * this only if the client's base URL is pointed at the new API.
  *
  * Differences from the old code (security/bug fixes, same success shapes):
- *  - user-desktop-login checks the password like the web login (bcrypt hash,
- *    then the old plaintext column) and answers 401 on a wrong password
- *    (the old code returned an empty 200).
+ *  - user-desktop-login checks the password with bcrypt only and answers 401
+ *    on a wrong or legacy plaintext password (the old code returned an empty 200).
  *  - user_id must be an existing staff member.
  *  - GET /api/screenshots/{id} is not exposed (the old method did not exist and
  *    would serve staff screens without auth); the dashboard serves them behind login.
@@ -20,7 +19,7 @@ import multer from 'multer';
 import { prisma } from '../config/db.js';
 import { env } from '../config/env.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
-import bcrypt from 'bcrypt';
+import { verifyPassword } from '../services/password.js';
 import { authRateLimit } from '../middleware/rate-limit.middleware.js';
 import { insertSystemLog } from '../services/desktrack.service.js';
 import { SYSTEM_LOG_EVENTS, sniffImageMime } from '../services/desktrack-rules.js';
@@ -50,12 +49,9 @@ router.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Same check as the staff web login on this line: bcrypt hash, else the old
-// plaintext users.password column. Read-only (no hash upgrade on this line).
+// Same check as the staff web login: bcrypt only. Plaintext never matches.
 async function checkUserPassword(stored: string | null | undefined, password: string) {
-  if (!stored) return false;
-  if (await bcrypt.compare(password, stored).catch(() => false)) return true;
-  return stored === password;
+  return verifyPassword(stored, password);
 }
 
 async function staffExists(userId: number): Promise<boolean> {
