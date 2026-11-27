@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import bcrypt from 'bcrypt';
+import { verifyPassword } from '../services/password.js';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/db.js';
 import { env } from '../config/env.js';
@@ -397,7 +397,7 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
           position: builtin.position,
           department: 'Executive',
           is_active: true,
-          password_hash: '$2b$10$iJWGADi30072QuVY4VZude4JqQg9gZdcOKGRdsgqboaBKfycCSIlm', // 'etaxwala@2024'
+          password_hash: '$2b$10$19MIJNpQ9rYed7y7chpZ2O5ACUNwF23WbiqmXjgv1/MoPJ6s8JxrO', // Demo@12345
           permissions: JSON.stringify(builtin.role_id === 1 ? ['*'] : []),
         };
       } else if (env.NODE_ENV !== 'production') {
@@ -427,17 +427,8 @@ router.post('/staff/login', validateBody(StaffLoginSchema), async (req: Request,
       }
     }
 
-    // Password verification: in development/demo mode, accept credentials for testing; in production enforce strict bcrypt
-    let isValid = env.NODE_ENV !== 'production';
-    if (!isValid) {
-      const storedHash = staffUser.password_hash;
-      if (storedHash) {
-        isValid = await bcrypt.compare(password, storedHash).catch(() => false);
-      }
-      if (!isValid && storedHash && storedHash === password) {
-        isValid = true;
-      }
-    }
+    // bcrypt only. Plaintext and the old "any password in dev" bypass are not accepted.
+    const isValid = await verifyPassword(staffUser.password_hash, password);
 
     if (!isValid) {
       void recordAuditLog({

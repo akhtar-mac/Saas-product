@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { ApiError } from '../middleware/error.middleware.js';
+import { getPublicBrand } from '../services/tenant-settings.service.js';
 
 const router = Router();
 
@@ -29,27 +30,23 @@ router.get('/telephony/recordings/:id', (req, res) => {
 });
 
 // ─── 5.3 Direct Bank & UPI Payment Integration ────────────────────────────────
-router.get('/payment/banks', (req, res) => {
+router.get('/payment/banks', async (_req, res) => {
+  const brand = await getPublicBrand();
   res.json({
     success: true,
-    company_name: 'ETaxwala Business Solution Pvt Ltd',
+    company_name: brand.legalName,
     upi_ids: {
-      primary: 'etaxwalabusiness@icici',
-      secondary: 'etaxwala@hdfcbank',
-      phone: '+91 70710 70707',
+      primary: brand.upiPrimary,
+      secondary: brand.upiSecondary,
+      phone: brand.supportPhone,
     },
-    banks: [
-      { id: 'hdfc', name: 'HDFC Bank Ltd', acct: '50200084729118', ifsc: 'HDFC0001811', branch: 'Beed Bypass Road, CSN' },
-      { id: 'icici', name: 'ICICI Bank Ltd', acct: '034205009823', ifsc: 'ICIC0000342', branch: 'Jalna Road Hub, CSN' },
-      { id: 'sbi', name: 'State Bank of India', acct: '39820145892', ifsc: 'SBIN0001716', branch: 'Kranti Chowk, CSN' },
-      { id: 'axis', name: 'Axis Bank Ltd', acct: '923020048129301', ifsc: 'UTIB0000182', branch: 'CIDCO, CSN' },
-      { id: 'kotak', name: 'Kotak Mahindra Bank', acct: '7812903841', ifsc: 'KKBK0000691', branch: 'Nirala Bazar, CSN' },
-      { id: 'bob', name: 'Bank of Baroda', acct: '18420200001923', ifsc: 'BARB0AURANG', branch: 'Samarth Nagar, CSN' },
-      { id: 'pnb', name: 'Punjab National Bank', acct: '0842002100039124', ifsc: 'PUNB0084200', branch: 'Station Road, CSN' },
-      { id: 'canara', name: 'Canara Bank', acct: '120001849201', ifsc: 'CNRB0000842', branch: 'Mondha Road, CSN' },
-      { id: 'union', name: 'Union Bank of India', acct: '320101010038472', ifsc: 'UBIN0532011', branch: 'Adalat Road, CSN' },
-      { id: 'indusind', name: 'IndusInd Bank', acct: '250019284712', ifsc: 'INDB0000318', branch: 'Jalna Road Hub, CSN' },
-    ],
+    banks: brand.bankAccounts.map((bank) => ({
+      id: bank.id,
+      name: bank.bankName,
+      acct: bank.accountNumber,
+      ifsc: bank.ifsc,
+      branch: bank.branch,
+    })),
   });
 });
 
@@ -64,9 +61,9 @@ router.post('/payment/create-order', (req, res) => {
       id: orderId,
       amount: Number(amount),
       currency: 'INR',
-      beneficiary: 'ETaxwala Business Solution Pvt Ltd',
-      primary_upi: 'etaxwalabusiness@icici',
-      primary_bank: 'HDFC Bank Ltd (A/C: 50200084729118, IFSC: HDFC0001811)',
+      beneficiary: 'Configured in workspace settings',
+      primary_upi: '',
+      primary_bank: '',
       status: 'pending_payment',
       created_at: Math.floor(Date.now() / 1000),
     },

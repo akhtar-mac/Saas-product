@@ -14,22 +14,15 @@ export interface SendNotificationParams {
 
 export async function sendNotification(params: SendNotificationParams): Promise<any> {
   try {
-    // Generate safe incremented ID
-    const maxIdRes = await prisma.$queryRawUnsafe<[{ max_id: number | null }]>(
-      `SELECT COALESCE(MAX(id), 0) + 1 as max_id FROM notifications;`
-    );
-    const nextId = Number(maxIdRes[0]?.max_id || Date.now() % 1000000);
-
     const safeRelatedId =
       typeof params.relatedId === 'number'
         ? params.relatedId
         : params.relatedId
-        ? parseInt(String(params.relatedId).replace(/[^0-9]/g, ''), 10) || null
-        : null;
+          ? parseInt(String(params.relatedId).replace(/[^0-9]/g, ''), 10) || null
+          : null;
 
     const record = await (prisma as any).notifications.create({
       data: {
-        id: nextId,
         user_id: params.userId,
         type: params.type,
         title: params.title,

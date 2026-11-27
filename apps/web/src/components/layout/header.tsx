@@ -13,6 +13,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { BrandMark, useBrand } from '@/lib/branding';
 import { services } from '@/lib/constants/services';
 
 interface NavItem {
@@ -143,6 +144,7 @@ const navDropdowns: NavItem[] = [
 ];
 
 export default function Header() {
+  const brand = useBrand();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpandedCat, setMobileExpandedCat] = useState<string | null>('startup');
@@ -247,14 +249,7 @@ export default function Header() {
           <div className="flex items-center gap-3 xl:gap-5 min-w-0">
             {/* Official Brand Logo */}
             <Link to="/" className="flex items-center gap-2 shrink-0 mr-1 xl:mr-2">
-              <img
-                src="/logo_black.png"
-                alt="ETaxwala"
-                className="h-7 sm:h-8 md:h-8.5 w-auto object-contain max-w-[135px]"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/brand-logo.png';
-                }}
-              />
+              <BrandMark className="h-7 sm:h-8" />
             </Link>
 
             {/* Horizontal Nav Links: Minimalist, spacious, strictly single line */}
@@ -589,14 +584,20 @@ export default function Header() {
           {/* Mobile Contact & Portal Footers */}
           <div className="pt-2 border-t border-[#EAE6DD] grid grid-cols-2 gap-2">
             <a
-              href="tel:08069029999"
+              href={
+                brand.supportPhone ? `tel:${brand.supportPhone.replace(/\s/g, '')}` : '/contact'
+              }
               className="py-2 px-3 text-center text-xs font-bold text-slate-800 bg-[#FAF9F5] border border-[#EAE6DD] rounded-xl flex items-center justify-center gap-1.5"
             >
               <Phone className="w-3.5 h-3.5 text-[#F97316]" />
               <span>Call CA</span>
             </a>
             <a
-              href="https://wa.me/918069029999?text=Hello%20ETaxwala%20Team"
+              href={
+                brand.supportPhone
+                  ? `https://wa.me/${brand.supportPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${brand.companyName}`)}`
+                  : '/contact'
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="py-2 px-3 text-center text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-center gap-1.5"

@@ -18,6 +18,7 @@ import {
 } from '../utils/emi-uploads.js';
 import { overview as hrmsOverview } from '../hrms/hrms-service.js';
 import { attendanceFor as hrmsAttendanceFor } from '../hrms/hrms-data.js';
+import { hashPassword } from '../services/password.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -457,10 +458,13 @@ router.get('/leads', async (req, res) => {
         : `'${tableName === 'leads_udyamikisan' ? 'Udyami Kisan' : 'Sahakar Samriddhi'}' as source`;
 
     // Single-table SELECT with lead_score and quoted_price included
+    const hasScore = await hasColumn(tableName, 'lead_score');
+    const hasPrice = await hasColumn(tableName, 'quoted_price');
     const leadsRaw = await prisma.$queryRawUnsafe<any[]>(
       `SELECT l.id, l.name, l.contact, l.email, l.state, l.city, l.service, ${sourceCol},
               l.added_by, l.is_assign, l.lead_type, l.lead_note, l.date, l.created_at,
-              l.lead_score, l.quoted_price
+              ${hasScore ? 'l.lead_score' : 'NULL AS lead_score'},
+              ${hasPrice ? 'l.quoted_price' : 'NULL AS quoted_price'}
        FROM ${tableName} l
        WHERE ${whereSql}
        ORDER BY l.id DESC
@@ -787,15 +791,12 @@ router.post('/leads', validateBody(CreateLeadSchema), async (req, res) => {
     const esc = (val: any) => String(val || '').replace(/'/g, "''");
 
     if (sLower.includes('udyamikisan') || sLower.includes('udyami') || sLower === 'uddyomi001') {
-      const maxRes = await prisma.$queryRawUnsafe<any[]>(
-        `SELECT MAX(id) as maxId FROM leads_udyamikisan`
-      );
-      const nextId = (Number(maxRes[0]?.maxId) || 0) + 1;
-
       await prisma.$executeRawUnsafe(
-        `INSERT INTO leads_udyamikisan (id, name, email, contact, service, state, city, lead_note, added_by, is_assign, lead_type, is_customer, is_payment, company_id, date, created_at, updated_at)
-         VALUES (${nextId}, '${esc(name)}', '${esc(email || contact + '@udyamikisan.in')}', '${esc(contact)}', '${esc(service)}', '${esc(state)}', '${esc(city)}', '${esc(note || '')}', 1, 0, 0, 0, 0, 'UDDYOMI001', NOW(), NOW(), NOW())`
+        `INSERT INTO leads_udyamikisan (name, email, contact, service, state, city, lead_note, added_by, is_assign, lead_type, is_customer, is_payment, company_id, date, created_at, updated_at)
+         VALUES ('${esc(name)}', '${esc(email || contact + '@lead.example.com')}', '${esc(contact)}', '${esc(service)}', '${esc(state)}', '${esc(city)}', '${esc(note || '')}', 1, 0, 0, 0, 0, 'UDDYOMI001', NOW(), NOW(), NOW())`
       );
+      const created = await prisma.$queryRawUnsafe<any[]>(`SELECT LAST_INSERT_ID() AS id`);
+      const nextId = Number(created[0]?.id || 0);
 
       _countsCache = null;
       return res.json({
@@ -806,15 +807,12 @@ router.post('/leads', validateBody(CreateLeadSchema), async (req, res) => {
     }
 
     if (sLower.includes('sahakar') || sLower === 'sahakar01') {
-      const maxRes = await prisma.$queryRawUnsafe<any[]>(
-        `SELECT MAX(id) as maxId FROM leads_sahakarsamridhi`
-      );
-      const nextId = (Number(maxRes[0]?.maxId) || 0) + 1;
-
       await prisma.$executeRawUnsafe(
-        `INSERT INTO leads_sahakarsamridhi (id, name, email, contact, service, state, city, lead_note, added_by, is_assign, lead_type, is_customer, is_payment, company_id, date, created_at, updated_at)
-         VALUES (${nextId}, '${esc(name)}', '${esc(email || contact + '@sahakar.in')}', '${esc(contact)}', '${esc(service)}', '${esc(state)}', '${esc(city)}', '${esc(note || '')}', 1, 0, 0, 0, 0, 'SAHAKAR01', NOW(), NOW(), NOW())`
+        `INSERT INTO leads_sahakarsamridhi (name, email, contact, service, state, city, lead_note, added_by, is_assign, lead_type, is_customer, is_payment, company_id, date, created_at, updated_at)
+         VALUES ('${esc(name)}', '${esc(email || contact + '@lead.example.com')}', '${esc(contact)}', '${esc(service)}', '${esc(state)}', '${esc(city)}', '${esc(note || '')}', 1, 0, 0, 0, 0, 'SAHAKAR01', NOW(), NOW(), NOW())`
       );
+      const created = await prisma.$queryRawUnsafe<any[]>(`SELECT LAST_INSERT_ID() AS id`);
+      const nextId = Number(created[0]?.id || 0);
 
       _countsCache = null;
       return res.json({
@@ -833,19 +831,12 @@ router.post('/leads', validateBody(CreateLeadSchema), async (req, res) => {
       });
     }
 
-    // Default: ETaxwala leads table
-    const maxIdLead = await prisma.leads.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
-    const nextId = (maxIdLead?.id || 17281) + 1;
-
     const newLead = await prisma.leads.create({
       data: {
-        id: nextId,
         name,
         contact,
-        email: email || `${contact}@lead.etaxwala.in`,
+        email:
+          email || `${String(contact).replace(/[^a-zA-Z0-9]/g, '') || 'lead'}@lead.example.com`,
         service: service || 'Business Registration Advisory',
         source,
         state,
@@ -855,7 +846,7 @@ router.post('/leads', validateBody(CreateLeadSchema), async (req, res) => {
         lead_type: 0, // NEW
         is_customer: 0,
         is_payment: 0,
-        company_id: 'etaxwala',
+        company_id: 'TENANT',
         date: new Date(),
         created_at: new Date(),
         updated_at: new Date(),
@@ -921,18 +912,18 @@ router.patch('/leads/:id/status', async (req, res) => {
 router.post('/leads/followup', async (req, res) => {
   try {
     const { lead_id, user_id = 1, followup_date, followup_time, followup_remark } = req.body;
-    const maxRows: any[] = (await prisma
-      .$queryRawUnsafe<any[]>(`SELECT COALESCE(MAX(id),1000)+1 AS nextId FROM lead_followups`)
-      .catch(() => [{ nextId: 1001 } as any])) as any[];
-    const nextId = Number(maxRows[0]?.nextId || 1001);
     const escFU = String(followup_remark || '').replace(/'/g, "''");
-    const escSrc = String(req.body.lead_source || 'etaxwala').replace(/'/g, "''");
+    const escSrc = String(req.body.lead_source || 'crm').replace(/'/g, "''");
     await prisma
       .$executeRawUnsafe(
-        `INSERT INTO lead_followups (id, lead_id, user_id, followup_date, followup_time, followup_remark, is_called, date, lead_source)
-         VALUES (${nextId}, ${Number(lead_id)}, ${Number(user_id)}, '${followup_date || new Date().toISOString().slice(0, 10)}', '${followup_time || '10:00 AM'}', '${escFU}', 0, NOW(), '${escSrc}')`
+        `INSERT INTO lead_followups (lead_id, user_id, followup_date, followup_time, followup_remark, is_called, date, lead_source)
+         VALUES (${Number(lead_id)}, ${Number(user_id)}, '${followup_date || new Date().toISOString().slice(0, 10)}', '${followup_time || '10:00 AM'}', '${escFU}', 0, NOW(), '${escSrc}')`
       )
       .catch(() => 0);
+    const created = await prisma
+      .$queryRawUnsafe<any[]>(`SELECT LAST_INSERT_ID() AS id`)
+      .catch(() => [{ id: 0 }]);
+    const nextId = Number(created[0]?.id || 0);
     const record = {
       id: nextId,
       lead_id: Number(lead_id),
@@ -2625,11 +2616,6 @@ router.post('/customers/add-offline', async (req, res) => {
     }
 
     // 2. Create Customer in customers table
-    const maxCust = await prisma.customers.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
-    const custId = (maxCust?.id || 1373) + 1;
 
     // Get actual service_id from targetServices
     let serviceIdForCustomer = Number(customer_service_id) || 1;
@@ -2637,15 +2623,14 @@ router.post('/customers/add-offline', async (req, res) => {
       serviceIdForCustomer = targetServices[0].service_id;
     }
 
-    await prisma.customers.create({
+    const createdCustomer = await prisma.customers.create({
       data: {
-        id: custId,
         lead_id: leadId,
         name: String(customer_name).trim(),
         business: customer_businessName || String(customer_name).trim(),
-        email: customer_email || `client_${Date.now()}@etaxwala.in`,
+        email: customer_email || `client_${Date.now()}@example.com`,
         contact: String(customer_mobile).trim(),
-        password: '123456',
+        password: await hashPassword(`reset-${Date.now()}-${customer_email || 'client'}`),
         service: String(serviceIdForCustomer), // Store service_id as string (database field is VarChar)
         service_price: Number(customer_total_service_price || 0),
         state: customer_state || 'Maharashtra',
@@ -2656,17 +2641,13 @@ router.post('/customers/add-offline', async (req, res) => {
         is_active: 1,
         is_approve: 1,
         is_partner: 1,
-        customer_token: `tok_${Date.now()}_${custId}`,
+        customer_token: `tok_${Date.now()}`,
         date: new Date(),
       },
     });
+    const custId = createdCustomer.id;
 
     // 3. Create Order in orders table (like old Laravel CRM)
-    const maxOrder = await prisma.orders.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
-    const orderId = (maxOrder?.id || 5000) + 1;
     const order_id_str = `order_${Date.now()}`;
     const payment_id_str = `offline_${Date.now()}`;
 
@@ -2682,16 +2663,10 @@ router.post('/customers/add-offline', async (req, res) => {
       (custom_package_name && customSvcIds.length > 0);
     if (isCustomPkgOrder && customSvcIds.length > 0) {
       // Create custom package if needed
-      const maxCombo = await prisma.combo_packages.findFirst({
-        orderBy: { cp_id: 'desc' },
-        select: { cp_id: true },
-      });
-      const comboId = (maxCombo?.cp_id || 100) + 1;
       const serviceString = customSvcIds.join(', ');
 
-      await prisma.combo_packages.create({
+      const createdCombo = await prisma.combo_packages.create({
         data: {
-          cp_id: comboId,
           service_id: serviceString,
           cp_title: customSvcIds[0],
           cp_type: 5,
@@ -2700,7 +2675,7 @@ router.post('/customers/add-offline', async (req, res) => {
           added_by: staffUserId,
         },
       });
-      packageIdForOrder = String(comboId);
+      packageIdForOrder = String(createdCombo.cp_id);
     }
     if (!packageIdForOrder) {
       // Normal service: use selected cp_id, else lookup combo_packages.cp_title = service_id
@@ -2722,9 +2697,8 @@ router.post('/customers/add-offline', async (req, res) => {
       packageIdForOrder = comboPkg.length > 0 ? String(comboPkg[0].cp_id) : String(svcIdForPkg);
     }
 
-    await prisma.orders.create({
+    const createdOrder = await prisma.orders.create({
       data: {
-        id: orderId,
         customer_id: String(custId),
         package_id: packageIdForOrder,
         order_id: order_id_str,
@@ -2734,16 +2708,11 @@ router.post('/customers/add-offline', async (req, res) => {
       },
     });
 
-    // 4. Create EMI Record in customer_emi
-    const maxEmi = await prisma.customer_emi.findFirst({
-      orderBy: { emi_id: 'desc' },
-      select: { emi_id: true },
-    });
-    const emiId = (maxEmi?.emi_id || 1000) + 1;
+    const orderId = createdOrder.id;
 
+    // 4. Create EMI Record in customer_emi
     await prisma.customer_emi.create({
       data: {
-        emi_id: emiId,
         customer_id: custId,
         order_id: orderId,
         emi_type: Number(customer_payment_mode) || 1,
@@ -4792,14 +4761,9 @@ router.post('/customers/:id/orders', async (req, res) => {
         if (existingCombo.length > 0) {
           packageId = String(existingCombo[0].cp_id);
         } else {
-          const maxCombo = await prisma.$queryRawUnsafe<{ max_id: number }[]>(
-            'SELECT MAX(cp_id) as max_id FROM combo_packages'
-          );
-          const comboId = (maxCombo[0]?.max_id || 100) + 1;
           await prisma.$executeRawUnsafe(
-            `INSERT INTO combo_packages (cp_id, service_id, cp_title, cp_type, cp_discount, company_id, added_by, cp_date)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            comboId,
+            `INSERT INTO combo_packages (service_id, cp_title, cp_type, cp_discount, company_id, added_by, cp_date)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             serviceString,
             svcIds[0],
             5,
@@ -4808,7 +4772,10 @@ router.post('/customers/:id/orders', async (req, res) => {
             staffUserId,
             new Date()
           );
-          packageId = String(comboId);
+          const createdCombo = await prisma.$queryRawUnsafe<{ id: number }[]>(
+            `SELECT LAST_INSERT_ID() AS id`
+          );
+          packageId = String(createdCombo[0]?.id || '');
         }
       }
     }
@@ -4844,15 +4811,8 @@ router.post('/customers/:id/orders', async (req, res) => {
     // Now use normal Prisma create since AUTO_INCREMENT is fixed
     const subCustName = sub_customer_name || null;
     const companyName = customer_businessName || customer.business || customer.name || 'NA';
-    // Get next order ID
-    const maxOrder = await prisma.$queryRawUnsafe<{ max_id: number }[]>(
-      'SELECT MAX(id) as max_id FROM orders'
-    );
-    const nextOrderId = (maxOrder[0]?.max_id || 0) + 1;
-
     const newOrder = await prisma.orders.create({
       data: {
-        id: nextOrderId,
         customer_id: String(custId),
         package_id: String(packageId),
         company_name: companyName,
@@ -4864,14 +4824,9 @@ router.post('/customers/:id/orders', async (req, res) => {
     });
     const orderId = newOrder.id;
 
-    const maxEmi = await prisma.$queryRawUnsafe<{ max_id: number }[]>(
-      'SELECT MAX(emi_id) as max_id FROM customer_emi'
-    );
-    const emiId = (maxEmi[0]?.max_id || 0) + 1;
     await prisma.$executeRawUnsafe(
-      `INSERT INTO customer_emi (emi_id, customer_id, order_id, emi_type, emi_total_amount, emi_paid_amount, emi_unpaid_amount, emi_due_date, second_emi, second_emi_due_date, emi_comment, date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      emiId,
+      `INSERT INTO customer_emi (customer_id, order_id, emi_type, emi_total_amount, emi_paid_amount, emi_unpaid_amount, emi_due_date, second_emi, second_emi_due_date, emi_comment, date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       custId,
       orderId,
       Number(customer_payment_mode) || 1,
@@ -5056,15 +5011,8 @@ router.post('/customers/create-from-order', async (req, res) => {
     );
     const leadId = lead[0]?.id;
 
-    // 2. Create New Customer (with manual ID since not auto-increment)
-    const maxCust = await prisma.$queryRawUnsafe<{ max_id: number }[]>(
-      'SELECT MAX(id) as max_id FROM customers'
-    );
-    const nextCustId = (maxCust[0]?.max_id || 0) + 1;
-
     const newCustomer = await prisma.customers.create({
       data: {
-        id: nextCustId,
         lead_id: leadId,
         name: customer_name,
         business: customer_businessName || '',
@@ -5074,7 +5022,7 @@ router.post('/customers/create-from-order', async (req, res) => {
         service_price: Number(customer_total_service_price) || 0,
         state: customer_state || '',
         city: customer_city || '',
-        password: '123456',
+        password: await hashPassword(`reset-${Date.now()}-${customer_email || 'client'}`),
         company_id: 'ETax1',
         customer_token: 'cust_' + Date.now(),
         added_by: staffUserId,
@@ -5330,15 +5278,8 @@ router.post('/quotations', async (req, res) => {
       total = 1499,
       service_name = 'Tax Advisory Service',
     } = req.body;
-    const maxQ = await prisma.quotations.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
-    const nextQId = (maxQ?.id ? BigInt(maxQ.id) : 1874n) + 1n;
-
     const quotation = await prisma.quotations.create({
       data: {
-        id: nextQId,
         lead_id: BigInt(lead_id),
         created_by: 'Staff Admin',
         note: note || `Quotation for ${client_name || 'Client'} - ${service_name}`,
@@ -5347,14 +5288,10 @@ router.post('/quotations', async (req, res) => {
       },
     });
 
-    const maxSale = await prisma.sales.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
-    const nextSaleId = (maxSale?.id ? BigInt(maxSale.id) : 2000n) + 1n;
-
     await prisma.sales
       .create({
         data: {
-          id: nextSaleId,
-          quotation_id: nextQId,
+          quotation_id: quotation.id,
           service_name,
           qty: 1,
           price: Number(total),
@@ -5454,16 +5391,10 @@ router.get('/employees', async (_req, res) => {
 router.post('/employees', async (req, res) => {
   try {
     const { username, email, position } = req.body;
-    const maxUser = await prisma.desktop_users.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true, user_id: true },
-    });
-    const nextId = (maxUser?.id || 10) + 1;
     const newUser = await prisma.desktop_users.create({
       data: {
-        id: nextId,
-        username: username || email || `user_${nextId}`,
-        user_id: nextId,
+        username: username || email || `user_${Date.now()}`,
+        user_id: Number(req.body?.user_id) || 0,
         idle_time: 0,
         screenshot_time: 5,
       },
@@ -5869,7 +5800,10 @@ router.put('/users/:id', async (req, res) => {
       updated_at: new Date(),
     };
     if (permsJson !== undefined) dataToUpdate.permissions = permsJson;
-    if (password) dataToUpdate.password_hash = password;
+    if (password) {
+      const bcrypt = await import('bcrypt');
+      dataToUpdate.password_hash = await bcrypt.default.hash(String(password), 12);
+    }
 
     const updated = await (prisma as any).staff_users.update({
       where: { id: Number(id) },
@@ -5894,23 +5828,16 @@ router.delete('/users/:id', async (req, res) => {
 });
 
 // 4.14.20 & 4.14.21: Settings
-router.get('/settings', (_req, res) => {
-  res.json({
-    success: true,
-    data: {
-      companyName: 'ETaxwala Business Solution Pvt Ltd',
-      phone: '080-6902-9999',
-      supportEmail: 'support@etaxwala.com',
-      workingHours: '9:30 AM - 6:30 PM (Mon - Sat)',
-      headOffice: 'Chhatrapati Sambhaji Nagar, Maharashtra',
-      mcaV3AutoSync: true,
-      gstPortalAutoSync: true,
-    },
-  });
+router.get('/settings', async (_req, res) => {
+  const { getAdminSettings } = await import('../services/tenant-settings.service.js');
+  const data = await getAdminSettings();
+  res.json({ success: true, data });
 });
 
-router.put('/settings', (req, res) => {
-  res.json({ success: true, message: 'Settings saved successfully', data: req.body });
+router.put('/settings', async (req, res) => {
+  const { updateSettings } = await import('../services/tenant-settings.service.js');
+  const data = await updateSettings(req.body || {});
+  res.json({ success: true, message: 'Settings saved', data });
 });
 
 // 4.14.22 & 4.14.23: HR Attendance & Payroll

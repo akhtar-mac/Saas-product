@@ -118,9 +118,14 @@ const jobOfferSchema = z.object({
 router.get(
   '/jobs',
   asyncHandler(async (_req: Request, res: Response) => {
-    const jobs = await (prisma as any).jobs.findMany({
-      orderBy: { id: 'asc' },
-    });
+    let jobs: any[] = [];
+    try {
+      jobs = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM jobs ORDER BY id ASC`);
+    } catch (err) {
+      console.warn('jobs table unavailable:', (err as Error).message);
+      res.json({ success: true, data: [], warning: 'Careers table is not ready yet.' });
+      return;
+    }
 
     // Provide rich fallback positions if database has only test records
     const defaultPositions = [
@@ -160,8 +165,7 @@ router.get(
         location: 'Remote / Hybrid',
         dept: 'Technology',
         exp: '2-4 Years',
-        description:
-          'Scale ETaxwala SaaS portal, client ERPs, and high-performance financial systems.',
+        description: 'Scale the client portal, internal tools, and the reporting views.',
       },
       {
         id: 'mkt-growth',
@@ -193,7 +197,7 @@ router.get(
       if (
         !merged.some((m) => m.title.toLowerCase().includes(def.title.toLowerCase().slice(0, 10)))
       ) {
-        merged.push(def);
+        merged.push({ ...def, responsibilities: '', qualifications: '', postedDate: '' });
       }
     }
 
@@ -496,14 +500,36 @@ router.get(
   verifyJWT,
   requireRole(HR_ALLOWED_ROLES),
   asyncHandler(async (_req: Request, res: Response) => {
-    const items = await (prisma as any).job_applications.findMany({
-      orderBy: { created_at: 'desc' },
-      include: {
-        documents: true,
-        notes: { orderBy: { created_at: 'desc' } },
-        interviews: { orderBy: { scheduled_at: 'asc' } },
-      },
-    });
+    let items: any[] = [];
+    try {
+      items = await (prisma as any).job_applications.findMany({
+        orderBy: { created_at: 'desc' },
+        include: {
+          documents: true,
+          notes: { orderBy: { created_at: 'desc' } },
+          interviews: { orderBy: { scheduled_at: 'asc' } },
+        },
+      });
+    } catch (err) {
+      console.warn('job applications unavailable:', (err as Error).message);
+      res.json({
+        success: true,
+        data: {
+          applicants: [],
+          counts: {
+            total: 0,
+            new: 0,
+            review: 0,
+            shortlisted: 0,
+            interview_scheduled: 0,
+            offered: 0,
+            rejected: 0,
+          },
+        },
+        warning: 'Careers applications table is not ready yet.',
+      });
+      return;
+    }
 
     const applicants = items.map(mapToApplicantDto);
 

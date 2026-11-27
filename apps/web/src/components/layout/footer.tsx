@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { BrandMark, useBrand } from '@/lib/branding';
 import { Phone, Mail, MapPin, Shield, Clock, Globe, Lock } from 'lucide-react';
 
 const footerColumns = {
@@ -24,7 +25,7 @@ const footerColumns = {
     { label: 'Import Export Code (IEC)', to: '/services/other/import-export' },
   ],
   company: [
-    { label: 'About ETaxwala', to: '/about' },
+    { label: 'About', to: '/about' },
     { label: 'Careers', to: '/careers' },
     { label: 'Official Bank Accounts & UPI', to: '/pay' },
     { label: 'Knowledge Hub & Blog', to: '/blog' },
@@ -40,6 +41,7 @@ const footerColumns = {
 };
 
 export default function Footer() {
+  const brand = useBrand();
   return (
     <footer className="bg-[#FAF9F5] text-slate-700 font-sans border-t border-[#EAE6DD]">
       {/* ── Top Trust & Credential Banner (Light Cream) ── */}
@@ -95,36 +97,27 @@ export default function Footer() {
           {/* Brand Info with Official Logo */}
           <div className="col-span-2 space-y-4">
             <Link to="/" className="inline-block">
-              <img
-                src="/logo_black.png"
-                alt="ETaxwala"
-                className="h-10 sm:h-12 w-auto object-contain"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/brand-logo.png';
-                }}
-              />
+              <BrandMark className="h-10" />
             </Link>
 
             <p className="text-xs text-slate-600 leading-relaxed max-w-sm">
-              ETaxwala Business Solution Pvt Ltd is India’s modern institutional legal, tax, and
-              compliance platform. Advised by senior Chartered Accountants, Company Secretaries, and
-              Corporate Advocates.
+              {brand.legalName} — {brand.tagline}
             </p>
 
             <div className="space-y-2 pt-2 text-xs">
               <div className="flex items-center gap-2 text-slate-800 font-semibold">
                 <Phone className="w-3.5 h-3.5 text-[#0084D1] shrink-0" />
-                <span>080-6902-9999 (Toll Free Helpline)</span>
+                <span>{brand.supportPhone || 'Phone not configured'}</span>
               </div>
               <div className="flex items-center gap-2 text-slate-700">
                 <Mail className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
-                <span>support@etaxwala.com</span>
+                <span>{brand.supportEmail}</span>
               </div>
               <div className="flex items-start gap-2 text-slate-500 text-[11px] leading-snug">
                 <MapPin className="w-3.5 h-3.5 text-[#F97316] shrink-0 mt-0.5" />
                 <span>
-                  Head Office: Plot 42, Town Centre, CIDCO, Chhatrapati Sambhaji Nagar, Maharashtra
-                  431003
+                  {[brand.address, brand.city, brand.state].filter(Boolean).join(', ') ||
+                    'Address not configured'}
                 </span>
               </div>
             </div>
@@ -205,11 +198,11 @@ export default function Footer() {
       <div className="border-t border-[#EAE6DD] py-6 bg-[#FAF9F5] text-[11px] text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>
-            © {new Date().getFullYear()} ETaxwala Business Solution Pvt Ltd. All rights reserved.
+            © {new Date().getFullYear()} {brand.legalName}. All rights reserved.
           </p>
           <p className="text-slate-400 text-center sm:text-right max-w-xl">
-            Disclaimer: ETaxwala is a technology platform that connects businesses with independent
-            Chartered Accountants, Advocates, and Company Secretaries.
+            Disclaimer: {brand.companyName} connects businesses with independent advisors.
+            Government approval is not guaranteed.
           </p>
         </div>
       </div>

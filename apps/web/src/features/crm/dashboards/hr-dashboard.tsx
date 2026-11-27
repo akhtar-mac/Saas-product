@@ -71,8 +71,20 @@ export default function HrDashboard() {
       });
       const json = await res.json();
       if (json.success && json.data) {
-        setApplicants(json.data.applicants);
-        setCounts(json.data.counts);
+        setApplicants(Array.isArray(json.data.applicants) ? json.data.applicants : []);
+        setCounts(
+          json.data.counts || {
+            total: 0,
+            new: 0,
+            review: 0,
+            shortlisted: 0,
+            interview_scheduled: 0,
+            offered: 0,
+            rejected: 0,
+          }
+        );
+      } else {
+        setApplicants([]);
       }
     } catch (err) {
       console.error('Failed to fetch applicants:', err);
@@ -138,10 +150,18 @@ export default function HrDashboard() {
     const q = searchQuery.toLowerCase();
     const matchesSearch =
       !q ||
-      app.name.toLowerCase().includes(q) ||
-      app.email.toLowerCase().includes(q) ||
-      app.role.toLowerCase().includes(q) ||
-      app.phone.includes(q);
+      String(app.name || '')
+        .toLowerCase()
+        .includes(q) ||
+      String(app.email || '')
+        .toLowerCase()
+        .includes(q) ||
+      String(app.role || '')
+        .toLowerCase()
+        .includes(q) ||
+      String(app.phone || '')
+        .toLowerCase()
+        .includes(q);
     return matchesStatus && matchesSearch;
   });
 

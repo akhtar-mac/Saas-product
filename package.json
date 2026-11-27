@@ -2,7 +2,7 @@
   "name": "etaxwala-v2",
   "version": "2.0.0",
   "private": true,
-  "description": "ETaxwala 2.0 - Complete rebuild with React + Node + PostgreSQL",
+  "description": "Single-tenant white-label CRM",
   "packageManager": "pnpm@11.22.0",
   "scripts": {
     "dev": "turbo dev",
@@ -45,7 +45,7 @@
     ]
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=22.13.0",
     "pnpm": ">=9.0.0"
   },
   "dependencies": {

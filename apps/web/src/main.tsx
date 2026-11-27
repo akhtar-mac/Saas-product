@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './app/App';
 import ErrorBoundary from './components/error-boundary';
 import { installStaffAuthFetch } from './lib/staff-auth-fetch';
+import { BrandingProvider } from './lib/branding';
 import './styles/globals.css';
 import './styles/theme-mnc.css';
 
@@ -26,16 +27,18 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
-          <BrowserRouter
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true,
-            }}
-          >
-            <App />
-          </BrowserRouter>
-        </QueryClientProvider>
+        <BrandingProvider>
+          <QueryClientProvider client={queryClient}>
+            <BrowserRouter
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}
+            >
+              <App />
+            </BrowserRouter>
+          </QueryClientProvider>
+        </BrandingProvider>
       </HelmetProvider>
     </ErrorBoundary>
   </React.StrictMode>

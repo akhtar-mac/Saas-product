@@ -2,14 +2,18 @@ import { Router, Request, Response } from 'express';
 import { hasColumn } from '../rbac/schema-features.js';
 import { prisma } from '../config/db.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
-import { verifyJWT } from '../middleware/auth.middleware.js';
+import { verifyJWT, type JwtPayload } from '../middleware/auth.middleware.js';
+import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
+import { verifyPassword } from '../services/password.js';
+import { leadEmail } from '../services/tenant-settings.service.js';
 
 const router = Router();
 
 // The mobile-compat routes list and edit leads, customers and quotations and the
 // /login here hands out a fixed placeholder token. Require a real staff JWT,
 // except for the public website inquiry form (POST /api/add-inquiry-lead).
-const PUBLIC_PATHS = new Set(['/add-inquiry-lead']);
+const PUBLIC_PATHS = new Set(['/add-inquiry-lead', '/login']);
 router.use((req: Request, res: Response, next) =>
   PUBLIC_PATHS.has(req.path) ? next() : verifyJWT(req, res, next)
 );
@@ -28,26 +32,22 @@ router.post(
       return;
     }
 
-    const maxLead = await prisma.leads.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
-    const nextId = (maxLead?.id || 17281) + 1;
-
     const newLead = await prisma.leads.create({
       data: {
-        id: nextId,
         name: clientName,
         contact: clientPhone || '9999999999',
-        email: email || `${clientPhone || nextId}@lead.etaxwala.in`,
+        email: email || leadEmail(clientPhone || 'lead'),
         service: service || 'General Corporate Advisory',
         source: 'Website Inquiry Modal',
         state: state || 'Maharashtra',
         city: city || 'Pune',
-        lead_note: lead_note || message || notes || 'Inquiry submitted from ETaxwala web portal',
+        lead_note: lead_note || message || notes || 'Inquiry submitted from the website',
         added_by: 1,
         is_assign: 0,
         lead_type: 0,
         is_customer: 0,
         is_payment: 0,
-        company_id: 'etaxwala',
+        company_id: 'TENANT',
         date: new Date(),
         created_at: new Date(),
         updated_at: new Date(),
@@ -68,39 +68,66 @@ router.post(
 router.post(
   '/login',
   asyncHandler(async (req: Request, res: Response) => {
-    const { email, mobile, username } = req.body as any;
-    const identifier = email || mobile || username || '';
+    const { email, mobile, username, password } = req.body as any;
+    const identifier = String(email || mobile || username || '')
+      .trim()
+      .toLowerCase();
+    const secret = String(password || '');
+    if (!identifier || !secret) {
+      res.status(401).json({ status: false, message: 'Email and password are required.' });
+      return;
+    }
 
     let staff: any = null;
-    if (identifier) {
+    try {
       staff = await (prisma as any).staff_users.findFirst({
-        where: {
-          OR: [{ email: identifier }, { phone: identifier }, { username: identifier }],
-        },
+        where: { email: identifier },
       });
+    } catch {
+      staff = null;
     }
-
+    let stored = staff?.password_hash;
+    let userId = staff?.id;
+    let name = staff?.name;
+    let roleId = staff?.role_id || 7;
     if (!staff) {
-      // Fallback to finding first active sales staff
-      staff =
-        (await (prisma as any).staff_users.findFirst({
-          where: { role_id: 6 },
-        })) || (await (prisma as any).staff_users.findFirst());
+      const rows = await prisma.users.findFirst({ where: { email: identifier } }).catch(() => null);
+      if (rows) {
+        stored = (rows as any).password;
+        userId = Number(rows.id);
+        name = rows.username;
+        roleId = 7;
+      }
+    }
+    if (!userId || !(await verifyPassword(stored, secret))) {
+      res.status(401).json({ status: false, message: 'Invalid email or password.' });
+      return;
     }
 
+    const payload: JwtPayload = {
+      user_id: Number(userId),
+      role_id: Number(roleId),
+      role_ids: [Number(roleId)],
+      role_name: 'sales_employee',
+      roles: ['sales_employee'],
+      username: name || identifier,
+      email: identifier,
+      user_source: staff ? 'staff_users' : 'users',
+    };
+    const token = jwt.sign(payload, env.JWT_SECRET, { expiresIn: '7d' });
     res.json({
       status: true,
+      statusCode: 200,
       message: 'Login successful',
-      data: {
-        token: 'flutter_sales_jwt_token_verified',
-        refresh_token: 'flutter_sales_refresh_token_verified',
-        user: {
-          id: staff ? staff.id : 7,
-          name: staff ? staff.name : 'Priya Sharma',
-          email: staff ? staff.email : email || 'sales@etaxwala.com',
-          mobile: staff ? staff.phone : mobile || '9876543210',
-          role: 'SALES_EMPLOYEE',
-        },
+      token,
+      user: {
+        userID: Number(userId),
+        username: name || identifier,
+        id: Number(userId),
+        name: name || identifier,
+        email: identifier,
+        mobile: mobile || '',
+        role: 'SALES_EMPLOYEE',
       },
     });
   })
@@ -112,27 +139,33 @@ router.post('/register', (_req: Request, res: Response) => {
 
 router.get(
   '/me',
-  asyncHandler(async (_req: Request, res: Response) => {
-    const totalLeads = await prisma.leads.count();
-    const callsCount = await prisma.call_history.count();
+  asyncHandler(async (req: Request, res: Response) => {
+    const totalLeads = await prisma.leads.count().catch(() => 0);
+    const callsCount = await prisma.call_history.count().catch(() => 0);
+    const user = req.user;
 
     res.json({
       status: true,
       data: {
-        id: 7,
-        name: 'Field Sales Officer',
-        email: 'sales@etaxwala.com',
-        mobile: '9876543210',
-        role: 'SALES_EMPLOYEE',
+        id: user?.user_id,
+        name: user?.username || 'Staff',
+        email: user?.email || '',
+        mobile: '',
+        role: user?.role_name || 'staff',
         assigned_leads: totalLeads,
-        today_calls: Number(callsCount) > 0 ? 38 : 0,
+        today_calls: Number(callsCount) || 0,
       },
     });
   })
 );
 
-router.post('/refresh', (_req: Request, res: Response) => {
-  res.json({ status: true, token: 'flutter_sales_jwt_refreshed_token' });
+router.post('/refresh', (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json({ status: false, message: 'Authentication required.' });
+    return;
+  }
+  const token = jwt.sign(req.user, env.JWT_SECRET, { expiresIn: '7d' });
+  res.json({ status: true, statusCode: 200, token });
 });
 
 // ─── 2. Mobile Leads ─────────────────────────────────────────────────────────
@@ -236,15 +269,11 @@ router.post(
 router.post(
   '/add_lead',
   asyncHandler(async (req: Request, res: Response) => {
-    const maxLead = await prisma.leads.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
-    const nextId = (maxLead?.id || 17281) + 1;
-
     const newLead = await prisma.leads.create({
       data: {
-        id: nextId,
         name: req.body.name || 'Mobile Field Lead',
         contact: req.body.contact || req.body.mobile || '9999999999',
-        email: req.body.email || `lead${nextId}@etaxwala.in`,
+        email: req.body.email || leadEmail(req.body.contact || req.body.mobile || 'lead'),
         service: req.body.service || 'GST Registration',
         city: req.body.city || 'Pune',
         state: req.body.state || 'Maharashtra',
@@ -254,7 +283,7 @@ router.post(
         is_assign: 0,
         is_customer: 0,
         is_payment: 0,
-        company_id: 'etaxwala',
+        company_id: 'TENANT',
         date: new Date(),
         created_at: new Date(),
         updated_at: new Date(),
@@ -360,17 +389,10 @@ router.post(
   '/new_appointment',
   asyncHandler(async (req: Request, res: Response) => {
     const { name, mobile, city, date, time, mode } = req.body;
-    const maxAppt = await prisma.appointments.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
-    const nextId = (maxAppt?.id || 108) + 1;
-
     const appt = await prisma.appointments.create({
       data: {
-        id: nextId,
         name: name || 'Client Appointment',
-        email: req.body.email || `${mobile || '9876543210'}@appointment.etaxwala.in`,
+        email: req.body.email || leadEmail(mobile || 'appointment'),
         mobile: mobile || '9876543210',
         city: city || 'Pune',
         message: req.body.message || 'Booked appointment via app',
@@ -396,17 +418,11 @@ router.post(
   '/book-appointment',
   asyncHandler(async (req: Request, res: Response) => {
     const { name, mobile, phone, email, city, message, ap_date, ap_time, ap_mode } = req.body;
-    const maxAppt = await prisma.appointments.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
-    const nextId = (maxAppt?.id || 108) + 1;
 
     const appt = await prisma.appointments.create({
       data: {
-        id: nextId,
         name: name || 'Consultation Client',
-        email: email || `${mobile || phone || '9876543210'}@appointment.etaxwala.in`,
+        email: email || leadEmail(mobile || phone || 'appointment'),
         mobile: mobile || phone || '9876543210',
         city: city || 'Pune',
         message: message || 'Appointment scheduled from web consultation page',

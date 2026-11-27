@@ -75,6 +75,10 @@ const CrmCustomerDetailsPage = lazy(() => import('@/features/crm/crm-customer-de
 const CrmChatPage = lazy(() => import('@/features/crm/pages/crm-chat-page'));
 const HrDashboard = lazy(() => import('@/features/crm/dashboards/hr-dashboard'));
 const MarketingDashboard = lazy(() => import('@/features/crm/dashboards/marketing-dashboard'));
+const MarketingAutomationPage = lazy(
+  () => import('@/features/crm/marketing-automation/marketing-automation-page')
+);
+const CrmSettingsPage = lazy(() => import('@/features/crm/crm-settings-page'));
 const ItCommandDashboard = lazy(() => import('@/features/crm/dashboards/it-command-dashboard'));
 const FranchiseDashboard = lazy(() => import('@/features/crm/dashboards/franchise-dashboard'));
 const SubBrandsDashboard = lazy(() => import('@/features/crm/dashboards/sub-brands-dashboard'));
@@ -335,6 +339,8 @@ export default function App() {
           {/* Department Hubs: HR Desk, Marketing Suite & IT Command Center */}
           <Route path="hr" element={<HrDashboard />} />
           <Route path="marketing" element={<MarketingDashboard />} />
+          <Route path="marketing-automation" element={<MarketingAutomationPage />} />
+          <Route path="settings" element={<CrmSettingsPage />} />
           <Route path="it-command" element={<ItCommandDashboard />} />
           <Route path="it" element={<Navigate to="/crm/it-command" replace />} />
 

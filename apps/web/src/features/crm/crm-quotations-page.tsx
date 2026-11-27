@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { API_BASE_URL } from '@/lib/api-base';
+import { useBrand } from '@/lib/branding';
 import {
   FileSpreadsheet,
   Plus,
@@ -308,8 +309,22 @@ function numberToWords(num: number): string {
   return str.trim() ? str.trim() + ' Rupees Only' : 'Zero Rupees Only';
 }
 
+function safeText(value: unknown): string {
+  if (value == null) return '';
+  return String(value);
+}
+
+function safeDay(value: unknown): string {
+  const parsed = new Date(value as string);
+  if (!value || Number.isNaN(parsed.getTime()) || parsed.getFullYear() < 1971) {
+    return new Date().toISOString().slice(0, 10);
+  }
+  return parsed.toISOString().slice(0, 10);
+}
+
 export function CrmQuotationsPage() {
   const location = useLocation();
+  const brand = useBrand();
 
   const [quotations, setQuotations] = useState<QuotationRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -420,16 +435,16 @@ export function CrmQuotationsPage() {
             ];
           }
 
-          const createdAt = q.created_at
-            ? new Date(q.created_at).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0];
+          const createdAt = safeDay(q.created_at);
 
           return {
             id: `db-${q.id}`,
-            quotationNo: `ETAX/${createdAt.slice(0, 4)}/${String(q.id).padStart(4, '0')}`,
-            customerName: q.client_name || q.customer_name || q.name || `Lead #${q.lead_id}`,
+            quotationNo: `${brand.quotePrefix || 'QT'}/${createdAt.slice(0, 4)}/${safeText(q.id).padStart(4, '0')}`,
+            customerName: safeText(
+              q.client_name || q.customer_name || q.name || `Lead #${q.lead_id}`
+            ),
             companyName: q.company_name || '',
-            mobile: q.contact || q.mobile || '',
+            mobile: safeText(q.contact || q.mobile),
             email: q.email || '',
             address: q.city || q.address || '',
             date: createdAt,
@@ -464,7 +479,7 @@ export function CrmQuotationsPage() {
   const handleCreateNewFromLead = (lead: any) => {
     const today = new Date().toISOString().split('T')[0];
     const validDate = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
-    const nextNo = `ETAX/2026/${String(Math.floor(1000 + Math.random() * 9000))}`;
+    const nextNo = `${brand.quotePrefix || 'QT'}/${new Date().getFullYear()}/${String(Math.floor(1000 + Math.random() * 9000))}`;
 
     let matchedService: ServiceOption | undefined;
     if (lead.service) {
@@ -526,11 +541,9 @@ export function CrmQuotationsPage() {
   };
 
   const getTotals = (q: QuotationRecord) => {
-    const subtotal = q.items.reduce(
-      (sum, item) => sum + (item.qty || 0) * (item.unitPrice || 0),
-      0
-    );
-    const itemDiscounts = q.items.reduce((sum, item) => sum + (item.discount || 0), 0);
+    const items = Array.isArray(q?.items) ? q.items : [];
+    const subtotal = items.reduce((sum, item) => sum + (item.qty || 0) * (item.unitPrice || 0), 0);
+    const itemDiscounts = items.reduce((sum, item) => sum + (item.discount || 0), 0);
     const afterItemDiscounts = Math.max(0, subtotal - itemDiscounts);
     const overallDisc = q.overallDiscount || 0;
     const finalTotal = Math.max(0, afterItemDiscounts - overallDisc);
@@ -540,7 +553,7 @@ export function CrmQuotationsPage() {
   const handleCreateNew = () => {
     const today = new Date().toISOString().split('T')[0];
     const validDate = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0];
-    const nextNo = `ETAX/2026/${String(Math.floor(1000 + Math.random() * 9000))}`;
+    const nextNo = `${brand.quotePrefix || 'QT'}/${new Date().getFullYear()}/${String(Math.floor(1000 + Math.random() * 9000))}`;
 
     const firstService = servicesList[0] || DEFAULT_SERVICES[0];
 
@@ -796,10 +809,10 @@ export function CrmQuotationsPage() {
   const filteredQuotations = quotations.filter((q) => {
     const term = searchTerm.toLowerCase();
     return (
-      q.quotationNo.toLowerCase().includes(term) ||
-      q.customerName.toLowerCase().includes(term) ||
-      (q.companyName && q.companyName.toLowerCase().includes(term)) ||
-      q.mobile.includes(term)
+      safeText(q.quotationNo).toLowerCase().includes(term) ||
+      safeText(q.customerName).toLowerCase().includes(term) ||
+      safeText(q.companyName).toLowerCase().includes(term) ||
+      safeText(q.mobile).toLowerCase().includes(term)
     );
   });
 

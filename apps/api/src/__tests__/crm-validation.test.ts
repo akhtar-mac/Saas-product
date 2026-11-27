@@ -13,7 +13,7 @@ describe('CRM Schema Validation', () => {
     };
     const parsed = CreateLeadSchema.parse(valid);
     expect(parsed.name).toBe('Rohan Sharma');
-    expect(parsed.company_id).toBe('etaxwala');
+    expect(parsed.company_id).toBe(process.env.COMPANY_CODE || 'TENANT');
   });
 
   it('should throw validation error on invalid email or short phone', () => {

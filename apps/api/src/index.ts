@@ -35,6 +35,9 @@ import auditLogRoutes from './rbac/logs.routes.js';
 import { recycleBinRouter, deleteRoutes } from './rbac/recycle-bin.routes.js';
 import { initChatSocket } from './socket/chat.socket.js';
 import { prisma } from './config/db.js';
+import settingsRoutes from './routes/settings.routes.js';
+import marketingAutomationRoutes from './routes/marketing-automation.routes.js';
+import { companyCode, leadEmail } from './services/tenant-settings.service.js';
 import { authRateLimit, apiRateLimit } from './middleware/rate-limit.middleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -49,18 +52,27 @@ app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (
-        !origin ||
-        origin.includes('localhost') ||
-        origin.includes('127.0.0.1') ||
-        origin.endsWith('.etaxwala.com') ||
-        origin === 'https://etaxwala.com' ||
-        origin === env.FRONTEND_URL
-      ) {
+      if (!origin) {
         callback(null, true);
-      } else {
-        callback(null, true);
+        return;
       }
+      const extras = (process.env.CORS_ORIGINS || '')
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+      const custom = (process.env.CUSTOM_DOMAIN || '').replace(/^https?:\/\//, '');
+      let host = '';
+      try {
+        host = new URL(origin).hostname;
+      } catch {
+        host = '';
+      }
+      const allowed =
+        env.NODE_ENV !== 'production' ||
+        origin === env.FRONTEND_URL ||
+        extras.includes(origin) ||
+        Boolean(custom && (host === custom || host.endsWith(`.${custom}`)));
+      callback(null, allowed);
     },
     credentials: true,
   })
@@ -70,6 +82,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // ─── Static file serving for uploaded documents ───────────────────────────────
 app.use('/Docs', express.static(path.join(process.cwd(), 'public/Docs')));
+app.use('/branding', express.static(path.join(process.cwd(), 'public/branding')));
 
 // ─── Request Logger & Global API Rate Limit ──────────────────────────────────
 app.use(requestLogger);
@@ -132,6 +145,12 @@ app.use('/v1/staff/hrms', hrmsRoutes);
 app.use('/v1/crm/desktrack', desktrackRoutes);
 app.use('/v1/staff/desktrack', desktrackRoutes);
 
+app.use('/v1/public', settingsRoutes.publicRouter);
+app.use('/v1/crm/settings', settingsRoutes.adminRouter);
+app.use('/v1/staff/settings', settingsRoutes.adminRouter);
+app.use('/v1/crm/marketing-automation', marketingAutomationRoutes);
+app.use('/v1/staff/marketing-automation', marketingAutomationRoutes);
+
 app.use('/v1/crm', crmRoutes);
 
 // ─── Call Analytics: Flutter sync + analytics endpoints ──────────────────────
@@ -187,15 +206,11 @@ app.post('/v1/inquiry', async (req, res) => {
         .json({ success: false, error: { message: 'Name and contact required' } });
     }
 
-    const maxLead = await prisma.leads.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
-    const nextId = (maxLead?.id || 17281) + 1;
-
     const newLead = await prisma.leads.create({
       data: {
-        id: nextId,
         name,
         contact: clientPhone,
-        email: email || `${clientPhone}@lead.etaxwala.in`,
+        email: email || leadEmail(clientPhone),
         service: service || 'Business Registration Advisory',
         source: 'Website Quick Enquiry',
         state: state || 'Maharashtra',
@@ -206,7 +221,7 @@ app.post('/v1/inquiry', async (req, res) => {
         lead_type: 0,
         is_customer: 0,
         is_payment: 0,
-        company_id: 'etaxwala',
+        company_id: companyCode(),
         date: new Date(),
         created_at: new Date(),
         updated_at: new Date(),
@@ -235,18 +250,11 @@ app.post('/v1/appointment', async (req, res) => {
         .json({ success: false, error: { message: 'Name and mobile required' } });
     }
 
-    const maxAp = await prisma.appointments.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
-    const nextId = (maxAp?.id || 110) + 1;
-
     const newAppointment = await prisma.appointments.create({
       data: {
-        id: nextId,
         name,
         mobile: clientPhone,
-        email: email || `${clientPhone}@appointment.etaxwala.in`,
+        email: email || leadEmail(clientPhone),
         city: city || 'Pune',
         message: message || service || 'CA Consultation Appointment booked via website',
         ap_date: ap_date || new Date().toISOString().split('T')[0],

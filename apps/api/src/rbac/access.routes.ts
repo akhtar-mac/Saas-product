@@ -378,7 +378,7 @@ router.post('/users', async (req, res) => {
     if (role.legacyUserType !== null) {
       // Legacy `users` table: same shape the old app writes, so the mobile app,
       // lead assignment, call history and Desktrack all see the new person.
-      // NOTE: the old app and mobile backend compare users.password as plain text.
+      // Password is stored as bcrypt. Run scripts/hash-legacy-passwords.ts for old rows.
       const company = await prisma
         .$queryRawUnsafe<any[]>(
           `SELECT company_id FROM users WHERE id = ?`,
@@ -392,7 +392,7 @@ router.post('/users', async (req, res) => {
         cleanEmail,
         String(phone || ''),
         role.legacyUserType,
-        String(password),
+        await bcrypt.hash(String(password), 12),
         actor.id,
         String(company[0]?.company_id || 'ETax1') === '0'
           ? 'ETax1'
@@ -469,7 +469,7 @@ router.put('/users/:source/:id', async (req, res) => {
       if (name) (sets.push('username = ?'), vals.push(String(name).trim()));
       if (cleanEmail) (sets.push('email = ?'), vals.push(cleanEmail));
       if (phone !== undefined) (sets.push('contact = ?'), vals.push(String(phone || '')));
-      if (password) (sets.push('password = ?'), vals.push(String(password)));
+      if (password) (sets.push('password = ?'), vals.push(await bcrypt.hash(String(password), 12)));
       if (role && role.legacyUserType !== null)
         (sets.push('user_type = ?'), vals.push(role.legacyUserType));
       if (sets.length)

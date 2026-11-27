@@ -8,7 +8,10 @@ export const CreateLeadSchema = z.object({
   state: z.string().max(100).optional(),
   city: z.string().max(250).optional(),
   lead_note: z.string().max(500).optional(),
-  company_id: z.string().optional().default('etaxwala'),
+  company_id: z
+    .string()
+    .optional()
+    .default(process.env.COMPANY_CODE || 'TENANT'),
   source: z.string().optional().default('CRM Web'),
 });
 
